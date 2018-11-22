@@ -10,6 +10,7 @@ module Set =
     open OpenMath
 
     let private _omSetName = GET.definitions "setname1"
+    let createTheUniverse = _omSetName
     
     type Universe =
          | R //Real
