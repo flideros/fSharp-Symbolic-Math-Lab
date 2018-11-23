@@ -71,7 +71,6 @@
     <Compile Include="Factorization.fs" />
     <Compile Include="PartialFraction.fs" />
     <None Include="MainScript.fsx" />
-    <None Include="Script1.fsx" />
     <None Include="fsLab.fsx" />
     <None Include="xml.fsx" />
     <Content Include="packages.config" />
@@ -94,9 +93,11 @@
     </Reference>
     <Reference Include="FSharp.Core">
       <HintPath>..\packages\FSharp.Core.4.5.3\lib\net45\FSharp.Core.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="FSharp.Data">
+    <Reference Include="FSharp.Data, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="FSharp.Data.TypeProviders">
       <HintPath>..\packages\FSharp.Data.TypeProviders.5.0.0.6\lib\net40\FSharp.Data.TypeProviders.dll</HintPath>
