@@ -72,7 +72,8 @@
     <Compile Include="PartialFraction.fs" />
     <None Include="MainScript.fsx" />
     <None Include="fsLab.fsx" />
-    <None Include="xml.fsx" />
+    <None Include="set.fsx" />
+    <None Include="open math.fsx" />
     <Content Include="packages.config" />
     <Content Include="Google.DataTable.Net.Wrapper.XML" />
     <None Include="md-template.html" />
