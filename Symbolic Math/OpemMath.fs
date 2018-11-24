@@ -20,8 +20,7 @@ type CDDefinition = {Name:string;
                      Role:Option<string>;
                      Examples:OpenMathCD.Example[];
                      CMPs:string[];                 
-                     FMPs:OpenMathCD.Fmp[];                 
-                    }
+                     FMPs:OpenMathCD.Fmp[]}
 
 
 ///Content Dictionary Group Member///
