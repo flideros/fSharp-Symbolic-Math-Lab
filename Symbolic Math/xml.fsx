@@ -10,6 +10,17 @@ open Math.Foundations
 
 Logic.Set.createTheUniverse
 
+
+
+
+
+
+
+
+Logic.Set.createTheUniverse
+
+
+
 let ocd = "set1"
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
 printfn "%O" d
@@ -26,7 +37,12 @@ h.CdBase
 GET.cDFile h
 
 
-let cds = ["alg1";"altenc";"arith1";"bigfloat1";"calculus1";"complex1";"error";"fns1";"fns2";"integer1";"interval1";"limit1";"linalg1";"linalg2";"list1";"logic1";"mathmlattr";"mathmltypes";"meta";"metagrp";"metasig";"minmax1";"multiset1";"nums1";"piece1";"quant1";"relation1";"relation3";"rounding1";"s_data1";"s_dist1";"set1";"setname1";"sts";"transc1";"veccalc1"]
+let cds = ["alg1";"altenc";"arith1";"bigfloat1";"calculus1";"complex1";
+           "error";"fns1";"fns2";"integer1";"interval1";"limit1";"linalg1";
+           "linalg2";"list1";"logic1";"mathmlattr";"mathmltypes";"meta";
+           "metagrp";"metasig";"minmax1";"multiset1";"nums1";"piece1";"quant1"
+           ;"relation1";"relation3";"rounding1";"s_data1";"s_dist1";"set1";
+           "setname1";"sts";"transc1";"veccalc1"]
 
 GET.cDFiles cds
 
