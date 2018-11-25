@@ -6,19 +6,18 @@ type Bag<'T> = 'T list
 module Set =
 
     open System.Collections.Generic
-    open FSharp.Data
     open OpenMath
     
     //type Set<'T> = F# Collection Type Set
     
-    // Definition
+    // Content Dictionaries
     let private _omSet = GET.definitions "set1"
-    let definition = _omSet |> Array.tryFind (fun x -> x.Name = "set")
-
-    // Definition
     let private _omSetName = GET.definitions "setname1"
-    let createTheUniverse = _omSetName
-    
+
+    // Definition    
+    let definition = GET.definitionEntry _omSet "set"
+
+        
     /// <Definition>
     /// The Universe is the set of the sets of discorse
     /// https://math.stackexchange.com/a/435659
@@ -33,13 +32,15 @@ module Set =
          | EmptySet 
          with member this.getDefinition = 
                 match this with 
-                | R -> _omSetName |> Array.tryFind (fun (r : CDDefinition) -> r.Name = "R")
-                | N -> _omSetName |> Array.tryFind (fun (n : CDDefinition) -> n.Name = "N")
-                | Q -> _omSetName |> Array.tryFind (fun (q : CDDefinition) -> q.Name = "Q")
-                | Z -> _omSetName |> Array.tryFind (fun (z : CDDefinition) -> z.Name = "Z")
-                | C -> _omSetName |> Array.tryFind (fun (c : CDDefinition) -> c.Name = "C")
-                | P -> _omSetName |> Array.tryFind (fun (p : CDDefinition) -> p.Name = "P")
-                | EmptySet -> _omSet |> Array.tryFind (fun (p : CDDefinition) -> p.Name = "emptyset")
+                | R -> GET.definitionEntry _omSetName "R"
+                | N -> GET.definitionEntry _omSetName "N"
+                | Q -> GET.definitionEntry _omSetName "Q"
+                | Z -> GET.definitionEntry _omSetName "Z"
+                | C -> GET.definitionEntry _omSetName "C"
+                | P -> GET.definitionEntry _omSetName "P"
+                | EmptySet -> GET.definitionEntry _omSet "emptyset"
+
+    let createTheUniverse = _omSetName
 
     module Union =
 
@@ -50,8 +51,7 @@ module Set =
            List.append left right |> Seq.distinct |> List.ofSeq
 
         // Definition
-        let private _omSet = GET.definitions "set1"
-        let definition = _omSet |> Array.tryFind (fun x -> x.Name = "union")
+        let definition = GET.definitionEntry _omSet "union"
 
     module Intersection = 
         
@@ -62,8 +62,7 @@ module Set =
             left |> List.filter (fun n -> cache.Contains n)
 
         // Definition
-        let private _omSet = GET.definitions "set1"
-        let definition = _omSet |> Array.tryFind (fun x -> x.Name = "intersect")
+        let definition = GET.definitionEntry _omSet "intersect"
     
     module Difference =
 
@@ -74,8 +73,7 @@ module Set =
             left |> List.filter (fun n -> not (cache.Contains n))
 
         // Definition
-        let private _omSet = GET.definitions "set1"
-        let definition = _omSet |> Array.tryFind (fun x -> x.Name = "setdiff")
+        let definition = GET.definitionEntry _omSet "setdiff"
 
 [<RequireQualifiedAccess>]
 module Bag =
