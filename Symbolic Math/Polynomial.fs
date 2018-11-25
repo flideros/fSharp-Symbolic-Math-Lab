@@ -220,7 +220,7 @@ module Polynomial =
 
         let ofExpression u = _variablesOf [] u
         
-        let ofRationalExpression u = Set.union (ofExpression (numerator u)) (ofExpression (denominator u))
+        let ofRationalExpression u = Set.Union.oFList (ofExpression (numerator u)) (ofExpression (denominator u))
                                      |> List.sortWith (fun x -> ExpressionType.compareExpressions x) 
 
 //Degree of a polynomial

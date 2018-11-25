@@ -58,7 +58,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="OpemMath.fs" />
     <Compile Include="TypeExtensions.fs" />
-    <Compile Include="Set.fs" />
+    <Compile Include="Collection.fs" />
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
     <Compile Include="Number.fs" />
@@ -72,7 +72,8 @@
     <Compile Include="PartialFraction.fs" />
     <None Include="MainScript.fsx" />
     <None Include="fsLab.fsx" />
-    <None Include="xml.fsx" />
+    <None Include="set.fsx" />
+    <None Include="open math.fsx" />
     <Content Include="packages.config" />
     <Content Include="Google.DataTable.Net.Wrapper.XML" />
     <None Include="md-template.html" />
