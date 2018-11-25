@@ -40,12 +40,11 @@ module Set =
                 | P -> GET.definitionEntry _omSetName "P"
                 | EmptySet -> GET.definitionEntry _omSet "emptyset"
 
-    let createTheUniverse = _omSetName
+    let createTheUniverse = _omSetName //meed to add EmptySet to this array
 
     module Union =
 
-        let oF left right =
-           Set.union left right |> Seq.distinct |> List.ofSeq       
+        let oF left right = Set.union left right       
         
         let oFList left right =
            List.append left right |> Seq.distinct |> List.ofSeq
@@ -60,6 +59,7 @@ module Set =
         let oFList (left:list< 'a >) (right:list< 'a >) =
             let cache = HashSet< 'a >(right, HashIdentity.Structural)
             left |> List.filter (fun n -> cache.Contains n)
+            |> Seq.distinct |> List.ofSeq
 
         // Definition
         let definition = GET.definitionEntry _omSet "intersect"
@@ -71,6 +71,7 @@ module Set =
         let oFList (left:list< 'a >) (right:list< 'a >) =
             let cache = HashSet< 'a >(right, HashIdentity.Structural)
             left |> List.filter (fun n -> not (cache.Contains n))
+            |> Seq.distinct |> List.ofSeq
 
         // Definition
         let definition = GET.definitionEntry _omSet "setdiff"
@@ -84,15 +85,15 @@ module Bag =
         | false -> 0
 
     let union b1 b2 = 
-        let intersection = Set.Union.oF b1 b2
+        let intersection = Set.Union.oFList b1 b2
         List.map (fun x -> 
                  match (countItem b1 x) > (countItem b2 x) with
-                 | true -> (x,(countItem b1 x))
-                 | false -> (x,(countItem b2 x))) intersection
+                 | true -> (x,(countItem b1 x)) 
+                 | false -> (x,(countItem b2 x))) intersection 
         |> List.collect (fun x -> [for i in 1..(snd x) -> (fst x)])
 
     let intersection b1 b2 = 
-        let intersection = Set.Union.oF b1 b2
+        let intersection = Set.Union.oFList b1 b2
         List.map (fun x -> 
                  match (countItem b1 x) > (countItem b2 x) with
                  | true -> (x,(countItem b2 x))

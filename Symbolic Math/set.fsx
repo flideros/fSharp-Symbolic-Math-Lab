@@ -11,6 +11,28 @@ open Math.Foundations
 
 
 
+
+
+
+
+
+
+
+
+/////
+let list1 = ["a";"f";"g";"g"]//[]
+let list2 = ["g";"d";"s"]//[]
+let set1 :Set<string> = Set ["a";"f";"g";"g"]//[]
+let set2 :Set<string> = Set ["g";"d";"s"]//[] 
+
+let intersectSet = Logic.Set.Intersection.oF set1 set2
+let intersectList = Logic.Set.Intersection.oFList list1 list2
+let unionSet = Logic.Set.Union.oF set1 set2
+let unionList = Logic.Set.Union.oFList list1 list2
+let diffSet = Logic.Set.Difference.oF set1 set2
+let diffList = Logic.Set.Difference.oFList list1 list2
+
+/////
 Logic.Set.Union.definition
 Logic.Set.Difference.definition
 Logic.Set.Intersection.definition
