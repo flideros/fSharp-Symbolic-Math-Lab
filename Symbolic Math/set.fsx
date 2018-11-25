@@ -1,4 +1,4 @@
-﻿#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
+#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r @"System.Xml.Linq.dll"
 #r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\bin\Debug\Symbolic_Math.dll"
 #r @"FSharp.Core"
@@ -29,4 +29,6 @@ printfn "%O" d
 let R = Logic.Set.R.getDefinition.Value
 R.Description
 
+let EmptySet = Logic.Set.EmptySet.getDefinition.Value
+R.Description
 
