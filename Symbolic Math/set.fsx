@@ -29,4 +29,5 @@ printfn "%O" d
 let R = Logic.Set.R.getDefinition.Value
 R.Description
 
-
+let EmptySet = Logic.Set.EmptySet.getDefinition.Value
+R.Description
