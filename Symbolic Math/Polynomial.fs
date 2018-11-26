@@ -913,7 +913,7 @@ module Polynomial =
                 match L with
                 | [] -> 
                     match K with
-                    | Math.Foundations.Logic.Set.Universe.Z ->
+                    | Constant.IntegralNumbers ->
                         match u/v with 
                         | Number (Integer i) -> (u/v,Number(Integer 0I))
                         | _ -> (Number(Integer 0I),u)
@@ -1392,12 +1392,12 @@ module Polynomial =
                 | x::xs -> loop (Coefficients.leadingGPE u x) xs
             let c = loop w L 
             match K with 
-            | Set.Universe.Z -> 
+            | IntegralNumbers -> 
                 match ExpressionType.compareExpressions c (Number(Integer 0I)) with
                 | 1 -> w
                 | -1 -> -w |> Expand.algebraicExpression
                 | _ -> Number(Integer 0I)
-            | Set.Universe.Q -> w/c |> Expand.algebraicExpression
+            | RationalNumbers -> w/c |> Expand.algebraicExpression
             | _ -> Number Undefined
         
         let rec mVPolyGCD u v L K =
@@ -1422,8 +1422,8 @@ module Polynomial =
                         match L with
                         | [] -> 
                             match K with
-                            | Set.Universe.Z -> NumberTheory.Integer.gcd u v
-                            | Set.Universe.Q -> one
+                            | IntegralNumbers -> NumberTheory.Integer.gcd u v
+                            | RationalNumbers -> one
                             | _ -> Number Undefined
                         | x::R ->
                             let contU = content u x R
@@ -1478,8 +1478,8 @@ module Polynomial =
                         match L with
                         | [] -> 
                             match K with
-                            | Set.Universe.Z -> NumberTheory.Integer.gcd u v
-                            | Set.Universe.Q -> one
+                            | IntegralNumbers -> NumberTheory.Integer.gcd u v
+                            | RationalNumbers -> one
                             | _ -> Number Undefined
                         | x::R ->
                             let contU = content u x R
@@ -1532,7 +1532,7 @@ module Polynomial =
                || Check.isMonomialGPE v L = false 
                with
             | true -> Number Undefined
-            | false -> Divisors.normalize (u*v/(Divisors.mVPolyGCD u v L Set.Universe.Q) |> Expand.algebraicExpression) L Set.Universe.Q
+            | false -> Divisors.normalize (u*v/(Divisors.mVPolyGCD u v L RationalNumbers) |> Expand.algebraicExpression) L RationalNumbers
 
         let S u v L = 
             let u',v' = Coefficients.leadingMonomial u L, Coefficients.leadingMonomial v L
@@ -1631,7 +1631,7 @@ module Polynomial =
             | _ -> denominator u
 
         let simplify u L = 
-            let K = Math.Foundations.Logic.Set.Universe.Z
+            let K = RationalNumbers
 
             let u' = Expand.algebraicExpression (u)
     

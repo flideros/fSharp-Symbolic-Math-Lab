@@ -40,7 +40,7 @@ open Math.Pure.Structure.Polynomial
                         match x <> zero with 
                         | true -> Some x 
                         | _ -> None)
-                    Divisors.normalize (List.reduce (fun acc x' -> Divisors.mVPolyGCD acc x' [] (Math.Foundations.Logic.Set.Universe.Z)) cList) [x] (Math.Foundations.Logic.Set.Universe.Z)
+                    Divisors.normalize (List.reduce (fun acc x' -> Divisors.mVPolyGCD acc x' [] (IntegralNumbers)) cList) [x] (IntegralNumbers)
             match u = zero with
             | true -> u
             | false -> 
@@ -50,13 +50,13 @@ open Math.Pure.Structure.Polynomial
                     c'*(content u)
                 let U = Expand.algebraicExpression (u/c)
                 let P = one
-                let R = Divisors.mVPolyGCD U (derivativeOf U x) [x] (Math.Foundations.Logic.Set.Universe.Z)
+                let R = Divisors.mVPolyGCD U (derivativeOf U x) [x] (IntegralNumbers)
                 let F = Divide.getQuotient U R x 
                 let rec loop P R F j =
                     match R = one with 
                     | true -> P*F**j
                     | false ->
-                        let G = Divisors.mVPolyGCD R F [x] (Math.Foundations.Logic.Set.Universe.Z)
+                        let G = Divisors.mVPolyGCD R F [x] (IntegralNumbers)
                         let s = Divide.getQuotient F G x
                         let P' = P*s**j
                         let R' = Divide.getQuotient R G x                        
