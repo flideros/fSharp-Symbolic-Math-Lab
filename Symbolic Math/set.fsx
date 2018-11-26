@@ -6,24 +6,20 @@
 open FSharp.Data
 open OpenMath
 open Math.Foundations
+open Math.Pure.Objects
 
-
-
-
-
-
-
-
-
-
-
-
+RealNumbers.definition
 
 /////
-let list1 = ["a";"f";"g";"g"]//[]
+let list1 = []//["a";"f";"g";"g"]
 let list2 = ["g";"d";"s"]//[]
-let set1 :Set<string> = Set ["a";"f";"g";"g"]//[]
-let set2 :Set<string> = Set ["g";"d";"s"]//[] 
+let set1 :Set<string> = Set.empty // ["a";"f";"g";"g"]
+let set2 :Set<string> = Set ["g";"d";"s"] 
+
+Logic.Set.Size.oFSequence list1
+Seq.length []
+
+
 
 let intersectSet = Logic.Set.Intersection.oF set1 set2
 let intersectList = Logic.Set.Intersection.oFList list1 list2

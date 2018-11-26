@@ -58,9 +58,9 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="OpemMath.fs" />
     <Compile Include="TypeExtensions.fs" />
-    <Compile Include="Collection.fs" />
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
+    <Compile Include="Collection.fs" />
     <Compile Include="Number.fs" />
     <Compile Include="Expression.fs" />
     <Compile Include="NumberTheory.fs" />

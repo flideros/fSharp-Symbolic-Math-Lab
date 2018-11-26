@@ -4,7 +4,7 @@ type Bag<'T> = 'T list
 
 [<RequireQualifiedAccess>]
 module Set =
-
+    open Math.Pure.Objects
     open System.Collections.Generic
     open OpenMath
     
@@ -17,30 +17,25 @@ module Set =
     // Definition    
     let definition = GET.definitionEntry _omSet "set"
 
-        
-    /// <Definition>
-    /// The Universe is the set of the sets of discorse
-    /// https://math.stackexchange.com/a/435659
-    /// </Definition>
-    type Universe =
-         | R /// Real
-         | N /// Natural
-         | Q /// Rational
-         | Z /// Integral
-         | C /// Complex
-         | P /// Positive Primes
-         | EmptySet 
-         with member this.getDefinition = 
-                match this with 
-                | R -> GET.definitionEntry _omSetName "R"
-                | N -> GET.definitionEntry _omSetName "N"
-                | Q -> GET.definitionEntry _omSetName "Q"
-                | Z -> GET.definitionEntry _omSetName "Z"
-                | C -> GET.definitionEntry _omSetName "C"
-                | P -> GET.definitionEntry _omSetName "P"
-                | EmptySet -> GET.definitionEntry _omSet "emptyset"
+    module Size =
 
-    let createTheUniverse = _omSetName //meed to add EmptySet to this array
+        let oF set = Set.count set
+
+        let oFSequence seq = Seq.length seq
+
+        // Definition
+        let definition = GET.definitionEntry _omSet "size"    
+
+    
+    module Map =
+
+        let tO set func = Set.map func set     
+
+        let tOList set func = List.map func set
+                              |> Seq.distinct |> List.ofSeq
+
+        // Definition
+        let definition = GET.definitionEntry _omSet "map"
 
     module Union =
 
