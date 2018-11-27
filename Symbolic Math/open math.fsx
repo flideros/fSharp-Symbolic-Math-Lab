@@ -6,9 +6,12 @@
 open FSharp.Data
 open OpenMath
 open Math.Foundations
+open Math.Pure.Objects
 
 
-
+And.defenition
+Abs.defenition
+Function.Argument .defenition
 let ocd = "set1"
 
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
@@ -16,10 +19,6 @@ let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
 printfn "%O" d
 
 
-
-let R = Logic.Set.R.getDefinition.Value
-
-R.Description
 
 let ooo = GET.cD "setname1"
 ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")

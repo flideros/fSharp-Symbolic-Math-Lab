@@ -1,21 +1,21 @@
 ﻿namespace Math.Pure.Objects
 
 type Function = 
-    | Abs
+    | Abs // Implemented
     | And
     | ApplyToList
     | Approx
-    | ArcCos
+    | ArcCos // Implemented
     | ArcCosh
-    | ArcCot
+    | ArcCot // Implemented
     | ArcCoth
-    | ArcCsc
+    | ArcCsc // Implemented
     | ArcCsch
-    | ArcSec
+    | ArcSec // Implemented
     | ArcSech
-    | ArcSin
+    | ArcSin // Implemented
     | ArcSinh
-    | ArcTan
+    | ArcTan // Implemented
     | ArcTanh
     | Argument
     | BasedFloat
@@ -28,23 +28,23 @@ type Function =
     | ComplexCartesian
     | ComplexPolar
     | Conjugate
-    | Cos
+    | Cos // Implemented
     | Cosh
-    | Cot
+    | Cot // Implemented
     | Coth
-    | Csc
+    | Csc // Implemented
     | Csch
     | Curl
     | Defint
     | Determinant
     | Diff
     | Divergence
-    | DividedBy
+    | DividedBy // Implemented
     | Domain
     | DomainOfApplication
     | Equals
     | Equivalent
-    | Exp
+    | Exp  // Implemented
     | Factorial
     | Factorof
     | Floor
@@ -70,13 +70,13 @@ type Function =
     | Inverse
     | Kernel
     | Laplacian
-    | Lcm
+    | Lcm  
     | LeftCompose
     | LeftInverse
     | Leq
     | Limit
     | List
-    | Ln
+    | Ln // Implemented
     | Log
     | LessThan
     | ListMap
@@ -113,11 +113,11 @@ type Function =
     | PartialDiffDegree
     | Piece
     | Piecewise
-    | Plus
+    | Plus // Implemented
     | ExplicitToThePowerOf
-    | ToThePowerOf
+    | ToThePowerOf // Implemented
     | PredicateOnList
-    | Product
+    | Product  // Implemented
     | MultiProperSubset
     | Prsubset
     | Quotient
@@ -137,7 +137,7 @@ type Function =
     | Set
     | MultiSetdiff
     | Setdiff
-    | Sin
+    | Sin // Implemented
     | Sinh
     | MultiSize
     | Size
@@ -145,10 +145,10 @@ type Function =
     | Subset
     | ListSuchthat
     | SuchThat
-    | Sum
-    | Tan
+    | Sum // Implemented
+    | Tan // Implemented
     | Tanh
-    | Times
+    | Times // Implemented
     | Transpose
     | Trunc
     | UnaryMinus
@@ -161,11 +161,10 @@ type Function =
     | Vectorproduct
     | Xnor
     | Xor
-    | AntiDerivative
-    | Derivative
+    | AntiDerivative 
+    | Derivative // Implemented
     
     with
-
     member this.defenition =
         match this with
         | Abs -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "arith1") "abs"
