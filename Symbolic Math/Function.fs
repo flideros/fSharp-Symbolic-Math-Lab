@@ -1,6 +1,7 @@
 ﻿namespace Math.Pure.Objects
 
 type Function = 
+
     | Abs // Implemented
     | And
     | ApplyToList
