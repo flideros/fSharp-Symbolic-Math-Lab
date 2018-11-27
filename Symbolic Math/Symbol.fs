@@ -53,14 +53,13 @@ type Constant =
         | Infinity -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "nums1") "infinity"
         | NaN -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "nums1") "NaN"
         
-        // setname1    
+        // setname1
         | RealNumbers -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "R"
         | NaturalNumbers -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "N"
         | RationalNumbers -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "Q"
         | IntegralNumbers -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "Z"
         | ComplexNumbers -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "C"
         | PositivePrimes -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "P"
-
         
         // set1
         | EmptySet -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "set1") "emptyset"
@@ -120,7 +119,6 @@ type Constant =
         | IntegralNumbers -> (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "Z").Value.Name
         | ComplexNumbers -> (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "C").Value.Name
         | PositivePrimes -> (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "setname1") "P").Value.Name
-
         
         // set
         | EmptySet -> (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "set1") "emptyset").Value.Name
