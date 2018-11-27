@@ -11,8 +11,8 @@ module Set =
     //type Set<'T> = F# Collection Type Set
     
     // Content Dictionaries
-    let private _omSet = GET.definitions "set1"
-    let private _omSetName = GET.definitions "setname1"
+
+    let private _omSet = GET.definitions "set1"    
 
     // Definition    
     let definition = GET.definitionEntry _omSet "set"

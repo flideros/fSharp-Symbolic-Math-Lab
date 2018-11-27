@@ -14,6 +14,8 @@ type Fraction =
         | true -> this.numerator / this.denominator
         | false -> (this.numerator / this.denominator) - 1I   
 
+    member this.definition = (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "nums1") "rational")
+    
     member this.Ceiling = 
         match this.numerator > 0I with
         | true -> match snd (System.Numerics.BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
@@ -24,6 +26,7 @@ type Fraction =
                    | false -> (this.numerator / this.denominator) - 1I
 
     static member Zero = {numerator = 0I; denominator = 1I}
+
 
 [<StructuralEquality;NoComparison>]
 type NumberType =

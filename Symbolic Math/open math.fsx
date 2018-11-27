@@ -8,31 +8,28 @@ open OpenMath
 open Math.Foundations
 
 
-Logic.Set.Union.definition
-Logic.Set.Difference.definition
-Logic.Set.Intersection.definition
-
-
-Logic.Set.definition
-
-Logic.Set.createTheUniverse
-
-
 
 let ocd = "set1"
+
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
+
 printfn "%O" d
 
+
+
 let R = Logic.Set.R.getDefinition.Value
+
 R.Description
+
+let ooo = GET.cD "setname1"
+ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
+
 
 
 let h = GET.cD "set1"
-
 let hh = h.CdDefinitions |> Array.collect (fun x -> [|x.Name,x.Role|])
 
 
-GET.cDFile h
 
 
 let cds = ["alg1";"altenc";"arith1";"bigfloat1";"calculus1";"complex1";
@@ -42,16 +39,13 @@ let cds = ["alg1";"altenc";"arith1";"bigfloat1";"calculus1";"complex1";
            ;"relation1";"relation3";"rounding1";"s_data1";"s_dist1";"set1";
            "setname1";"sts";"transc1";"veccalc1"]
 
-GET.cDFiles cds
 
 
 
-let cD ocd = let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
-             OpenMathCD.Load(d)
-
-let _cD ocd = let d = "http://www.openmath.org/cd/" + ocd + ".ocd"
-              OpenMathCD.Load(d)
-let ooo = _cD "setname1"
-
-
-ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
+let Con = (List.map (fun x -> let cd = (GET.cD x) 
+                              cd.CdDefinitions
+                              |> Array.collect (fun x -> match x.Role = Some "application" with
+                                                         | true -> [|x.Name,cd.CdName|]
+                                                         | false -> [||])
+                              
+                              ) cds) |> Seq.distinct |> Seq.toList

@@ -667,12 +667,12 @@ module Print =
             | Symbol (Constant c), _ -> sprintf "%s" c.symbol 
             | Symbol (Variable v), _ -> sprintf "%s" v
             | ComplexNumber (r,i), _ -> sprintf "(%s,%si)" (getString r (treeLevel + 1)) (getString i (treeLevel + 1))            
-            | BinaryOp(x,op,y), true -> sprintf "%s%s%s" (getString x (treeLevel + 1)) op.Symbol (getString y (treeLevel + 1))
-            | BinaryOp(x,op,y), false -> sprintf "(%s%s%s)" (getString x (treeLevel + 1)) op.Symbol (getString y (treeLevel + 1))
-            | NaryOp(op,aList), true -> sprintf "%s%s" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.Symbol + (getString x (treeLevel + 1))) "" aList.Tail )
-            | NaryOp(op,aList), false when op = Product -> sprintf "%s%s" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.Symbol + (getString x (treeLevel + 1))) "" aList.Tail )
-            | NaryOp(op,aList), false -> sprintf "(%s%s)" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.Symbol + (getString x (treeLevel + 1))) "" aList.Tail)            
-            | UnaryOp(op,x), _ -> sprintf "%s(%s)" op.Symbol (getString x (treeLevel + 1))
+            | BinaryOp(x,op,y), true -> sprintf "%s%s%s" (getString x (treeLevel + 1)) op.symbol (getString y (treeLevel + 1))
+            | BinaryOp(x,op,y), false -> sprintf "(%s%s%s)" (getString x (treeLevel + 1)) op.symbol (getString y (treeLevel + 1))
+            | NaryOp(op,aList), true -> sprintf "%s%s" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail )
+            | NaryOp(op,aList), false when op = Product -> sprintf "%s%s" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail )
+            | NaryOp(op,aList), false -> sprintf "(%s%s)" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail)            
+            | UnaryOp(op,x), _ -> sprintf "%s(%s)" op.symbol (getString x (treeLevel + 1))
             | _ -> sprintf ""  
         getString x 0
 
