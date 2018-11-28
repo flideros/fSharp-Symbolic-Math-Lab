@@ -8,16 +8,37 @@ open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
 
+open Math.Foundations.Logic
+
+RealNumbers.definition
+
+Set.MuliIntersection.definition
+
+Set.Union.definition
+
+
+let seqInfinite = Seq.initInfinite (fun index ->
+    let n = float ( index + 1 )
+    1.0 / (n * n * (if ((index + 1) % 2 = 0) then 1.0 else -1.0)))
+printfn "%A" seqInfinite
+
+Set.Size.oFSequence seqInfinite
+///
 RealNumbers.definition
 
 /////
-let list1 = []//["a";"f";"g";"g"]
-let list2 = ["g";"d";"s"]//[]
-let set1 :Set<string> = Set.empty // ["a";"f";"g";"g"]
-let set2 :Set<string> = Set ["g";"d";"s"] 
+let list1 = [1;2;3;7;77;6;67;75]
+let list2 = [3;2;4;7;6;55;66]
+let list3 = [5;2;6;4;77;55;7]
+let set1 :Set<int> = Set.ofList [1;2;3;7;77;6;67;75]
+let set2 :Set<int> = Set.ofList [3;2;4;7;6;55;66]
+let set3 :Set<int> = Set.ofList [5;2;6;4;77;55;7] 
 
-Logic.Set.Size.oFSequence list1
-Seq.length []
+
+let ll = Logic.Set.Difference.oFList list2 list3
+
+let l = Logic.Set.Difference.oF set2 set3
+
 
 
 
@@ -36,17 +57,11 @@ Logic.Set.Intersection.definition
 
 Logic.Set.definition
 
-Logic.Set.createTheUniverse
+
 
 
 
 let ocd = "set1"
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
 printfn "%O" d
-
-let R = Logic.Set.R.getDefinition.Value
-R.Description
-
-let EmptySet = Logic.Set.EmptySet.getDefinition.Value
-R.Description
 

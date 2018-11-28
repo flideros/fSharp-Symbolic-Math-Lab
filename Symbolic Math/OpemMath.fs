@@ -31,8 +31,6 @@ type CDGroupMember = {CDComment:string;
 
 type CDSignature = {Name:string; Signature:XmlProvider<"https://www.openmath.org/sts/arith1.sts">.Omobj}
 
-
-
 module GET = 
         
     let cD ocd = let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")

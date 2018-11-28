@@ -13,11 +13,16 @@ Abs.defenition
 Function.Argument .defenition
 let ocd = "set1"
 
+And.defenition
+Abs.defenition
+Function.Argument .defenition
+let ocd = "set1"
+
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
 
 printfn "%O" d
 
-printfn "%O" d
+
 
 let ooo = GET.cD "setname1"
 ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
