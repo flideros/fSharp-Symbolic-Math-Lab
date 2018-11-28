@@ -1,5 +1,7 @@
 ﻿namespace Math.Pure.Quantity
 
+open OpenMath
+
 type Fraction = 
     {numerator:System.Numerics.BigInteger; denominator:System.Numerics.BigInteger}
     with
@@ -14,7 +16,7 @@ type Fraction =
         | true -> this.numerator / this.denominator
         | false -> (this.numerator / this.denominator) - 1I   
 
-    member this.definition = (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "nums1") "rational")
+    member this.definition = (GET.definitionEntry (GET.definitions "nums1") "rational")
     
     member this.Ceiling = 
         match this.numerator > 0I with
