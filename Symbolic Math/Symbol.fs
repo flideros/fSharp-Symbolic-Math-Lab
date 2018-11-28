@@ -42,6 +42,7 @@ type Constant =
     | Attribution
     | Binder
     | NumericalValue
+    
     with
     member this.definition =         
         match this with 
@@ -101,6 +102,7 @@ type Constant =
         | Attribution -> GET.definitionEntry (GET.definitions "sts") "attribution"
         | Binder -> GET.definitionEntry (GET.definitions "sts") "binder"
         | NumericalValue -> GET.definitionEntry (GET.definitions "sts") "NumericalValue"
+
                    
     member this.symbol =         
         match this with         
@@ -182,3 +184,8 @@ type Result<'T> =
                 | Pass t -> Some t
                 | Fail -> None
         v.Value
+
+
+
+
+    

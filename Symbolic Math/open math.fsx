@@ -8,6 +8,10 @@ open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
 
+And.defenition
+Abs.defenition
+Function.Argument .defenition
+let ocd = "set1"
 
 And.defenition
 Abs.defenition
@@ -23,7 +27,8 @@ printfn "%O" d
 let ooo = GET.cD "setname1"
 ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
 
-
+let ooo = GET.cD "setname1"
+ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
 
 let h = GET.cD "set1"
 let hh = h.CdDefinitions |> Array.collect (fun x -> [|x.Name,x.Role|])

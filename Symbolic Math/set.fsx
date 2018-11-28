@@ -7,8 +7,10 @@ open FSharp.Data
 open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
+
 open Math.Foundations.Logic
 
+RealNumbers.definition
 
 Set.MuliIntersection.definition
 

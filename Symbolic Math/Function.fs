@@ -495,7 +495,6 @@ type Function =
         | Xnor -> (GET.definitionEntry (GET.definitions "logic1") "xnor").Value.Name
         | Xor -> (GET.definitionEntry (GET.definitions "logic1") "xor").Value.Name
         | _ -> ""  
-
  
 module Function =
     
