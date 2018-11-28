@@ -1,6 +1,7 @@
 ﻿namespace Math.Pure.Objects
 
 type Function = 
+
     | Abs // Implemented
     | And
     | ApplyToList
@@ -60,8 +61,8 @@ type Function =
     | MultiIn
     | Int
     | IntegerInterval
-    | Intersect
-    | MultiIntersect
+    | Intersect // Implemented
+    | MultiIntersect // Implemented
     | Interval
     | IntervalCC
     | IntervalCO
@@ -136,7 +137,7 @@ type Function =
     | Sech
     | Set
     | MultiSetdiff
-    | Setdiff
+    | Setdiff // Implemented
     | Sin // Implemented
     | Sinh
     | MultiSize
@@ -152,8 +153,8 @@ type Function =
     | Transpose
     | Trunc
     | UnaryMinus
-    | MultiUnion
-    | Union
+    | MultiUnion // Implemented
+    | Union // Implemented
     | DataVariance
     | Variance
     | Vector
@@ -165,7 +166,7 @@ type Function =
     | Derivative // Implemented
     
     with
-    member this.defenition =
+    member this.definition =
         match this with
         | Abs -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "arith1") "abs"
         | And -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "logic1") "and"
@@ -492,4 +493,3 @@ type Function =
         | Xnor -> (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "logic1") "xnor").Value.Name
         | Xor -> (OpenMath.GET.definitionEntry (OpenMath.GET.definitions "logic1") "xor").Value.Name
         | _ -> ""  
-

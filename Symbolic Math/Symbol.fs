@@ -169,7 +169,7 @@ type Symbol =
     member this.definition = 
         match this with
         | Constant _ -> ConstantType.definition
-        | Variable _ -> OpenMath.GET.definitionEntry (OpenMath.GET.definitions "prog1") "local_var"
+        | Variable _ -> None //OpenMath.GET.definitionEntry (OpenMath.GET.definitions "prog1") "local_var"
         | Inconsistent -> Error.definition
 
 
@@ -182,8 +182,3 @@ type Result<'T> =
                 | Pass t -> Some t
                 | Fail -> None
         v.Value
-
-
-
-
-    
