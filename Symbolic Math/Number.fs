@@ -1,9 +1,10 @@
 ﻿namespace Math.Pure.Quantity
 
-open OpenMath
+open Math.Pure.Objects
+open System.Numerics
 
 type Fraction = 
-    {numerator:System.Numerics.BigInteger; denominator:System.Numerics.BigInteger}
+    {numerator: BigInteger; denominator: BigInteger}
     with
     member this.compareTo that = 
         match (this.numerator*that.denominator) > (this.denominator*that.numerator) with
@@ -20,30 +21,47 @@ type Fraction =
     
     member this.Ceiling = 
         match this.numerator > 0I with
-        | true -> match snd (System.Numerics.BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
+        | true -> match snd (BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
                   | true -> (this.numerator / this.denominator) + 1I
                   | false -> this.numerator / this.denominator
-        | false -> match snd (System.Numerics.BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
+        | false -> match snd (BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
                    | true -> (this.numerator / this.denominator) 
                    | false -> (this.numerator / this.denominator) - 1I
 
     static member Zero = {numerator = 0I; denominator = 1I}
+    
+    static member definition = FractionType.definition
+    static member floorDefinition = Floor.definition
+    static member ceilingDefinition = Ceiling.definition
+    static member zeroDefinition = Zero.definition
 
 
 [<StructuralEquality;NoComparison>]
 type NumberType =
-    | Complex of System.Numerics.Complex
+    | Complex of Complex
     | Rational of Fraction 
-    | Integer of System.Numerics.BigInteger 
+    | Integer of BigInteger 
     | Real of float
     | PositiveInfinity
     | NegativeInfinity
     | ComplexInfinity
     | Undefined
 
+    with
+    member this.definition = 
+        match this with
+        | Complex c -> ComplexCartesianType.definition
+        | Rational r -> RationalType.definition
+        | Integer i -> IntegerType.definition
+        | Real r -> RealType.definition
+        | PositiveInfinity -> Infinity.definition
+        | NegativeInfinity -> Infinity.definition
+        | ComplexInfinity -> Infinity.definition
+        | Undefined -> None
+
 module Number =
 
-    let rec hcf x y = System.Numerics.BigInteger.GreatestCommonDivisor (x, y)
+    let rec hcf x y = BigInteger.GreatestCommonDivisor (x, y)
 
     let compare x y =
         match x,y with
@@ -78,7 +96,7 @@ module Number =
     let abs x = 
         match x with
         | Integer x -> Integer (abs x)
-        | Complex x -> Real (System.Numerics.Complex.Abs x)
+        | Complex x -> Real (Complex.Abs x)
         | Rational x -> Rational {numerator = abs x.numerator; denominator = abs x.denominator}
         | Real x -> Real (abs x)
         | PositiveInfinity -> PositiveInfinity
@@ -197,11 +215,11 @@ type NumberType with
         | Complex x, Complex y -> Complex (x ** y) 
         | Integer x, Integer y when y >= 0I-> Integer (x ** int y)
         | Integer x, Integer y when y < 0I-> 
-            Rational {numerator = 1I * System.Numerics.BigInteger x.Sign; denominator = ((abs x) ** int (abs y))}
+            Rational {numerator = 1I * BigInteger x.Sign; denominator = ((abs x) ** int (abs y))}
         | Rational r, Integer i when i >= 0I -> 
             Rational {numerator = r.numerator ** int i; denominator = r.denominator ** int i}
         | Rational r, Integer i when i < 0I -> 
-            Rational {numerator = ((System.Numerics.BigInteger r.numerator.Sign) * r.denominator) ** 
+            Rational {numerator = ((BigInteger r.numerator.Sign) * r.denominator) ** 
                                   int (abs i); denominator = (abs r.numerator) ** int (abs i)}
         | PositiveInfinity, PositiveInfinity -> PositiveInfinity
         | NegativeInfinity, NegativeInfinity -> NegativeInfinity
@@ -216,5 +234,3 @@ type NumberType with
             | Integer x when x < 0I -> n * factorial (-n + -(Integer 1I))
             | _ -> Undefined
         factorial x
-
-

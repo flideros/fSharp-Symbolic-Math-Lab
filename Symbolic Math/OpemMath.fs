@@ -31,6 +31,7 @@ type CDGroupMember = {CDComment:string;
 
 type CDSignature = {Name:string; Signature:XmlProvider<"https://www.openmath.org/sts/arith1.sts">.Omobj}
 
+[<RequireQualifiedAccess>]
 module GET = 
         
     let cD ocd = let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
@@ -60,3 +61,8 @@ module GET =
 
     let cDSignature sts = let d = "http://www.openmath.org/sts/" + sts + ".sts"
                           OpenMathCDSignature.Load(d)
+
+[<RequireQualifiedAccess>]
+module FROM =
+
+    let cD name = GET.definitions name

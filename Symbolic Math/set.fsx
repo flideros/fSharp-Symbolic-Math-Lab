@@ -7,15 +7,18 @@ open FSharp.Data
 open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
+open Math.Foundations.Logic
+open Math.Pure.Quantity
 
 open Math.Foundations.Logic
 
 RealNumbers.definition
 
+PositiveInfinity.definition
+
 Set.MuliIntersection.definition
 
 Set.Union.definition
-
 
 let seqInfinite = Seq.initInfinite (fun index ->
     let n = float ( index + 1 )

@@ -13,7 +13,7 @@ module Set =
     
     // Content Dictionaries
 
-    let private _omSet = GET.definitions "set1"    
+    let private _omSet = FROM.cD "set1"    
 
     // Definition    
     let definition = GET.definitionEntry _omSet "set"
@@ -95,7 +95,6 @@ module Set =
             |> Seq.distinct |> List.ofSeq
 
         // Definition
-
         let definition = Setdiff.definition
 
 [<RequireQualifiedAccess>]
