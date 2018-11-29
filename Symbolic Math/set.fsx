@@ -8,7 +8,11 @@ open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
 open Math.Foundations.Logic
+open Math.Pure.Quantity
 
+
+
+PositiveInfinity.definition
 
 Set.MuliIntersection.definition
 

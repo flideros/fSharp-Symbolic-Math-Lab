@@ -4,11 +4,12 @@ open Math.Pure.Objects
 open Math.Pure.Quantity
 open Math.Pure.Structure
 open Math.Pure.Structure.Polynomial
+open Math.Pure.Structure.ExpressionStructure
 
 module Calculus =
 
     module Differential =
-        open Math.Pure.Structure.ExpressionStructure
+        
 
         let rec derivativeOf u x = 
             match u = x with
