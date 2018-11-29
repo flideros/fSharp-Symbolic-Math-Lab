@@ -171,6 +171,7 @@ type Function =
     with
     member this.definition =
         match this with
+
         | Abs -> GET.definitionEntry (FROM.cD "arith1") "abs"
         | And -> GET.definitionEntry (FROM.cD "logic1") "and"
         | ApplyToList-> GET.definitionEntry (FROM.cD "fns2") "apply_to_list"

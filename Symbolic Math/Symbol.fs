@@ -105,6 +105,7 @@ type Constant =
     member this.symbol =         
         match this with         
         // nums1
+
         | E -> (GET.definitionEntry (FROM.cD "nums1") "e").Value.Name
         | I -> (GET.definitionEntry (FROM.cD "nums1") "i").Value.Name
         | Pi -> (GET.definitionEntry (FROM.cD "nums1") "pi").Value.Name
@@ -172,7 +173,6 @@ type Symbol =
         | Variable _ -> None //GET.definitionEntry (FROM.cD "prog1") "local_var"
         | Inconsistent -> Error.definition
 
-
 type Result<'T> =
     | Pass of 'T
     | Fail
@@ -182,3 +182,8 @@ type Result<'T> =
                 | Pass t -> Some t
                 | Fail -> None
         v.Value
+
+
+
+
+    

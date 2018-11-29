@@ -17,6 +17,8 @@ type Fraction =
         | true -> this.numerator / this.denominator
         | false -> (this.numerator / this.denominator) - 1I   
 
+    member this.definition = (GET.definitionEntry (GET.definitions "nums1") "rational")
+    
     member this.Ceiling = 
         match this.numerator > 0I with
         | true -> match snd (BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
@@ -32,6 +34,7 @@ type Fraction =
     static member floorDefinition = Floor.definition
     static member ceilingDefinition = Ceiling.definition
     static member zeroDefinition = Zero.definition
+
 
 [<StructuralEquality;NoComparison>]
 type NumberType =
