@@ -1,4 +1,4 @@
-﻿namespace Math.Pure.Objects
+namespace Math.Pure.Objects
 
 open OpenMath
 
@@ -332,7 +332,6 @@ type Function =
         | Xnor -> GET.definitionEntry "xnor" (FROM.cD "logic1")
         | Xor -> GET.definitionEntry "xor" (FROM.cD "logic1")
         | FractionType -> GET.definitionEntry "rational)" (FROM.cD "nums1")
-
         | _ -> None
 
     member this.symbol =

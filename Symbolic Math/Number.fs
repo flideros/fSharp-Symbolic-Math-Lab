@@ -1,4 +1,4 @@
-﻿namespace Math.Pure.Quantity
+namespace Math.Pure.Quantity
 
 open Math.Pure.Objects
 open System.Numerics
@@ -18,10 +18,9 @@ type Fraction =
     member this.Floor = 
         match this.numerator > 0I with
         | true -> this.numerator / this.denominator
-        | false -> (this.numerator / this.denominator) - 1I   
+        | false -> (this.numerator / this.denominator) - 1I
     static member floorDefinition = Floor.definition
         
-    
     member this.Ceiling = 
         match this.numerator > 0I with
         | true -> match snd (BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with

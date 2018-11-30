@@ -1,4 +1,4 @@
-﻿namespace Math.Pure.Objects
+namespace Math.Pure.Objects
 
 open OpenMath
 
@@ -46,6 +46,7 @@ type Constant =
     member this.definition =         
         match this with 
         //nums1
+
         | E -> GET.definitionEntry "e" (FROM.cD "nums1")
         | I -> GET.definitionEntry "i" (FROM.cD "nums1")
         | Pi -> GET.definitionEntry "pi" (FROM.cD "nums1")
@@ -161,9 +162,6 @@ type Constant =
         | Attribution -> @"<csymbol cd=""sts"">attribution</csymbol>"
         | Binder -> @"<csymbol cd=""sts"">binder</csymbol>"
         | NumericalValue -> @"<csymbol cd=""sts"">NumericalValue</csymbol>"
-
-
-
 
 type Symbol = 
     | Constant of Constant

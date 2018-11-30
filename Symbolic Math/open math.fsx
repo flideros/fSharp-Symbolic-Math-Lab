@@ -1,4 +1,4 @@
-﻿#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
+#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r @"System.Xml.Linq.dll"
 #r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\bin\Debug\Symbolic_Math.dll"
 #r @"FSharp.Core"
@@ -8,6 +8,10 @@ open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
 
+And.defenition
+Abs.defenition
+Function.Argument .defenition
+let ocd = "set1"
 
 And.defenition
 Abs.defenition
@@ -22,8 +26,6 @@ printfn "%O" d
 
 let ooo = GET.cD "setname1"
 ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
-
-
 
 let h = GET.cD "set1"
 let hh = h.CdDefinitions |> Array.collect (fun x -> [|x.Name,x.Role|])
