@@ -10,7 +10,7 @@ open Math.Pure.Objects
 open Math.Foundations.Logic
 open Math.Pure.Quantity
 
-
+E.symbol
 
 PositiveInfinity.definition
 

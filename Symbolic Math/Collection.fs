@@ -12,10 +12,11 @@ module Set =
     //type Set<'T> = F# Collection Type Set
     
     // Content Dictionaries
+
     let private _omSet = FROM.cD "set1"    
 
     // Definition    
-    let definition = GET.definitionEntry _omSet "set"
+    let definition = GET.definitionEntry "set" _omSet
 
     module Size =
 

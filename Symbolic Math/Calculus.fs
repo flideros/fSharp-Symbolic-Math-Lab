@@ -8,7 +8,7 @@ open Math.Pure.Structure.ExpressionStructure
 
 module Calculus =
 
-    module Differential =
+    module Differential = 
         
 
         let rec derivativeOf u x = 
