@@ -1,4 +1,4 @@
-﻿namespace Math.Pure.Objects
+namespace Math.Pure.Objects
 
 open OpenMath
 
@@ -46,121 +46,122 @@ type Constant =
     member this.definition =         
         match this with 
         //nums1
-        | E -> GET.definitionEntry (FROM.cD "nums1") "e"
-        | I -> GET.definitionEntry (FROM.cD "nums1") "i"
-        | Pi -> GET.definitionEntry (FROM.cD "nums1") "pi"
-        | Gamma -> GET.definitionEntry (FROM.cD "nums1") "gamma"
-        | Infinity -> GET.definitionEntry (FROM.cD "nums1") "infinity"
-        | NaN -> GET.definitionEntry (FROM.cD "nums1") "NaN"
-        
-        // setname1
-        | RealNumbers -> GET.definitionEntry (FROM.cD "setname1") "R"
-        | NaturalNumbers -> GET.definitionEntry (FROM.cD "setname1") "N"
-        | RationalNumbers -> GET.definitionEntry (FROM.cD "setname1") "Q"
-        | IntegralNumbers -> GET.definitionEntry (FROM.cD "setname1") "Z"
-        | ComplexNumbers -> GET.definitionEntry (FROM.cD "setname1") "C"
-        | PositivePrimes -> GET.definitionEntry (FROM.cD "setname1") "P"
-        
-        // set1
-        | EmptySet -> GET.definitionEntry (FROM.cD "set1") "emptyset"
-        
-        // alg1
-        | Zero -> GET.definitionEntry (FROM.cD "alg1") "zero"
-        | One -> GET.definitionEntry (FROM.cD "alg1") "one"
-        
-        // limit1
-        | Null -> GET.definitionEntry (FROM.cD "limit1") "null"
-        | BothSides -> GET.definitionEntry (FROM.cD "limit1") "both_sides"
-        | Above -> GET.definitionEntry (FROM.cD "limit1") "above"
-        | Below -> GET.definitionEntry (FROM.cD "limit1") "below"
-        
-        // logic1
-        | False -> GET.definitionEntry (FROM.cD "logic1") "false"
-        | True -> GET.definitionEntry (FROM.cD "logic1") "true"
-        
-        // mathmltypes
-        | ComplexCartesianType -> GET.definitionEntry (FROM.cD "mathmltypes") "complex_cartesian_type"
-        | ComplexPolarType -> GET.definitionEntry (FROM.cD "mathmltypes") "complex_polar_type"
-        | FnType -> GET.definitionEntry (FROM.cD "mathmltypes") "fn_type"
-        | RationalType -> GET.definitionEntry (FROM.cD "mathmltypes") "rational_type"
-        | SetType -> GET.definitionEntry (FROM.cD "mathmltypes") "set_type"
-        | VectorType -> GET.definitionEntry (FROM.cD "mathmltypes") "vector_type"
-        | IntegerType -> GET.definitionEntry (FROM.cD "mathmltypes") "integer_type"
-        | ConstantType -> GET.definitionEntry (FROM.cD "mathmltypes") "constant_type"
-        | ListType -> GET.definitionEntry (FROM.cD "mathmltypes") "list_type"
-        | MatrixType -> GET.definitionEntry (FROM.cD "mathmltypes") "matrix_type"
-        | RealType -> GET.definitionEntry (FROM.cD "mathmltypes") "real_type"
-        
+
+        | E -> GET.definitionEntry "e" (FROM.cD "nums1")
+        | I -> GET.definitionEntry "i" (FROM.cD "nums1")
+        | Pi -> GET.definitionEntry "pi" (FROM.cD "nums1")
+        | Gamma -> GET.definitionEntry "gamma" (FROM.cD "nums1")
+        | Infinity -> GET.definitionEntry "infinity" (FROM.cD "nums1")
+        | NaN -> GET.definitionEntry "NaN" (FROM.cD "nums1")
+
+        //setname1
+        | RealNumbers -> GET.definitionEntry "R" (FROM.cD "setname1")
+        | NaturalNumbers -> GET.definitionEntry "N" (FROM.cD "setname1")
+        | RationalNumbers -> GET.definitionEntry "Q" (FROM.cD "setname1")
+        | IntegralNumbers -> GET.definitionEntry "Z" (FROM.cD "setname1")
+        | ComplexNumbers -> GET.definitionEntry "C" (FROM.cD "setname1")
+        | PositivePrimes -> GET.definitionEntry "P" (FROM.cD "setname1")
+
+        //set1
+        | EmptySet -> GET.definitionEntry "emptyset" (FROM.cD "set1")
+
+        //alg1
+        | Zero -> GET.definitionEntry "zero" (FROM.cD "alg1")
+        | One -> GET.definitionEntry "one" (FROM.cD "alg1")
+
+        //limit1
+        | Null -> GET.definitionEntry "null" (FROM.cD "limit1")
+        | BothSides -> GET.definitionEntry "both_sides" (FROM.cD "limit1")
+        | Above -> GET.definitionEntry "above" (FROM.cD "limit1")
+        | Below -> GET.definitionEntry "below" (FROM.cD "limit1")
+
+        //logic1
+        | False -> GET.definitionEntry "False" (FROM.cD "logic1")
+        | True -> GET.definitionEntry "True" (FROM.cD "logic1")
+
+        //mathmltypes
+        | ComplexCartesianType -> GET.definitionEntry "complex_cartesian_type" (FROM.cD "mathmltypes")
+        | ComplexPolarType -> GET.definitionEntry "complex_polar_type" (FROM.cD "mathmltypes")
+        | FnType -> GET.definitionEntry "fn_type" (FROM.cD "mathmltypes")
+        | RationalType -> GET.definitionEntry "rational_type" (FROM.cD "mathmltypes")
+        | SetType -> GET.definitionEntry "set_type" (FROM.cD "mathmltypes")
+        | VectorType -> GET.definitionEntry "vector_type" (FROM.cD "mathmltypes")
+        | IntegerType -> GET.definitionEntry "integer_type" (FROM.cD "mathmltypes")
+        | ConstantType -> GET.definitionEntry "constant_type" (FROM.cD "mathmltypes")
+        | ListType -> GET.definitionEntry "list_type" (FROM.cD "mathmltypes")
+        | MatrixType -> GET.definitionEntry "matrix_type" (FROM.cD "mathmltypes")
+        | RealType -> GET.definitionEntry "real_type" (FROM.cD "mathmltypes")
+
         //multiset1
-        | EmptyMultiSet -> GET.definitionEntry (FROM.cD "multiset1") "emptyset"
-        
-        // sts
-        | Object -> GET.definitionEntry (FROM.cD "sts") "Object"
-        | SetNumericalValue -> GET.definitionEntry (FROM.cD "sts") "SetNumericalValue"
-        | Error -> GET.definitionEntry (FROM.cD "sts") "error"
-        | Attribution -> GET.definitionEntry (FROM.cD "sts") "attribution"
-        | Binder -> GET.definitionEntry (FROM.cD "sts") "binder"
-        | NumericalValue -> GET.definitionEntry (FROM.cD "sts") "NumericalValue"
+        | EmptyMultiSet -> GET.definitionEntry "emptyset" (FROM.cD "multiset1")
+
+        //sts
+        | Object -> GET.definitionEntry "Object" (FROM.cD "sts")
+        | SetNumericalValue -> GET.definitionEntry "SetNumericalValue" (FROM.cD "sts")
+        | Error -> GET.definitionEntry "error" (FROM.cD "sts")
+        | Attribution -> GET.definitionEntry "attribution" (FROM.cD "sts")
+        | Binder -> GET.definitionEntry "binder" (FROM.cD "sts")
+        | NumericalValue -> GET.definitionEntry "NumericalValue" (FROM.cD "sts")
+
                    
     member this.symbol =         
         match this with         
-        // nums1
+        //nums1
+        | E -> @"<csymbol cd=""nums1"">e</csymbol>"
+        | I -> @"<csymbol cd=""nums1"">i</csymbol>"
+        | Pi -> @"<csymbol cd=""nums1"">pi</csymbol>"
+        | Gamma -> @"<csymbol cd=""nums1"">gamma</csymbol>"
+        | Infinity -> @"<csymbol cd=""nums1"">infinity</csymbol>"
+        | NaN -> @"<csymbol cd=""nums1"">NaN</csymbol>"
 
-        | E -> (GET.definitionEntry (FROM.cD "nums1") "e").Value.Name
-        | I -> (GET.definitionEntry (FROM.cD "nums1") "i").Value.Name
-        | Pi -> (GET.definitionEntry (FROM.cD "nums1") "pi").Value.Name
-        | Gamma -> (GET.definitionEntry (FROM.cD "nums1") "gamma").Value.Name
-        | Infinity -> (GET.definitionEntry (FROM.cD "nums1") "infinity").Value.Name
-        | NaN -> (GET.definitionEntry (FROM.cD "nums1") "NaN").Value.Name
-        
-        // setname1
-        | RealNumbers -> (GET.definitionEntry (FROM.cD "setname1") "R").Value.Name
-        | NaturalNumbers -> (GET.definitionEntry (FROM.cD "setname1") "N").Value.Name
-        | RationalNumbers -> (GET.definitionEntry (FROM.cD "setname1") "Q").Value.Name
-        | IntegralNumbers -> (GET.definitionEntry (FROM.cD "setname1") "Z").Value.Name
-        | ComplexNumbers -> (GET.definitionEntry (FROM.cD "setname1") "C").Value.Name
-        | PositivePrimes -> (GET.definitionEntry (FROM.cD "setname1") "P").Value.Name
-        
-        // set
-        | EmptySet -> (GET.definitionEntry (FROM.cD "set1") "emptyset").Value.Name
-        
-        // alg1
-        | Zero -> (GET.definitionEntry (FROM.cD "alg1") "zero").Value.Name
-        | One -> (GET.definitionEntry (FROM.cD "alg1") "one").Value.Name
-        
-        // limit1
-        | Null -> (GET.definitionEntry (FROM.cD "limit1") "null").Value.Name
-        | BothSides -> (GET.definitionEntry (FROM.cD "limit1") "both_sides").Value.Name
-        | Above -> (GET.definitionEntry (FROM.cD "limit1") "above").Value.Name
-        | Below -> (GET.definitionEntry (FROM.cD "limit1") "below").Value.Name
-        
-        // logical1
-        | False -> (GET.definitionEntry (FROM.cD "logic1") "false").Value.Name
-        | True -> (GET.definitionEntry (FROM.cD "logic1") "true").Value.Name
-        
-        // mathmltypes
-        | ComplexCartesianType -> (GET.definitionEntry (FROM.cD "mathmltypes") "complex_cartesian_type").Value.Name
-        | ComplexPolarType -> (GET.definitionEntry (FROM.cD "mathmltypes") "complex_polar_type").Value.Name
-        | FnType -> (GET.definitionEntry (FROM.cD "mathmltypes") "fn_type").Value.Name
-        | RationalType -> (GET.definitionEntry (FROM.cD "mathmltypes") "rational_type").Value.Name
-        | SetType -> (GET.definitionEntry (FROM.cD "mathmltypes") "set_type").Value.Name
-        | VectorType -> (GET.definitionEntry (FROM.cD "mathmltypes") "vector_type").Value.Name
-        | IntegerType -> (GET.definitionEntry (FROM.cD "mathmltypes") "integer_type").Value.Name
-        | ConstantType -> (GET.definitionEntry (FROM.cD "mathmltypes") "constant_type").Value.Name
-        | ListType -> (GET.definitionEntry (FROM.cD "mathmltypes") "list_type").Value.Name
-        | MatrixType -> (GET.definitionEntry (FROM.cD "mathmltypes") "matrix_type").Value.Name
-        | RealType -> (GET.definitionEntry (FROM.cD "mathmltypes") "real_type").Value.Name
-        
-        // multiset1
-        | EmptyMultiSet -> (GET.definitionEntry (FROM.cD "multiset1") "emptyset").Value.Name
-        
-        // sts
-        | Object -> (GET.definitionEntry (FROM.cD "sts") "Object").Value.Name
-        | SetNumericalValue -> (GET.definitionEntry (FROM.cD "sts") "SetNumericalValue").Value.Name
-        | Error -> (GET.definitionEntry (FROM.cD "sts") "error").Value.Name
-        | Attribution -> (GET.definitionEntry (FROM.cD "sts") "attribution").Value.Name
-        | Binder -> (GET.definitionEntry (FROM.cD "sts") "binder").Value.Name
-        | NumericalValue -> (GET.definitionEntry (FROM.cD "sts") "NumericalValue").Value.Name
+        //setname1
+        | RealNumbers -> @"<csymbol cd=""setname1"">R</csymbol>"
+        | NaturalNumbers -> @"<csymbol cd=""setname1"">N</csymbol>"
+        | RationalNumbers -> @"<csymbol cd=""setname1"">Q</csymbol>"
+        | IntegralNumbers -> @"<csymbol cd=""setname1"">Z</csymbol>"
+        | ComplexNumbers -> @"<csymbol cd=""setname1"">C</csymbol>"
+        | PositivePrimes -> @"<csymbol cd=""setname1"">P</csymbol>"
+
+        //set
+        | EmptySet -> @"<mo>&#x2205;</mo>"
+
+        //alg1
+        | Zero -> @"<csymbol cd=""alg1"">zero</csymbol>"
+        | One -> @"<csymbol cd=""alg1"">one</csymbol>"
+
+        //limit1
+        | Null -> @"<csymbol cd=""limit1"">null</csymbol>"
+        | BothSides -> @"<csymbol cd=""limit1"">both_sides</csymbol>"
+        | Above -> @"<csymbol cd=""limit1"">above</csymbol>"
+        | Below -> @"<csymbol cd=""limit1"">below</csymbol>"
+
+        //logical1
+        | False -> @"<csymbol cd=""logic1"">FALSE</csymbol>"
+        | True -> @"<csymbol cd=""logic1"">TRUE</csymbol>"
+
+        //mathmltypes
+        | ComplexCartesianType -> @"<csymbol cd=""mathmltypes"">complex_cartesian_type</csymbol>"
+        | ComplexPolarType -> @"<csymbol cd=""mathmltypes"">complex_polar_type</csymbol>"
+        | FnType -> @"<csymbol cd=""mathmltypes"">fn_type</csymbol>"
+        | RationalType -> @"<csymbol cd=""mathmltypes"">rational_type</csymbol>"
+        | SetType -> @"<csymbol cd=""mathmltypes"">set_type</csymbol>"
+        | VectorType -> @"<csymbol cd=""mathmltypes"">vector_type</csymbol>"
+        | IntegerType -> @"<csymbol cd=""mathmltypes"">integer_type</csymbol>"
+        | ConstantType -> @"<csymbol cd=""mathmltypes"">constant_type</csymbol>"
+        | ListType -> @"<csymbol cd=""mathmltypes"">list_type</csymbol>"
+        | MatrixType -> @"<csymbol cd=""mathmltypes"">matrix_type</csymbol>"
+        | RealType -> @"<csymbol cd=""mathmltypes"">real_type</csymbol>"
+
+        //multiset1
+        | EmptyMultiSet -> @"<csymbol cd=""multiset1"">emptyset</csymbol>"
+
+        //sts
+        | Object -> @"<csymbol cd=""sts"">Object</csymbol>"
+        | SetNumericalValue -> @"<csymbol cd=""sts"">SetNumericalValue</csymbol>"
+        | Error -> @"<csymbol cd=""sts"">error</csymbol>"
+        | Attribution -> @"<csymbol cd=""sts"">attribution</csymbol>"
+        | Binder -> @"<csymbol cd=""sts"">binder</csymbol>"
+        | NumericalValue -> @"<csymbol cd=""sts"">NumericalValue</csymbol>"
 
 type Symbol = 
     | Constant of Constant

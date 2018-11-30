@@ -53,7 +53,7 @@ module GET =
                                                     CMPs = entry.Cmps; 
                                                     FMPs = entry.Fmps});
 
-    let definitionEntry cd symbol = cd |> Array.tryFind (fun (r : CDDefinition) -> r.Name = symbol)
+    let definitionEntry symbol cd = cd |> Array.tryFind (fun (r : CDDefinition) -> r.Name = symbol)
  
     let cDGroup cdg = let d = "http://www.openmath.org/cdgroups/" + cdg + ".cdg"
                       OpenMathCDGroup.Load(d)

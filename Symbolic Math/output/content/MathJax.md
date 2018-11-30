@@ -1,7 +1,19 @@
 ﻿# MathJax
 
+  <br><br><br>
 
 
+
+
+<math xmlns='http://www.w3.org/1998/Math/MathML'>
+<mo>&#x2205;</mo>
+ </math>
+
+
+
+
+
+<br><br><br><br><br>
 
 $ \(     8 + 202x + 18x^2 + 7x^3 + x^4           \) $
 

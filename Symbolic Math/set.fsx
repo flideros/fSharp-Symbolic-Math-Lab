@@ -10,9 +10,7 @@ open Math.Pure.Objects
 open Math.Foundations.Logic
 open Math.Pure.Quantity
 
-open Math.Foundations.Logic
-
-RealNumbers.definition
+E.symbol
 
 PositiveInfinity.definition
 

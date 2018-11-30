@@ -16,7 +16,7 @@ module Set =
     let private _omSet = FROM.cD "set1"    
 
     // Definition    
-    let definition = GET.definitionEntry _omSet "set"
+    let definition = GET.definitionEntry "set" _omSet
 
     module Size =
 
