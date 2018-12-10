@@ -1,4 +1,6 @@
-﻿namespace Math.Pure.Objects
+namespace Math.Pure.Objects
+
+open OpenMath
 
 open OpenMath
 
@@ -101,7 +103,7 @@ type Constant =
         | Attribution -> GET.definitionEntry "attribution" (FROM.cD "sts")
         | Binder -> GET.definitionEntry "binder" (FROM.cD "sts")
         | NumericalValue -> GET.definitionEntry "NumericalValue" (FROM.cD "sts")
-                   
+
 type Symbol = 
     | Constant of Constant
     | Variable of string
