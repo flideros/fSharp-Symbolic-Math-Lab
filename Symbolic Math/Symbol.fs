@@ -2,6 +2,8 @@ namespace Math.Pure.Objects
 
 open OpenMath
 
+open OpenMath
+
 type Constant =
     | E
     | I
@@ -46,7 +48,6 @@ type Constant =
     member this.definition =         
         match this with 
         //nums1
-
         | E -> GET.definitionEntry "e" (FROM.cD "nums1")
         | I -> GET.definitionEntry "i" (FROM.cD "nums1")
         | Pi -> GET.definitionEntry "pi" (FROM.cD "nums1")
@@ -102,66 +103,6 @@ type Constant =
         | Attribution -> GET.definitionEntry "attribution" (FROM.cD "sts")
         | Binder -> GET.definitionEntry "binder" (FROM.cD "sts")
         | NumericalValue -> GET.definitionEntry "NumericalValue" (FROM.cD "sts")
-
-                   
-    member this.symbol =         
-        match this with         
-        //nums1
-        | E -> @"<csymbol cd=""nums1"">e</csymbol>"
-        | I -> @"<csymbol cd=""nums1"">i</csymbol>"
-        | Pi -> @"<csymbol cd=""nums1"">pi</csymbol>"
-        | Gamma -> @"<csymbol cd=""nums1"">gamma</csymbol>"
-        | Infinity -> @"<csymbol cd=""nums1"">infinity</csymbol>"
-        | NaN -> @"<csymbol cd=""nums1"">NaN</csymbol>"
-
-        //setname1
-        | RealNumbers -> @"<csymbol cd=""setname1"">R</csymbol>"
-        | NaturalNumbers -> @"<csymbol cd=""setname1"">N</csymbol>"
-        | RationalNumbers -> @"<csymbol cd=""setname1"">Q</csymbol>"
-        | IntegralNumbers -> @"<csymbol cd=""setname1"">Z</csymbol>"
-        | ComplexNumbers -> @"<csymbol cd=""setname1"">C</csymbol>"
-        | PositivePrimes -> @"<csymbol cd=""setname1"">P</csymbol>"
-
-        //set
-        | EmptySet -> @"<mo>&#x2205;</mo>"
-
-        //alg1
-        | Zero -> @"<csymbol cd=""alg1"">zero</csymbol>"
-        | One -> @"<csymbol cd=""alg1"">one</csymbol>"
-
-        //limit1
-        | Null -> @"<csymbol cd=""limit1"">null</csymbol>"
-        | BothSides -> @"<csymbol cd=""limit1"">both_sides</csymbol>"
-        | Above -> @"<csymbol cd=""limit1"">above</csymbol>"
-        | Below -> @"<csymbol cd=""limit1"">below</csymbol>"
-
-        //logical1
-        | False -> @"<csymbol cd=""logic1"">FALSE</csymbol>"
-        | True -> @"<csymbol cd=""logic1"">TRUE</csymbol>"
-
-        //mathmltypes
-        | ComplexCartesianType -> @"<csymbol cd=""mathmltypes"">complex_cartesian_type</csymbol>"
-        | ComplexPolarType -> @"<csymbol cd=""mathmltypes"">complex_polar_type</csymbol>"
-        | FnType -> @"<csymbol cd=""mathmltypes"">fn_type</csymbol>"
-        | RationalType -> @"<csymbol cd=""mathmltypes"">rational_type</csymbol>"
-        | SetType -> @"<csymbol cd=""mathmltypes"">set_type</csymbol>"
-        | VectorType -> @"<csymbol cd=""mathmltypes"">vector_type</csymbol>"
-        | IntegerType -> @"<csymbol cd=""mathmltypes"">integer_type</csymbol>"
-        | ConstantType -> @"<csymbol cd=""mathmltypes"">constant_type</csymbol>"
-        | ListType -> @"<csymbol cd=""mathmltypes"">list_type</csymbol>"
-        | MatrixType -> @"<csymbol cd=""mathmltypes"">matrix_type</csymbol>"
-        | RealType -> @"<csymbol cd=""mathmltypes"">real_type</csymbol>"
-
-        //multiset1
-        | EmptyMultiSet -> @"<csymbol cd=""multiset1"">emptyset</csymbol>"
-
-        //sts
-        | Object -> @"<csymbol cd=""sts"">Object</csymbol>"
-        | SetNumericalValue -> @"<csymbol cd=""sts"">SetNumericalValue</csymbol>"
-        | Error -> @"<csymbol cd=""sts"">error</csymbol>"
-        | Attribution -> @"<csymbol cd=""sts"">attribution</csymbol>"
-        | Binder -> @"<csymbol cd=""sts"">binder</csymbol>"
-        | NumericalValue -> @"<csymbol cd=""sts"">NumericalValue</csymbol>"
 
 type Symbol = 
     | Constant of Constant

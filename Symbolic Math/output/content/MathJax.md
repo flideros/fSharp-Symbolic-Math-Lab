@@ -5,12 +5,37 @@
 
 
 
-<math xmlns='http://www.w3.org/1998/Math/MathML'>
-<mo>&#x2205;</mo>
- </math>
+<math xmlns="http://www.w3.org/1998/Math/MathML" mathbackground="lightskyblue">
+ <bind><csymbol cd="quant1">forall</csymbol>
+  <bvar><ci>a</ci></bvar>
+  <apply><csymbol cd="relation1">eq</csymbol>
+   <apply><csymbol cd="arith1">plus</csymbol><ci>a</ci><csymbol cd="alg1">zero</csymbol></apply>
+   <ci>a</ci>
+  </apply>
+ </bind>
+</math>
 
 
 
+<br><br>
+
+<math>        
+  <mrow>
+    <mn> 1 </mn>
+    <mo> + </mo>
+    <mn> 1 </mn>
+  </mrow>
+<br> 
+  <mrow>
+    <mo> ( </mo>
+    <mrow>
+      <mi> x </mi>
+      <mo> , </mo>
+      <mi> y </mi>
+    </mrow>
+    <mo> ) </mo>
+  </mrow>   
+</math>
 
 
 <br><br><br><br><br>
