@@ -6,13 +6,10 @@
 
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" mathbackground="lightskyblue">
- <bind><csymbol cd="quant1">forall</csymbol>
-  <bvar><ci>a</ci></bvar>
-  <apply><csymbol cd="relation1">eq</csymbol>
-   <apply><csymbol cd="arith1">plus</csymbol><ci>a</ci><csymbol cd="alg1">zero</csymbol></apply>
-   <ci>a</ci>
-  </apply>
- </bind>
+<mtext>
+  Theorem
+  1:
+</mtext>
 </math>
 
 
@@ -20,21 +17,27 @@
 <br><br>
 
 <math>        
-  <mrow>
+<mrow>
+  <mmultiscripts>
+    <mi> F </mi>
     <mn> 1 </mn>
-    <mo> + </mo>
-    <mn> 1 </mn>
-  </mrow>
-<br> 
+    <none/>
+    <mprescripts/>
+    <mn> 0 </mn>
+    <none/>
+  </mmultiscripts>
+  <mo> &#x2061;<!--FUNCTION APPLICATION--> </mo>
   <mrow>
     <mo> ( </mo>
-    <mrow>
-      <mi> x </mi>
-      <mo> , </mo>
-      <mi> y </mi>
-    </mrow>
+    <mrow> 
+      <mo> ; </mo>
+      <mi> a </mi>
+      <mo> ; </mo>
+      <mi> z </mi>
+    </mrow> 
     <mo> ) </mo>
-  </mrow>   
+  </mrow>
+</mrow>   
 </math>
 
 

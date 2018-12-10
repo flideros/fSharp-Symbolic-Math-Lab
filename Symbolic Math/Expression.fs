@@ -655,7 +655,7 @@ module ExpressionFunction =
         | Number n -> Number (Number.floor n)
         | _ -> u
 
-[<RequireQualifiedAccess>]
+(*[<RequireQualifiedAccess>]
 module Print =
  
     let expression x = 
@@ -674,7 +674,7 @@ module Print =
             | NaryOp(op,aList), false -> sprintf "(%s%s)" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail)            
             | UnaryOp(op,x), _ -> sprintf "%s(%s)" op.symbol (getString x (treeLevel + 1))
             | _ -> sprintf ""  
-        getString x 0
+        getString x 0*)
 
 
 
