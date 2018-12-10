@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TypeExtensions.fs" />
+    <Compile Include="MathML.fs" />
     <Compile Include="OpemMath.fs" />
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
@@ -73,6 +74,7 @@
     <None Include="MainScript.fsx" />
     <None Include="fsLab.fsx" />
     <None Include="set.fsx" />
+    <None Include="MathML.fsx" />
     <None Include="open math.fsx" />
     <Content Include="packages.config" />
     <Content Include="Google.DataTable.Net.Wrapper.XML" />
