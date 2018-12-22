@@ -5,11 +5,13 @@
 
 open MathML
 
-let ggg = Num 5.0
+
+let ggg = Number 5.0
 let rrr = EM 5.0<em>
+let ttt = Attr.accent true 
 
 match rrr with
 | EM n -> n.ToString() + "em"
-| Num n -> n.ToString()
+| Number n -> n.ToString()
 
-
+let _s =  [ColumnAlign.Center; ColumnAlign.Left]
