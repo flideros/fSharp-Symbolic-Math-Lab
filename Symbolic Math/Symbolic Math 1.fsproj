@@ -61,8 +61,8 @@
     <Compile Include="OpemMath.fs" />
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
-    <Compile Include="Collection.fs" />
     <Compile Include="Number.fs" />
+    <Compile Include="Collection.fs" />
     <Compile Include="Expression.fs" />
     <Compile Include="Collection.fs" />
     <Compile Include="NumberTheory.fs" />
@@ -96,8 +96,7 @@
       <HintPath>..\packages\FSharp.Control.Reactive.4.1.0\lib\net46\FSharp.Control.Reactive.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Core">
-      <HintPath>..\packages\FSharp.Core.4.5.3\lib\net45\FSharp.Core.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\packages\FSharp.Core.4.5.4\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="FSharp.Data, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll</HintPath>
@@ -128,7 +127,7 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Suave">
       <HintPath>..\packages\Suave.2.5.3\lib\net461\Suave.dll</HintPath>

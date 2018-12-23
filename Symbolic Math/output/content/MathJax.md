@@ -16,27 +16,14 @@
 
 <br><br>
 
-<math>        
+<Math>        
 <mrow>
-  <mmultiscripts>
-    <mi> F </mi>
-    <mn> 1 </mn>
-    <none/>
-    <mprescripts/>
-    <mn> 0 </mn>
-    <none/>
-  </mmultiscripts>
+  <mi> f </mi>
   <mo> &#x2061;<!--FUNCTION APPLICATION--> </mo>
-  <mrow>
-    <mo> ( </mo>
-    <mrow> 
-      <mo> ; </mo>
-      <mi> a </mi>
-      <mo> ; </mo>
-      <mi> z </mi>
-    </mrow> 
-    <mo> ) </mo>
-  </mrow>
+  <mfenced Close="]">
+    <Mi> x </Mi>
+    <mi> y </mi>
+  </mfenced>
 </mrow>   
 </math>
 
