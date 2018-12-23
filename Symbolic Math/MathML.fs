@@ -1,4 +1,5 @@
-﻿namespace MathML
+namespace MathML
+
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -187,6 +188,3 @@ type Attribute<[<Measure>] 'u> =
 module Mrow =
     
     type G = string
-
-
- 
