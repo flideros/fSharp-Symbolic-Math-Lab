@@ -9,8 +9,8 @@
 [<Measure>] type pt /// points (1 point = 1/72 inch)
 [<Measure>] type pc /// picas (1 pica = 12 points)
 [<Measure>] type pct /// percentage of the default value
-[<Measure>] type boolean /// no measure
-[<Measure>] type text /// no measure
+//[<Measure>] type boolean /// no measure
+//[<Measure>] type text /// no measure
 
 type NamedSpace = 
     | VeryVeryThinMathSpace /// 1/18em
@@ -28,7 +28,7 @@ type NamedSpace =
     | NegativeVeryThickMathSpace /// -6/18em
     | NegativeVeryVeryThickMathSpace /// -7/18em
 
-type Length<[<Measure>] 'u> =    
+type Length = //<[<Measure>] 'u> =    
     | Number of float
     | EM of float<em>
     | EX of float<ex>
@@ -50,27 +50,27 @@ type LineBreakMultChar = string /// hex character code
 type LQuote = string /// character code
 type RQuote = string /// character code
 
-type ActionType = | Toggle | Statusline | Tooltip | Input | Highlight
+type ActionType = | Toggle | StatusLine | ToolTip | Input | Highlight
 type Align = | Left | Right | Top | Bottom | Center | Baseline | Axis
 type CharAlign = | Left | Right | Center
-type CharSpacing<[<Measure>] 'u> = Length of Length<'u> | Left | Right | Center
-type ColumnAlign = | Left | Right | Center
+type CharSpacing = Length of Length | Loose | Medium | Tight
+type _ColumnAlign = | Left | Right | Center
 type ColumnLines = | None | Solid | Dashed
-type ColumnWidth<[<Measure>] 'u> = | Length of Length<'u> | Auto | Fit
-type Crossout = | None | Updiagonalstrike | Downdiagonalstrike | Verticalstrike | Horizontalstrike
+type ColumnWidth = | Length of Length | Auto | Fit
+type Crossout = | None | UpDiagonalStrike | DownDiagonalStrike | VerticalStrike | HorizontalStrike
 type DenomAlign = | Left | Right | Center
-type Dir = | Ltr | Rt
+type _Dir = | Ltr | Rtl
 type Display = | Block | Inline
 type Edge = | Left | Right
 type Form = | Prefix | Infix | Postfix
 type Frame = | None | Solid | Dashed
-type GroupAlign = | Left | Center | Right | Decimalpoint
-type IndentAlignFirst = | Left | Center | Right | Auto | Id | Indentalign
-type IndentAlignLast = | Left | Center | Right | Auto | Id | Indentalign
+type GroupAlign = | Left | Center | Right | DecimalPoint
 type IndentAlign = | Left | Center | Right | Auto | Id
+type IndentAlignFirst = | Left | Center | Right | Auto | Id | IndentAlign
+type IndentAlignLast = | Left | Center | Right | Auto | Id | IndentAlign
 type InfixLineBreakStyle = | Before | After | Duplicate
-type LineBreak = | Auto | Newline | Nobreak | Goodbreak | Badbreak
-type LineBreakStyle = | Before | After | Duplicate | Infixlinebreakstyle
+type LineBreak = | Auto | NewLine | NoBreak | GoodBreak | BadBreak
+type LineBreakStyle = | Before | After | Duplicate | InfixLinebBreakStyle
 type Location = | W | NW | N | NE | E | SE | S | SW
 type LongDivStyle = | LeftTop | StackedRightRight | MediumStackedRightRight | ShortStackedRightRight | RightTop | LeftRight1  | LeftRight2 | RightRight | StackedLeftLeft | StackedLeftLineTop
 type MathVariant = | Normal | Bold | Italic | BoldItalic | DoubleStruck | BoldFraktur | Script | BoldScript | Fraktur | SansSerif | BoldSansSerif | SansSerifItalic | SansSerifBoldItalic | MonoSpace | Initial | Tailed | Looped | Stretched
@@ -79,11 +79,11 @@ type NumAlign = | Left | Right | Center
 type Overflow = | Linebreak | Scroll | Elide | Truncate | Scale
 type RowAlign = | Top | Bottom | Center | Baseline | Axis
 type RowLines = | None | Solid | Dashed
-type Side = | Left | Right | LeftOverlap | Rightoverlap
-type StackAlign = | Left | Center | Right | Decimalpoint
+type Side = | Left | Right | LeftOverlap | RightOerlap
+type StackAlign = | Left | Center | Right | DecimalPoint
 
-type Attribute<[<Measure>] 'u> =
-    private
+type MLAttribute = //<[<Measure>] 'u> =
+    //private
     | Accent of bool
     | AccentUnder of bool
     | ActionType of ActionType
@@ -91,25 +91,25 @@ type Attribute<[<Measure>] 'u> =
     | AlignmentScope of bool
     | Alt of Uri
     | AltImg of Uri
-    | AltImgHeight of Length<'u>
-    | AltImgValign of Length<'u>
-    | AltImgWidth of Length<'u>
+    | AltImgHeight of Length
+    | AltImgValign of Length
+    | AltImgWidth of Length
     | AltText of string // Alternate string
     | Bevelled of bool
     | CdGroup of Uri
     | CharAlign of CharAlign
-    | CharSpacing of Length<'u>
+    | CharSpacing of Length
     | Close of string //Specifies the closing delimiter.
-    | ColumnAlign of ColumnAlign
+    | ColumnAlign of _ColumnAlign
     | ColumnLines of ColumnLines
-    | ColumnSpacing of Length<'u>
+    | ColumnSpacing of Length
     | ColumnSpan of uint32
-    | ColumnWidth of Length<'u>
+    | ColumnWidth of Length
     | Crossout of Crossout
     | DecimalPoint of char
     | DenomAlign of DenomAlign
-    | Depth of Length<'u>
-    | Dir of Dir
+    | Depth of Length
+    | Dir of _Dir
     | Display of Display
     | DisplayStyle of bool
     | Edge of Edge
@@ -118,55 +118,54 @@ type Attribute<[<Measure>] 'u> =
     | Fence of bool
     | Form of Form
     | Frame of Frame
-    | FrameSpacing of Length<'u>*Length<'u>
+    | FrameSpacing of Length*Length
     | GroupAlign of GroupAlign
-    | Height of Length<'u>
+    | Height of Length
     | Href of Uri
     | Id of Id
     | IndentAlignFirst of IndentAlignFirst
     | IndentAlignLast of IndentAlignLast
     | IndentAlign of IndentAlign
-    | IndentShift of Length<'u>
-    | IndentShiftFirst of Length<'u>
-    | IndentShiftLast of Length<'u>
+    | IndentShift of Length
+    | IndentShiftFirst of Length
+    | IndentShiftLast of Length
     | IndentTarget of Idref
     | InfixLineBreakStyle of InfixLineBreakStyle
     | LargeOp of bool
-    | LeftOverhang of Length<'u>
-    | Length of uint32
+    | LeftOverhang of Length
     | LineBreak of LineBreak
     | LineBreakMultChar of LineBreakMultChar
     | LineBreakStyle of LineBreakStyle
-    | LineLeading of Length<'u>
-    | LineThickness of Length<'u>
+    | LineLeading of Length
+    | LineThickness of Length
     | Location of Location
     | LongDivStyle of LongDivStyle
     | LQuote of LQuote
-    | LSpace of Length<'u>
+    | LSpace of Length
     | MathBackground of Color
     | MathColor of Color
-    | MathSize of Length<'u>
+    | MathSize of Length
     | MathVariant of MathVariant
-    | MaxSize of Length<'u>
-    | MaxWidth of Length<'u>
-    | MinLabelSpacing of Length<'u>
-    | MinSize of Length<'u>
+    | MaxSize of Length
+    | MaxWidth of Length
+    | MinLabelSpacing of Length
+    | MinSize of Length
     | MovableLimits of bool
-    | MsLineThickness of Length<'u>
+    | MsLineThickness of Length
     | Notation of Notation
     | NumAlign of NumAlign
     | Open of string // Specifies the opening delimiter.
     | Overflow of Overflow
     | Position of int
-    | RightOverhang of Length<'u>
+    | RightOverhang of Length
     | RowAlign of RowAlign
     | RowLines of RowLines
-    | RowSpacing of Length<'u>
+    | RowSpacing of Length
     | RowSpan of uint32
     | RQuote of RQuote
-    | RSpace of Length<'u>
+    | RSpace of Length
     | ScriptLevel of char*uint32
-    | ScriptMinSize of Length<'u>
+    | ScriptMinSize of Length
     | ScriptSizeMultiplier of float
     | Selection of uint32
     | Separator of bool
@@ -176,17 +175,88 @@ type Attribute<[<Measure>] 'u> =
     | Src of Uri
     | StackAlign of StackAlign
     | Stretchy of bool
-    | SubScriptShift of Length<'u>
-    | SupScriptShift of Length<'u>
+    | SubScriptShift of Length
+    | SupScriptShift of Length
     | Symmetric of bool
-    | VAlign of Length<'u>
-    | VOffset of Length<'u>
-    | Width of Length<'u>
+    | VAlign of Length
+    | VOffset of Length
+    | Width of Length
     | Xmlns of Uri
 
-module Mrow =
+type TokenElement = | Mi | Mn | Mo | Mtext | Mspace | Ms | Mglyph
+type GeneralLayoutElement = | Mrow | Mfrac | Msqrt | Mroot | Mstyle | Merror | Mpadded | Mphantom | Mfenced | Menclose
+type ScriptElement = | Msub | Msup| Msubsup | Munde | Mover | Munderover | Mmultiscripts
+type TableElement = | Mtable | Mlabeledtr | Mtr | Mtd | Maligngroup | Malignmark
+type MathLayoutElement = | Mstack | Mlongdiv | Msgroup | Msrow | Mscarries  | Mscarry | Msline
+type EnliveningExpressionElement = | Maction
+
+type Element = | Token of TokenElement | General of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | Math of MathLayoutElement | Enlivening of EnliveningExpressionElement
+
+(*module Attribute = 
+
+    let accent d = match d with 
+                   | true -> Accent true 
+                   | false -> Accent false 
+                   /// Default 
+                   | _ -> Accent false 
     
-    type G = string
+    let dir d = match d with 
+                | "ltr" -> Dir Ltr
+                | "rtl" ->  Dir Rtl 
+                /// Default 
+                | _ -> Dir Ltr*)
+
+module Element =
+
+    let element (attr : MLAttribute list) (args : Element list) = (attr, args)
 
 
- 
+
+
+//module mi =
+//module mn =
+//module mo =
+//module mtext =
+//module mspace =
+//module ms =
+//module mglyph =
+
+//module mrow =
+//module mfrac =
+//module msqrt =
+//module mroot =
+//module mstyle =
+//module merror =
+//module mpadded =
+//module mphantom =
+//module mfenced =
+//module menclose =
+
+//module msub =
+//module msup =
+//module msubsup =
+//module munder =
+//module mover =
+//module munderover =
+//module mmultiscripts =
+
+//module mtable =
+//module mlabeledtr =
+//module mtr =
+//module mtd =
+//module maligngroup =
+//module malignmark =
+
+//module mstack =
+//module mlongdiv =
+//module msgroup =
+//module msrow =
+//module mscarries =
+//module mscarry =
+//module msline =
+
+//module maction =
+
+//module math =
+
+    

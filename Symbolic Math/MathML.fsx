@@ -8,10 +8,11 @@ open MathML
 
 let ggg = Number 5.0
 let rrr = EM 5.0<em>
-let ttt = Attr.accent true 
+let ttt =  Accent  true
 
 match rrr with
 | EM n -> n.ToString() + "em"
 | Number n -> n.ToString()
 
-let _s =  [ColumnAlign.Center; ColumnAlign.Left]
+let bb = [Accent true; AltImgHeight (EM 5.0<em>)]
+
