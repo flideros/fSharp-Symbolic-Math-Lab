@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -10,7 +10,7 @@
 [<Measure>] type pc /// picas (1 pica = 12 points)
 [<Measure>] type pct /// percentage of the default value
 
-type NamedSpace = 
+Type NamedSpace = 
     | VeryVeryThinMathSpace /// 1/18em
     | VeryThinMathSpace /// 2/18em
     | ThinMathSpace /// 3/18em
@@ -43,7 +43,6 @@ type Length =
 type Color = string
 type Idref = string
 type Uri = string
-
 type _Id = string
 type _LineBreakMultChar = string /// hex character code
 type _LQuote = string /// character code
