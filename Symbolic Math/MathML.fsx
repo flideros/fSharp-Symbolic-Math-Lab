@@ -14,5 +14,35 @@ match rrr with
 | EM n -> n.ToString() + "em"
 | Number n -> n.ToString()
 
-let bb = [Accent true; AltImgHeight (EM 5.0<em>)]
+let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+let altAttributes = [MathBackground "yellow"; Position 1; Xref "bbb";]
 
+let isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
+
+let scrub l = List.choose (fun elem ->
+    match elem with
+    | elem when isValidElementAttributeOf defaultAttributes elem -> Option.Some elem
+    | _ -> Option.None) l
+
+
+scrub altAttributes
+
+
+//Test
+isValidElementAttributeOf defaultAttributes (MathBackground "yellow")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rrr.GetType()
