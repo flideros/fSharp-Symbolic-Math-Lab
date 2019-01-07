@@ -5,6 +5,7 @@
 
 open MathML
 
+
 let ggg = Number 5.0
 let rrr = EM 5.0<em>
 let ttt =  Accent  true
@@ -45,3 +46,4 @@ isValidElementAttributeOf defaultAttributes (MathBackground "yellow")
 
 
 rrr.GetType()
+
