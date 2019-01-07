@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -9,7 +9,6 @@
 [<Measure>] type pt /// points (1 point = 1/72 inch)
 [<Measure>] type pc /// picas (1 pica = 12 points)
 [<Measure>] type pct /// percentage of the default value
-
 
 type NamedSpace = 
     | VeryVeryThinMathSpace /// 1/18em
@@ -241,6 +240,7 @@ module Element =
                                      MathSize (EM 1.0<em>);
                                      Dir Ltr;
                                      
+
                                      //The rest after I compared this to the MathML schema
                                      Accent false;
                                      AccentUnder false;
@@ -340,6 +340,7 @@ module Element =
             (elem, attr', args)
         
         | Token Mn ->
+
             let defaultAttributes =  
                                     [//2.1.6 Attributes Shared by all MathML Elements 
                                      Id "none"; 
