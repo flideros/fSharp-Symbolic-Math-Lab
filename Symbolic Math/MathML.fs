@@ -10,6 +10,7 @@
 [<Measure>] type pc /// picas (1 pica = 12 points)
 [<Measure>] type pct /// percentage of the default value
 
+
 type NamedSpace = 
     | VeryVeryThinMathSpace /// 1/18em
     | VeryThinMathSpace /// 2/18em
@@ -38,7 +39,7 @@ type Length =
     | PC of float<pc>
     | Pct of float<pct>
     | NamedLength of NamedSpace
-    | KeyWord of string
+    | KeyWord of obj
 
 type Color = string
 type Idref = string
@@ -51,7 +52,7 @@ type _RQuote = string /// character code
 type _ActionType = | Toggle | StatusLine | ToolTip | Input | Highlight
 type _Align = | Left | Right | Top | Bottom | Center | Baseline | Axis
 type _CharAlign = | Left | Right | Center
-type _CharSpacing = Length of Length | Loose | Medium | Tight
+type _CharSpacing = | Loose | Medium | Tight | Length of Length 
 type _ColumnAlign = | Left | Right | Center
 type _ColumnLines = | None | Solid | Dashed
 type _ColumnWidth = | Length of Length | Auto | Fit
@@ -131,6 +132,7 @@ type MathMLAttribute =
     | InfixLineBreakStyle of _LineBreakStyle
     | LargeOp of bool
     | LeftOverhang of Length
+    | Length of uint32
     | LineBreak of _LineBreak
     | LineBreakMultChar of _LineBreakMultChar
     | LineBreakStyle of _LineBreakStyle
@@ -175,7 +177,7 @@ type MathMLAttribute =
     | Stretchy of bool
     | Style of string //Associates style information with the element for use with [XSLT] and [CSS21].
     | SubScriptShift of Length
-    | SupScriptShift of Length
+    | SuperScriptShift of Length
     | Symmetric of bool
     | VAlign of Length
     | VOffset of Length
@@ -204,7 +206,8 @@ module Element =
         
         match elem with
         | Math ->                    //2.2 Top-Level <math> Element 
-            let defaultAttributes = [Display Inline;
+            let defaultAttributes = 
+                                    [Display Inline;
                                      MaxWidth (KeyWord "available width");
                                      Overflow Linebreak; 
                                      AltImg "none";                                      
@@ -238,116 +241,257 @@ module Element =
                                      MathSize (EM 1.0<em>);
                                      Dir Ltr;
                                      
-                                     (* TODO *
-                                        accent
-                                        accentunder
-                                        align
-                                        alignmentscope
-                                        bevelled
-                                        charalign
-                                        charspacing
-                                        close
-                                        columnalign
-                                        columnlines
-                                        columnspacing
-                                        columnspan
-                                        columnwidth
-                                        crossout
-                                        denomalign
-                                        depth
-                                        edge
-                                        equalcolumns
-                                        equalrows
-                                        fence
-                                        form
-                                        frame
-                                        framespacing
-                                        groupalign
-                                        height
-                                        indentalign
-                                        indentalignfirst
-                                        indentalignlast
-                                        indentshift
-                                        indentshiftfirst
-                                        indentshiftlast
-                                        indenttarget
-                                        largeop
-                                        leftoverhang
-                                        length
-                                        linebreak
-                                        linebreakmultchar
-                                        linebreakstyle
-                                        lineleading
-                                        linethickness
-                                        location
-                                        longdivstyle
-                                        lquote
-                                        lspace
-                                        maxsize
-                                        minlabelspacing
-                                        minsize
-                                        movablelimits
-                                        mslinethickness
-                                        notation
-                                        numalign
-                                        open
-                                        position
-                                        rightoverhang
-                                        rowalign
-                                        rowlines
-                                        rowspacing
-                                        rowspan
-                                        rquote
-                                        rspace
-                                        selection
-                                        separator
-                                        separators
-                                        shift
-                                        side
-                                        stackalign
-                                        stretchy
-                                        subscriptshift
-                                        superscriptshift
-                                        symmetric
-                                        valign
-                                        width
-                                     *)
-                                     ]
+                                     //The rest after I compared this to the MathML schema
+                                     Accent false;
+                                     AccentUnder false;
+                                     Align _Align.Center;
+                                     AlignmentScope true;
+                                     Bevelled false;
+                                     CharAlign _CharAlign.Center;
+                                     CharSpacing (KeyWord _CharSpacing.Medium);
+                                     Close ")";
+                                     ColumnAlign _ColumnAlign.Center;
+                                     ColumnLines _ColumnLines.None;
+                                     ColumnSpacing (EM 0.8<em>);
+                                     ColumnSpan 1u;
+                                     ColumnWidth (KeyWord _ColumnWidth.Auto);
+                                     Crossout _Crossout.None;
+                                     DenomAlign _DenomAlign.Center;
+                                     Depth (EX 0.0<ex>);
+                                     Edge _Edge.Left;
+                                     EqualColumns false;
+                                     EqualRows false;
+                                     Fence false;
+                                     Form _Form.Infix;
+                                     Frame _Frame.None;
+                                     FrameSpacing (EM 0.4<em>,EX 0.5<ex>);
+                                     GroupAlign _GroupAlign.Left;
+                                     Height (KeyWord "fromimage");
+                                     IndentAlign _IndentAlign.Auto;
+                                     IndentAlignFirst _IndentAlignFirst.IndentAlign;
+                                     IndentAlignLast _IndentAlignLast.IndentAlign;
+                                     IndentShift (Number 0.0);
+                                     IndentShiftFirst (KeyWord "indentshift");
+                                     IndentShiftLast (KeyWord "indentshift");
+                                     IndentTarget "none";
+                                     LargeOp false;
+                                     LeftOverhang (Number 0.0);
+                                     Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
+                                     LineBreak _LineBreak.Auto;
+                                     LineBreakMultChar "02062";//&InvisibleTimes;
+                                     LineBreakStyle _LineBreakStyle.Before;
+                                     LineLeading (Pct 100.0<pct>);
+                                     LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
+                                     Location N;
+                                     LongDivStyle LeftTop;
+                                     LQuote "&quot;";
+                                     LSpace (NamedLength ThickMathSpace);
+                                     MaxSize (KeyWord "infinity");
+                                     MinLabelSpacing (EM 0.8<em>);
+                                     MinSize (Pct 100.0<pct>);
+                                     MovableLimits false;
+                                     MsLineThickness (KeyWord "medium");
+                                     Notation LongDiv;
+                                     NumAlign _NumAlign.Center;
+                                     Open ")";
+                                     Position 0;
+                                     RightOverhang (Number 0.0);
+                                     RowAlign _RowAlign.Baseline
+                                     RowLines _RowLines.None
+                                     RowSpacing (EX 1.0<ex>)
+                                     RowSpan 1u
+                                     RQuote "&quot;"
+                                     RSpace (NamedLength ThickMathSpace);
+                                     Selection 1u
+                                     Separator false
+                                     Separators ",";
+                                     Shift 0
+                                     Side _Side.Right
+                                     StackAlign _StackAlign.DecimalPoint
+                                     Stretchy false
+                                     SubScriptShift (KeyWord "automatic");
+                                     SuperScriptShift (KeyWord "automatic");
+                                     Symmetric false
+                                     VAlign (EX 0.0<ex>)
+                                     Width (KeyWord "automatic")]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
 
         | Token Mi -> 
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = 
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Token Mn ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes =  
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Token Mo ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes =  
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     
+                                     //3.2.5.2.1 Dictionary-based attributes 
+                                     Fence false;
+                                     Form _Form.Infix;
+                                     Separator false;
+                                     LSpace (NamedLength ThickMathSpace);
+                                     RSpace (NamedLength ThickMathSpace);
+                                     Stretchy false
+                                     Symmetric false
+                                     MaxSize (KeyWord "infinity");                                     
+                                     MinSize (Pct 100.0<pct>);
+                                     LargeOp false;
+                                     MovableLimits false;
+                                     Accent false;
+                                     
+                                     //3.2.5.2.2 Linebreaking attributes 
+                                     LineBreak _LineBreak.Auto;
+                                     LineBreakMultChar "02062"; //&InvisibleTimes;
+                                     LineBreakStyle _LineBreakStyle.Before;
+                                     LineLeading (Pct 100.0<pct>);
+                                     
+                                     //3.2.5.2.3 Indentation attributes
+                                     IndentAlign _IndentAlign.Auto;
+                                     IndentAlignFirst _IndentAlignFirst.IndentAlign;
+                                     IndentAlignLast _IndentAlignLast.IndentAlign;
+                                     IndentShift (Number 0.0);
+                                     IndentShiftFirst (KeyWord "indentshift");
+                                     IndentShiftLast (KeyWord "indentshift");
+                                     IndentTarget "none";                                     
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Token Mtext ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes =  
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Token Mspace ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes =  
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Token Ms ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes =  
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Token Mglyph ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes =  
+                                    [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent"; 
+
+                                     //3.2.2 Mathematics style attributes common to token elements 
+                                     MathVariant Normal;
+                                     MathSize (EM 1.0<em>);
+                                     Dir Ltr;                                     
+                                     ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
