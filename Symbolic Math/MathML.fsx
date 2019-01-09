@@ -46,4 +46,3 @@ isValidElementAttributeOf defaultAttributes (MathBackground "yellow")
 
 
 rrr.GetType()
-
