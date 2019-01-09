@@ -6,10 +6,13 @@
 
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" mathbackground="lightskyblue">
-<mtext>
-  Theorem
-  1:
-</mtext>
+<mfrac>
+  <mo> &#x2146;<!--DOUBLE-STRUCK ITALIC SMALL D--> </mo>
+  <mrow>
+    <mo> &#x2146;<!--DOUBLE-STRUCK ITALIC SMALL D--> </mo>
+    <mi> x </mi>
+  </mrow>
+</mfrac>
 </math>
 
 

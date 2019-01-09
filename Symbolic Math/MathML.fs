@@ -296,24 +296,25 @@ module Element =
                                      Open ")";
                                      Position 0;
                                      RightOverhang (Number 0.0);
-                                     RowAlign _RowAlign.Baseline
-                                     RowLines _RowLines.None
-                                     RowSpacing (EX 1.0<ex>)
-                                     RowSpan 1u
-                                     RQuote "&quot;"
+                                     RowAlign _RowAlign.Baseline;
+                                     RowLines _RowLines.None;
+                                     RowSpacing (EX 1.0<ex>);
+                                     RowSpan 1u;
+                                     RQuote "&quot;";
                                      RSpace (NamedLength ThickMathSpace);
-                                     Selection 1u
-                                     Separator false
+                                     Selection 1u;
+                                     Separator false;
                                      Separators ",";
-                                     Shift 0
-                                     Side _Side.Right
-                                     StackAlign _StackAlign.DecimalPoint
-                                     Stretchy false
+                                     Shift 0;
+                                     Side _Side.Right;
+                                     StackAlign _StackAlign.DecimalPoint;
+                                     Stretchy false;
                                      SubScriptShift (KeyWord "automatic");
                                      SuperScriptShift (KeyWord "automatic");
-                                     Symmetric false
-                                     VAlign (EX 0.0<ex>)
-                                     Width (KeyWord "automatic")]
+                                     Symmetric false;
+                                     VAlign (EX 0.0<ex>);
+                                     Width (KeyWord "automatic");
+                                     ]
 
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
@@ -427,8 +428,9 @@ module Element =
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
                                      MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
+                                     Dir Ltr;  
                                      ]
+                                     
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
@@ -448,8 +450,24 @@ module Element =
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
                                      MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
+                                     Dir Ltr;
+                                     
+                                     //3.2.7.2 Attributes 
+                                     Width (EM 0.0<em>);
+                                     Height (EX 0.0<ex>);
+                                     Depth (EX 0.0<ex>);
+                                     LineBreak _LineBreak.Auto
+                                     
+                                     //3.2.5.2.3 Indentation attributes 
+                                     IndentAlign _IndentAlign.Auto;
+                                     IndentAlignFirst _IndentAlignFirst.IndentAlign;
+                                     IndentAlignLast _IndentAlignLast.IndentAlign;
+                                     IndentShift (Number 0.0);
+                                     IndentShiftFirst (KeyWord "indentshift");
+                                     IndentShiftLast (KeyWord "indentshift");
+                                     IndentTarget "none";                                     
                                      ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
@@ -469,8 +487,13 @@ module Element =
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
                                      MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
+                                     Dir Ltr;
+                                     
+                                     //3.2.8.2 Attributes 
+                                     RQuote "&quot;";
+                                     LQuote "&quot;";
                                      ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
@@ -487,166 +510,672 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent"; 
 
-                                     //3.2.2 Mathematics style attributes common to token elements 
-                                     MathVariant Normal;
-                                     MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
+                                     //3.2.1.2.2 Attributes 
+                                     Src "required"
+                                     Width (KeyWord "fromimage");
+                                     Height (KeyWord "fromimage");                                     
+                                     VAlign (EX 0.0<ex>);
+                                     Alt "required"
                                      ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mrow ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.3.1.2 Attributes
+                                     Dir Ltr
+                                    ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mfrac ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.3.2.2 Attributes
+                                     LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
+                                     NumAlign _NumAlign.Center;
+                                     DenomAlign _DenomAlign.Center;
+                                     Bevelled false;
+                                    ]
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Msqrt ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mroot ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mstyle ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.3.4.2 Attributes 
+                                     ScriptLevel ('+',0u)
+                                     DisplayStyle false ///When display="block", displaystyle is initialized to "true" when display="inline", displaystyle is initialized to "false"
+                                     ScriptSizeMultiplier 0.71
+                                     ScriptMinSize (PT 8.0<pt>)
+                                     InfixLineBreakStyle Before;
+                                     DecimalPoint '.'
+
+                                     //The rest after I compared this to the MathML schema
+                                     Accent false;
+                                     AccentUnder false;
+                                     Align _Align.Center;
+                                     AlignmentScope true;
+                                     Bevelled false;
+                                     CharAlign _CharAlign.Center;
+                                     CharSpacing (KeyWord _CharSpacing.Medium);
+                                     Close ")";
+                                     ColumnAlign _ColumnAlign.Center;
+                                     ColumnLines _ColumnLines.None;
+                                     ColumnSpacing (EM 0.8<em>);
+                                     ColumnSpan 1u;
+                                     ColumnWidth (KeyWord _ColumnWidth.Auto);
+                                     Crossout _Crossout.None;
+                                     DenomAlign _DenomAlign.Center;
+                                     Depth (EX 0.0<ex>);
+                                     Edge _Edge.Left;
+                                     EqualColumns false;
+                                     EqualRows false;
+                                     Fence false;
+                                     Form _Form.Infix;
+                                     Frame _Frame.None;
+                                     FrameSpacing (EM 0.4<em>,EX 0.5<ex>);
+                                     GroupAlign _GroupAlign.Left;
+                                     Height (KeyWord "fromimage");
+                                     IndentAlign _IndentAlign.Auto;
+                                     IndentAlignFirst _IndentAlignFirst.IndentAlign;
+                                     IndentAlignLast _IndentAlignLast.IndentAlign;
+                                     IndentShift (Number 0.0);
+                                     IndentShiftFirst (KeyWord "indentshift");
+                                     IndentShiftLast (KeyWord "indentshift");
+                                     IndentTarget "none";
+                                     LargeOp false;
+                                     LeftOverhang (Number 0.0);
+                                     Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
+                                     LineBreak _LineBreak.Auto;
+                                     LineBreakMultChar "02062";//&InvisibleTimes;
+                                     LineBreakStyle _LineBreakStyle.Before;
+                                     LineLeading (Pct 100.0<pct>);
+                                     LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
+                                     Location N;
+                                     LongDivStyle LeftTop;
+                                     LQuote "&quot;";
+                                     LSpace (NamedLength ThickMathSpace);
+                                     MaxSize (KeyWord "infinity");
+                                     MinLabelSpacing (EM 0.8<em>);
+                                     MinSize (Pct 100.0<pct>);
+                                     MovableLimits false;
+                                     MsLineThickness (KeyWord "medium");
+                                     Notation LongDiv;
+                                     NumAlign _NumAlign.Center;
+                                     Open ")";
+                                     Position 0;
+                                     RightOverhang (Number 0.0);
+                                     RowAlign _RowAlign.Baseline;
+                                     RowLines _RowLines.None;
+                                     RowSpacing (EX 1.0<ex>);
+                                     RowSpan 1u;
+                                     RQuote "&quot;";
+                                     RSpace (NamedLength ThickMathSpace);
+                                     Selection 1u;
+                                     Separator false;
+                                     Separators ",";
+                                     Shift 0;
+                                     Side _Side.Right;
+                                     StackAlign _StackAlign.DecimalPoint;
+                                     Stretchy false;
+                                     SubScriptShift (KeyWord "automatic");
+                                     SuperScriptShift (KeyWord "automatic");
+                                     Symmetric false;
+                                     VAlign (EX 0.0<ex>);
+                                     Width (KeyWord "automatic");
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Merror ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mpadded ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.3.6.2 Attributes
+                                     Depth (KeyWord "same as content");                                   
+                                     Height (KeyWord "same as content");
+                                     Width (KeyWord "same as content");
+                                     LSpace (EM 0.8<em>);
+                                     VOffset (EM 0.8<em>);
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mphantom ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Mfenced ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.3.8.2 Attributes
+                                     Open ")";
+                                     Close ")";
+                                     Separators ",";
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | GeneralLayout Menclose ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.3.9.2 Attributes
+                                     Notation LongDiv;
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Msub ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.1.2 Attributes 
+                                     SubScriptShift (KeyWord "automatic");
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Msup ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.2.2 Attributes 
+                                     SuperScriptShift (KeyWord "automatic");
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Msubsup ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.3.2 Attributes 
+                                     SubScriptShift (KeyWord "automatic");
+                                     SuperScriptShift (KeyWord "automatic");
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Munde ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.4.2 Attributes
+                                     AccentUnder false; //automatic
+                                     Align _Align.Center;
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Mover ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.5.2 Attributes
+                                     Accent false; //automatic
+                                     Align _Align.Center;
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Munderover ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.6.2 Attributes
+                                     Accent false; //automatic
+                                     AccentUnder false; //automatic
+                                     Align _Align.Center;
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Script Mmultiscripts ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //3.4.7.2 Attributes 
+                                     SubScriptShift (KeyWord "automatic");
+                                     SuperScriptShift (KeyWord "automatic");
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Table Mtable ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Table Mlabeledtr ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Table Mtr ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Table Mtd ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Table Maligngroup ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Table Malignmark ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Mstack ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Mlongdiv ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Msgroup ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Msrow ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Mscarries ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Mscarry ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | MathLayout Msline ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
         | Enlivening Maction ->
-            let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
+            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
+                                     Id "none"; 
+                                     Xref "none"; 
+                                     Class "none"; 
+                                     Style "none"; 
+                                     Href "none";
+                                     
+                                     //3.1.10 Mathematics style attributes common to presentation elements 
+                                     MathColor "black"; 
+                                     MathBackground "transparent";
+
+                                     //
+                                     ]
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
 
