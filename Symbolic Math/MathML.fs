@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -509,7 +509,6 @@ module Element =
                                      //3.1.10 Mathematics style attributes common to presentation elements 
                                      MathColor "black"; 
                                      MathBackground "transparent"; 
-
                                      //3.2.1.2.2 Attributes 
                                      Src "required"
                                      Width (KeyWord "fromimage");
@@ -822,7 +821,7 @@ module Element =
                                      //3.4.2.2 Attributes 
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
-
+        
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
