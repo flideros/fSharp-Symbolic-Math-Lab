@@ -49,7 +49,7 @@ type _Id = string
 type _LineBreakMultChar = string /// hex character code
 type _LQuote = string /// character code
 type _RQuote = string /// character code
-type _ActionType = | Toggle | StatusLine | ToolTip | Input | Highlight
+type _ActionType = | Toggle | StatusLine | ToolTip | Input | Highlight | Other of string
 type _Align = | Left | Right | Top | Bottom | Center | Baseline | Axis
 type _CharAlign = | Left | Right | Center
 type _CharSpacing = | Loose | Medium | Tight | Length of Length 
@@ -70,7 +70,7 @@ type _IndentAlignLast = | Left | Center | Right | Auto | Id | IndentAlign
 type _LineBreak = | Auto | NewLine | NoBreak | GoodBreak | BadBreak
 type _LineBreakStyle = | Before | After | Duplicate | InfixLinebBreakStyle
 type _Location = | W | NW | N | NE | E | SE | S | SW
-type _LongDivStyle = | LeftTop | StackedRightRight | MediumStackedRightRight | ShortStackedRightRight | RightTop | LeftRight1  | LeftRight2 | RightRight | StackedLeftLeft | StackedLeftLineTop
+type _LongDivStyle = | LeftTop | StackedRightRight | MediumStackedRightRight | ShortStackedRightRight | RightTop | LeftRight1  | LeftRight2 | RightRight | StackedLeftLeft | StackedLeftLineTop//1 "left/\right" | "2 left)(right" | ":right=right"
 type _MathVariant = | Normal | Bold | Italic | BoldItalic | DoubleStruck | BoldFraktur | Script | BoldScript | Fraktur | SansSerif | BoldSansSerif | SansSerifItalic | SansSerifBoldItalic | MonoSpace | Initial | Tailed | Looped | Stretched
 type _Notation = | LongDiv | Actuarial | PhasOrAngle | Radical | Box | RoundedBox | Circle | Left | Right | Top | Bottom | UpDiagonalStrike | DownDiagonalStrike | VerticalStrike | HorizontalStrike | NorthEastArrow | Madruwb | Text
 type _NumAlign = | Left | Right | Center
@@ -509,6 +509,7 @@ module Element =
                                      //3.1.10 Mathematics style attributes common to presentation elements 
                                      MathColor "black"; 
                                      MathBackground "transparent"; 
+
                                      //3.2.1.2.2 Attributes 
                                      Src "required"
                                      Width (KeyWord "fromimage");
@@ -821,7 +822,7 @@ module Element =
                                      //3.4.2.2 Attributes 
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
-        
+
             let attr' = scrubAttributes attr defaultAttributes
             (elem, attr', args)
         
@@ -938,7 +939,25 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.5.1.2 Attributes
+                                     Align _Align.Axis;
+                                     AlignmentScope true;                                     
+                                     ColumnAlign _ColumnAlign.Center;
+                                     ColumnLines _ColumnLines.None;
+                                     ColumnSpacing (EM 0.8<em>);
+                                     ColumnWidth (KeyWord _ColumnWidth.Auto);
+                                     DisplayStyle false
+                                     EqualColumns false;
+                                     EqualRows false;                                     
+                                     Frame _Frame.None;
+                                     FrameSpacing (EM 0.4<em>,EX 0.5<ex>);
+                                     GroupAlign _GroupAlign.Left;                                     
+                                     MinLabelSpacing (EM 0.8<em>);                                   
+                                     RowAlign _RowAlign.Baseline;
+                                     RowLines _RowLines.None;
+                                     RowSpacing (EX 1.0<ex>);
+                                     Side _Side.Right;                                     
+                                     Width (KeyWord "automatic");
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -956,7 +975,10 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.5.3.2 Attributes
+                                     RowAlign _RowAlign.Baseline; //inherited
+                                     ColumnAlign _ColumnAlign.Center; //inherited
+                                     GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -974,7 +996,10 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.5.2.2 Attributes
+                                     RowAlign _RowAlign.Baseline; //inherited
+                                     ColumnAlign _ColumnAlign.Center; //inherited
+                                     GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -992,7 +1017,12 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.5.4.2 Attributes
+                                     RowSpan 1u;
+                                     ColumnSpan 1u;
+                                     RowAlign _RowAlign.Baseline; //inherited
+                                     ColumnAlign _ColumnAlign.Center; //inherited
+                                     GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1010,7 +1040,8 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.5.5.6 <maligngroup/> Attributes 
+                                     GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1027,8 +1058,8 @@ module Element =
                                      //3.1.10 Mathematics style attributes common to presentation elements 
                                      MathColor "black"; 
                                      MathBackground "transparent";
-
-                                     //
+                                     //3.5.5.5 <malignmark/> Attributes 
+                                     Edge _Edge.Left;
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1046,7 +1077,11 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.6.1.2 Attributes
+                                     Align _Align.Baseline;
+                                     StackAlign _StackAlign.DecimalPoint;
+                                     CharAlign _CharAlign.Right;
+                                     CharSpacing (KeyWord _CharSpacing.Medium);
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1063,8 +1098,8 @@ module Element =
                                      //3.1.10 Mathematics style attributes common to presentation elements 
                                      MathColor "black"; 
                                      MathBackground "transparent";
-
-                                     //
+                                     //3.6.2.2 Attributes 
+                                     LongDivStyle LeftTop;
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1082,7 +1117,9 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.6.3.2 Attributes
+                                     Position 0;
+                                     Shift 0;
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1100,7 +1137,8 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.6.4.2 Attributes 
+                                     Position 0;
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1118,7 +1156,11 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.6.5.2 Attributes
+                                     Position 0;
+                                     Location N;
+                                     Crossout _Crossout.None;
+                                     ScriptSizeMultiplier 0.6 //inherited
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1136,7 +1178,9 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.6.6.2 Attributes
+                                     Location N; //inherited
+                                     Crossout _Crossout.None; //inherited
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1154,7 +1198,12 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.6.7.2 Attributes
+                                     Position 0;
+                                     Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
+                                     LeftOverhang (Number 0.0);
+                                     RightOverhang (Number 0.0);
+                                     MsLineThickness (KeyWord "medium");
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
@@ -1172,7 +1221,9 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
 
-                                     //
+                                     //3.7.1.1 Attributes
+                                     ActionType (Other "none")
+                                     Selection 1u;
                                      ]
 
             let attr' = scrubAttributes attr defaultAttributes
