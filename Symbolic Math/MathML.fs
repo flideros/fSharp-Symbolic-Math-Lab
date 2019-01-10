@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -1058,7 +1058,6 @@ module Element =
                                      //3.1.10 Mathematics style attributes common to presentation elements 
                                      MathColor "black"; 
                                      MathBackground "transparent";
-
                                      //3.5.5.5 <malignmark/> Attributes 
                                      Edge _Edge.Left;
                                      ]
@@ -1099,7 +1098,6 @@ module Element =
                                      //3.1.10 Mathematics style attributes common to presentation elements 
                                      MathColor "black"; 
                                      MathBackground "transparent";
-
                                      //3.6.2.2 Attributes 
                                      LongDivStyle LeftTop;
                                      ]
