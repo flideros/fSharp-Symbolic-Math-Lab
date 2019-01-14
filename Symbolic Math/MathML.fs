@@ -192,7 +192,8 @@ type TableElement = | Mtable | Mlabeledtr | Mtr | Mtd | Maligngroup | Malignmark
 type MathLayoutElement = | Mstack | Mlongdiv | Msgroup | Msrow | Mscarries  | Mscarry | Msline
 type EnliveningExpressionElement = | Maction
 
-type Element = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
+type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
+type Element<'a> = { element : MathMLElement; attributes : MathMLAttribute list; args : 'a list }
 
 module Element =
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
@@ -202,12 +203,13 @@ module Element =
         | elem when isValidElementAttributeOf defaultAttributes elem -> Option.Some elem
         | _ -> Option.None) attrList
     
-    let element (elem : Element) (attr : MathMLAttribute list) args = 
-        
+    let element (elem : MathMLElement) (attr : MathMLAttribute list) args = 
+
         match elem with
-        | Math ->                    //2.2 Top-Level <math> Element 
+        | Math ->                     
             let defaultAttributes = 
-                                    [Display Inline;
+                                    [//2.2 Top-Level <math> Element
+                                     Display Inline;
                                      MaxWidth (KeyWord "available width");
                                      Overflow Linebreak; 
                                      AltImg "none";                                      
@@ -316,8 +318,7 @@ module Element =
                                      Width (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
 
         | Token Mi -> 
             let defaultAttributes = 
@@ -336,9 +337,9 @@ module Element =
                                      MathVariant Normal;
                                      MathSize (EM 1.0<em>);
                                      Dir Ltr;                                     
-                                     ]
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+                                     ]         
+
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Mn ->
             let defaultAttributes =  
@@ -358,8 +359,8 @@ module Element =
                                      MathSize (EM 1.0<em>);
                                      Dir Ltr;                                     
                                      ]
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Mo ->
             let defaultAttributes =  
@@ -409,8 +410,7 @@ module Element =
                                      IndentTarget "none";                                     
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Mtext ->
             let defaultAttributes =  
@@ -431,8 +431,7 @@ module Element =
                                      Dir Ltr;  
                                      ]
                                      
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Mspace ->
             let defaultAttributes =  
@@ -468,8 +467,7 @@ module Element =
                                      IndentTarget "none";                                     
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Ms ->
             let defaultAttributes =  
@@ -494,8 +492,7 @@ module Element =
                                      LQuote "&quot;";
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Mglyph ->
             let defaultAttributes =  
@@ -518,8 +515,7 @@ module Element =
                                      Alt "required"
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -537,8 +533,7 @@ module Element =
                                      Dir Ltr
                                     ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mfrac ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -558,8 +553,7 @@ module Element =
                                      DenomAlign _DenomAlign.Center;
                                      Bevelled false;
                                     ]
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Msqrt ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -574,8 +568,7 @@ module Element =
                                      MathBackground "transparent";
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mroot ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -590,8 +583,7 @@ module Element =
                                      MathBackground "transparent";
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mstyle ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -688,8 +680,7 @@ module Element =
                                      Width (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Merror ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -706,8 +697,7 @@ module Element =
                                      //
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mpadded ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -729,8 +719,7 @@ module Element =
                                      VOffset (EM 0.8<em>);
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mphantom ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -745,8 +734,7 @@ module Element =
                                      MathBackground "transparent";
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mfenced ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -766,8 +754,7 @@ module Element =
                                      Separators ",";
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Menclose ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -785,8 +772,7 @@ module Element =
                                      Notation LongDiv;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Msub ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -804,8 +790,7 @@ module Element =
                                      SubScriptShift (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Msup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -823,8 +808,7 @@ module Element =
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Msubsup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -843,8 +827,7 @@ module Element =
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Munde ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -863,8 +846,7 @@ module Element =
                                      Align _Align.Center;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Mover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -883,8 +865,7 @@ module Element =
                                      Align _Align.Center;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Munderover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -904,8 +885,7 @@ module Element =
                                      Align _Align.Center;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Mmultiscripts ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -924,8 +904,7 @@ module Element =
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Mtable ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -960,8 +939,7 @@ module Element =
                                      Width (KeyWord "automatic");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Mlabeledtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -981,8 +959,7 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Mtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1002,8 +979,7 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Mtd ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1025,8 +1001,7 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Maligngroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1044,8 +1019,7 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Malignmark ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1063,8 +1037,7 @@ module Element =
                                      Edge _Edge.Left;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Mstack ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1085,8 +1058,7 @@ module Element =
                                      CharSpacing (KeyWord _CharSpacing.Medium);
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Mlongdiv ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1104,8 +1076,7 @@ module Element =
                                      LongDivStyle LeftTop;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Msgroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1124,8 +1095,7 @@ module Element =
                                      Shift 0;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Msrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1143,8 +1113,7 @@ module Element =
                                      Position 0;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Mscarries ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1165,8 +1134,7 @@ module Element =
                                      ScriptSizeMultiplier 0.6 //inherited
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Mscarry ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1185,8 +1153,7 @@ module Element =
                                      Crossout _Crossout.None; //inherited
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Msline ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1208,8 +1175,7 @@ module Element =
                                      MsLineThickness (KeyWord "medium");
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Enlivening Maction ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1228,8 +1194,7 @@ module Element =
                                      Selection 1u;
                                      ]
 
-            let attr' = scrubAttributes attr defaultAttributes
-            (elem, attr', args)
+            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
 
 
         
