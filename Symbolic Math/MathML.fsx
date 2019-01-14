@@ -4,7 +4,7 @@
 #r @"FSharp.Core"
 
 open MathML
-
+open MathML.Element
 
 let ggg = Number 5.0
 let rrr = EM 5.0<em>
@@ -15,7 +15,7 @@ match rrr with
 | Number n -> n.ToString()
 
 let defaultAttributes = [MathColor "black"; MathBackground "white"; MathVariant Normal; Id ""; Xref ""; Class ""; Style ""; Href ""]
-let altAttributes = [MathBackground "yellow"; Position 1; Xref "bbb";]
+let altAttributes = [MathBackground "yellow";Stretchy false]
 
 let isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
 
@@ -31,6 +31,7 @@ scrub altAttributes
 //Test
 isValidElementAttributeOf defaultAttributes (MathBackground "yellow")
 
+let mi = element (Token Mi) altAttributes [1]
 
 
 
@@ -45,4 +46,4 @@ isValidElementAttributeOf defaultAttributes (MathBackground "yellow")
 
 
 
-rrr.GetType()
+mi.GetType()
