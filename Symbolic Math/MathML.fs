@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -807,7 +807,7 @@ module Element =
                                      //3.4.2.2 Attributes 
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
-
+                                     
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Msubsup ->
@@ -1214,4 +1214,4 @@ module Element =
                 | "ltr" -> Dir Ltr
                 | "rtl" ->  Dir Rtl 
                 /// Default 
-                | _ -> Dir Ltr*)   
+
