@@ -191,6 +191,7 @@ type ScriptElement = | Msub | Msup | Msubsup | Munde | Mover | Munderover | Mmul
 type TableElement = | Mtable | Mlabeledtr | Mtr | Mtd | Maligngroup | Malignmark
 type MathLayoutElement = | Mstack | Mlongdiv | Msgroup | Msrow | Mscarries  | Mscarry | Msline
 type EnliveningExpressionElement = | Maction
+
 type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
 type Element<'a> = { element : MathMLElement; attributes : MathMLAttribute list; args : 'a list }
 
@@ -408,6 +409,7 @@ module Element =
                                      IndentShiftLast (KeyWord "indentshift");
                                      IndentTarget "none";                                     
                                      ]
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Token Mtext ->
@@ -731,6 +733,7 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
                                      ]
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | GeneralLayout Mfenced ->
@@ -804,6 +807,7 @@ module Element =
                                      //3.4.2.2 Attributes 
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
+                                     
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Msubsup ->
@@ -996,6 +1000,7 @@ module Element =
                                      ColumnAlign _ColumnAlign.Center; //inherited
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Table Maligngroup ->
@@ -1070,6 +1075,7 @@ module Element =
                                      //3.6.2.2 Attributes 
                                      LongDivStyle LeftTop;
                                      ]
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Msgroup ->
@@ -1106,6 +1112,7 @@ module Element =
                                      //3.6.4.2 Attributes 
                                      Position 0;
                                      ]
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Mscarries ->
@@ -1126,6 +1133,7 @@ module Element =
                                      Crossout _Crossout.None;
                                      ScriptSizeMultiplier 0.6 //inherited
                                      ]
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | MathLayout Mscarry ->
@@ -1206,4 +1214,4 @@ module Element =
                 | "ltr" -> Dir Ltr
                 | "rtl" ->  Dir Rtl 
                 /// Default 
-                | _ -> Dir Ltr*)   
+

@@ -18,7 +18,7 @@ let zero,one,two,three,four,five,six,seven,eight,nine,ten = Number (Integer 0I),
 let pi,i = Symbol (Constant Pi),Symbol (Constant I)
 let sin(u) = UnaryOp(Sin,u)
 let cos(u) = UnaryOp(Cos,u)
-let printEuc a = match a with | (a, b, c) -> sprintf "(%s, %s, %s)" (Print.expression a) (Print.expression b) (Print.expression c)
+//let printEuc a = match a with | (a, b, c) -> sprintf "(%s, %s, %s)" (Print.expression a) (Print.expression b) (Print.expression c)
 
 let x2 = x**two 
 let x3 = x**three
@@ -44,7 +44,7 @@ let v = x5 +
 
 let _out = squareFree u x
 
-Print.expression _out
+//Print.expression _out
 
 #r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r "System.Xml.Linq.dll"
@@ -54,7 +54,24 @@ open OpenMath
 open Math.Foundations
 
 
-let zz = Logic.Set.C
+let zz = Logic.Set.Difference.definition
 
 
-printfn "%O" zz.getDefinition
+
+let printExpression n = 
+    match n with
+    | Number (NumberType.Real r) -> 
+        use file = System.IO.File.CreateText("D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\output\content\Test.md")
+        fprintf file "<mn>%f</mn>" r
+
+
+printExpression (Number (Real 232.33225))
+
+
+let printNumbersToFile fileName =
+   use file = System.IO.File.CreateText(fileName)
+   let x = [1;2;3;4;5]
+   x
+   |> List.iter (fun elem -> fprintf file "%d " elem)
+    
+printNumbersToFile "D:\MyFolders\Desktop\Test.csv"

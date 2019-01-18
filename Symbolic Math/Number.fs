@@ -48,18 +48,6 @@ type NumberType =
     | ComplexInfinity
     | Undefined
 
-    with
-    member this.definition = 
-        match this with
-        | Complex c -> ComplexCartesianType.definition
-        | Rational r -> RationalType.definition
-        | Integer i -> IntegerType.definition
-        | Real r -> RealType.definition
-        | PositiveInfinity -> Infinity.definition
-        | NegativeInfinity -> Infinity.definition
-        | ComplexInfinity -> Infinity.definition
-        | Undefined -> None
-
 module Number =
 
     module HCF = 
@@ -237,3 +225,13 @@ type NumberType with
             | Integer x when x < 0I -> n * factorial (-n + -(Integer 1I))
             | _ -> Undefined
         factorial x
+    member this.definition = 
+        match this with
+        | Complex c -> ComplexCartesianType.definition
+        | Rational r -> RationalType.definition
+        | Integer i -> IntegerType.definition
+        | Real r -> RealType.definition
+        | PositiveInfinity -> Infinity.definition
+        | NegativeInfinity -> Infinity.definition
+        | ComplexInfinity -> Infinity.definition
+        | Undefined -> None
