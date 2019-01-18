@@ -62,9 +62,8 @@
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
     <Compile Include="Number.fs" />
-    <Compile Include="Collection.fs" />
+    <Compile Include="Collections.fs" />
     <Compile Include="Expression.fs" />
-    <Compile Include="Collection.fs" />
     <Compile Include="NumberTheory.fs" />
     <Compile Include="Polynomial.fs" />
     <Compile Include="Logarithm and Expoential.fs" />
@@ -72,6 +71,7 @@
     <Compile Include="Calculus.fs" />
     <Compile Include="Factorization.fs" />
     <Compile Include="PartialFraction.fs" />
+    <Compile Include="Display.fs" />
     <None Include="MainScript.fsx" />
     <None Include="fsLab.fsx" />
     <None Include="set.fsx" />
@@ -81,6 +81,7 @@
     <Content Include="Google.DataTable.Net.Wrapper.XML" />
     <None Include="md-template.html" />
     <None Include="output\content\MathJax.md" />
+    <None Include="output\content\Test.md" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Chessie">
@@ -262,7 +263,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.1\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.2\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Thread">
       <HintPath>..\packages\System.Threading.Thread.4.3.0\lib\net46\System.Threading.Thread.dll</HintPath>
