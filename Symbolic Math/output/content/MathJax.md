@@ -23,11 +23,12 @@
 <mrow>
   <mi> f </mi>
   <mo> &#x2061;<!--FUNCTION APPLICATION--> </mo>
-  <mfenced Close="]">
-    <Mi> x </Mi>
-    <mi> y </mi>
-  </mfenced>
-</mrow>   
+  <mrow>
+    <mo> ( </mo>
+    <mi> x </mi>
+    <mo> ) </mo>
+  </mrow>
+</mrow>
 </math>
 
 

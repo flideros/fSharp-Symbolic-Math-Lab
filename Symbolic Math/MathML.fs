@@ -28,7 +28,7 @@ type NamedSpace =
     | NegativeVeryVeryThickMathSpace /// -7/18em
 
 type Length =  
-    | Number of float
+    | Numb of float
     | EM of float<em>
     | EX of float<ex>
     | PX of float<px>
@@ -81,7 +81,6 @@ type _Side = | Left | Right | LeftOverlap | RightOerlap
 type _StackAlign = | Left | Center | Right | DecimalPoint
 
 type MathMLAttribute =
-    //private
     | Accent of bool
     | AccentUnder of bool
     | ActionType of _ActionType
@@ -193,7 +192,92 @@ type MathLayoutElement = | Mstack | Mlongdiv | Msgroup | Msrow | Mscarries  | Ms
 type EnliveningExpressionElement = | Maction
 
 type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
+
 type Element<'a> = { element : MathMLElement; attributes : MathMLAttribute list; args : 'a list }
+    with 
+    member this.openTag = 
+        match this.element with
+        | Math -> "<math>"
+        | Token Mi -> "<mi>" 
+        | Token Mn -> "<mn>" 
+        | Token Mo -> "<mo>" 
+        | Token Mtext -> "<mtext>" 
+        | Token Mspace -> "<mspace>" 
+        | Token Ms -> "<ms>" 
+        | Token Mglyph -> "<mglyph>" 
+        | GeneralLayout Mrow -> "<mrow>" 
+        | GeneralLayout Mfrac -> "<mfrac>" 
+        | GeneralLayout Msqrt -> "<msqrt>" 
+        | GeneralLayout Mroot -> "<mroot>" 
+        | GeneralLayout Mstyle -> "<mstyle>" 
+        | GeneralLayout Merror -> "<merror>" 
+        | GeneralLayout Mpadded -> "<mpadded>" 
+        | GeneralLayout Mphantom -> "<mphantom>" 
+        | GeneralLayout Mfenced -> "<mfenced>" 
+        | GeneralLayout Menclose -> "<menclose>" 
+        | Script Msub -> "<msub>" 
+        | Script Msup -> "<msup>" 
+        | Script Msubsup -> "<msubsup>" 
+        | Script Munde -> "<munde>" 
+        | Script Mover -> "<mover>" 
+        | Script Munderover -> "<munderover>" 
+        | Script Mmultiscripts -> "<mmultiscripts>" 
+        | Table Mtable -> "<mtable>" 
+        | Table Mlabeledtr -> "<mlabeledtr>" 
+        | Table Mtr -> "<mtr>" 
+        | Table Mtd -> "<mtd>" 
+        | Table Maligngroup -> "<maligngroup>" 
+        | Table Malignmark -> "<malignmark>" 
+        | MathLayout Mstack -> "<mstack>" 
+        | MathLayout Mlongdiv -> "<mlongdiv>" 
+        | MathLayout Msgroup -> "<msgroup>" 
+        | MathLayout Msrow -> "<msrow>" 
+        | MathLayout Mscarries -> "<mscarries>" 
+        | MathLayout Mscarry -> "<mscarry>" 
+        | MathLayout Msline -> "<msline>" 
+        | Enlivening Maction -> "<maction>" 
+
+    member this.closeTag = 
+        match this.element with
+        | Math -> "</math>"
+        | Token Mi -> "</mi>" 
+        | Token Mn -> "</mn>" 
+        | Token Mo -> "</mo>" 
+        | Token Mtext -> "</mtext>" 
+        | Token Mspace -> "</mspace>" 
+        | Token Ms -> "</ms>" 
+        | Token Mglyph -> "</mglyph>" 
+        | GeneralLayout Mrow -> "</mrow>" 
+        | GeneralLayout Mfrac -> "</mfrac>" 
+        | GeneralLayout Msqrt -> "</msqrt>" 
+        | GeneralLayout Mroot -> "</mroot>" 
+        | GeneralLayout Mstyle -> "</mstyle>" 
+        | GeneralLayout Merror -> "</merror>" 
+        | GeneralLayout Mpadded -> "</mpadded>" 
+        | GeneralLayout Mphantom -> "</mphantom>" 
+        | GeneralLayout Mfenced -> "</mfenced>" 
+        | GeneralLayout Menclose -> "</menclose>" 
+        | Script Msub -> "</msub>" 
+        | Script Msup -> "</msup>" 
+        | Script Msubsup -> "</msubsup>" 
+        | Script Munde -> "</munde>" 
+        | Script Mover -> "</mover>" 
+        | Script Munderover -> "</munderover>" 
+        | Script Mmultiscripts -> "</mmultiscripts>" 
+        | Table Mtable -> "</mtable>" 
+        | Table Mlabeledtr -> "</mlabeledtr>" 
+        | Table Mtr -> "</mtr>" 
+        | Table Mtd -> "</mtd>" 
+        | Table Maligngroup -> "</maligngroup>" 
+        | Table Malignmark -> "</malignmark>" 
+        | MathLayout Mstack -> "</mstack>" 
+        | MathLayout Mlongdiv -> "</mlongdiv>" 
+        | MathLayout Msgroup -> "</msgroup>" 
+        | MathLayout Msrow -> "</msrow>" 
+        | MathLayout Mscarries -> "</mscarries>" 
+        | MathLayout Mscarry -> "</mscarry>" 
+        | MathLayout Msline -> "</msline>" 
+        | Enlivening Maction -> "</maction>" 
 
 module Element =
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
@@ -272,12 +356,12 @@ module Element =
                                      IndentAlign _IndentAlign.Auto;
                                      IndentAlignFirst _IndentAlignFirst.IndentAlign;
                                      IndentAlignLast _IndentAlignLast.IndentAlign;
-                                     IndentShift (Number 0.0);
+                                     IndentShift (Numb 0.0);
                                      IndentShiftFirst (KeyWord "indentshift");
                                      IndentShiftLast (KeyWord "indentshift");
                                      IndentTarget "none";
                                      LargeOp false;
-                                     LeftOverhang (Number 0.0);
+                                     LeftOverhang (Numb 0.0);
                                      Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
                                      LineBreak _LineBreak.Auto;
                                      LineBreakMultChar "02062";//&InvisibleTimes;
@@ -297,7 +381,7 @@ module Element =
                                      NumAlign _NumAlign.Center;
                                      Open ")";
                                      Position 0;
-                                     RightOverhang (Number 0.0);
+                                     RightOverhang (Numb 0.0);
                                      RowAlign _RowAlign.Baseline;
                                      RowLines _RowLines.None;
                                      RowSpacing (EX 1.0<ex>);
@@ -404,7 +488,7 @@ module Element =
                                      IndentAlign _IndentAlign.Auto;
                                      IndentAlignFirst _IndentAlignFirst.IndentAlign;
                                      IndentAlignLast _IndentAlignLast.IndentAlign;
-                                     IndentShift (Number 0.0);
+                                     IndentShift (Numb 0.0);
                                      IndentShiftFirst (KeyWord "indentshift");
                                      IndentShiftLast (KeyWord "indentshift");
                                      IndentTarget "none";                                     
@@ -461,7 +545,7 @@ module Element =
                                      IndentAlign _IndentAlign.Auto;
                                      IndentAlignFirst _IndentAlignFirst.IndentAlign;
                                      IndentAlignLast _IndentAlignLast.IndentAlign;
-                                     IndentShift (Number 0.0);
+                                     IndentShift (Numb 0.0);
                                      IndentShiftFirst (KeyWord "indentshift");
                                      IndentShiftLast (KeyWord "indentshift");
                                      IndentTarget "none";                                     
@@ -634,12 +718,12 @@ module Element =
                                      IndentAlign _IndentAlign.Auto;
                                      IndentAlignFirst _IndentAlignFirst.IndentAlign;
                                      IndentAlignLast _IndentAlignLast.IndentAlign;
-                                     IndentShift (Number 0.0);
+                                     IndentShift (Numb 0.0);
                                      IndentShiftFirst (KeyWord "indentshift");
                                      IndentShiftLast (KeyWord "indentshift");
                                      IndentTarget "none";
                                      LargeOp false;
-                                     LeftOverhang (Number 0.0);
+                                     LeftOverhang (Numb 0.0);
                                      Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
                                      LineBreak _LineBreak.Auto;
                                      LineBreakMultChar "02062";//&InvisibleTimes;
@@ -659,7 +743,7 @@ module Element =
                                      NumAlign _NumAlign.Center;
                                      Open ")";
                                      Position 0;
-                                     RightOverhang (Number 0.0);
+                                     RightOverhang (Numb 0.0);
                                      RowAlign _RowAlign.Baseline;
                                      RowLines _RowLines.None;
                                      RowSpacing (EX 1.0<ex>);
@@ -807,7 +891,7 @@ module Element =
                                      //3.4.2.2 Attributes 
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
-                                     
+
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
         
         | Script Msubsup ->
@@ -1170,8 +1254,8 @@ module Element =
                                      //3.6.7.2 Attributes
                                      Position 0;
                                      Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
-                                     LeftOverhang (Number 0.0);
-                                     RightOverhang (Number 0.0);
+                                     LeftOverhang (Numb 0.0);
+                                     RightOverhang (Numb 0.0);
                                      MsLineThickness (KeyWord "medium");
                                      ]
 
@@ -1195,23 +1279,54 @@ module Element =
                                      ]
 
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
-
-
-        
-
-
-
-
-(*module Attribute = 
-
-    let accent d = match d with 
-                   | true -> Accent true 
-                   | false -> Accent false 
-                   /// Default 
-                   | _ -> Accent false 
+    //Top-Level Constructor
+    let math a x = (element (Math) a x)
     
-    let dir d = match d with 
-                | "ltr" -> Dir Ltr
-                | "rtl" ->  Dir Rtl 
-                /// Default 
+    //Token Constructors
+    let mi a x = (element (Token Mi) a x)
+    let mn a x = (element (Token Mn) a x)
+    let mo a x = (element (Token Mo) a x)
+    let mtext a x = (element (Token Mtext) a x)
+    let mspace a x = (element (Token Mspace) a x)
+    let ms a x = (element (Token Ms) a x)
 
+    //General Layout Constructors
+    let mrow a x = (element (GeneralLayout Mrow) a x)
+    let mfrac a x = (element (GeneralLayout Mfrac) a x)
+    let msqrt a x = (element (GeneralLayout Msqrt) a x)
+    let mroot a x = (element (GeneralLayout Mroot) a x)
+    let mstyle a x = (element (GeneralLayout Mstyle) a x)
+    let merror a x = (element (GeneralLayout Merror) a x)        
+    let mpadded a x = (element (GeneralLayout Mpadded) a x)
+    let mphantom a x = (element (GeneralLayout Mphantom) a x)
+    let mfenced a x = (element (GeneralLayout Mfenced) a x) 
+    let menclose a x = (element (GeneralLayout Menclose) a x)
+
+    //Script Constructors
+    let msub a x = (element (Script Msub) a x)
+    let msup a x = (element (Script Msup) a x)
+    let msubsup a x = (element (Script Msubsup) a x)
+    let munde a x = (element (Script Munde) a x)
+    let mover a x = (element (Script Mover) a x)
+    let munderover a x = (element (Script Munderover) a x)        
+    let mmultiscripts a x = (element (Script Mmultiscripts) a x)
+
+    //Table Constructors
+    let mtable a x = (element (Table Mtable) a x)
+    let mlabeledtr a x = (element (Table Mlabeledtr) a x)
+    let mtr a x = (element (Table Mtr) a x)
+    let mtd a x = (element (Table Mtd) a x)
+    let maligngroup a x = (element (Table Maligngroup) a x)
+    let malignmark a x = (element (Table Malignmark) a x)
+
+    //Math Layout Constructors
+    let mstack a x = (element (MathLayout Mstack) a x)
+    let mlongdiv a x = (element (MathLayout Mlongdiv) a x)
+    let msgroup a x = (element (MathLayout Msgroup) a x)
+    let msrow a x = (element (MathLayout Msrow) a x)
+    let mscarries a x = (element (MathLayout Mscarries) a x)
+    let mscarry a x = (element (MathLayout Mscarry) a x)        
+    let msline a x = (element (MathLayout Msline) a x)
+
+    //Math Layout Constructors EnliveningExpressionElement = | Maction
+    let menliveningExpression a x = (element (Enlivening Maction) a x)
