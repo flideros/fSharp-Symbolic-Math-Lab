@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -1279,7 +1279,6 @@ module Element =
                                      ]
 
             { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
-
     //Top-Level Constructor
     let math a x = (element (Math) a x)
     
