@@ -32,7 +32,7 @@ let u = Number(Integer 1I)*x4 +
         Number(Integer 7I)*x3 + 
         Number(Integer 18I)*x2 +
         Number(Integer 202I)*x +
-        Number(Integer 8I)
+        Number(Real 8.7)
 
 let v = x5 +
         Number(Integer 7I)*x4 +
@@ -40,7 +40,6 @@ let v = x5 +
         Number(Integer 17I)*x2 +
         Number(Integer 7I)*x +
         Number(Integer 1I)
-
 
 let _out = squareFree u x
 
@@ -52,9 +51,54 @@ let _out = squareFree u x
 open FSharp.Data
 open OpenMath
 open Math.Foundations
-
+open MathML
+open MathML.Element
 
 let zz = Logic.Set.Difference.definition
+
+//-----------display-----------//
+
+let mi x = Element.mi [] [x]
+let mn x = Element.mn [] [x]
+let mo x = Element.mo [] [x]
+
+let rec getStringsFrom (x:Expression) = 
+        let eNumber acc (n:Expression) = 
+            match n with 
+            | Number (Real r) -> ( (mn r).openTag + r.ToString() + (mn r).closeTag )::acc 
+            | Number (Integer i) -> ( (mn i).openTag + i.ToString() + (mn i).closeTag )::acc 
+            | _ -> acc
+        let eComplexNumber acc _ = acc
+        let eSymbol acc (v:Expression) = 
+            match v with 
+            | Symbol (Variable v) -> ( (mi v).openTag + v + (mi v).closeTag )::acc 
+            | Symbol (Constant c) -> ( (mi c).openTag + c.symbol + (mi c).closeTag )::acc 
+            | _ -> acc
+        let eBinaryOp acc (bOpp:Expression)  = 
+            match bOpp with
+            | BinaryOp (a,Plus,b) -> //((mo Plus).openTag + " + " + (mo Plus).closeTag)::acc
+                let a' = match (getStringsFrom a) with | a::[] -> a | _ -> ""
+                let b' =  match (getStringsFrom b) with | b::[] -> b | _ -> ""
+                let plus = (mo Plus).openTag + " + " + (mo Plus).closeTag
+                [(a' + plus + b')]//::acc
+
+            | _ -> acc
+        let eUnaryOp acc _ = acc
+        let eNaryOp acc _ = acc
+        Cata.foldExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp [] x
+        //|> Seq.rev
+        //|> Seq.distinct
+        //|> Seq.rev
+        |> Seq.toList
+
+
+getStringsFrom (BinaryOp(a,Plus,two))
+
+let elem n = match n with
+             | Number (NumberType.Real r) -> element (Token Mi) [] [r]
+
+
+let math = element Math [] [elem]
 
 
 
@@ -63,6 +107,7 @@ let printExpression n =
     | Number (NumberType.Real r) -> 
         use file = System.IO.File.CreateText("D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\output\content\Test.md")
         fprintf file "<mn>%f</mn>" r
+
 
 
 printExpression (Number (Real 232.33225))
@@ -75,3 +120,6 @@ let printNumbersToFile fileName =
    |> List.iter (fun elem -> fprintf file "%d " elem)
     
 printNumbersToFile "D:\MyFolders\Desktop\Test.csv"
+
+
+I.symbol
