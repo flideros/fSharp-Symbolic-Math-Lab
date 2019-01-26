@@ -1,3 +1,1 @@
-<math>
-    <mn>232.332250</mn>
-</math>
+<math><mi>a</mi><mo> + </mo><mn>2</mn><mo> = </mo><mn>14</mn></math>

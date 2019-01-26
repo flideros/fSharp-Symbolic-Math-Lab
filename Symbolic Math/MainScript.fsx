@@ -1,6 +1,13 @@
-﻿//#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
+//#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r "System.Xml.Linq.dll"
 #r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\bin\Debug\Symbolic_Math.dll"
+#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
+#r "System.Xml.Linq.dll"
+open FSharp.Data
+open OpenMath
+open Math.Foundations
+open MathML
+open MathML.Element
 open Math.TypeExtensions
 open Math.Foundations.Logic
 open Math.Pure.Objects
@@ -57,60 +64,54 @@ open MathML.Element
 let zz = Logic.Set.Difference.definition
 
 //-----------display-----------//
+(EM 2.0<em>)
+MathSize (EM 2.0<em>)
+let mi = Element.mi []
+let mn = Element.mn  []
+let mo = Element.mo  []
 
-let mi x = Element.mi [] [x]
-let mn x = Element.mn [] [x]
-let mo x = Element.mo [] [x]
-
-let rec getStringsFrom (x:Expression) = 
-        let eNumber acc (n:Expression) = 
+let getStringsFrom (x:Expression) = 
+        let eNumber (n:Expression) = 
             match n with 
-            | Number (Real r) -> ( (mn r).openTag + r.ToString() + (mn r).closeTag )::acc 
-            | Number (Integer i) -> ( (mn i).openTag + i.ToString() + (mn i).closeTag )::acc 
-            | _ -> acc
-        let eComplexNumber acc _ = acc
-        let eSymbol acc (v:Expression) = 
+            | Number (Real r) -> ( mn.openTag + r.ToString() + mn.closeTag )
+            | Number (Integer i) -> ( mn.openTag + i.ToString() + mn.closeTag )
+            | _ ->  ""
+        let eComplexNumber  _ = ""
+        let eSymbol (v:Expression) = 
             match v with 
-            | Symbol (Variable v) -> ( (mi v).openTag + v + (mi v).closeTag )::acc 
-            | Symbol (Constant c) -> ( (mi c).openTag + c.symbol + (mi c).closeTag )::acc 
-            | _ -> acc
-        let eBinaryOp acc (bOpp:Expression)  = 
-            match bOpp with
-            | BinaryOp (a,Plus,b) -> //((mo Plus).openTag + " + " + (mo Plus).closeTag)::acc
-                let a' = match (getStringsFrom a) with | a::[] -> a | _ -> ""
-                let b' =  match (getStringsFrom b) with | b::[] -> b | _ -> ""
-                let plus = (mo Plus).openTag + " + " + (mo Plus).closeTag
-                [(a' + plus + b')]//::acc
+            | Symbol (Variable v) -> ( mi.openTag + v + mi.closeTag )
+            | Symbol (Constant c) -> ( mi.openTag + c.symbol + mi.closeTag )
+            | _ -> ""
+        let eBinaryOp (aText, op, bText)  = 
+            match op with
+            | Plus -> (aText + (mo.openTag + " + " + mo.closeTag) + bText)
+            | Equals -> (aText + (mo.openTag + " = " + mo.closeTag) + bText)
+        let eUnaryOp _ = ""
+        let eNaryOp _ = ""
+        let initialGenerator = fun t -> t
+        Cata.foldbackExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp initialGenerator x
 
-            | _ -> acc
-        let eUnaryOp acc _ = acc
-        let eNaryOp acc _ = acc
-        Cata.foldExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp [] x
-        //|> Seq.rev
-        //|> Seq.distinct
-        //|> Seq.rev
-        |> Seq.toList
-
-
-getStringsFrom (BinaryOp(a,Plus,two))
+getStringsFrom (BinaryOp((BinaryOp(a,Plus,two),Equals,four)))
 
 let elem n = match n with
-             | Number (NumberType.Real r) -> element (Token Mi) [] [r]
-
-
-let math = element Math [] [elem]
+             | Number (NumberType.Real r) -> element (Token Mi) [] 
 
 
 
-let printExpression n = 
+
+// PRINT
+(*let printExpression n = 
     match n with
     | Number (NumberType.Real r) -> 
         use file = System.IO.File.CreateText("D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\output\content\Test.md")
-        fprintf file "<mn>%f</mn>" r
+        fprintf file "<mn>%f</mn>" r*)
+let printExpression n =    
+        //let r = (getStringsFrom n)
+        use file = System.IO.File.CreateText("D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\output\content\Test.md")
+        fprintf file "<math>%s</math>" (getStringsFrom n)
 
 
-
-printExpression (Number (Real 232.33225))
+printExpression (BinaryOp((BinaryOp(a,Plus,two),Equals,five + nine)))
 
 
 let printNumbersToFile fileName =
@@ -123,3 +124,26 @@ printNumbersToFile "D:\MyFolders\Desktop\Test.csv"
 
 
 I.symbol
+
+let ff = MathMLElement.Token Mi
+
+ff.ToString().ToLower()
+
+
+let hhh = Id "none"
+let vvv = Accent true
+
+
+(hhh.GetType().Name.ToLowerInvariant() + hhh.ToString().Replace(hhh.GetType().Name + " "," = \"") + "\"").ToString().Replace("\"\"", "\"")
+(vvv.GetType().Name.ToLowerInvariant() + vvv.ToString().Replace(vvv.GetType().Name + " "," = \"") + "\"").ToString().Replace("\"\"", "\"")
+
+let getString (x:MathMLAttribute) = (x.GetType().Name.ToLowerInvariant() + x.ToString().Replace(x.GetType().Name + " "," = \"") + "\"").ToString().Replace("\"\"", "\"")
+
+getString vvv
+
+
+
+
+
+
+
