@@ -1,4 +1,4 @@
-﻿namespace MathML
+namespace MathML
 
 [<Measure>] type em /// an em (font-relative unit traditionally used for horizontal lengths)
 [<Measure>] type ex /// an ex (font-relative unit traditionally used for vertical lengths)
@@ -192,7 +192,6 @@ type MathLayoutElement = | Mstack | Mlongdiv | Msgroup | Msrow | Mscarries  | Ms
 type EnliveningExpressionElement = | Maction
 
 type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
-
 type Element = { element : MathMLElement; attributes : MathMLAttribute list; openTag : string; closeTag : string }
 
 module Element =
@@ -612,7 +611,6 @@ module Element =
                                      //3.3.1.2 Attributes
                                      Dir Ltr
                                     ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
@@ -655,7 +653,6 @@ module Element =
                                      MathColor "black"; 
                                      MathBackground "transparent";
                                      ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
@@ -822,7 +819,6 @@ module Element =
                                      LSpace (EM 0.8<em>);
                                      VOffset (EM 0.8<em>);
                                      ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
@@ -1000,7 +996,6 @@ module Element =
                                      Accent false; //automatic
                                      Align _Align.Center;
                                      ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
@@ -1229,7 +1224,6 @@ module Element =
                                      CharAlign _CharAlign.Right;
                                      CharSpacing (KeyWord _CharSpacing.Medium);
                                      ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
@@ -1344,7 +1338,6 @@ module Element =
                                      Location N; //inherited
                                      Crossout _Crossout.None; //inherited
                                      ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
@@ -1370,7 +1363,6 @@ module Element =
                                      RightOverhang (Numb 0.0);
                                      MsLineThickness (KeyWord "medium");
                                      ]
-
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
