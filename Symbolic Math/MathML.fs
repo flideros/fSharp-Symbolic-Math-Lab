@@ -193,101 +193,66 @@ type EnliveningExpressionElement = | Maction
 
 type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
 
-type Element<'a> = { element : MathMLElement; attributes : MathMLAttribute list; args : 'a list }
-    with 
-    member this.openTag = 
-        match this.element with
-        | Math -> "<math>"
-        | Token Mi -> "<mi>" 
-        | Token Mn -> "<mn>" 
-        | Token Mo -> "<mo>" 
-        | Token Mtext -> "<mtext>" 
-        | Token Mspace -> "<mspace>" 
-        | Token Ms -> "<ms>" 
-        | Token Mglyph -> "<mglyph>" 
-        | GeneralLayout Mrow -> "<mrow>" 
-        | GeneralLayout Mfrac -> "<mfrac>" 
-        | GeneralLayout Msqrt -> "<msqrt>" 
-        | GeneralLayout Mroot -> "<mroot>" 
-        | GeneralLayout Mstyle -> "<mstyle>" 
-        | GeneralLayout Merror -> "<merror>" 
-        | GeneralLayout Mpadded -> "<mpadded>" 
-        | GeneralLayout Mphantom -> "<mphantom>" 
-        | GeneralLayout Mfenced -> "<mfenced>" 
-        | GeneralLayout Menclose -> "<menclose>" 
-        | Script Msub -> "<msub>" 
-        | Script Msup -> "<msup>" 
-        | Script Msubsup -> "<msubsup>" 
-        | Script Munde -> "<munde>" 
-        | Script Mover -> "<mover>" 
-        | Script Munderover -> "<munderover>" 
-        | Script Mmultiscripts -> "<mmultiscripts>" 
-        | Table Mtable -> "<mtable>" 
-        | Table Mlabeledtr -> "<mlabeledtr>" 
-        | Table Mtr -> "<mtr>" 
-        | Table Mtd -> "<mtd>" 
-        | Table Maligngroup -> "<maligngroup>" 
-        | Table Malignmark -> "<malignmark>" 
-        | MathLayout Mstack -> "<mstack>" 
-        | MathLayout Mlongdiv -> "<mlongdiv>" 
-        | MathLayout Msgroup -> "<msgroup>" 
-        | MathLayout Msrow -> "<msrow>" 
-        | MathLayout Mscarries -> "<mscarries>" 
-        | MathLayout Mscarry -> "<mscarry>" 
-        | MathLayout Msline -> "<msline>" 
-        | Enlivening Maction -> "<maction>" 
-
-    member this.closeTag = 
-        match this.element with
-        | Math -> "</math>"
-        | Token Mi -> "</mi>" 
-        | Token Mn -> "</mn>" 
-        | Token Mo -> "</mo>" 
-        | Token Mtext -> "</mtext>" 
-        | Token Mspace -> "</mspace>" 
-        | Token Ms -> "</ms>" 
-        | Token Mglyph -> "</mglyph>" 
-        | GeneralLayout Mrow -> "</mrow>" 
-        | GeneralLayout Mfrac -> "</mfrac>" 
-        | GeneralLayout Msqrt -> "</msqrt>" 
-        | GeneralLayout Mroot -> "</mroot>" 
-        | GeneralLayout Mstyle -> "</mstyle>" 
-        | GeneralLayout Merror -> "</merror>" 
-        | GeneralLayout Mpadded -> "</mpadded>" 
-        | GeneralLayout Mphantom -> "</mphantom>" 
-        | GeneralLayout Mfenced -> "</mfenced>" 
-        | GeneralLayout Menclose -> "</menclose>" 
-        | Script Msub -> "</msub>" 
-        | Script Msup -> "</msup>" 
-        | Script Msubsup -> "</msubsup>" 
-        | Script Munde -> "</munde>" 
-        | Script Mover -> "</mover>" 
-        | Script Munderover -> "</munderover>" 
-        | Script Mmultiscripts -> "</mmultiscripts>" 
-        | Table Mtable -> "</mtable>" 
-        | Table Mlabeledtr -> "</mlabeledtr>" 
-        | Table Mtr -> "</mtr>" 
-        | Table Mtd -> "</mtd>" 
-        | Table Maligngroup -> "</maligngroup>" 
-        | Table Malignmark -> "</malignmark>" 
-        | MathLayout Mstack -> "</mstack>" 
-        | MathLayout Mlongdiv -> "</mlongdiv>" 
-        | MathLayout Msgroup -> "</msgroup>" 
-        | MathLayout Msrow -> "</msrow>" 
-        | MathLayout Mscarries -> "</mscarries>" 
-        | MathLayout Mscarry -> "</mscarry>" 
-        | MathLayout Msline -> "</msline>" 
-        | Enlivening Maction -> "</maction>" 
+type Element = { element : MathMLElement; attributes : MathMLAttribute list; openTag : string; closeTag : string }
 
 module Element =
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
-    let private scrubAttributes attrList defaultAttributes = 
+    let private scrubAttributes attrList defaultAttr = 
         List.choose (fun elem ->
-        match elem with
-        | elem when isValidElementAttributeOf defaultAttributes elem -> Option.Some elem
-        | _ -> Option.None) attrList
+            match elem with
+            | elem when isValidElementAttributeOf defaultAttr elem -> Option.Some elem
+            | _ -> Option.None) attrList
+        |>
+        List.choose (fun elem ->
+            match elem with
+            | elem when List.exists (fun elem' -> elem' = elem) defaultAttr -> Option.None
+            | _ -> Option.Some elem)    
+    let private getAttrString (x:MathMLAttribute) = 
+        let addOrRemoveSpace x = match x with | "" -> "" | _ -> " " + x
+        let convertLength (l:string)=
+            match l.Contains("(") with
+            | true -> 
+                let value =
+                    let last = l.IndexOf(")")
+                    let start = l.IndexOf(" ")
+                    l.Substring(start,last-start).Trim()
+                let unit =
+                    let start = l.IndexOf("(")
+                    let last = l.IndexOf(" ")
+                    l.Substring(start+1,last-start).ToLower().Trim()
+                match unit with
+                | "em" | "ex" | "px" | "cm" | "in" | "mm" | "pt" | "pc" -> "=\"" + value + unit
+                | "pct" -> "=\"" + value + "%"
+                | "namedlength" | "keyword" | "numb" -> "=\"" + value
+                | _ -> l
+            |false -> l
+        (x.GetType().Name.ToLowerInvariant() 
+         + convertLength (x.ToString().Replace(x.GetType().Name + " ","=\""))
+         + "\"").ToString().Replace("\"\"", "\"")
+        |> addOrRemoveSpace            
     
-    let element (elem : MathMLElement) (attr : MathMLAttribute list) args = 
+  
+    let element (elem : MathMLElement) (attr : MathMLAttribute list)  =                 
+        
+        let openTag attrString = 
+            match elem with
+            | Math -> "<math" + attrString + ">"
+            | Token x -> "<" + (x.ToString().ToLower()) + attrString + ">"
+            | GeneralLayout x -> "<" + (x.ToString().ToLower()) + attrString + ">"
+            | Script x -> "<" + (x.ToString().ToLower()) + attrString + ">"
+            | Table x -> "<" + (x.ToString().ToLower()) + attrString + ">"
+            | MathLayout x -> "<" + (x.ToString().ToLower()) + attrString + ">"
+            | Enlivening x -> "<" + (x.ToString().ToLower()) + attrString + ">"
+
+        let closeTag = 
+            match elem with
+            | Math -> "</math>"
+            | Token x -> "</" + x.ToString().ToLower() + ">"
+            | GeneralLayout x -> "</" + x.ToString().ToLower() + ">"
+            | Script x -> "</" + x.ToString().ToLower() + ">"
+            | Table x -> "</" + x.ToString().ToLower() + ">"
+            | MathLayout x -> "</" + x.ToString().ToLower() + ">"
+            | Enlivening x -> "</" + x.ToString().ToLower() + ">"
 
         match elem with
         | Math ->                     
@@ -401,8 +366,11 @@ module Element =
                                      VAlign (EX 0.0<ex>);
                                      Width (KeyWord "automatic");
                                      ]
-
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
 
         | Token Mi -> 
             let defaultAttributes = 
@@ -423,7 +391,11 @@ module Element =
                                      Dir Ltr;                                     
                                      ]         
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Token Mn ->
             let defaultAttributes =  
@@ -444,7 +416,11 @@ module Element =
                                      Dir Ltr;                                     
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Token Mo ->
             let defaultAttributes =  
@@ -494,7 +470,11 @@ module Element =
                                      IndentTarget "none";                                     
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Token Mtext ->
             let defaultAttributes =  
@@ -515,7 +495,11 @@ module Element =
                                      Dir Ltr;  
                                      ]
                                      
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Token Mspace ->
             let defaultAttributes =  
@@ -551,7 +535,11 @@ module Element =
                                      IndentTarget "none";                                     
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Token Ms ->
             let defaultAttributes =  
@@ -576,7 +564,11 @@ module Element =
                                      LQuote "&quot;";
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Token Mglyph ->
             let defaultAttributes =  
@@ -599,7 +591,11 @@ module Element =
                                      Alt "required"
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -617,7 +613,11 @@ module Element =
                                      Dir Ltr
                                     ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mfrac ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -637,7 +637,11 @@ module Element =
                                      DenomAlign _DenomAlign.Center;
                                      Bevelled false;
                                     ]
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Msqrt ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -652,7 +656,11 @@ module Element =
                                      MathBackground "transparent";
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mroot ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -667,7 +675,11 @@ module Element =
                                      MathBackground "transparent";
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mstyle ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -764,7 +776,11 @@ module Element =
                                      Width (KeyWord "automatic");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Merror ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -781,7 +797,11 @@ module Element =
                                      //
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mpadded ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -803,7 +823,11 @@ module Element =
                                      VOffset (EM 0.8<em>);
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mphantom ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -818,7 +842,11 @@ module Element =
                                      MathBackground "transparent";
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Mfenced ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -838,7 +866,11 @@ module Element =
                                      Separators ",";
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | GeneralLayout Menclose ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -856,7 +888,11 @@ module Element =
                                      Notation LongDiv;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Msub ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -874,7 +910,11 @@ module Element =
                                      SubScriptShift (KeyWord "automatic");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Msup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -892,7 +932,11 @@ module Element =
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Msubsup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -911,7 +955,11 @@ module Element =
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Munde ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -930,7 +978,11 @@ module Element =
                                      Align _Align.Center;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Mover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -949,7 +1001,11 @@ module Element =
                                      Align _Align.Center;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Munderover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -969,7 +1025,11 @@ module Element =
                                      Align _Align.Center;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Script Mmultiscripts ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -988,7 +1048,11 @@ module Element =
                                      SuperScriptShift (KeyWord "automatic");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Table Mtable ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1023,7 +1087,11 @@ module Element =
                                      Width (KeyWord "automatic");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Table Mlabeledtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1043,7 +1111,11 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Table Mtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1063,7 +1135,11 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Table Mtd ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1085,7 +1161,11 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Table Maligngroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1103,7 +1183,11 @@ module Element =
                                      GroupAlign _GroupAlign.Left; //inherited
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Table Malignmark ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1121,7 +1205,11 @@ module Element =
                                      Edge _Edge.Left;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Mstack ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1142,7 +1230,11 @@ module Element =
                                      CharSpacing (KeyWord _CharSpacing.Medium);
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Mlongdiv ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1160,7 +1252,11 @@ module Element =
                                      LongDivStyle LeftTop;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Msgroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1179,7 +1275,11 @@ module Element =
                                      Shift 0;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Msrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1197,7 +1297,11 @@ module Element =
                                      Position 0;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Mscarries ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1218,7 +1322,11 @@ module Element =
                                      ScriptSizeMultiplier 0.6 //inherited
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Mscarry ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1237,7 +1345,11 @@ module Element =
                                      Crossout _Crossout.None; //inherited
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | MathLayout Msline ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1259,7 +1371,11 @@ module Element =
                                      MsLineThickness (KeyWord "medium");
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
         
         | Enlivening Maction ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1278,56 +1394,60 @@ module Element =
                                      Selection 1u;
                                      ]
 
-            { element = elem; attributes = (scrubAttributes attr defaultAttributes); args = args }
+            let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            { element = elem; 
+              attributes = (scrubAttributes attr defaultAttributes); 
+              openTag = openTag aString;
+              closeTag = closeTag }
 
     //Top-Level Constructor
-    let math a x = (element (Math) a x)
+    let math a = (element (Math) a)
     
     //Token Constructors
-    let mi a x = (element (Token Mi) a x)
-    let mn a x = (element (Token Mn) a x)
-    let mo a x = (element (Token Mo) a x)
-    let mtext a x = (element (Token Mtext) a x)
-    let mspace a x = (element (Token Mspace) a x)
-    let ms a x = (element (Token Ms) a x)
+    let mi a = (element (Token Mi) a)
+    let mn a = (element (Token Mn) a)
+    let mo a = (element (Token Mo) a)
+    let mtext a = (element (Token Mtext) a)
+    let mspace a = (element (Token Mspace) a)
+    let ms a = (element (Token Ms) a)
 
     //General Layout Constructors
-    let mrow a x = (element (GeneralLayout Mrow) a x)
-    let mfrac a x = (element (GeneralLayout Mfrac) a x)
-    let msqrt a x = (element (GeneralLayout Msqrt) a x)
-    let mroot a x = (element (GeneralLayout Mroot) a x)
-    let mstyle a x = (element (GeneralLayout Mstyle) a x)
-    let merror a x = (element (GeneralLayout Merror) a x)        
-    let mpadded a x = (element (GeneralLayout Mpadded) a x)
-    let mphantom a x = (element (GeneralLayout Mphantom) a x)
-    let mfenced a x = (element (GeneralLayout Mfenced) a x) 
-    let menclose a x = (element (GeneralLayout Menclose) a x)
+    let mrow a = (element (GeneralLayout Mrow) a)
+    let mfrac a = (element (GeneralLayout Mfrac) a)
+    let msqrt a = (element (GeneralLayout Msqrt) a)
+    let mroot a = (element (GeneralLayout Mroot) a)
+    let mstyle a = (element (GeneralLayout Mstyle) a)
+    let merror a = (element (GeneralLayout Merror) a)        
+    let mpadded a = (element (GeneralLayout Mpadded) a)
+    let mphantom a = (element (GeneralLayout Mphantom) a)
+    let mfenced a = (element (GeneralLayout Mfenced) a) 
+    let menclose a = (element (GeneralLayout Menclose) a)
 
     //Script Constructors
-    let msub a x = (element (Script Msub) a x)
-    let msup a x = (element (Script Msup) a x)
-    let msubsup a x = (element (Script Msubsup) a x)
-    let munde a x = (element (Script Munde) a x)
-    let mover a x = (element (Script Mover) a x)
-    let munderover a x = (element (Script Munderover) a x)        
-    let mmultiscripts a x = (element (Script Mmultiscripts) a x)
+    let msub a = (element (Script Msub) a)
+    let msup a = (element (Script Msup) a)
+    let msubsup a = (element (Script Msubsup) a)
+    let munde a = (element (Script Munde) a)
+    let mover a = (element (Script Mover) a)
+    let munderover a = (element (Script Munderover) a)        
+    let mmultiscripts a = (element (Script Mmultiscripts) a)
 
     //Table Constructors
-    let mtable a x = (element (Table Mtable) a x)
-    let mlabeledtr a x = (element (Table Mlabeledtr) a x)
-    let mtr a x = (element (Table Mtr) a x)
-    let mtd a x = (element (Table Mtd) a x)
-    let maligngroup a x = (element (Table Maligngroup) a x)
-    let malignmark a x = (element (Table Malignmark) a x)
+    let mtable a = (element (Table Mtable) a)
+    let mlabeledtr a = (element (Table Mlabeledtr) a)
+    let mtr a = (element (Table Mtr) a)
+    let mtd a = (element (Table Mtd) a)
+    let maligngroup a = (element (Table Maligngroup) a)
+    let malignmark a = (element (Table Malignmark) a)
 
     //Math Layout Constructors
-    let mstack a x = (element (MathLayout Mstack) a x)
-    let mlongdiv a x = (element (MathLayout Mlongdiv) a x)
-    let msgroup a x = (element (MathLayout Msgroup) a x)
-    let msrow a x = (element (MathLayout Msrow) a x)
-    let mscarries a x = (element (MathLayout Mscarries) a x)
-    let mscarry a x = (element (MathLayout Mscarry) a x)        
-    let msline a x = (element (MathLayout Msline) a x)
+    let mstack a = (element (MathLayout Mstack) a)
+    let mlongdiv a = (element (MathLayout Mlongdiv) a)
+    let msgroup a = (element (MathLayout Msgroup) a)
+    let msrow a = (element (MathLayout Msrow) a)
+    let mscarries a = (element (MathLayout Mscarries) a)
+    let mscarry a = (element (MathLayout Mscarry) a)        
+    let msline a = (element (MathLayout Msline) a)
 
     //Math Layout Constructors EnliveningExpressionElement = | Maction
-    let menliveningExpression a x = (element (Enlivening Maction) a x)
+    let menliveningExpression a = (element (Enlivening Maction) a)

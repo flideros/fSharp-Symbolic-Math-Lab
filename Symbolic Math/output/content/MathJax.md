@@ -20,15 +20,7 @@
 <br><br>
 
 <Math>        
-<mrow>
-  <mi> f </mi>
-  <mo> &#x2061;<!--FUNCTION APPLICATION--> </mo>
-  <mrow>
-    <mo> ( </mo>
-    <mi> x </mi>
-    <mo> ) </mo>
-  </mrow>
-</mrow>
+<mi >a</mi><mo > + </mo><mn mathsize="4.0em">2</mn>
 </math>
 
 
