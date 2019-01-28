@@ -64,8 +64,9 @@ open MathML.Element
 let zz = Logic.Set.Difference.definition
 
 //-----------display-----------//
-(EM 2.0<em>)
-MathSize (EM 2.0<em>)
+
+
+
 let mi = Element.mi []
 let mn = Element.mn  []
 let mo = Element.mo  []
@@ -75,6 +76,7 @@ let getStringsFrom (x:Expression) =
             match n with 
             | Number (Real r) -> ( mn.openTag + r.ToString() + mn.closeTag )
             | Number (Integer i) -> ( mn.openTag + i.ToString() + mn.closeTag )
+
             | _ ->  ""
         let eComplexNumber  _ = ""
         let eSymbol (v:Expression) = 
@@ -84,7 +86,10 @@ let getStringsFrom (x:Expression) =
             | _ -> ""
         let eBinaryOp (aText, op, bText)  = 
             match op with
-            | Plus -> (aText + (mo.openTag + " + " + mo.closeTag) + bText)
+            | Plus -> (aText + (mo.openTag + " + " + mo.closeTag) + bText) //placeholder
+            | Minus -> (aText + (mo.openTag + " - " + mo.closeTag) + bText) //placeholder
+            | Times -> (aText + (mo.openTag + " * " + mo.closeTag) + bText) //placeholder
+            | DividedBy -> (aText + (mo.openTag + " / " + mo.closeTag) + bText) //placeholder
             | Equals -> (aText + (mo.openTag + " = " + mo.closeTag) + bText)
         let eUnaryOp _ = ""
         let eNaryOp _ = ""

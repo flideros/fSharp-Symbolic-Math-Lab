@@ -20,7 +20,7 @@
 <br><br>
 
 <Math>        
-<mi >a</mi><mo > + </mo><mn mathsize="4.0em">2</mn>
+<mo>&#x2ADD;&#x338;</m0>
 </math>
 
 
