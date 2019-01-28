@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TypeExtensions.fs" />
+    <Compile Include="OperatorDictionary.fs" />
     <Compile Include="MathML.fs" />
     <Compile Include="OpemMath.fs" />
     <Compile Include="Symbol.fs" />

@@ -94,7 +94,7 @@ type Function =
     | Mean
     | Median
     | Min
-    | Minus
+    | Minus // Implemented
     | Mode
     | DataMoment
     | Moment
