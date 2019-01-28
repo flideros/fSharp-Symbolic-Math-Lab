@@ -1,4 +1,4 @@
-﻿//#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
+//#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r "System.Xml.Linq.dll"
 #r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\bin\Debug\Symbolic_Math.dll"
 #r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
@@ -67,15 +67,6 @@ let zz = Logic.Set.Difference.definition
 
 
 
-let mi = Element.mi []
-let mn = Element.mn  []
-let mo = Element.mo  []
-
-let getStringsFrom (x:Expression) = 
-        let eNumber (n:Expression) = 
-            match n with 
-            | Number (Real r) -> ( mn.openTag + r.ToString() + mn.closeTag )
-            | Number (Integer i) -> ( mn.openTag + i.ToString() + mn.closeTag )
 
             | _ ->  ""
         let eComplexNumber  _ = ""
@@ -145,10 +136,6 @@ let vvv = Accent true
 let getString (x:MathMLAttribute) = (x.GetType().Name.ToLowerInvariant() + x.ToString().Replace(x.GetType().Name + " "," = \"") + "\"").ToString().Replace("\"\"", "\"")
 
 getString vvv
-
-
-
-
 
 
 
