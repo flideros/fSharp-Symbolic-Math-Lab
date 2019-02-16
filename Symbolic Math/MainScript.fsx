@@ -63,6 +63,26 @@ open MathML.Element
 
 let zz = Logic.Set.Difference.definition
 
+type UnicodeG = XmlProvider<"D:/MyFolders/Desktop/ucd.nounihan.grouped/ucd.nounihan.grouped.xml">
+
+let dataG = UnicodeG.Load("D:/MyFolders/Desktop/ucd.nounihan.grouped/ucd.nounihan.grouped.xml")
+
+
+
+
+//printf "%A" chars
+
+let c2 = dataG.Repertoire.Groups |> Array.map (fun ds -> ds.Blk) |> Array.iter (fun x -> printfn "%A" x )
+let c3 = dataG.Repertoire.Groups |> Array.choose (fun ds -> match ds.Blk with  
+                                                            | Some x when x = "Playing_Cards" -> Some ds | _ -> Option.None)
+                                 |> Array.map (fun x -> x.Chars) |> Array.concat 
+c3.Length
+
+printfn "%A" c2
+
+dataG.Repertoire.Groups.[21].Blk
+
+
 //-----------display-----------//
 
 

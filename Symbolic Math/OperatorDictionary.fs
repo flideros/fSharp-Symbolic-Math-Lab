@@ -1,6 +1,12 @@
 ﻿module OperatorDictionary
 
-//This is where I will connect to a database to get operator defenitions one I create the database table
+///\/-------------------------------------Notes------------------------------------\/
+
+/// 1..When an operator is expanded vertically, it is implemented in a function elsewhere 
+///    in subsequent code.
+
+///\-------------------------------------Notes-------------------------------------/\
+
 
 type Operator = 
     { character : string
@@ -728,7 +734,7 @@ let quadruplePrimePostfix = {character = "&#x2057;"; glyph = "⁗"; name="quadru
 let quaternionIntegralOperatorPrefix = {character = "&#x2A16;"; glyph = "⨖"; name="quaternion integral operator"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
 let questionedEqualToInfix = {character = "&#x225F;"; glyph = "≟"; name="questioned equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
 let questionMarkInfix = {character = "?"; glyph = "?"; name="question mark"; form="infix"; priority="835"; lspace="1"; rspace="1"; properties=[]}
-let quotationMarkPostfix = {character = "\; glyph = "\; name="quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
+let quotationMarkPostfix = {character = "\""; glyph = "\""; name="quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
 let ratioInfix = {character = "&#x2236;"; glyph = "∶"; name="ratio"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
 let reversedAngleInfix = {character = "&#x29A3;"; glyph = "⦣"; name="reversed angle"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
 let reversedAngleWithUnderbarInfix = {character = "&#x29A5;"; glyph = "⦥"; name="reversed angle with underbar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
