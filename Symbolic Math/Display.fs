@@ -1,4 +1,4 @@
-module Display
+﻿module Display
 
 open Math.TypeExtensions
 open Math.Foundations.Logic

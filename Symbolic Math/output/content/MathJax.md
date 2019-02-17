@@ -20,13 +20,13 @@
 <br><br>
 
 <Math>        
-<mo>&#x2ADD;&#x338;</m0>
+<mo mathsize="2in">&#x1F0DF;</m0>
 </math>
 
 
 <br><br><br><br><br>
 
-$ \(     8 + 202x + 18x^2 + 7x^3 + x^4           \) $
+$ \(     8 + 202x + 18x^2 + 7x^3 + x^4        \) $
 
 $\rm\TeX $
 $\rm\LaTeX $
