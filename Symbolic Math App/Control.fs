@@ -6,14 +6,14 @@ open System.Windows.Controls
 open System.Windows.Media
 open System.Windows.Shapes
 open TypeExtension
-open Container
+open UI
 open Operator
 
-//
-// user control declarations
-//
+
+//\/-------------------------------------Volume control------------------------------------\/
+
 /// Volume control , it shows a value and allows you to change it.
-type Volume(title:string, range:int * int, value:share<int>) as this =
+type Volume(title:string, range:int * int, value:SharedValue<int>) as this =
   inherit StackPanel(Orientation=Orientation.Horizontal)
   do Label(Content=title,Width=50.) |>this.add 
   let label  = Label(Content=value.Get,Width=50.) $ this.add
@@ -27,9 +27,12 @@ type Volume(title:string, range:int * int, value:share<int>) as this =
     value.Changed.Add changedHandler
 
     changedHandler value.Get // initialization
+//\------------------------------------- Volume control------------------------------------/\
+
+//\/-------------------------------Color Volume control------------------------------------\/
 
 /// Volume control of a color
-type ColorVolume (color:share<Color>) as this =
+type ColorVolume (color:SharedValue<Color>) as this =
   inherit StackPanel(Orientation=Orientation.Vertical)
   // shared values for controls which represents ARGB of selected color
   let alpha = SharedValue(int color.Get.A)
@@ -53,3 +56,5 @@ type ColorVolume (color:share<Color>) as this =
     Volume("Red"  , (0,255), red  ) |> this.add
     Volume("Green", (0,255), green) |> this.add
     Volume("Blue" , (0,255), blue ) |> this.add
+
+//\--------------------------------Color Volume control------------------------------------/\

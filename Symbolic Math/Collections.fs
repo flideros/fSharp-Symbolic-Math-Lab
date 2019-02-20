@@ -13,20 +13,17 @@ module Set =
     
     // Content Dictionaries
 
-    let private _omSet = FROM.cD "set1"    
+    //let private _omSet = FROM.cD "set1"    
 
     // Definition    
-    let definition = GET.definitionEntry "set" _omSet
+    let definition = ""//GET.definitionEntry "set" _omSet
 
     module Size =
 
         let oF set = Integer (bigint(Set.count set))
-
         let oFSequence seq = 
-            try 
-            
-            Integer (bigint(Seq.length seq))
-            
+            try             
+            Integer (bigint(Seq.length seq))            
             with
             | :? System.InvalidOperationException -> PositiveInfinity
                              
@@ -35,31 +32,25 @@ module Set =
 
     module Map =
 
-        let tO set func = Set.map func set     
-
+        let tO set func = Set.map func set
         let tOList set func = List.map func set
                               |> Seq.distinct |> List.ofSeq
-
         // Definition
         let definition = Map.definition
 
     module Union =
 
-        let oF left right = Set.union left right       
-        
+        let oF left right = Set.union left right        
         let oFList left right =
            List.append left right |> Seq.distinct |> List.ofSeq
-
         // Definition
         let definition = Union.definition
     
     module MultiUnion =
         
-        let oF setList = List.fold (fun acc x -> Set.union acc x) Set.empty setList
-        
+        let oF setList = List.fold (fun acc x -> Set.union acc x) Set.empty setList        
         let oFManyLists lists =
            List.fold (fun acc x ->List.append acc x) [] lists |> Seq.distinct |> List.ofSeq
-
         // Definition
         let definition = MultiUnion.definition
 
@@ -70,8 +61,7 @@ module Set =
         let oFList (left:list< 'a >) (right:list< 'a >) =
             let cache = HashSet< 'a >(right, HashIdentity.Structural)
             left |> List.filter (fun n -> cache.Contains n)
-            |> Seq.distinct |> List.ofSeq
-        
+            |> Seq.distinct |> List.ofSeq        
         // Definition
         let definition = Intersect.definition
 

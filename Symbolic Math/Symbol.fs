@@ -1,8 +1,7 @@
 namespace Math.Pure.Objects
 
 open OpenMath
-
-open OpenMath
+open FSharp.Data
 
 type Constant =
     | E
@@ -46,6 +45,7 @@ type Constant =
     | NumericalValue
     with
     member this.definition =         
+        
         match this with 
         //nums1
         | E -> GET.definitionEntry "e" (FROM.cD "nums1")
