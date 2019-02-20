@@ -83,6 +83,7 @@ printfn "%A" c2
 dataG.Repertoire.Groups.[21].Blk
 
 
+//-----------display-----------//
 
 
 

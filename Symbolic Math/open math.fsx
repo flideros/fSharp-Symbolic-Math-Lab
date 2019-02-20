@@ -8,14 +8,12 @@ open OpenMath
 open Math.Foundations
 open Math.Pure.Objects
 
-And.defenition
-Abs.defenition
-Function.Argument .defenition
-let ocd = "set1"
+let e = E
+e.definition
 
-And.defenition
-Abs.defenition
-Function.Argument .defenition
+And.definition
+Abs.definition
+Function.Argument.definition
 let ocd = "set1"
 
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
@@ -29,6 +27,10 @@ ooo.XElement.Save(__SOURCE_DIRECTORY__ + @"\OCD\"  + ooo.CdName + ".ocd")
 
 
 let h = GET.cD "set1"
+let dj = OpenMathCD.Load(__SOURCE_DIRECTORY__ + @"\OCD\" + "set1" + ".ocd")
+        
+
+
 let hh = h.CdDefinitions |> Array.collect (fun x -> [|x.Name,x.Role|])
 
 
