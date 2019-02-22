@@ -50,6 +50,7 @@
     <Compile Include="TypeExtension.fs" />
     <Compile Include="Container.fs" />
     <Compile Include="Operator.fs" />
+    <Compile Include="Style.fs" />
     <Compile Include="Control.fs" />
     <Compile Include="Program.fs" />
     <None Include="MainScrript.fsx" />

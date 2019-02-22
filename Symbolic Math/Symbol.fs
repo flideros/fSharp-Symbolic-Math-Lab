@@ -3,8 +3,6 @@ namespace Math.Pure.Objects
 open OpenMath
 open FSharp.Data
 
-open OpenMath
-
 type Constant =
     | E
     | I

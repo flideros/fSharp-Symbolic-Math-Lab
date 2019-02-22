@@ -4,18 +4,34 @@ open System
 open System.Windows          
 open System.Windows.Controls
 open System.Windows.Media
-open System.Windows.Shapes
 open TypeExtension
 open UI
 open Operator
+open System.Windows.Shapes
+open System.IO
+open System.Windows.Markup
+open System.Reflection
+open System.Windows.Media.Imaging
 
 
-//\/-------------------------------------Volume control------------------------------------\/
+//\/--- Browser Control ------------------------------------------------------------------\/
+
+type Browser(page:String) as this =
+     inherit Frame()
+     let browser = new WebBrowser()
+     do
+        browser.Navigate(page)
+        this.Content <- browser
+
+ //\--- Browser Control -------------------------------------------------------------------/\
+
+
+//\/--- Volume Control --------------------------------------------------------------------\/
 
 /// Volume control , it shows a value and allows you to change it.
 type Volume(title:string, range:int * int, value:SharedValue<int>) as this =
   inherit StackPanel(Orientation=Orientation.Horizontal)
-  do Label(Content=title,Width=50.) |>this.add 
+  do Label(Content=title,Width=50.) |> this.add 
   let label  = Label(Content=value.Get,Width=50.) $ this.add
   let slider = Slider(Minimum=float(fst range), Maximum=float(snd range), TickFrequency=2., Width=127.) $ this.add
   let changedHandler value =
@@ -27,9 +43,9 @@ type Volume(title:string, range:int * int, value:SharedValue<int>) as this =
     value.Changed.Add changedHandler
 
     changedHandler value.Get // initialization
-//\------------------------------------- Volume control------------------------------------/\
+//\--- Volume Control ----------------------------------------------------------------------/\
 
-//\/-------------------------------Color Volume control------------------------------------\/
+//\/--- Color Volume Control ---------------------------------------------------------------\/
 
 /// Volume control of a color
 type ColorVolume (color:SharedValue<Color>) as this =
@@ -57,4 +73,4 @@ type ColorVolume (color:SharedValue<Color>) as this =
     Volume("Green", (0,255), green) |> this.add
     Volume("Blue" , (0,255), blue ) |> this.add
 
-//\--------------------------------Color Volume control------------------------------------/\
+//\--- Color Volume Control -----------------------------------------------------------------/\
