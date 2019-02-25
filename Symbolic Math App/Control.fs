@@ -12,18 +12,32 @@ open System.IO
 open System.Windows.Markup
 open System.Reflection
 open System.Windows.Media.Imaging
+open Microsoft.Toolkit.Wpf.UI.Controls
+//open Microsoft.Toolkit.Win32.UI.Controls
 
+//\/--- Browser Controls ------------------------------------------------------------------\/
+   
+ ///--- This control uses the native WebBrowser ActiveX control.  
+ ///--- https://docs.microsoft.com/en-us/dotnet/framework/wpf/controls/frame
 
-//\/--- Browser Control ------------------------------------------------------------------\/
-
-type Browser(page:String) as this =
-     inherit Frame()
-     let browser = new WebBrowser()
+type FrameBrowser(page:String) as this =
+     inherit Frame()     
      do
-        browser.Navigate(page)
-        this.Content <- browser
+        this.Source <- Uri(page)
 
- //\--- Browser Control -------------------------------------------------------------------/\
+///--- This control uses the Microsoft Edge rendering engine (EdgeHTML) to embed a view that 
+///--- renders richly formatted HTML5 content from a remote web server, dynamically generated 
+///--- code, or content files.
+///--- https://docs.microsoft.com/en-us/windows/communitytoolkit/controls/wpf-winforms/webview
+
+type WebViewBrowser(page:String) as this =
+     inherit Frame()    
+     let webViewer = new WebView()
+     do
+        webViewer.Source <- Uri(page)
+        this.Content <- webViewer
+
+//\--- Browser Controls -------------------------------------------------------------------/\
 
 
 //\/--- Volume Control --------------------------------------------------------------------\/

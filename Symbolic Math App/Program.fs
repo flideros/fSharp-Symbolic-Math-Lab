@@ -17,11 +17,12 @@ open Style
 open Control
 
 // Create Types
-let browser = Browser("https://www.bing.com/")
+let browser = WebViewBrowser(@"https://www.bing.com/")
 let browserBorder = BorderStyle();
 let comboBox = ComboBox()
 let listView = ListView()
 let dockPanel = DockPanelStyle()
+let button = ButtonStyle("Frank's Button") 
 
 // Compose Types
 browserBorder.Child <- browser
@@ -32,8 +33,8 @@ listView.Items.Add("bbbb") |> ignore
 comboBox.Items.Add (listView) |> ignore
 
 dockPanel.Children.Add (comboBox) |> ignore
+dockPanel.Children.Add (button) |> ignore
 dockPanel.Children.Add (browserBorder) |> ignore
-
 
 // Make a window and add content
 let window = Window()
