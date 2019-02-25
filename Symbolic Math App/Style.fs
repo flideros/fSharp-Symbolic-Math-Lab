@@ -30,6 +30,37 @@ type BorderStyle() as border =
 //\--- Border Style -------------------------------------------------------------------/\
 
 
+//\/--- Button Styles --------------------------------------------------------------------\/
+
+type ButtonStyle(name:string) as button =
+     inherit Button()
+
+     let strokeBrushColor = Color()
+
+     let rectangle = Rectangle()
+     let border = Border()
+     //let buttonFocusVisual = 
+     
+
+     do
+        rectangle.Margin <- Thickness(2.)
+        rectangle.Stroke <- Brushes.AliceBlue
+        //button.Background <- Brushes.AliceBlue
+        //button.BorderBrush <- Brushes.Red
+        button.Content <- name // add some error handling code
+        button.SnapsToDevicePixels <- true
+        button.OverridesDefaultStyle <- true
+        //button.FocusVisualStyle <- Value="{StaticResource ButtonFocusVisual}"
+        button.MaxHeight <- 23.
+        button.MinWidth <- 75.
+        //button.Template <- 
+
+
+
+
+//\--- Button Styles ----------------------------------------------------------------------/\
+
+
 //\/--- StackPanel Style ------------------------------------------------------------------\/
  
 type StackPanelStyle() as stackPanel =
