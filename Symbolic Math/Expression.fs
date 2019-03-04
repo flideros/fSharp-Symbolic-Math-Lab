@@ -4,7 +4,7 @@ open Math.Pure.Quantity
 
 type Expression =
     | Number of NumberType
-    | ComplexNumber of Expression*Expression
+    | ComplexNumber of Expression*Expression //still working on this. Might remove and create a module...
     | Symbol of Symbol
     | BinaryOp of Expression * Function * Expression
     | UnaryOp of Function * Expression

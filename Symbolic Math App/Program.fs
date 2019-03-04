@@ -15,36 +15,40 @@ open System.Reflection
 open System.Windows.Media.Imaging
 open Style
 open Control
+open BasicCalculator
+
+//Define app resources and load them to the main progream.
+let resource = new Uri("app.xaml",System.UriKind.Relative)
+let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Create Types
-let browser = WebViewBrowser(@"https://www.bing.com/")
-let browserBorder = BorderStyle();
-let comboBox = ComboBox()
-let listView = ListView()
+let browser = FrameBrowser(@"https://www.bing.com/")
+let browserBorder = Border()
 let dockPanel = DockPanelStyle()
-let button = ButtonStyle("Frank's Button") 
+let button = ButtonStyle("Frank's Button")
 
 // Compose Types
 browserBorder.Child <- browser
 
-listView.Items.Add("aaaa") |> ignore
-listView.Items.Add("bbbb") |> ignore
-
-comboBox.Items.Add (listView) |> ignore
-
-dockPanel.Children.Add (comboBox) |> ignore
 dockPanel.Children.Add (button) |> ignore
 dockPanel.Children.Add (browserBorder) |> ignore
 
-// Make a window and add content
-let window = Window()
-window.Title <- "F# is fun!"
-window.Content <- dockPanel //browserBorder
-//window.Show()
 
-  
+let calculator = new Calculator(OverridesDefaultStyle = true) 
+
+// Make a window and add content
+let window = new Window()
+window.Title <- "F# is fun!" 
+window.Content <-  calculator
+
+//----------{not needed unless a Xaml used for window}----------//
+// Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
+//{not needed unless a Xaml used for window} let mutable this : Window = Utilities.contentAsXamlObject("MainWindow.xaml"):?> Window  
 
 [<STAThread>] 
 [<EntryPoint>]
-do (new Application()).Run(window) |> ignore
-
+let main(_) =  
+    do mainProgram.Run(window) |> ignore
+    0
+    
+    
