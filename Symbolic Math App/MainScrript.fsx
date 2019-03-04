@@ -3,6 +3,7 @@
 #r @"WindowsBase"
 #r @"System.Xaml"
 #r @"UIAutomationTypes"
+
 #load "Operator.fs"
 #load "TypeExtension.fs"
 #load "Container.fs"
@@ -15,7 +16,13 @@ open System.Windows.Media
 open TypeExtension
 open UI
 open Operator
-open Control
+//open Control
+open System.Windows.Shapes
+
+
+Rectangle().GetType()
+
+
 
 let brush = Brushes.Bisque
 

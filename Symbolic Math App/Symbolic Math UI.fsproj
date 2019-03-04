@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TypeExtension.fs" />
+    <Compile Include="Utilities.fs" />
+    <Resource Include="app.xaml" />
     <Compile Include="Container.fs" />
     <Compile Include="Operator.fs" />
     <Compile Include="Control.fs" />
@@ -100,10 +102,15 @@
     <Reference Include="System.Windows" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\BasicCalculator\BasicCalculator.fsproj">
+      <Name>BasicCalculator</Name>
+      <Project>{80918dbd-cfca-4d94-b1a0-0941828708cd}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Symbolic Math\Symbolic Math 1.fsproj">
       <Name>Symbolic Math 1</Name>
       <Project>{03e8055f-412d-498f-9cd1-c712257fad32}</Project>

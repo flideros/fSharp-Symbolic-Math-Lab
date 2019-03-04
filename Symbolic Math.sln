@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math 1", "Symbolic
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math UI", "Symbolic Math App\Symbolic Math UI.fsproj", "{73E118D2-706E-4DDE-896D-C23EA714F7EC}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BasicCalculator", "BasicCalculator\BasicCalculator.fsproj", "{80918DBD-CFCA-4D94-B1A0-0941828708CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

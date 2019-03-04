@@ -6,7 +6,7 @@ open System.Windows.Controls
 open System.Windows.Media
 open TypeExtension
 open UI
-open Operator
+open Utilities
 open System.Windows.Shapes
 open System.IO
 open System.Windows.Markup
