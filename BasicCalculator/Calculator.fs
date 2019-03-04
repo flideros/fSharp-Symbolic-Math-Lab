@@ -282,11 +282,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable buttonList =[one;two;three;four;five;six;seven;eight;nine;zero;
-        decimalPoint;add;subtract;multiply;
-        divide;equals;root;sign;inverse;percent;back;clear;clearEntry;
-        clearMemory;recallMemory;storeMemory;addToMemory;subtractFromMemoy]
-        
+            
         // Text Blocks
     let mutable result =
         TextBlock(Name = "result",
@@ -294,7 +290,7 @@ type Calculator() as calculator =
                     HorizontalAlignment = HorizontalAlignment.Left,
                     Margin = Thickness(Left = 26., Top = 29., Right = 0., Bottom = 0.),
                     TextWrapping = TextWrapping.NoWrap,
-                    Text = "result",
+                    Text = "0",
                     VerticalAlignment = VerticalAlignment.Top,
                     Height = 41.,
                     Width = 169.,
@@ -305,8 +301,7 @@ type Calculator() as calculator =
                     TextAlignment = TextAlignment.Right, 
                     HorizontalAlignment = HorizontalAlignment.Left,
                     Margin = Thickness(Left = 10., Top = 29., Right = 0., Bottom = 0.),
-                    TextWrapping = TextWrapping.Wrap,
-                    Text = "M",
+                    TextWrapping = TextWrapping.Wrap,                    
                     VerticalAlignment = VerticalAlignment.Top,
                     Height = 41.,
                     Width = 17.,
@@ -318,23 +313,57 @@ type Calculator() as calculator =
                     HorizontalAlignment = HorizontalAlignment.Left,
                     Margin = Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.),
                     TextWrapping = TextWrapping.NoWrap,
-                    Text = "helper",
                     VerticalAlignment = VerticalAlignment.Top,
                     Height = 19.,
                     Width = 185.,
                     Background = backgroundColor)
-    let mutable textBlockList = [result; memo; helper]
-
+    
         // Main Layout Grid
     let mutable grid = Grid( Height = 304.,
                              Width = 206.,
                              Background = gridColor,
                              RenderTransformOrigin = Point(0.5,0.5))
     
+    
+
+ (*   
+    // Add click event to each button
+    // MEMORY COMMAND
+    let memoCommand (oper : string) = 
+        match result.Text with
+        | "NaN" | "∞"-> ignore()    
+        | _ ->    match oper with
+                  | "MS" -> Perform.memo <- txtResult.Text    // Memory Store puts the number on the display into the memory 
+                            memo.Text <- "M"
+                  | "MR" -> result.Text <- Perform.memo    // Memory Recall uses the number in memory
+                            Perform.memo <- "0.0"
+                            memo.Text <- ""
+                  | "MC" -> Perform.memo <- "0.0"             // Memory Clear
+                            memo.Text <- ""
+                  | "M+" -> Perform.memo <- (Double.Parse(Perform.memo) + Double.Parse(txtResult.Text)).ToString()
+                            memo.Text <- "M"
+                  | "M-" -> Perform.memo <- (Double.Parse(Perform.memo) - Double.Parse(txtResult.Text)).ToString() 
+                            memo.Text <- "M"
+                  | _    -> Perform.memo <- ("0")
+                            memo.Text <- ""
+                  Perform.blnCommand <- true
+                  memo.ToolTip <- Perform.memo
+            
+    do btnMS.Click.Add(fun _ -> memoCommand("MS"))
+       btnMR.Click.Add(fun _ -> memoCommand("MR"))
+       btnMC.Click.Add(fun _ ->  memoCommand("MC"))  
+       btnMPlus.Click.Add(fun _ -> memoCommand("M+"))
+       btnMMinus.Click.Add(fun _ -> memoCommand("M-")) 
+    
+    *)
+
+    let mutable textBlockList = [result; memo; helper]
+    let mutable buttonList =[one;two;three;four;five;six;seven;eight;nine;zero;
+        decimalPoint;add;subtract;multiply;
+        divide;equals;root;sign;inverse;percent;back;clear;clearEntry;
+        clearMemory;recallMemory;storeMemory;addToMemory;subtractFromMemoy]
+
     do 
         for x in buttonList do grid.Children.Add(x) |> ignore
         for x in textBlockList do grid.Children.Add(x) |> ignore
         calculator.Content <- grid
-
-
-    
