@@ -27,7 +27,6 @@ type BorderStyle() as border =
 
 type ButtonStyle(name:string) as button =
      inherit Button()
-     
      do       
         button.Content <- name // add some error handling code        
         // Get style from application resources in app.xmal
