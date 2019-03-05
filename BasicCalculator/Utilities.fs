@@ -24,3 +24,18 @@ let contentAsXamlObject (strXamlName : string) =
               XamlReader.Load(mySr.BaseStream)
     | false -> null
 
+// helper to make defaultArg better for piping
+let ifNone defaultValue input = 
+    // just reverse the parameters!
+    defaultArg input defaultValue
+
+
+        
+[<AutoOpen>]
+type MaybeBuilder() =
+        member this.Bind(x, f) = Option.bind f x
+        member this.Return(x) = Some x
+   
+    let maybe = new MaybeBuilder()
+    
+    

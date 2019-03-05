@@ -13,23 +13,20 @@ open System.Windows.Controls
 open System.Reflection
 open System.Windows.Media.Imaging
 open Utilities
+open CalculatorDomain
 
 
 type Calculator() as calculator =     
     inherit UserControl()
-    //Define app resources and load them to the main program.
-    //let resource = new Uri("app.xaml",System.UriKind.Relative)
-    //let mainProgram = Application.LoadComponent(resource) :?> Application
-
-    // Create Types
-        
-        //Colors
+    
+    // ------Create Types---------        
+    //Colors 
     let gridColor = new SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xF6", byte "0xF7", byte "0xF9"))
     let buttonColor = new SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xFB", byte "0xFB", byte "0xFB"))
     let backgroundColor = new SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xF6", byte "0xF7", byte "0xF9"))
     
-        //Buttons     
-    let mutable one = 
+    //Buttons     
+    let one = 
         Button(Name = "oneButton",
                 Content = "1",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -37,9 +34,8 @@ type Calculator() as calculator =
                 VerticalAlignment = VerticalAlignment.Top,
                 Width = 33.,
                 Height = 33.,
-                Background = buttonColor) //
-    
-    let mutable two = 
+                Background = buttonColor) //    
+    let two = 
         Button(Name = "twoButton",
                 Content = "2",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -48,7 +44,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor)
-    let mutable three = 
+    let three = 
         Button(Name = "threeButton",
                 Content = "3",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -57,7 +53,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable four = 
+    let four = 
         Button(Name = "fourButton",
                 Content = "4",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -66,7 +62,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable five = 
+    let five = 
         Button(Name = "fiveButton",
                 Content = "5",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -75,7 +71,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable six = 
+    let six = 
         Button(Name = "sixButton",
                 Content = "6",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -84,7 +80,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable seven = 
+    let seven = 
         Button(Name = "sevenButton",
                 Content = "7",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -93,7 +89,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable eight = 
+    let eight = 
         Button(Name = "eightButton",
                 Content = "8",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -102,7 +98,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable nine = 
+    let nine = 
         Button(Name = "nineButton",
                 Content = "9",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -111,7 +107,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable zero = 
+    let zero = 
         Button(Name = "zeroButton",
                 Content = "0",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -120,7 +116,7 @@ type Calculator() as calculator =
                 Width = 71.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable decimalPoint = 
+    let decimalPoint = 
         Button(Name = "decimalPointButton",
                 Content = ".",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -129,7 +125,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable add = 
+    let add = 
         Button(Name = "addButton",
                 Content = "+",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -138,7 +134,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable subtract = 
+    let subtract = 
         Button(Name = "subtractButton",
                 Content = "-",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -147,7 +143,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable multiply = 
+    let multiply = 
         Button(Name = "multiplyButton",
                 Content = "*",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -156,7 +152,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable divide = 
+    let divide = 
         Button(Name = "divideButton",
                 Content = "/",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -165,7 +161,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable equals = 
+    let equals = 
         Button(Name = "equalsButton",
                 Content = "=",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -174,7 +170,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 71.,
                 Background = buttonColor) //
-    let mutable root = 
+    let root = 
         Button(Name = "rootButton",
                 Content = "\u221A",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -183,7 +179,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable sign = 
+    let sign = 
         Button(Name = "signButton",
                 Content = "\u00B1",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -192,7 +188,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable inverse = 
+    let inverse = 
         Button(Name = "inverseButton",
                 Content = "1/x",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -201,7 +197,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable percent = 
+    let percent = 
         Button(Name = "percentButton",
                 Content = "%",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -210,7 +206,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable back = 
+    let back = 
         Button(Name = "backButton",
                 Content = "\u2b05",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -219,7 +215,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable clear = 
+    let clear = 
         Button(Name = "clearButton",
                 Content = "C",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -228,7 +224,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable clearEntry = 
+    let clearEntry = 
         Button(Name = "clearEntryButton",
                 Content = "CE",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -237,7 +233,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable clearMemory = 
+    let clearMemory = 
         Button(Name = "clearMemoryButton",
                 Content = "MC",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -246,7 +242,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable recallMemory = 
+    let recallMemory = 
         Button(Name = "recallMemoryButton",
                 Content = "MR",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -255,7 +251,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable storeMemory = 
+    let storeMemory = 
         Button(Name = "storeMemoryButton",
                 Content = "MS",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -264,7 +260,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable addToMemory = 
+    let addToMemory = 
         Button(Name = "addToMemoryButton",
                 Content = "M+",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -273,7 +269,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let mutable subtractFromMemoy = 
+    let subtractFromMemoy = 
         Button(Name = "subtractFromButton",
                 Content = "M-",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -283,20 +279,20 @@ type Calculator() as calculator =
                 Height = 33.,
                 Background = buttonColor) //
             
-        // Text Blocks
-    let mutable result =
+    // Text Blocks
+    let result =
         TextBlock(Name = "result",
                     TextAlignment = TextAlignment.Right, 
                     HorizontalAlignment = HorizontalAlignment.Left,
                     Margin = Thickness(Left = 26., Top = 29., Right = 0., Bottom = 0.),
                     TextWrapping = TextWrapping.NoWrap,
-                    Text = "0",
+                    Text = (0.0).ToString(),
                     VerticalAlignment = VerticalAlignment.Top,
                     Height = 41.,
                     Width = 169.,
                     Background = backgroundColor,
                     FontSize = 27.)
-    let mutable memo =
+    let memo =
         TextBlock(Name = "memo",
                     TextAlignment = TextAlignment.Right, 
                     HorizontalAlignment = HorizontalAlignment.Left,
@@ -307,7 +303,7 @@ type Calculator() as calculator =
                     Width = 17.,
                     Background = backgroundColor,
                     FontSize = 17.)            
-    let mutable helper =
+    let helper =
         TextBlock(Name = "helper",
                     TextAlignment = TextAlignment.Right, 
                     HorizontalAlignment = HorizontalAlignment.Left,
@@ -318,52 +314,58 @@ type Calculator() as calculator =
                     Width = 185.,
                     Background = backgroundColor)
     
-        // Main Layout Grid
-    let mutable grid = Grid( Height = 304.,
+    // Main Layout Grid
+    let grid = Grid( Height = 304.,
                              Width = 206.,
                              Background = gridColor,
                              RenderTransformOrigin = Point(0.5,0.5))
     
+    //-------setup calculator logic----------
+    let services = CalculatorServices.createServices()
+    let calculate = CalculatorImplementation.createCalculate services    
     
+    // set initial state
+    let mutable state = CalculatorDomain.ZeroState None
 
- (*   
-    // Add click event to each button
-    // MEMORY COMMAND
-    let memoCommand (oper : string) = 
-        match result.Text with
-        | "NaN" | "∞"-> ignore()    
-        | _ ->    match oper with
-                  | "MS" -> Perform.memo <- txtResult.Text    // Memory Store puts the number on the display into the memory 
-                            memo.Text <- "M"
-                  | "MR" -> result.Text <- Perform.memo    // Memory Recall uses the number in memory
-                            Perform.memo <- "0.0"
-                            memo.Text <- ""
-                  | "MC" -> Perform.memo <- "0.0"             // Memory Clear
-                            memo.Text <- ""
-                  | "M+" -> Perform.memo <- (Double.Parse(Perform.memo) + Double.Parse(txtResult.Text)).ToString()
-                            memo.Text <- "M"
-                  | "M-" -> Perform.memo <- (Double.Parse(Perform.memo) - Double.Parse(txtResult.Text)).ToString() 
-                            memo.Text <- "M"
-                  | _    -> Perform.memo <- ("0")
-                            memo.Text <- ""
-                  Perform.blnCommand <- true
-                  memo.ToolTip <- Perform.memo
-            
-    do btnMS.Click.Add(fun _ -> memoCommand("MS"))
-       btnMR.Click.Add(fun _ -> memoCommand("MR"))
-       btnMC.Click.Add(fun _ ->  memoCommand("MC"))  
-       btnMPlus.Click.Add(fun _ -> memoCommand("M+"))
-       btnMMinus.Click.Add(fun _ -> memoCommand("M-")) 
+    // a function that sets the displayed text
+    let  setDisplayedText = 
+        fun text -> result.Text <- text 
+
+    // a function that sets the pending op text
+    let  setPendingOpText = 
+        fun text -> helper.Text <- text 
+       
+    let handleInput input =
+             let newState = calculate(input,state)
+             state <- newState 
+             setDisplayedText (services.getDisplayFromState state)
+             setPendingOpText (services.getPendingOpFromState state)
     
-    *)
-
-    let mutable textBlockList = [result; memo; helper]
-    let mutable buttonList =[one;two;three;four;five;six;seven;eight;nine;zero;
-        decimalPoint;add;subtract;multiply;
-        divide;equals;root;sign;inverse;percent;back;clear;clearEntry;
-        clearMemory;recallMemory;storeMemory;addToMemory;subtractFromMemoy]
-
+    // Assemble the calculator controls
+    let textBlockList = [result; memo; helper]
+    let buttonList = [one; two; three; four; five; six; seven; eight; nine; zero; 
+                      decimalPoint; add; subtract; multiply; divide; 
+                      equals; root; sign; inverse; percent; back; clear; clearEntry; 
+                      clearMemory; recallMemory; storeMemory; addToMemory; subtractFromMemoy]
     do 
         for x in buttonList do grid.Children.Add(x) |> ignore
-        for x in textBlockList do grid.Children.Add(x) |> ignore
-        calculator.Content <- grid
+        for x in textBlockList do grid.Children.Add(x) |> ignore        
+        calculator.Content <- grid        
+        
+        //add event handler to each button
+        one         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
+        two         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two)))
+        three       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Three)))
+        four        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Four)))
+        five        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Five)))
+        six         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Six)))
+        seven       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Seven)))
+        eight       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Eight)))
+        nine        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Nine)))
+        zero        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Zero)))
+        decimalPoint.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (DecimalSeparator)))
+        add         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Add)))
+        subtract    .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Subtract)))
+        multiply    .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Multiply)))
+        divide      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Divide)))        
+        equals      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Equals)))
