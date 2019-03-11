@@ -179,7 +179,7 @@ type Calculator() as calculator =
                 Width = 33.,
                 Height = 33.,
                 Background = buttonColor) //
-    let sign = 
+    let changeSign = 
         Button(Name = "signButton",
                 Content = "\u00B1",
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -325,7 +325,7 @@ type Calculator() as calculator =
     let calculate = CalculatorImplementation.createCalculate services    
     
     // set initial state
-    let mutable state = CalculatorDomain.ZeroState None
+    let mutable state = CalculatorDomain.ZeroState {pendingOp=None;memory=""}
 
     // a function that sets the displayed text
     let  setDisplayedText = 
@@ -334,18 +334,23 @@ type Calculator() as calculator =
     // a function that sets the pending op text
     let  setPendingOpText = 
         fun text -> helper.Text <- text 
-       
+ 
+     // a function that sets the memo text
+    let  setMemoText = 
+        fun text -> memo.Text <- text
+
     let handleInput input =
              let newState = calculate(input,state)
              state <- newState 
              setDisplayedText (services.getDisplayFromState state)
              setPendingOpText (services.getPendingOpFromState state)
+             setMemoText (services.getMemoFromState state)
     
     // Assemble the calculator controls
     let textBlockList = [result; memo; helper]
     let buttonList = [one; two; three; four; five; six; seven; eight; nine; zero; 
                       decimalPoint; add; subtract; multiply; divide; 
-                      equals; root; sign; inverse; percent; back; clear; clearEntry; 
+                      equals; root; changeSign; inverse; percent; back; clear; clearEntry; 
                       clearMemory; recallMemory; storeMemory; addToMemory; subtractFromMemoy]
     do 
         for x in buttonList do grid.Children.Add(x) |> ignore
@@ -369,3 +374,12 @@ type Calculator() as calculator =
         multiply    .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Multiply)))
         divide      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Divide)))        
         equals      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Equals)))
+        clear       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Clear)))
+        clearEntry  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (ClearEntry)))
+        clearMemory .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryClear)))
+        storeMemory .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryStore)))
+        recallMemory.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryRecall)))
+        changeSign  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp ChangeSign)))
+        back        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Back)))
+        addToMemory .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp MemoryAdd)))
+        subtractFromMemoy.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp MemorySubtract)))
