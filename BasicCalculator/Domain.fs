@@ -236,9 +236,9 @@ module CalculatorImplementation =
             | MemorySubtract ->
                 let newMemory = 
                     match System.Double.TryParse stateData.digits, System.Double.TryParse stateData.memory with
-                    | (true, d),  (true, e) -> (d - e).ToString()
+                    | (true, d),  (true, e) -> (e - d).ToString()
                     | (false,_), (true,  e) -> e.ToString()
-                    | (true,d), (false, _) -> d.ToString()
+                    | (true,d), (false, _) -> (-d).ToString()
                     | (false,_), (false, _) -> ""
                 AccumulatorState {digits = stateData.digits; pendingOp = stateData.pendingOp; memory = newMemory}
             | ChangeSign -> 
@@ -305,9 +305,9 @@ module CalculatorImplementation =
             | MemorySubtract ->
                 let newMemory = 
                     match System.Double.TryParse stateData.digits, System.Double.TryParse stateData.memory with
-                    | (true, d),  (true, e) -> (d - e).ToString()
+                    | (true, d),  (true, e) -> (e - d).ToString()
                     | (false,_), (true,  e) -> e.ToString()
-                    | (true,d), (false, _) -> d.ToString()
+                    | (true,d), (false, _) -> (-d).ToString()
                     | (false,_), (false, _) -> ""
                 AccumulatorWithDecimalState {digits = stateData.digits; pendingOp = stateData.pendingOp; memory = newMemory}
             | ChangeSign -> 
@@ -371,8 +371,8 @@ module CalculatorImplementation =
             | MemorySubtract ->
                 let newMemory = 
                     match stateData.displayNumber, System.Double.TryParse stateData.memory with
-                    | d,  (true, e) -> (d - e).ToString()
-                    | d, (false, _) -> d.ToString()                    
+                    | d,  (true, e) -> (e - d).ToString()
+                    | d, (false, _) -> (-d).ToString()                    
                 ComputedState {displayNumber = stateData.displayNumber; pendingOp = stateData.pendingOp; memory = newMemory}
             | ChangeSign ->  ComputedState {displayNumber = -1.0*(stateData.displayNumber); pendingOp = stateData.pendingOp; memory = stateData.memory}             
         | Equals -> 
