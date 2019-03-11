@@ -40,7 +40,7 @@ let calculator = new Calculator(OverridesDefaultStyle = true)
 let window = new Window()
 window.Title <- "F# is fun!" 
 window.Content <-  calculator
-
+window.SizeToContent <- SizeToContent.WidthAndHeight
 //----------{not needed unless a Xaml used for window}----------//
 // Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
 //{not needed unless a Xaml used for window} let mutable this : Window = Utilities.contentAsXamlObject("MainWindow.xaml"):?> Window  
