@@ -115,7 +115,6 @@ module CalculatorImplementation =
         let newDigits = services.accumulateSeparator digits
         let newAccumulatorData = { accumulatorData with digits = newDigits }
         newAccumulatorData // return
-
     let getComputationState services (accumulatorStateData:AccumulatorStateData) nextOp = 
 
         // helper to create a new ComputedState from a given displayNumber 
@@ -492,8 +491,7 @@ module CalculatorServices =
             if f2 = 0.0 then
                 Failure DivideByZero 
             else
-                Success (f1 / f2)
-        
+                Success (f1 / f2)        
         | ChangeSign  -> Success (f1 * -1.)
 
     let getDisplayFromState divideByZeroMsg :GetDisplayFromState =
