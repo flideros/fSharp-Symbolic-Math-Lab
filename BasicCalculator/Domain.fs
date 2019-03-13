@@ -493,7 +493,6 @@ module CalculatorServices =
                 Failure DivideByZero 
             else
                 Success (f1 / f2)
-        
         | ChangeSign  -> Success (f1 * -1.)
 
     let getDisplayFromState divideByZeroMsg :GetDisplayFromState =
