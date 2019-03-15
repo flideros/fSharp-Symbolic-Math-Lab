@@ -130,10 +130,9 @@ module CalculatorImplementation =
             services.getNumberFromAccumulator accumulatorStateData 
 
         // If there is no pending op, create a new ComputedState using the currentNumber
-        let computeStateWithNoPendingOp = 
-            getNewState currentNumber 
+        let computeStateWithNoPendingOp = getNewState currentNumber 
 
-        maybe {
+        maybe {            
             let! (op,previousNumber) = accumulatorStateData.pendingOp
             let result = services.doMathOperation(op,previousNumber,currentNumber,accumulatorStateData.memory)
             let newState =
@@ -180,6 +179,7 @@ module CalculatorImplementation =
             | MemoryAdd        
             | MemorySubtract -> ZeroState {pendingOp = pendingOp; memory = memory}
             | ChangeSign -> AccumulatorState {digits = "-"; pendingOp = pendingOp; memory = memory}
+            | Inverse -> ErrorState {error = DivideByZero; memory = memory}
         | Equals -> 
             let nextOp = None
             let newState = getComputationState services accumulatorStateData nextOp 
@@ -218,6 +218,48 @@ module CalculatorImplementation =
             |> AccumulatorWithDecimalState  // transition to AccumulatorWithDecimalState
         | MathOp op -> 
             match op with
+            | Inverse ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,services.getNumberFromAccumulator stateData); memory = stateData.memory; digits = "1"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState 
+            | Percent ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,services.getNumberFromAccumulator stateData); memory = stateData.memory; digits = "100"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState 
+            | Root ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,services.getNumberFromAccumulator stateData); memory = stateData.memory; digits = "0.5"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState 
             | Divide
             | Multiply
             | Subtract
@@ -247,6 +289,7 @@ module CalculatorImplementation =
                     | true -> stateData.digits.Replace("-","")
                     | false -> stateData.digits.Insert(0,"-")
                 AccumulatorState {digits = newDigits; pendingOp = stateData.pendingOp; memory = stateData.memory}
+             
         | Equals -> 
             let nextOp = None
             let newState = getComputationState services stateData nextOp 
@@ -287,6 +330,48 @@ module CalculatorImplementation =
             |> AccumulatorWithDecimalState  // stay in AccumulatorWithDecimalState 
         | MathOp op -> 
             match op with
+            | Inverse ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,services.getNumberFromAccumulator stateData); memory = stateData.memory; digits = "1"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState
+            | Percent ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,services.getNumberFromAccumulator stateData); memory = stateData.memory; digits = "100"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState 
+            | Root ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,services.getNumberFromAccumulator stateData); memory = stateData.memory; digits = "0.5"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState             
             | Divide
             | Multiply
             | Subtract
@@ -316,6 +401,7 @@ module CalculatorImplementation =
                     | true -> stateData.digits.Replace("-","")
                     | false -> stateData.digits.Insert(0,"-")
                 AccumulatorWithDecimalState {digits = newDigits; pendingOp = stateData.pendingOp; memory = stateData.memory}
+        
         | Equals -> 
             let nextOp = None
             let newState = getComputationState services stateData nextOp 
@@ -340,11 +426,11 @@ module CalculatorImplementation =
             let newState = getComputationState services accumulatorStateDataFromMemory nextOp
             newState //
 
-    let handleComputedState services (stateData:ComputedStateData) input memory = 
-        let emptyAccumulatorStateData = {digits=""; pendingOp=stateData.pendingOp; memory = memory}
+    let handleComputedState services (stateData:ComputedStateData) input = 
+        let emptyAccumulatorStateData = {digits=""; pendingOp=stateData.pendingOp; memory = stateData.memory}
         match input with
         | Zero -> 
-            ZeroState {pendingOp = emptyAccumulatorStateData.pendingOp; memory = memory} // transition to ZeroState with any pending ops
+            ZeroState {pendingOp = emptyAccumulatorStateData.pendingOp; memory = stateData.memory} // transition to ZeroState with any pending ops
         | Digit digit -> 
             emptyAccumulatorStateData 
             |> accumulateNonZeroDigit services digit 
@@ -355,6 +441,48 @@ module CalculatorImplementation =
             |> AccumulatorWithDecimalState  // transition to AccumulatorWithDecimalState  
         | MathOp op -> 
             match op with
+            | Inverse ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,stateData.displayNumber); memory = stateData.memory; digits = "1"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState
+            | Percent ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,stateData.displayNumber); memory = stateData.memory; digits = "100"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState 
+            | Root ->            
+                let nextOp = None//Some op
+                let newState = getComputationState services {pendingOp = Some (op,stateData.displayNumber); memory = stateData.memory; digits = "0.5"} nextOp 
+                let finalState =
+                    match stateData.pendingOp = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with
+                        | ComputedState c ->  AccumulatorState {digits = c.displayNumber.ToString(); pendingOp = stateData.pendingOp; memory = stateData.memory}                      
+                        | AccumulatorState _ 
+                        | AccumulatorWithDecimalState _ 
+                        | ZeroState _
+                        | ErrorState _ -> newState
+                finalState 
             | Divide
             | Multiply
             | Subtract
@@ -374,17 +502,17 @@ module CalculatorImplementation =
                     | d,  (true, e) -> (e - d).ToString()
                     | d, (false, _) -> (-d).ToString()                    
                 ComputedState {displayNumber = stateData.displayNumber; pendingOp = stateData.pendingOp; memory = newMemory}
-            | ChangeSign ->  ComputedState {displayNumber = -1.0*(stateData.displayNumber); pendingOp = stateData.pendingOp; memory = stateData.memory}             
+            | ChangeSign ->  ComputedState {displayNumber = -1.0*(stateData.displayNumber); pendingOp = stateData.pendingOp; memory = stateData.memory}            
         | Equals -> 
             // replace the pending op, if any
             let nextOp = None
             replacePendingOp stateData nextOp 
         | ClearEntry -> 
-            ZeroState {pendingOp = stateData.pendingOp ; memory = memory} // transition to ZeroState and keep any pending ops
+            ZeroState {pendingOp = stateData.pendingOp ; memory = stateData.memory} // transition to ZeroState and keep any pending ops
         | Clear -> 
-            ZeroState {pendingOp = None ; memory = memory} // transition to ZeroState and throw away any pending ops      
+            ZeroState {pendingOp = None ; memory = stateData.memory} // transition to ZeroState and throw away any pending ops      
         | Back ->
-            ZeroState {pendingOp = stateData.pendingOp ; memory = memory} // I can do better...later...
+            ZeroState {pendingOp = stateData.pendingOp ; memory = stateData.memory} // I can do better...later...
         | MemoryStore ->
             AccumulatorState {digits = stateData.displayNumber.ToString(); pendingOp = stateData.pendingOp ; memory = stateData.displayNumber.ToString()} // store current digits in memory
         | MemoryClear ->
@@ -393,7 +521,7 @@ module CalculatorImplementation =
             let nextOp = match stateData.pendingOp with 
                          | Some (op,_) -> Some op
                          | None -> None           
-            let accumulatorStateDataFromMemory = {digits = (match memory.Length with | 0 -> stateData.displayNumber.ToString() | _ -> memory); pendingOp = stateData.pendingOp; memory = memory}
+            let accumulatorStateDataFromMemory = {digits = (match stateData.memory.Length with | 0 -> stateData.displayNumber.ToString() | _ -> stateData.memory); pendingOp = stateData.pendingOp; memory = stateData.memory}
             let newState = getComputationState services accumulatorStateDataFromMemory nextOp
             newState //
 
@@ -431,7 +559,7 @@ module CalculatorImplementation =
             | AccumulatorWithDecimalState stateData -> 
                 handleAccumulatorWithDecimal stateData input
             | ComputedState stateData -> 
-                handleComputed stateData input stateData.memory
+                handleComputed stateData input
             | ErrorState stateData -> 
                 handleError stateData input stateData.memory
 
@@ -485,14 +613,15 @@ module CalculatorServices =
 
     let doMathOperation  :DoMathOperation = fun (op,f1,f2,memory) ->
         match op with
+        | Percent -> Success (f1/f2)
+        | Root -> Success (System.Math.Pow(f1,f2))
+        | Inverse when f1 = 0. -> Failure DivideByZero
+        | Inverse -> Success (f2 / f1)
         | Add -> Success (f1 + f2)
         | Subtract -> Success (f1 - f2)
         | Multiply -> Success (f1 * f2)
-        | Divide -> 
-            if f2 = 0.0 then
-                Failure DivideByZero 
-            else
-                Success (f1 / f2)
+        | Divide when f2 = 0. -> Failure DivideByZero 
+        | Divide -> Success (f1 / f2)        
         | ChangeSign  -> Success (f1 * -1.)
 
     let getDisplayFromState divideByZeroMsg :GetDisplayFromState =
@@ -523,6 +652,7 @@ module CalculatorServices =
             | Multiply -> "*"  
             | Divide -> "/"
             | ChangeSign -> "(change sign)"
+            | Inverse -> "(inverse)"
 
         let displayStringForPendingOp pendingOp =
             maybe {
