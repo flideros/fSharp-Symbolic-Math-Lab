@@ -26,21 +26,20 @@ let browser = FrameBrowser(@"https://www.bing.com/")
 let browserBorder = Border()
 let dockPanel = DockPanelStyle()
 let button = ButtonStyle("Frank's Button")
-let notepad = new AppContainer()
+
 // Compose Types
 browserBorder.Child <- browser
 
 dockPanel.Children.Add (button) |> ignore
 dockPanel.Children.Add (browserBorder) |> ignore
 
-do notepad.ExeName <- "wordpad.exe"
-   notepad.InitializeComponent()
+
 let calculator = new Calculator(OverridesDefaultStyle = true) 
 
 // Make a window and add content
 let window = new Window()
-window.Title <- "Math is fun!" 
-window.Content <-  notepad //calculator
+window.Title <- "F# is fun!" 
+window.Content <-  calculator
 window.SizeToContent <- SizeToContent.WidthAndHeight
 //----------{not needed unless a Xaml used for window}----------//
 // Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
