@@ -1,6 +1,4 @@
-﻿// This modul must be internal and must exist in all assemblies.
-
-module internal Utilities
+﻿module internal Utilities
 
 open System.Windows
 open System.Windows.Controls
@@ -9,13 +7,8 @@ open System.Reflection
 open System.IO
 open System.Windows.Markup
 
-// This operator is similar to (|>). 
-// But, it returns argument as a return value.
-// Then you can chain functions which returns unit.
-// http://fssnip.net/9q
-
-let ($) x f = f x ; x
-
+/// Use this implementation of the dynamic binding operator
+    /// to bind to Xaml components in code-behind, see example below
 let (?) (c:obj) (s:string) =
     match c with
     | :? ResourceDictionary as r ->  r.[s] :?> 'T
@@ -44,3 +37,5 @@ type MaybeBuilder() =
         member this.Return(x) = Some x
    
     let maybe = new MaybeBuilder()
+    
+    
