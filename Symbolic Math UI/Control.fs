@@ -14,6 +14,10 @@ open System.Reflection
 open System.Windows.Media.Imaging
 open Microsoft.Toolkit.Wpf.UI.Controls
 //open Microsoft.Toolkit.Win32.UI.Controls
+open System.Runtime.InteropServices
+open System.Diagnostics
+open System.Windows.Interop
+
 
 //\/--- Browser Controls ------------------------------------------------------------------\/
    
@@ -88,3 +92,126 @@ type ColorVolume (color:SharedValue<Color>) as this =
     Volume("Blue" , (0,255), blue ) |> this.add
 
 //\--- Color Volume Control -----------------------------------------------------------------/\
+
+
+//\/--- Win32 AppContainer ---------------------------------------------------------------\/
+
+module External =
+
+    [<DllImport("user32.dll", EntryPoint="GetWindowThreadProcessId",  SetLastError=true,
+             CharSet=CharSet.Unicode, ExactSpelling=true,
+             CallingConvention=CallingConvention.StdCall)>]
+    extern void GetWindowThreadProcessId(float hWnd, float lpdwProcessId)
+            
+    [<DllImport("user32.dll", SetLastError=true)>]
+    extern void FindWindow (string lpClassName, string lpWindowName)
+
+    [<DllImport("user32.dll", SetLastError=true)>]
+    extern void  SetParent (IntPtr hWndChild, IntPtr hWndNewParent)
+
+    [<DllImport("user32.dll", EntryPoint="GetWindowLongA", SetLastError=true)>]
+    extern void  GetWindowLong (IntPtr hwnd, int nIndex)
+
+    [<DllImport("user32.dll", EntryPoint="SetWindowLongA", SetLastError=true)>]
+    extern void  SetWindowLongA(System.IntPtr hWnd, int nIndex, int dwNewLong)
+
+    [<DllImport("user32.dll", SetLastError=true)>]
+    extern void  SetWindowPos(IntPtr hwnd, float hWndInsertAfter, float x, float y, float cx, float cy, float wFlags)
+        
+    [<DllImport("user32.dll", SetLastError=true)>]
+    extern void  MoveWindow(IntPtr hwnd, int x, int y, int cx, int cy, bool repaint)
+
+type AppContainer() as this =
+    inherit  UserControl()       
+
+    let SWP_NOOWNERZORDER = 0x200
+    let SWP_NOREDRAW = 0x8
+    let SWP_NOZORDER = 0x4
+    let SWP_SHOWWINDOW = 0x0040
+    let WS_EX_MDICHILD = 0x40
+    let SWP_FRAMECHANGED = 0x20
+    let SWP_NOACTIVATE = 0x10
+    let cSWP_ASYNCWINDOWPOS = 0x4000
+    let SWP_NOMOVE = 0x2
+    let SWP_NOSIZE = 0x1
+    let GWL_STYLE = (-16)
+    let WS_VISIBLE = 0x10000000
+    let WS_CHILD = 0x40000000
+    
+    /// <summary>
+    /// Track if the application has been created
+    /// </summary>
+    let mutable _iscreated = false;
+
+    /// <summary>
+    /// Handle to the application Window
+    /// </summary>
+    [<DefaultValue>] val mutable  _appWin : IntPtr
+
+    [<DefaultValue>] val mutable _childp : Process
+
+    /// <summary>
+    /// The name of the exe to launch
+    /// </summary>
+    let mutable exeName = ""
+    member this.ExeName with get () = exeName        
+    member this.ExeName with set (value) = exeName <- value
+    
+    /// <summary>
+    /// Force redraw of control when size changes
+    /// </summary>
+    /// <param name="e">Not used</param>
+    let OnSizeChanged (s:obj) (e:SizeChangedEventArgs) = this.InvalidateVisual()
+
+    /// <summary>
+    /// Create control when visibility changes
+    /// </summary>
+    /// <param name="e">Not used</param>
+    let OnVisibleChanged(s:obj)(e:RoutedEventArgs) = 
+        // If control needs to be initialized/created
+        if _iscreated = false then
+            do 
+                _iscreated <- true
+                this._appWin <- IntPtr.Zero
+            try
+                let procInfo = new System.Diagnostics.ProcessStartInfo(this.ExeName)
+                do
+                    procInfo.WorkingDirectory <- System.IO.Path.GetDirectoryName(this.ExeName)
+                    // Start the process
+                    this._childp <- System.Diagnostics.Process.Start(procInfo)
+
+                    // Wait for process to be created and enter idle condition
+                    this._childp.WaitForInputIdle() |> ignore
+
+                    // Get the main handle
+                    this._appWin  <-  this._childp.MainWindowHandle
+            with
+            | Failure msg -> "caught: " + msg |> ignore
+    
+            // Put it into this form
+            let  helper = new WindowInteropHelper(Window.GetWindow(this))
+            do
+                External.SetParent(this._appWin, helper.Handle)
+
+                // Remove border and whatnot
+                External.SetWindowLongA(this._appWin, GWL_STYLE, WS_VISIBLE)
+
+                // Move the window to overlay it on this window
+                External.MoveWindow(this._appWin, 0, 0, (int)this.ActualWidth, (int)this.ActualHeight, true)
+     
+    let OnResize (s:obj)(e:RoutedEventArgs) =
+        if (this._appWin <> IntPtr.Zero) then
+            External.MoveWindow(this._appWin, 0, 0, (int)this.ActualWidth, (int)this.ActualHeight, true)
+
+    member this.InitializeComponent() =            
+        this.SizeChanged.AddHandler(new SizeChangedEventHandler(OnSizeChanged))
+        this.Loaded.AddHandler(new RoutedEventHandler(OnVisibleChanged))
+        this.SizeChanged.AddHandler(new SizeChangedEventHandler(OnResize))
+        
+
+    member x.Dispose() = (x :> IDisposable).Dispose() 
+
+    interface IDisposable with 
+        member this.Dispose() = this.Dispose()
+
+//\--- Win32 AppContainer ----------------------------------------------------------------------/\
