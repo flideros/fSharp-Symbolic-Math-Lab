@@ -27,4 +27,3 @@ let d = (dBConnection p)
 d.Close()
 try d.Open() finally ()
 testConnection d connString
-
