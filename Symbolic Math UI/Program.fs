@@ -27,6 +27,7 @@ let browserBorder = Border()
 let dockPanel = DockPanelStyle()
 let button = ButtonStyle("Frank's Button")
 let notepad = new AppContainer()
+
 // Compose Types
 browserBorder.Child <- browser
 

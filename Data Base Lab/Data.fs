@@ -4,36 +4,24 @@ open System.Data
 open System.Data.Common
 open System.Text
 open System
-open System.Text
 open System.IO
 open System.Windows.Markup
-open System.Xaml
 open System.Reflection
-open System.Linq
-open System.Net
 open System.Windows
 open System.Windows.Controls
-open System.Windows.Documents
-open System.Windows.Input
 open System.Windows.Media
-open System.Windows.Media.Imaging
-open System.Windows.Media.Animation
-open System.Windows.Shapes
-open System.Collections.Generic
-open System.Collections.ObjectModel
-open System.Windows.Threading
-open System.Transactions
 open Utilities
 
 
-//(*
-module Connection = 
 
+
+
+//(*
+module DataCommon = 
     let getAllProviders = DbProviderFactories.GetFactoryClasses()
     let allProviderStrings = 
         [ for i in 0..(getAllProviders.Rows.Count - 1) -> 
-            string (getAllProviders.Rows.Item i).ItemArray.[2] ]
-    
+            string (getAllProviders.Rows.Item i).ItemArray.[2] ]    
     let getAllOldbProviders =
         let reader = System.Data.OleDb.OleDbEnumerator.GetEnumerator(Type.GetTypeFromProgID("MSDAENUM"))
         let ds = new DataSet()
@@ -41,14 +29,8 @@ module Connection =
         do dt.Load(reader)
            ds.Tables.Add(dt)
            ds.AcceptChanges()  // MUST Accept Changes
-        ds    
-        
-    let dBConnection connectionString (providerName : string) =
-        let this = DbProviderFactories.GetFactory(providerName).CreateConnection()
-        this.ConnectionString <- connectionString
-        this
-    
-    let testConnection (x : DbConnection) =         
+        ds  
+    let connectionState (x : DbConnection) =         
         match x.State  with
         | ConnectionState.Open -> "open"
         | ConnectionState.Closed -> "closed"
@@ -57,13 +39,41 @@ module Connection =
         | ConnectionState.Fetching -> "fetching"
         | ConnectionState.Broken -> "broken"
         | _ -> ""
+    let testConnection (x : DbConnection) connString = 
+        do x.ConnectionString <- connString
+        try x.Open(); "good"  with ex ->  "Failed to connect to DB " + x.Database + " with Error " + ex.Message
 
+
+  
+type NonQueryResult = {numberOfRowAffected:int;connection:DbConnection}
 type Provider(input) = 
-     let providerString = 
-        match List.contains input Connection.allProviderStrings with
+    let providerString = 
+        match List.contains input DataCommon.allProviderStrings with
         | true -> Some (input)
         | false -> None
-     member x.option = providerString
+    member this.option = providerString
+
+
+module Connection =        
+    let dBConnection (providerName : Provider) =
+        match providerName.option with
+        | Some provider -> DbProviderFactories.GetFactory(provider).CreateConnection()
+        | None -> DbProviderFactories.GetFactory(DataCommon.allProviderStrings.Head).CreateConnection() 
+          //\ This assumes at least one provider exists on the machine, otherwise it will raise an error. But, then what's the point?
+            
+            
+
+ module DataQuery =   
+
+    let executeNonQuery (connection : DbConnection) sql =        
+        connection.Open()
+        let cmd = connection.CreateCommand()
+        do  cmd.Connection <- connection
+        do  cmd.CommandText <- sql
+        do  cmd.CommandType <- CommandType.Text
+        let numberOfRowAffected = cmd.ExecuteNonQuery()
+        do  connection.Close() 
+        {numberOfRowAffected = numberOfRowAffected; connection = connection}
                     
 
 
@@ -172,6 +182,8 @@ type internal DataCommon() =
                 do ds.Tables.Add(dt)
                 do ds.AcceptChanges()  // MUST Accept Changes
                 ds
+//*)
+
                                                                                                      
     // MEMBERS
 
