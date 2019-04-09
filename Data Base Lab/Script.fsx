@@ -1,6 +1,8 @@
 ﻿// Learn more about F# at http://fsharp.org
 // See the 'F# Tutorial' project for more help.
 
+#r "./bin/Debug/Data_Base_Lab.dll"
+
 open System.Data
 open System.Data.Common
 open System.Text
@@ -8,51 +10,21 @@ open System
 open System.Text
 open System.IO
 open System.Windows.Markup
+open DataLab.DataCommon
+open DataLab.DataQuery
+open DataLab.Connection
+open DataLab
 
 
-let getAllProviders = DbProviderFactories.GetFactoryClasses()
+(**)
 
-let getAllOldbProviders =
-    let reader = System.Data.OleDb.OleDbEnumerator.GetEnumerator(Type.GetTypeFromProgID("MSDAENUM"))
-    let ds = new DataSet()
-    let dt = new DataTable()
-    do dt.Load(reader)
-       ds.Tables.Add(dt)
-       ds.AcceptChanges()  // MUST Accept Changes
-    ds
-
-let allProviderStrings = [ for i in 0..(getAllProviders.Rows.Count - 1) -> string (getAllProviders.Rows.Item i).ItemArray.[2] ]
-    
-
-
-type Provider(input) = 
-     let providerString = 
-        match List.contains input allProviderStrings with
-        | true -> Some (input)
-        | false -> None
-     member x.option = providerString
-
-//
-let p = Provider("System.Data.Odbc")
-p.option
-//
-
-let dBConnection' connectionString (provider : Provider) =
-        
-        
-        let this = DbProviderFactories.GetFactory(provider.option.Value).CreateConnection()
-        this.ConnectionString <- connectionString
-        this
-
-                    
-let testConnection (x : DbConnection) =         
-        match x.State  with
-        | ConnectionState.Open -> "open"
-        | ConnectionState.Closed -> "closed"
-        | ConnectionState.Connecting -> "connecting"
-        | ConnectionState.Executing -> "executing"
-        | ConnectionState.Fetching -> "fetching"
-        | ConnectionState.Broken -> "broken"
-        | _ -> ""
+let p = Provider("System.Data.SqlClient")
 
 //let db = dBConnection' " " " "
+[<Literal>]
+let connString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=" + "D:\MyFolderks\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Data Base Lab\LABdb.mdf" + ";Integrated Security=True;Connect Timeout=30"
+let d = (dBConnection p)
+d.Close()
+try d.Open() finally ()
+testConnection d connString
+
