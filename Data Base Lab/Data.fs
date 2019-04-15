@@ -141,6 +141,7 @@ type State = { connectionString : string
 type DataLab() as this =
     inherit UserControl()
 
+
     // Set attributes on this.
     do  this.Name <- "DataLab"
         

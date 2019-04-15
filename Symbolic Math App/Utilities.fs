@@ -9,12 +9,7 @@ open System.Reflection
 open System.IO
 open System.Windows.Markup
 
-// This operator is similar to (|>). 
-// But, it returns argument as a return value.
-// Then you can chain functions which returns unit.
-// http://fssnip.net/9q
-
-let ($) x f = f x ; x
+// to bind to Xaml components in code-behind, see example below
 
 let (?) (c:obj) (s:string) =
     match c with
@@ -31,15 +26,8 @@ let contentAsXamlObject (strXamlName : string) =
               XamlReader.Load(mySr.BaseStream)
     | false -> null
 
-// helper to make defaultArg better for piping
-let ifNone defaultValue input = 
-    // just reverse the parameters!
-    defaultArg input defaultValue
-
-
-        
-[<AutoOpen>]
-type MaybeBuilder() =
-        member this.Bind(x, f) = Option.bind f x
-        member this.Return(x) = Some x
-   
+// This operator is similar to (|>). 
+// But, it returns argument as a return value.
+// Then you can chain functions which returns unit.
+// http://fssnip.net/9q
+let ($) x f = f x ; x
