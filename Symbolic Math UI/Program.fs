@@ -16,11 +16,12 @@ open System.Windows.Media.Imaging
 open Style
 open Control
 open BasicCalculator
+open DataLab
 
-//Define app resources and load them to the main progream.
+//Define app resources and load them to the main prograam.
 let resource = new Uri("app.xaml",System.UriKind.Relative)
 let mainProgram = Application.LoadComponent(resource) :?> Application
-
+(*
 // Create Types
 let browser = FrameBrowser(@"https://www.bing.com/")
 let browserBorder = Border()
@@ -37,12 +38,20 @@ dockPanel.Children.Add (browserBorder) |> ignore
 do notepad.ExeName <- "wordpad.exe"
    notepad.InitializeComponent()
 let calculator = new Calculator(OverridesDefaultStyle = true) 
+*)
+
+let dataLab = new DataLab(RenderTransformOrigin = Point(0.,0.))
 
 // Make a window and add content
-let window = new Window()
+let window = new Window(RenderTransformOrigin = Point(0.,0.))
 window.Title <- "Math is fun!" 
-window.Content <-  notepad //calculator
+window.Content <-  dataLab//notepad//calculator//grid//
+//window.Width <- Double.NaN
+//window.Height <- Double.NaN
+window.MinWidth <- 640.0
+window.MinHeight <- 440.0
 window.SizeToContent <- SizeToContent.WidthAndHeight
+
 //----------{not needed unless a Xaml used for window}----------//
 // Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
 //{not needed unless a Xaml used for window} let mutable this : Window = Utilities.contentAsXamlObject("MainWindow.xaml"):?> Window  
@@ -52,5 +61,3 @@ window.SizeToContent <- SizeToContent.WidthAndHeight
 let main(_) =  
     do mainProgram.Run(window) |> ignore
     0
-    
-    

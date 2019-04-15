@@ -43,4 +43,3 @@ type MaybeBuilder() =
         member this.Bind(x, f) = Option.bind f x
         member this.Return(x) = Some x
    
-    let maybe = new MaybeBuilder()

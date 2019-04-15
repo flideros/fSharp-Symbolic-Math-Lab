@@ -316,10 +316,10 @@ type Calculator() as calculator =
     
     // Main Layout Grid
     let grid = Grid( Height = 304.,
-                             Width = 206.,
-                             Background = gridColor,
-                             RenderTransformOrigin = Point(0.5,0.5))
-    
+                     Width = 206.,
+                     Background = gridColor,
+                     RenderTransformOrigin = Point(0.5,0.5)
+                    )
     //-------setup calculator logic----------
     let services = CalculatorServices.createServices()
     let calculate = CalculatorImplementation.createCalculate services    

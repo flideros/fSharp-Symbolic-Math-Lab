@@ -19,11 +19,13 @@ open DataLab
 (**)
 
 let p = Provider("System.Data.SqlClient")
+DataCommon.getAllProviders.Rows
+DataCommon.allProviderStrings
 
-//let db = dBConnection' " " " "
-[<Literal>]
-let connString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=" + "D:\MyFolderks\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Data Base Lab\LABdb.mdf" + ";Integrated Security=True;Connect Timeout=30"
-let d = (dBConnection p)
+let connString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Data Base Lab\LABdb.mdf;Integrated Security=True;Connect Timeout=30"
+let d = Connection.toDatabase  p
+
+Connection.test d connString
+d.State.ToString()
 d.Close()
 try d.Open() finally ()
-testConnection d connString
