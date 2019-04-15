@@ -12,16 +12,12 @@ open System.Windows.Controls
 open System.Windows.Media
 open Utilities
 
-
-
-
-
 //(*
 module DataCommon = 
     let getAllProviders = DbProviderFactories.GetFactoryClasses()
-    let allProviderStrings = 
-        [ for i in 0..(getAllProviders.Rows.Count - 1) -> 
-            string (getAllProviders.Rows.Item i).ItemArray.[2] ]    
+    let allProviderStrings =         
+        List.rev[ for i in 0..(getAllProviders.Rows.Count - 1) 
+            -> string (getAllProviders.Rows.Item i).ItemArray.[2] ]    
     let getAllOldbProviders =
         let reader = System.Data.OleDb.OleDbEnumerator.GetEnumerator(Type.GetTypeFromProgID("MSDAENUM"))
         let ds = new DataSet()
@@ -29,7 +25,25 @@ module DataCommon =
         do dt.Load(reader)
            ds.Tables.Add(dt)
            ds.AcceptChanges()  // MUST Accept Changes
-        ds  
+        ds
+
+type NonQueryResult = {numberOfRowAffected:int;error:string}
+
+type QueryResult = {data:DataSet; numberOfRowAffected:int;error:string}
+
+type Provider(input) = 
+    let providerString = 
+        match List.contains input DataCommon.allProviderStrings with
+        | true -> Some (input)
+        | false -> None
+    member this.option = providerString
+
+module Connection =        
+    let toDatabase (providerName : Provider) =
+        match providerName.option with
+        | Some provider -> DbProviderFactories.GetFactory(provider).CreateConnection()
+        | None -> DbProviderFactories.GetFactory(DataCommon.allProviderStrings.Head).CreateConnection() 
+          //\ This assumes at least one provider exists on the machine, otherwise it will raise an error. But, then what's the point?
     let connectionState (x : DbConnection) =         
         match x.State  with
         | ConnectionState.Open -> "open"
@@ -39,323 +53,235 @@ module DataCommon =
         | ConnectionState.Fetching -> "fetching"
         | ConnectionState.Broken -> "broken"
         | _ -> ""
-    let testConnection (x : DbConnection) connString = 
-        do x.ConnectionString <- connString
-        try x.Open(); "good"  with ex ->  "Failed to connect to DB " + x.Database + " with Error " + ex.Message
+    let test (x : DbConnection) connString =         
+        try do x.ConnectionString <- connString
+            x.Open(); x.Close();"good"  with ex ->  "Failed to connect to DB " + x.Database + " with Error " + ex.Message 
 
-
-  
-type NonQueryResult = {numberOfRowAffected:int;connection:DbConnection}
-type Provider(input) = 
-    let providerString = 
-        match List.contains input DataCommon.allProviderStrings with
-        | true -> Some (input)
-        | false -> None
-    member this.option = providerString
-
-
-module Connection =        
-    let dBConnection (providerName : Provider) =
-        match providerName.option with
-        | Some provider -> DbProviderFactories.GetFactory(provider).CreateConnection()
-        | None -> DbProviderFactories.GetFactory(DataCommon.allProviderStrings.Head).CreateConnection() 
-          //\ This assumes at least one provider exists on the machine, otherwise it will raise an error. But, then what's the point?
-            
-            
-
- module DataQuery =   
-
+module DataQuery =  
     let executeNonQuery (connection : DbConnection) sql =        
-        connection.Open()
-        let cmd = connection.CreateCommand()
-        do  cmd.Connection <- connection
-        do  cmd.CommandText <- sql
-        do  cmd.CommandType <- CommandType.Text
-        let numberOfRowAffected = cmd.ExecuteNonQuery()
-        do  connection.Close() 
-        {numberOfRowAffected = numberOfRowAffected; connection = connection}
-                    
+        async { 
+                connection.Open()
+                try 
+                    let cmd = connection.CreateCommand()
+                    do  cmd.Connection <- connection
+                    do  cmd.CommandText <- sql
+                    do  cmd.CommandType <- CommandType.Text
+                    let numberOfRowAffected = cmd.ExecuteNonQuery()
+                    do  connection.Close()
+                    {numberOfRowAffected = numberOfRowAffected;error="Done."} |> ignore
+                with 
+                    | ex -> 
+                        do  connection.Close()
+                        {numberOfRowAffected = -1;error = ex.Message} |> ignore
+               } 
 
-
-    
-//*)
-//(*
-//internal - Used to specify that a member is visible inside an assembly but not outside it.
-type internal DataCommon() =
-    
-    let mutable connDB : DbConnection = null 
-    let mutable connectionString : string = ""
-    let mutable providerName : string = ""
-    let mutable errorString : string = ""
-    let mutable sbSql : StringBuilder = null
-    let mutable numberOfRowAffected : int = -1 
-
-    // Close private DB connection "connDB"
-    
-    let closeConnection() = match connDB with
-                            | null -> ignore()
-                            | x    -> do x.Close()
-                                      do connDB <- null
-    
-    // Open private connection 
-    
-    let openDBConnection() =
-        do errorString <- ""
-        if connectionString <> "" && providerName <> ""  then
-            try
-                let factory = DbProviderFactories.GetFactory(providerName)
-                do connDB <- factory.CreateConnection()
-                do connDB.ConnectionString <- connectionString 
-                do connDB.Open()
-                true
-            with
-                | ex -> errorString <- ex.Message
-                        false
-        else errorString <- "Connection String AND/OR Provider Name are blank. "
-             false
-
-    // Execute None Query - see  numberOfRowAffected
-                             
-    let executeNonQuery() = 
-        do errorString <- ""
-        if openDBConnection() then
-            try
-                let mutable cmd = connDB.CreateCommand()
-                do cmd.Connection <- connDB
-                do cmd.CommandText <- sbSql.ToString()
-                do cmd.CommandType <- CommandType.Text
-                do numberOfRowAffected <- cmd.ExecuteNonQuery()
-                do closeConnection() 
-                true 
-            with 
-                | ex -> do errorString <- ex.Message
-                        do closeConnection() 
-                        false
-        else  do numberOfRowAffected <- -1
-              false
-
-    // Test DB Connection 
-
-    let testConnection() =  if openDBConnection() then
-                               closeConnection()
-                               true
-                            else false 
     // Get Data Set
-
-    let getDataSet() = 
-        if openDBConnection() then
-            try 
-                let factory = DbProviderFactories.GetFactory(providerName)
-                let mutable ds: DataSet = new DataSet() 
-                let mutable dbAdapter = factory.CreateDataAdapter()
-                do dbAdapter.FillLoadOption <- LoadOption.PreserveChanges 
-                 
-                let cmd = connDB.CreateCommand()
-                do cmd.CommandText <- sbSql.ToString()
-                do cmd.CommandType <- CommandType.Text // Procedure -> CALL procName (@param1,...,@paramN)
-                
-                do dbAdapter.SelectCommand <- cmd
-                do numberOfRowAffected <- dbAdapter.Fill(ds)
-
-                do closeConnection()
-                ds
+    let getDataSet (p:Provider) (connection : DbConnection) sql  = 
+        let factory = DbProviderFactories.GetFactory(p.option.Value)
+        let ds: DataSet = new DataSet() 
+        let dbAdapter = factory.CreateDataAdapter()
+        let cmd = connection.CreateCommand()
+        match Connection.test connection connection.ConnectionString with
+        | "good" -> 
+            try                
+                do  dbAdapter.FillLoadOption <- LoadOption.PreserveChanges
+                    cmd.CommandText <- sql.ToString()
+                    cmd.CommandType <- CommandType.Text // Procedure -> CALL procName (@param1,...,@paramN)                   
+                    dbAdapter.SelectCommand <- cmd
+                let rows = dbAdapter.Fill(ds)  
+                do  connection.Close()
+                {data = ds; numberOfRowAffected = rows;error=""}
             with 
-                | ex -> do errorString <- ex.Message
-                        do closeConnection() 
-                        null
-        else  do numberOfRowAffected <- -1
-              null
-              
-    // Get All Providers installed on your PC
-                                             
-    let getAllProviders () = DbProviderFactories.GetFactoryClasses()
-
-    // Get All OLE DB providers
-
-    let getAllOldbProviders () =
-                let mutable ds = new DataSet()
-                do errorString <- ""
-                let reader : System.Data.OleDb.OleDbDataReader  = System.Data.OleDb.OleDbEnumerator.GetEnumerator(Type.GetTypeFromProgID("MSDAENUM"))
-                let mutable dt : DataTable = new DataTable()
-                do dt.Load(reader)
-                do dt.TableName <- "MSDAENUM"
-                do ds.Tables.Add(dt)
-                do ds.AcceptChanges()  // MUST Accept Changes
-                ds
-//*)
-
-//type internal DataCommon() =
-                                                                                                     
-    // MEMBERS
-
-    member x.ConnectionString  with get() = connectionString  and set(v) = connectionString <- v
-    member x.ProviderName with get() = providerName and set(v) = providerName <-v
-
-    member x.SbSql  with get() = sbSql  and set(v) = sbSql <- v 
-
-    member x.CloseConnection() = closeConnection()   // just for interrupt execution
-
-    member x.TestConnection() = testConnection()
-    member x.TestConnection(currentProviderName, currentConnectionString) = 
-                            if isNull currentProviderName then providerName <- ""
-                                else providerName <- currentProviderName.ToString()
-                            do connectionString <- currentConnectionString
-                            testConnection()
-
-    member x.ExecuteNonQuery(currentProviderName, currentConnectionString, currentSbSQL) = 
-                            do providerName <- currentProviderName 
-                            do connectionString <- currentConnectionString
-                            do sbSql <- currentSbSQL
-                            executeNonQuery()
-    
-    member x.ExecuteNonQuery(currentSbSQL) = 
-                            do sbSql <- currentSbSQL
-                            executeNonQuery()
-    
-    member x.ExecuteNonQuery() = executeNonQuery() 
-
-
-    member x.GetDataSet(currentProviderName, currentConnectionString, currentSbSQL) = 
-                            if isNull currentProviderName then providerName <- ""
-                                                          else providerName <- currentProviderName.ToString()
-                            do connectionString <- currentConnectionString
-                            do sbSql <- currentSbSQL
-                            getDataSet()
-    
-    member x.GetDataSet(currentSbSQL) = do sbSql <- currentSbSQL
-                                        getDataSet()
-
-    member x.GetDataSet() = getDataSet()
-
-
-    member x.IntNumberOfRow  with get() = numberOfRowAffected
-    member x.StrError with get() = errorString and set(v) = errorString <- v
-
-    member x.GetAllProviders()  = getAllProviders()
-    member x.GetAllOldbProviders() = getAllOldbProviders()
-//*)
+                | ex ->                    
+                    connection.Close()
+                    {data = ds; numberOfRowAffected = -1; error=ex.Message}
+        | e -> {data = ds; numberOfRowAffected = -1; error = e}
+ 
 type ShowData() as this =
     inherit Window()
-
-    let mySr = new StreamReader(Assembly.Load("FsharpObjXAMLLibrary").GetManifestResourceStream("ShowData.xaml"))   // XAML - MUST be Embedded Resource 
-    do this.Content <- XamlReader.Load(mySr.BaseStream):?> UserControl  // Load XAML
+    
     do this.Title <- "Data Grid - Show"
+       this.Width <- 400.0
+       this.Height <- 300.0
 
-    do this.Width <- 400.0
-    do this.Height <- 300.0
+    let dg = new DataGrid()
+    let ti = new TabItem()
+    let tb = new TextBox()
+    let tabMain = new TabControl()
+    let mutable gridResult : Grid = Grid()       
     
-    let mutable gridResult : Grid = this.Content?gridResult   // Find txtHello name in runWindow and Cast to TextBlock
-    
-    
-    
-    let mutable scaleXY : ScaleTransform = this.Content?scaleXY
-    
-    let initGrid(ds: DataSet) =    let tabMain = new TabControl()
-                                   do gridResult.Children.Add(tabMain) |> ignore
+    let initGrid(ds: DataSet) =    
+        do  gridResult.Children.Add(tabMain) |> ignore
+        for dt in ds.Tables do                                      
+            ti.Header <- dt.TableName                                      
+            dg.AutoGenerateColumns <- true
+            dg.ItemsSource <- dt.DefaultView
+            ti.Content <- dg
+            tabMain.Items.Add(ti) |> ignore
+            this.Content <- gridResult
 
-                                   for dt in ds.Tables do
-                                      let mutable ti = new TabItem()
-                                      do ti.Header <- dt.TableName
-                                      let mutable dg = new DataGrid()
-                                      do dg.AutoGenerateColumns <- true
-                                      do dg.ItemsSource <- dt.DefaultView
-                                      do ti.Content <- dg
-                                      do tabMain.Items.Add(ti) |> ignore
-
-    let initGridError(strErr: String) =
-                                    let tabMain = new TabControl()
-                                    do gridResult.Children.Add(tabMain) |> ignore
-                                    let mutable ti = new TabItem()
-                                    do ti.Header <- "ERROR(S)"
-                                    let mutable tb = new TextBox()
-                                    do tb.Text <- strErr
-                                    do tb.TextWrapping <- TextWrapping.Wrap
-                                    do ti.Content <- tb
-                                    do tabMain.Items.Add(ti) |> ignore
-  
-    let changedScale(v) = do scaleXY.ScaleX <- v / 100.0
-                          do scaleXY.ScaleY <- v / 100.0
+    let initGridError(strErr: String) =                                    
+        do  gridResult.Children.Add(tabMain) |> ignore                                    
+            ti.Header <- "ERROR(S)"                                    
+            tb.Text <- strErr
+            tb.TextWrapping <- TextWrapping.Wrap
+            ti.Content <- tb
+            tabMain.Items.Add(ti) |> ignore
+            this.Content <- gridResult
     
     member x.InitGrid(ds : DataSet) =  initGrid(ds)
     member x.InitGridError(strError : String) =  initGridError(strError)
-    member x.ChangedScale(v) = changedScale(v)
+
+
+type State = { connectionString : string
+               provider : Provider
+               connection : DbConnection
+               error : string }
 
 type DataLab() as this =
     inherit UserControl()
 
- // XAML file properties -> "EmbeddedResource"
-
-    let mySr = new StreamReader(Assembly.Load("FsharpObjXAMLLibrary").GetManifestResourceStream("DataCommonFsharp.xaml"))   // XAML - MUST be Embedded Resource 
-    do this.Content <- XamlReader.Load(mySr.BaseStream):?> UserControl  // Load XAML
-
-// OR  Change XAML file properties to "Resource" and uncomment below (comment out above)
-
-// // XAML file properties -> Resource 
-//    let resource = new Uri("/FsharpObjXAMLLibrary;component/DataCommonFsharp.xaml",System.UriKind.Relative)
-//    do  <- Application.LoadComponent(resource) :?> UserControl   // Cast to UserControl 
-
-    let mutable txtSQL : TextBox = this.Content?txtSQL
-    let mutable txtConnectionString : TextBox = this.Content?txtConnectionString
-    let mutable comboProvider : ComboBox = this.Content?comboProvider
-    let mutable btnOleDbHelper : Button = this.Content?btnOleDbHelper
-    let mutable btnRUN : Button = this.Content?btnRUN
-    let mutable chkSpell : CheckBox = this.Content?chkSpell
-    let mutable btnTest : Button = this.Content?btnTest
-    
-    let mutable scaleXY : ScaleTransform = this.Content?scaleXY
-    let mutable slider : Slider = this.Content?slider
-    
-    let mutable sh : ShowData = new ShowData() 
-
-    let dc = new DataCommon() 
-
-    do btnOleDbHelper.ToolTip <- "Show OleDb data providers which installed on YOUR PC."
-    do comboProvider.ToolTip <- "Show ALL data providers which installed on YOUR PC."
-
-    // Init combo box providers
+    // Set attributes on this.
+    do  this.Name <- "DataLab"
+        
+    // Create controls.
+    let grid_Main = 
+        new Grid( Name = "gridMain", 
+                  RenderTransformOrigin = Point(0.,0.),
+                  MinWidth = 600.,
+                  MinHeight = 400.
+                )
+    let textBox_SQL = 
+        new TextBox( Name = "txtSQL",
+                     TextWrapping = TextWrapping.Wrap, 
+                     Text = "Enter SQL Here.",
+                     Margin = Thickness(Left = 10., Top = 63., Right = 10., Bottom = 27.),
+                     IsManipulationEnabled = true,
+                     IsInactiveSelectionHighlightEnabled = true,
+                     AcceptsReturn = true
+                    )
+    let textBox_ConnectionString = 
+        new TextBox( Name = "txtConnectionString",
+                     Height = 23., 
+                     Margin = Thickness(Left = 10., Top = 8., Right = 136., Bottom = 0.),
+                     TextWrapping = TextWrapping.Wrap,
+                     Text = "Connection String", 
+                     VerticalAlignment = VerticalAlignment.Top                     
+                    )
+    let comboBox_Provider = 
+        new ComboBox( Name="comboProvider",
+                      Margin = Thickness(Left = 10., Top = 36., Right = 370., Bottom = 0.), 
+                      VerticalAlignment=VerticalAlignment.Top,
+                      ToolTip = "Show ALL data providers installed on this PC.",
+                      DisplayMemberPath = "Name",
+                      SelectedValuePath = "InvariantName",
+                      ItemsSource = (DataCommon.getAllProviders).DefaultView,
+                      SelectedValue = "System.Data.SqlClient"
+                      )
+    let button_OleDbHelper = 
+        new Button( Name = "btnOleDbHelper",
+                    Content = "OleDb Helper",
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = Thickness(Left = 0., Top = 36., Right = 10., Bottom = 0.),
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Width = 121.,
+                    IsCancel = true,
+                    IsEnabled = false,
+                    ToolTip = "Show OleDb data providers installed on this PC."
+                   )
+    let button_RUN = 
+        new Button( Name = "btnRUN",
+                    Content = "RUN SQL",
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = Thickness(Left = 0., Top = 36., Right = 136., Bottom = 0.),
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Width = 121.,
+                    IsCancel = true                    
+                   )
+    let checkBox_Spell = 
+        new CheckBox( Name = "chkSpell", 
+                      Content = "Spell Check",
+                      HorizontalAlignment = HorizontalAlignment.Right,
+                      Margin = Thickness(Left = 0., Top = 39., Right = 271., Bottom = 0.),
+                      VerticalAlignment = VerticalAlignment.Top,
+                      Width = 94.
+                    )
+    let button_Test = 
+        new Button( Name = "btnTest",
+                    Content = "Test",
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = Thickness(Left = 0., Top = 10., Right = 10., Bottom = 0.),//
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Width = 121.,
+                    IsCancel = true,
+                    ToolTip = "Test Connection String."
+                   )
      
-    do comboProvider.DisplayMemberPath <- "Name"
-    do comboProvider.SelectedValuePath <- "InvariantName"
-    do comboProvider.ItemsSource <- (dc.GetAllProviders()).DefaultView;
+    // Initialize connection parameters.
+    let provider = 
+        let pList = DataCommon.allProviderStrings
+        Provider(pList.Head)
+    let connection =  Connection.toDatabase provider
+            
+    // Initial state variable
+    let mutable state = 
+        { connectionString = ""
+          provider = provider
+          connection = connection
+          error = ""
+          }
 
-    let runDS() = dc.GetDataSet(comboProvider.SelectedValue, txtConnectionString.Text, new StringBuilder(txtSQL.Text) )
-
+    // Functions
     let showData(ds:DataSet) = async {
-                              do sh <- new ShowData()  
-                              do sh.ChangedScale(slider.Value)
-                              do sh.Owner <- Application.Current.MainWindow  // window be on top of all other windows 
-                              do sh.Show() 
-                              if dc.StrError = "" then do sh.InitGrid(ds)
-                                                  else do sh.InitGridError(dc.StrError) 
-                            }
-
-    let comboSelected() = let s = comboProvider.SelectedValue.ToString()
-                          if s.IndexOf("OleDb") >= 0 then do btnOleDbHelper.IsEnabled <- true
-                                                     else do btnOleDbHelper.IsEnabled <- false
-
+        let showData = new ShowData()        
+        do showData.Owner <- Application.Current.MainWindow  // window be on top of all other windows         
+        do showData.Show()
+        match state.error = "" with
+        | true -> do showData.InitGrid(ds)
+        | false -> do showData.InitGridError(state.error) 
+      }
+    
+    let runSQL() = 
+        match textBox_SQL.Text.Contains("SELECT") with 
+        | true -> showData( (DataQuery.getDataSet state.provider state.connection textBox_SQL.Text).data ) 
+        | false -> DataQuery.executeNonQuery state.connection textBox_SQL.Text
+        
+    /// Enables OleDbHelper_button when the OleDb provider is selected from combo box and 
+    /// disables OleDbHelper_button when another provider is selected. 
+    let comboSelected() = 
+        let s = comboBox_Provider.SelectedValue.ToString()
+        let newState = {state with provider = Provider(s); connection = Connection.toDatabase (Provider(s))}        
+        do  state <- newState
+            match s.IndexOf("System.Data.OleDb") >= 0 with
+            | true -> do button_OleDbHelper.IsEnabled <- true
+            | false -> do button_OleDbHelper.IsEnabled <- false   
+    
     let testConnection() = async {
-                                   do sh <- new ShowData()
-                                   do sh.ChangedScale(slider.Value)
-                                   do sh.Owner <- Application.Current.MainWindow  // window be on top of all other windows 
-                                   do sh.Show() 
-                                   if dc.TestConnection(comboProvider.SelectedValue, txtConnectionString.Text) 
-                                       then do sh.InitGridError("Connection String - OK")
-                                       else do sh.InitGridError(dc.StrError)
-                                   ignore()
-                             }
-    let changedScale() = do scaleXY.ScaleX <- slider.Value / 100.0
-                         do scaleXY.ScaleY <- slider.Value / 100.0
-                         do sh.ChangedScale(slider.Value)
+        let showData = new ShowData()       
+        do  showData.Show()
+            showData.Owner <- Application.Current.MainWindow  
+        do state <- {state with connectionString = textBox_ConnectionString.Text}
+        match Connection.test state.connection state.connectionString with
+        | "good" -> do showData.InitGridError("Connection String - OK")
+        | error -> do showData.InitGridError(error)
+        ignore()}
+    
+    // Compose controls
+    do  grid_Main.Children.Add(textBox_SQL)              |> ignore
+        grid_Main.Children.Add(textBox_ConnectionString) |> ignore
+        grid_Main.Children.Add(comboBox_Provider)        |> ignore
+        grid_Main.Children.Add(button_OleDbHelper)       |> ignore
+        grid_Main.Children.Add(button_RUN)               |> ignore
+        grid_Main.Children.Add(checkBox_Spell)           |> ignore
+        grid_Main.Children.Add(button_Test)              |> ignore        
+        this.Content <- grid_Main
 
-    do slider.ValueChanged.Add(fun _ -> changedScale()) 
+    do this.Unloaded.Add(fun _ -> state.connection.Close())    
+       comboBox_Provider.SelectionChanged.Add(fun _ ->  comboSelected())    
+       checkBox_Spell.Checked.Add(fun _ -> do textBox_SQL.SpellCheck.IsEnabled <- true )
+       checkBox_Spell.Unchecked.Add(fun _ -> do textBox_SQL.SpellCheck.IsEnabled <- false )    
+       button_Test.Click.Add(fun _ ->  Async.StartImmediate (testConnection())) 
+       button_RUN.Click.Add(fun _ ->  Async.StartImmediate (runSQL()) )
+       button_OleDbHelper.Click.Add(fun _ -> Async.StartImmediate(showData(DataCommon.getAllOldbProviders)))
 
-    do this.Unloaded.Add(fun _ -> dc.CloseConnection())
-
-    do comboProvider.SelectionChanged.Add(fun _ ->  comboSelected())
-
-    do chkSpell.Checked.Add(fun _ -> do txtSQL.SpellCheck.IsEnabled <- true )
-    do chkSpell.Unchecked.Add(fun _ -> do txtSQL.SpellCheck.IsEnabled <- false )
-
-    do btnTest.Click.Add(fun _ ->  Async.StartImmediate(testConnection())) 
-    do btnRUN.Click.Add(fun _ ->  Async.StartImmediate(showData(runDS()))) 
-    do btnOleDbHelper.Click.Add(fun _ -> Async.StartImmediate(showData(dc.GetAllOldbProviders())))
+    
