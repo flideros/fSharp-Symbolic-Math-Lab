@@ -141,7 +141,6 @@ type State = { connectionString : string
 type DataLab() as this =
     inherit UserControl()
 
-
     // Set attributes on this.
     do  this.Name <- "DataLab"
         
@@ -284,5 +283,4 @@ type DataLab() as this =
        button_Test.Click.Add(fun _ ->  Async.StartImmediate (testConnection())) 
        button_RUN.Click.Add(fun _ ->  Async.StartImmediate (runSQL()) )
        button_OleDbHelper.Click.Add(fun _ -> Async.StartImmediate(showData(DataCommon.getAllOldbProviders)))
-
     
