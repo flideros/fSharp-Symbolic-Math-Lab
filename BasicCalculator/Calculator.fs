@@ -27,7 +27,7 @@ type Calculator() as calculator =
     
     //Buttons     
     let one = 
-        Button(Name = "oneButton",
+        Button( Name = "oneButton",
                 Content = "1",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = Thickness(Left = 10., Top = 227., Right = 0., Bottom = 0.),

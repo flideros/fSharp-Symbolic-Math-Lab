@@ -40,18 +40,19 @@ dockPanel.Children.Add (browserBorder) |> ignore
 do notepad.ExeName <- "wordpad.exe"
    notepad.InitializeComponent()
 let calculator = new Calculator(OverridesDefaultStyle = true) 
+let dataLab = new DataLab(RenderTransformOrigin = Point(0.,0.))
 *)
 
-let dataLab = new DataLab(RenderTransformOrigin = Point(0.,0.))
+let graphingCalc = GraphingCalculator.GraphingCalculator()
 
 // Make a window and add content
 let window = new Window(RenderTransformOrigin = Point(0.,0.))
 window.Title <- "Math is fun!" 
-window.Content <-  dataLab//notepad//calculator//grid//
+window.Content <-  graphingCalc//dataLab//notepad//calculator//grid//
 //window.Width <- Double.NaN
 //window.Height <- Double.NaN
-window.MinWidth <- 640.0
-window.MinHeight <- 440.0
+//window.MinWidth <- 640.0
+//window.MinHeight <- 440.0
 window.SizeToContent <- SizeToContent.WidthAndHeight
 
 //----------{not needed unless a Xaml used for window}----------//

@@ -1,6 +1,6 @@
 ﻿namespace GraphingCalculator
 
-type setting = 
+type Setting = 
         member this.UMin = "u Min";
         member this.UMax = "u Max";
         member this.UGrid = "u GridSections";
