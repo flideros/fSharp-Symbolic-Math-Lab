@@ -3886,7 +3886,7 @@
                                 <SolidColorBrush Color="{DynamicResource BorderMediumColor}" />
                             </Border.BorderBrush>
                             <ScrollViewer CanContentScroll="True"
-                        Style="{StaticResource MenuScrollViewer}">
+                        Style="{DynamicResource MenuScrollViewer}">
                                 <StackPanel IsItemsHost="True"
                         KeyboardNavigation.DirectionalNavigation="Cycle" />
                             </ScrollViewer>
@@ -4289,7 +4289,7 @@
                   Grid.Column="0">
                                 <ScrollContentPresenter Margin="{TemplateBinding Padding}" />
                             </Border>
-                            <RepeatButton Style="{StaticResource MenuScrollButton}"
+                            <RepeatButton Style="{DynamicResource MenuScrollButton}"
                         Grid.Row="0"
                         Grid.Column="0"
                         Command="{x:Static ScrollBar.LineUpCommand}"
@@ -4310,9 +4310,9 @@
                                     </MultiBinding>
                                 </RepeatButton.Visibility>
                                 <Path Fill="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"
-                  Data="{StaticResource UpArrow}" />
+                  Data="{DynamicResource UpArrow}" />
                             </RepeatButton>
-                            <RepeatButton Style="{StaticResource MenuScrollButton}"
+                            <RepeatButton Style="{DynamicResource MenuScrollButton}"
                         Grid.Row="2"
                         Grid.Column="0"
                         Command="{x:Static ScrollBar.LineDownCommand}"
@@ -4333,7 +4333,7 @@
                                     </MultiBinding>
                                 </RepeatButton.Visibility>
                                 <Path Fill="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"
-                  Data="{StaticResource DownArrow}" />
+                  Data="{DynamicResource DownArrow}" />
                             </RepeatButton>
                         </Grid>
                     </ControlTemplate>

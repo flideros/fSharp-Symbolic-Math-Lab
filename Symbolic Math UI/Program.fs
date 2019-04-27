@@ -51,9 +51,9 @@ window.Title <- "Math is fun!"
 window.Content <-  graphingCalc//dataLab//notepad//calculator//grid//
 //window.Width <- Double.NaN
 //window.Height <- Double.NaN
-//window.MinWidth <- 640.0
-//window.MinHeight <- 440.0
-window.SizeToContent <- SizeToContent.WidthAndHeight
+window.MaxWidth <- 440.0
+window.MaxHeight <- 640.0
+//window.SizeToContent <- SizeToContent.WidthAndHeight
 
 //----------{not needed unless a Xaml used for window}----------//
 // Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
