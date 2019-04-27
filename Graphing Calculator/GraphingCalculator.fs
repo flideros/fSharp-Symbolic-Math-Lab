@@ -51,7 +51,7 @@ type GraphingCalculator() as graphingCalculator =
         let row2 = RowDefinition(Height = GridLength.Auto)
         let row3 = RowDefinition(Height = GridLength.Auto)
         let row4 = RowDefinition(Height = GridLength.Auto)
-        let row5 = RowDefinition(Height = GridLength.Auto)
+        let row5 = RowDefinition(Height = GridLength.Auto)//GridLength(1., GridUnitType.Star))//
         
         do  grid.RowDefinitions.Add(row1)
             grid.RowDefinitions.Add(row2)
@@ -60,13 +60,17 @@ type GraphingCalculator() as graphingCalculator =
             grid.RowDefinitions.Add(row5)
         grid
     
+    do  // Assemble the pieces
+        calculator_Grid.Children.Add(calculator_Rectangle)             |> ignore
+        calculator_Grid.Children.Add(calculator_modelNumber_TextBlock) |> ignore
+    
     let screen_Border = 
         let gb = Border(
-                    Margin = Thickness(left=5.,top=5.,right=5.,bottom=5.),
+                    Margin = Thickness(left = 5., top = 5., right = 5., bottom = 5.),
                     BorderBrush = black,
                     BorderThickness = Thickness(1.5)
                     )        
-        do gb.SetValue(Grid.ColumnSpanProperty,3)
+        do gb.SetValue(Grid.RowSpanProperty,5)
         gb
     let screen_Grid = 
         let g = 
@@ -81,18 +85,18 @@ type GraphingCalculator() as graphingCalculator =
         g
     let screen_Text_TextBox = 
         let t = CalcTextBox(                    
-                    IsReadOnly=true,
-                    VerticalScrollBarVisibility = ScrollBarVisibility.Visible 
+                    Visibility = Visibility.Hidden,
+                    IsReadOnly = true,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Visible
                     )
         do t.SetValue(Grid.RowProperty, 1)
         t
+    let canvas = Canvas( Visibility = Visibility.Visible, 
+                         ClipToBounds = true)
     let screen_Canvas =
         let g = Grid()
-        do g.SetValue(Grid.RowProperty, 1)
-
-        let c = Canvas( Visibility = Visibility.Collapsed, 
-                        ClipToBounds=true)
-        do g.Children.Add(c) |> ignore
+        do g.SetValue(Grid.RowProperty, 1)        
+        do g.Children.Add(canvas) |> ignore
         g
     
     let selection_Rectangle =
@@ -110,8 +114,14 @@ type GraphingCalculator() as graphingCalculator =
         do r.SetValue(Grid.RowProperty, 1)
         r
     
+    do  // Assemble the pieces   
+        //screen_Text_TextBox.Text <- "Testing one two, testing."         
+        screen_Grid.Children.Add(screen_Text_TextBox) |> ignore
+        screen_Grid.Children.Add(screen_Canvas)       |> ignore
+        screen_Grid.Children.Add(selection_Rectangle) |> ignore
+  
     let function_Grid =     
-        let grid = Grid(Visibility = Visibility.Collapsed)
+        let grid = Grid(Visibility = Visibility.Hidden)
         
         do grid.SetValue(Grid.RowProperty, 1)
         
@@ -131,7 +141,7 @@ type GraphingCalculator() as graphingCalculator =
 
         grid
     let function_yLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "y = ")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function_y_TextBox = 
@@ -165,6 +175,11 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(function_Button) |> ignore
         grid
     
+    do  // Assemble the pieces
+        function_Grid .Children.Add(function_yLabel_TextBlock) |> ignore
+        function_Grid .Children.Add(function_y_TextBox) |> ignore      
+        function_Grid .Children.Add(function_Button_Grid) |> ignore
+    
     let function2D_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -190,7 +205,7 @@ type GraphingCalculator() as graphingCalculator =
 
         grid
     let function2D_xtLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "xt = ")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function2D_xt_TextBox = 
@@ -198,7 +213,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function2D_ytLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "yt = ")
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function2D_yt_TextBox = 
@@ -264,6 +279,14 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(function2D_Graph_Button) |> ignore            
         grid
     
+    do  // Assemble the pieces
+        function2D_Grid .Children.Add(function2D_xtLabel_TextBlock) |> ignore
+        function2D_Grid .Children.Add(function2D_xt_TextBox) |> ignore
+        function2D_Grid .Children.Add(function2D_ytLabel_TextBlock) |> ignore
+        function2D_Grid .Children.Add(function2D_yt_TextBox) |> ignore
+        function2D_Grid .Children.Add(function2D_ShapeButton_Grid) |> ignore
+        function2D_Grid .Children.Add(function2D_GraphButton_Grid) |> ignore
+
     let function3D_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -295,7 +318,7 @@ type GraphingCalculator() as graphingCalculator =
 
         grid
     let function3D_fxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "fx = ")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function3D_fx_TextBox = 
@@ -303,7 +326,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function3D_fyLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "fy = ")
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function3D_fy_TextBox = 
@@ -312,7 +335,7 @@ type GraphingCalculator() as graphingCalculator =
             tb.SetValue(Grid.ColumnProperty,1)
         tb    
     let function3D_fzLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "fz = ")
         do tb.SetValue(Grid.RowProperty,2)
         tb
     let function3D_fz_TextBox = 
@@ -385,6 +408,16 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(function3D_SolidMesh_Button) |> ignore            
         grid
     
+    do  // Assemble the pieces
+        function3D_Grid .Children.Add(function3D_fxLabel_TextBlock) |> ignore
+        function3D_Grid .Children.Add(function3D_fx_TextBox) |> ignore
+        function3D_Grid .Children.Add(function3D_fyLabel_TextBlock) |> ignore
+        function3D_Grid .Children.Add(function3D_fy_TextBox) |> ignore
+        function3D_Grid .Children.Add(function3D_fzLabel_TextBlock) |> ignore
+        function3D_Grid .Children.Add(function3D_fz_TextBox) |> ignore
+        function3D_Grid .Children.Add(function3D_ShapeButton_Grid) |> ignore
+        function3D_Grid .Children.Add(function3D_SolidMeshButton_Grid) |> ignore
+
     let option_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -412,7 +445,7 @@ type GraphingCalculator() as graphingCalculator =
 
         grid    
     let option_xMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "x Min = ")
         do tb.SetValue(Grid.RowProperty,0)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -422,7 +455,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option_xMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "x Max = ")
         do tb.SetValue(Grid.RowProperty,1)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -432,7 +465,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option_yMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "y Min = ")
         do tb.SetValue(Grid.RowProperty,2)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -442,7 +475,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option_yMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "y Max = ")
         do tb.SetValue(Grid.RowProperty,3)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -478,6 +511,17 @@ type GraphingCalculator() as graphingCalculator =
             grid.Children.Add(option_Reset_Button) |> ignore
         grid
     
+    do  // Assemble the pieces
+        option_Grid .Children.Add(option_xMinLabel_TextBlock) |> ignore
+        option_Grid .Children.Add(option_xMin_TextBox) |> ignore
+        option_Grid .Children.Add(option_xMaxLabel_TextBlock) |> ignore
+        option_Grid .Children.Add(option_xMax_TextBox) |> ignore
+        option_Grid .Children.Add(option_yMinLabel_TextBlock) |> ignore
+        option_Grid .Children.Add(option_yMin_TextBox) |> ignore
+        option_Grid .Children.Add(option_yMaxLabel_TextBlock) |> ignore
+        option_Grid .Children.Add(option_yMax_TextBox) |> ignore
+        option_Grid .Children.Add(option_Button_Grid) |> ignore
+
     let option2D_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -511,7 +555,7 @@ type GraphingCalculator() as graphingCalculator =
 
         grid
     let option2D_xMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "x Min = ")
         do tb.SetValue(Grid.RowProperty,0)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -521,7 +565,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option2D_xMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "x Max = ")
         do tb.SetValue(Grid.RowProperty,1)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -531,7 +575,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option2D_yMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "y Min = ")
         do tb.SetValue(Grid.RowProperty,2)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -541,7 +585,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option2D_yMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "y Max = ")
         do tb.SetValue(Grid.RowProperty,3)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -551,7 +595,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb    
     let option2D_tMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "t Min = ")
         do tb.SetValue(Grid.RowProperty,4)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -561,7 +605,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option2D_tMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "t Max = ")
         do tb.SetValue(Grid.RowProperty,5)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -571,7 +615,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb 
     let option2D_tStepLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "t Step = ")
         do tb.SetValue(Grid.RowProperty,6)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -606,10 +650,26 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(option2D_Save_Button) |> ignore
             grid.Children.Add(option2D_Reset_Button) |> ignore
         grid
-        
-    //363
+    
+    do  // Assemble the pieces
+        option2D_Grid .Children.Add(option2D_xMinLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_xMin_TextBox) |> ignore
+        option2D_Grid .Children.Add(option2D_xMaxLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_xMax_TextBox) |> ignore
+        option2D_Grid .Children.Add(option2D_yMinLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_yMin_TextBox) |> ignore
+        option2D_Grid .Children.Add(option2D_yMaxLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_yMax_TextBox) |> ignore
+        option2D_Grid .Children.Add(option2D_tMinLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_tMin_TextBox) |> ignore        
+        option2D_Grid .Children.Add(option2D_tMaxLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_tMax_TextBox) |> ignore
+        option2D_Grid .Children.Add(option2D_tStepLabel_TextBlock) |> ignore
+        option2D_Grid .Children.Add(option2D_tStep_TextBox) |> ignore
+        option2D_Grid .Children.Add(option2D_Button_Grid) |> ignore
+
     let option3D_Grid =     
-        let grid = Grid(Visibility = Visibility.Collapsed)        
+        let grid = Grid(Visibility = Visibility.Visible)        
         do grid.SetValue(Grid.RowProperty, 1)
         
         let column1 = ColumnDefinition()
@@ -637,7 +697,7 @@ type GraphingCalculator() as graphingCalculator =
             grid.RowDefinitions.Add(row8)            
         grid
     let option3D_uMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "u Min = ")
         do tb.SetValue(Grid.RowProperty,0)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -647,7 +707,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option3D_uMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "u Max = ")
         do tb.SetValue(Grid.RowProperty,1)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -657,7 +717,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option3D_uGridLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "u Grid = ")
         do tb.SetValue(Grid.RowProperty,2)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -666,28 +726,28 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,2)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
-    let option3D_uMinLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+    let option3D_vMinLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "v Min = ")
         do tb.SetValue(Grid.RowProperty,3)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
-    let option3D_uMin_TextBox = 
+    let option3D_vMin_TextBox = 
         let tb = FunctionTextBox(MaxLines = 1)
         do tb.SetValue(Grid.RowProperty,3)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb    
-    let option3D_uMaxLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+    let option3D_vMaxLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "v Max = ")
         do tb.SetValue(Grid.RowProperty,4)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
-    let option3D_uMax_TextBox = 
+    let option3D_vMax_TextBox = 
         let tb = FunctionTextBox(MaxLines = 1)
         do tb.SetValue(Grid.RowProperty,4)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let option3D_vGridLabel_TextBlock = 
-        let tb = FunctionTextBlock()
+        let tb = FunctionTextBlock(Text = "v Grid = ")
         do tb.SetValue(Grid.RowProperty,5)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
@@ -722,48 +782,76 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(option3D_Save_Button) |> ignore
             grid.Children.Add(option3D_Reset_Button) |> ignore
         grid
+    
+    do  // Assemble the pieces
+        option3D_Grid .Children.Add(option3D_uMinLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_uMin_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_uMaxLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_uMax_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_uGridLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_uGrid_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_vMinLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_vMin_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_vMaxLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_vMax_TextBox) |> ignore        
+        option3D_Grid .Children.Add(option3D_vGridLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_vGrid_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_Button_Grid) |> ignore
 
     let menu = 
         
-        let header1 = MenuItem(Header = "Graph")
-        let header1_Item1 = MenuItem(Name = "Text")
-        let header1_Item2 = MenuItem(Name = "Graph")
-        let header1_Item3 = MenuItem(Name = "Graph2D")
-        let header1_Item4 = MenuItem(Name = "Graph3D")
-        let itemCollection1 = [header1;header1_Item1;header1_Item2;header1_Item3;header1_Item4]
+        let itemsControlTemplate = ItemsPanelTemplate()
 
+        let header1 = MenuItem(Header = "Graph")
+        let header1_Item1 = MenuItem(Header = "Text")
+        let header1_Item2 = MenuItem(Header = "Graph")
+        let header1_Item3 = MenuItem(Header = "Graph2D")
+        let header1_Item4 = MenuItem(Header = "Graph3D")
+
+        do  header1.Items.Add(header1_Item1) |> ignore
+            header1.Items.Add(header1_Item2) |> ignore
+            header1.Items.Add(header1_Item3) |> ignore
+            header1.Items.Add(header1_Item4) |> ignore
 
         let header2 = MenuItem(Header = "Options")
-        let header2_Item1 = MenuItem(Name = "Graph")
-        let header2_Item2 = MenuItem(Name = "Graph2D")
-        let header2_Item3 = MenuItem(Name = "Graph3D")
-        let itemCollection2 = [header2;header2_Item1;header2_Item2;header2_Item3]
+        let header2_Item1 = MenuItem(Header = "Graph")
+        let header2_Item2 = MenuItem(Header = "Graph2D")
+        let header2_Item3 = MenuItem(Header = "Graph3D")
+        
+        do  header2.Items.Add(header2_Item1) |> ignore
+            header2.Items.Add(header2_Item2) |> ignore
+            header2.Items.Add(header2_Item3) |> ignore
 
         let m = Menu()
         do  m.SetValue(Grid.RowProperty,0)
-            m.Items.Add(itemCollection1) |> ignore
-            m.Items.Add(itemCollection2) |> ignore
+            m.Items.Add(header1) |> ignore
+            m.Items.Add(header2) |> ignore
+            
         m
 
+    let immediate =
+        let im = TextBox()
+
+        im
 
 
+    do  // Assemble the pieces        
+        screen_Grid.Children.Add(menu) |> ignore
+        screen_Grid.Children.Add(function_Grid) |> ignore
+        screen_Grid.Children.Add(function2D_Grid) |> ignore
+        screen_Grid.Children.Add(function3D_Grid) |> ignore
+        screen_Grid.Children.Add(option_Grid) |> ignore
+        screen_Grid.Children.Add(option2D_Grid) |> ignore
+        screen_Grid.Children.Add(option3D_Grid) |> ignore
 
-    // Compoe types
-    do
-      
-      screen_Grid.Children.Add(screen_Text_TextBox) |> ignore
-      screen_Grid.Children.Add(screen_Canvas) |> ignore
-      screen_Grid.Children.Add(selection_Rectangle) |> ignore
-      
-      screen_Border.Child <- screen_Grid
-      
-      calculator_Layout_Grid.Children.Add(screen_Border) |> ignore
-            
-      calculator_Grid.Children.Add(calculator_Rectangle) |> ignore
-      calculator_Grid.Children.Add(calculator_modelNumber_TextBlock) |> ignore
-      calculator_Grid.Children.Add(calculator_Layout_Grid) |> ignore
-      
-      graphingCalculator.Content <- calculator_Grid
+
+        
+        screen_Border.Child <- screen_Grid
+        calculator_Layout_Grid.Children.Add(screen_Border) |> ignore
+        calculator_Grid.Children.Add(calculator_Layout_Grid) |> ignore
+        
+        
+        graphingCalculator.Content <- calculator_Grid
 
 
 
