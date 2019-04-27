@@ -70,7 +70,6 @@ type GraphingCalculator() as graphingCalculator =
                     BorderBrush = black,
                     BorderThickness = Thickness(1.5)
                     )        
-        do gb.SetValue(Grid.ColumnSpanProperty,3)
         do gb.SetValue(Grid.RowSpanProperty,5)
         gb
     let screen_Grid = 

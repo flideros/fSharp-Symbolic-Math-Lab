@@ -283,5 +283,3 @@ type DataLab() as this =
        button_Test.Click.Add(fun _ ->  Async.StartImmediate (testConnection())) 
        button_RUN.Click.Add(fun _ ->  Async.StartImmediate (runSQL()) )
        button_OleDbHelper.Click.Add(fun _ -> Async.StartImmediate(showData(DataCommon.getAllOldbProviders)))
-
-    
