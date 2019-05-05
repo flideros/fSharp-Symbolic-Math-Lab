@@ -1,6 +1,7 @@
-﻿namespace Math.Pure.Objects
+namespace Math.Pure.Objects
 
 open OpenMath
+open FSharp.Data
 
 type Constant =
     | E
@@ -43,8 +44,9 @@ type Constant =
     | Binder
     | NumericalValue
     with
-    member this.definition =         
-        match this with 
+    member this.definition =
+
+        match this with
         //nums1
         | E -> GET.definitionEntry (FROM.cD "nums1") "e"
         | I -> GET.definitionEntry (FROM.cD "nums1") "i"
@@ -52,7 +54,7 @@ type Constant =
         | Gamma -> GET.definitionEntry (FROM.cD "nums1") "gamma"
         | Infinity -> GET.definitionEntry (FROM.cD "nums1") "infinity"
         | NaN -> GET.definitionEntry (FROM.cD "nums1") "NaN"
-        
+
         // setname1
         | RealNumbers -> GET.definitionEntry (FROM.cD "setname1") "R"
         | NaturalNumbers -> GET.definitionEntry (FROM.cD "setname1") "N"
@@ -60,24 +62,24 @@ type Constant =
         | IntegralNumbers -> GET.definitionEntry (FROM.cD "setname1") "Z"
         | ComplexNumbers -> GET.definitionEntry (FROM.cD "setname1") "C"
         | PositivePrimes -> GET.definitionEntry (FROM.cD "setname1") "P"
-        
+
         // set1
         | EmptySet -> GET.definitionEntry (FROM.cD "set1") "emptyset"
-        
+
         // alg1
         | Zero -> GET.definitionEntry (FROM.cD "alg1") "zero"
         | One -> GET.definitionEntry (FROM.cD "alg1") "one"
-        
+
         // limit1
         | Null -> GET.definitionEntry (FROM.cD "limit1") "null"
         | BothSides -> GET.definitionEntry (FROM.cD "limit1") "both_sides"
         | Above -> GET.definitionEntry (FROM.cD "limit1") "above"
         | Below -> GET.definitionEntry (FROM.cD "limit1") "below"
-        
+
         // logic1
         | False -> GET.definitionEntry (FROM.cD "logic1") "false"
         | True -> GET.definitionEntry (FROM.cD "logic1") "true"
-        
+
         // mathmltypes
         | ComplexCartesianType -> GET.definitionEntry (FROM.cD "mathmltypes") "complex_cartesian_type"
         | ComplexPolarType -> GET.definitionEntry (FROM.cD "mathmltypes") "complex_polar_type"
@@ -90,10 +92,10 @@ type Constant =
         | ListType -> GET.definitionEntry (FROM.cD "mathmltypes") "list_type"
         | MatrixType -> GET.definitionEntry (FROM.cD "mathmltypes") "matrix_type"
         | RealType -> GET.definitionEntry (FROM.cD "mathmltypes") "real_type"
-        
+
         //multiset1
         | EmptyMultiSet -> GET.definitionEntry (FROM.cD "multiset1") "emptyset"
-        
+
         // sts
         | Object -> GET.definitionEntry (FROM.cD "sts") "Object"
         | SetNumericalValue -> GET.definitionEntry (FROM.cD "sts") "SetNumericalValue"
@@ -101,9 +103,9 @@ type Constant =
         | Attribution -> GET.definitionEntry (FROM.cD "sts") "attribution"
         | Binder -> GET.definitionEntry (FROM.cD "sts") "binder"
         | NumericalValue -> GET.definitionEntry (FROM.cD "sts") "NumericalValue"
-                   
-    member this.symbol =         
-        match this with         
+
+    member this.symbol =
+        match this with
         // nums1
 
         | E -> (GET.definitionEntry (FROM.cD "nums1") "e").Value.Name
@@ -112,7 +114,7 @@ type Constant =
         | Gamma -> (GET.definitionEntry (FROM.cD "nums1") "gamma").Value.Name
         | Infinity -> (GET.definitionEntry (FROM.cD "nums1") "infinity").Value.Name
         | NaN -> (GET.definitionEntry (FROM.cD "nums1") "NaN").Value.Name
-        
+
         // setname1
         | RealNumbers -> (GET.definitionEntry (FROM.cD "setname1") "R").Value.Name
         | NaturalNumbers -> (GET.definitionEntry (FROM.cD "setname1") "N").Value.Name
@@ -120,24 +122,24 @@ type Constant =
         | IntegralNumbers -> (GET.definitionEntry (FROM.cD "setname1") "Z").Value.Name
         | ComplexNumbers -> (GET.definitionEntry (FROM.cD "setname1") "C").Value.Name
         | PositivePrimes -> (GET.definitionEntry (FROM.cD "setname1") "P").Value.Name
-        
+
         // set
         | EmptySet -> (GET.definitionEntry (FROM.cD "set1") "emptyset").Value.Name
-        
+
         // alg1
         | Zero -> (GET.definitionEntry (FROM.cD "alg1") "zero").Value.Name
         | One -> (GET.definitionEntry (FROM.cD "alg1") "one").Value.Name
-        
+
         // limit1
         | Null -> (GET.definitionEntry (FROM.cD "limit1") "null").Value.Name
         | BothSides -> (GET.definitionEntry (FROM.cD "limit1") "both_sides").Value.Name
         | Above -> (GET.definitionEntry (FROM.cD "limit1") "above").Value.Name
         | Below -> (GET.definitionEntry (FROM.cD "limit1") "below").Value.Name
-        
+
         // logical1
         | False -> (GET.definitionEntry (FROM.cD "logic1") "false").Value.Name
         | True -> (GET.definitionEntry (FROM.cD "logic1") "true").Value.Name
-        
+
         // mathmltypes
         | ComplexCartesianType -> (GET.definitionEntry (FROM.cD "mathmltypes") "complex_cartesian_type").Value.Name
         | ComplexPolarType -> (GET.definitionEntry (FROM.cD "mathmltypes") "complex_polar_type").Value.Name
@@ -150,10 +152,10 @@ type Constant =
         | ListType -> (GET.definitionEntry (FROM.cD "mathmltypes") "list_type").Value.Name
         | MatrixType -> (GET.definitionEntry (FROM.cD "mathmltypes") "matrix_type").Value.Name
         | RealType -> (GET.definitionEntry (FROM.cD "mathmltypes") "real_type").Value.Name
-        
+
         // multiset1
         | EmptyMultiSet -> (GET.definitionEntry (FROM.cD "multiset1") "emptyset").Value.Name
-        
+
         // sts
         | Object -> (GET.definitionEntry (FROM.cD "sts") "Object").Value.Name
         | SetNumericalValue -> (GET.definitionEntry (FROM.cD "sts") "SetNumericalValue").Value.Name
@@ -162,12 +164,12 @@ type Constant =
         | Binder -> (GET.definitionEntry (FROM.cD "sts") "binder").Value.Name
         | NumericalValue -> (GET.definitionEntry (FROM.cD "sts") "NumericalValue").Value.Name
 
-type Symbol = 
+type Symbol =
     | Constant of Constant
     | Variable of string
     | Inconsistent
     with
-    member this.definition = 
+    member this.definition =
         match this with
         | Constant _ -> ConstantType.definition
         | Variable _ -> None //GET.definitionEntry (FROM.cD "prog1") "local_var"
@@ -177,13 +179,8 @@ type Result<'T> =
     | Pass of 'T
     | Fail
     with
-    member this.value = 
+    member this.value =
         let v = match this with
                 | Pass t -> Some t
                 | Fail -> None
         v.Value
-
-
-
-
-    

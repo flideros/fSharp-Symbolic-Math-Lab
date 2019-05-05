@@ -35,7 +35,7 @@ let list2 = [3;2;4;7;6;55;66]
 let list3 = [5;2;6;4;77;55;7]
 let set1 :Set<int> = Set.ofList [1;2;3;7;77;6;67;75]
 let set2 :Set<int> = Set.ofList [3;2;4;7;6;55;66]
-let set3 :Set<int> = Set.ofList [5;2;6;4;77;55;7] 
+let set3 :Set<int> = Set.ofList [5;2;6;4;77;55;7]
 
 
 let ll = Logic.Set.Difference.oFList list2 list3
@@ -67,4 +67,3 @@ Logic.Set.definition
 let ocd = "set1"
 let d = (__SOURCE_DIRECTORY__ + @"\OCD\" + ocd + ".ocd")
 printfn "%O" d
-

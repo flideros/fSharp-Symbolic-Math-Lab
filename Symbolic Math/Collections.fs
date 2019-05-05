@@ -8,84 +8,74 @@ module Set =
     open System.Collections.Generic
     open Math.Pure.Quantity
     open OpenMath
-    
+
     //type Set<'T> = F# Collection Type Set
-    
+
     // Content Dictionaries
 
-    let private _omSet = FROM.cD "set1"    
+    let private _omSet = FROM.cD "set1"
 
-    // Definition    
-    let definition = GET.definitionEntry _omSet "set"
+    // Definition
+    let definition = ""//GET.definitionEntry "set" _omSet
 
     module Size =
 
         let oF set = Integer (bigint(Set.count set))
-
-        let oFSequence seq = 
-            try 
-            
+        let oFSequence seq =
+            try
             Integer (bigint(Seq.length seq))
-            
             with
             | :? System.InvalidOperationException -> PositiveInfinity
-                             
+
         // Definition
-        let definition = Size.definition    
+        let definition = Size.definition
 
     module Map =
 
-        let tO set func = Set.map func set     
-
+        let tO set func = Set.map func set
         let tOList set func = List.map func set
                               |> Seq.distinct |> List.ofSeq
-
         // Definition
         let definition = Map.definition
 
     module Union =
 
-        let oF left right = Set.union left right       
-        
+        let oF left right = Set.union left right
         let oFList left right =
            List.append left right |> Seq.distinct |> List.ofSeq
-
         // Definition
         let definition = Union.definition
-    
+
     module MultiUnion =
-        
+
         let oF setList = List.fold (fun acc x -> Set.union acc x) Set.empty setList
-        
         let oFManyLists lists =
            List.fold (fun acc x ->List.append acc x) [] lists |> Seq.distinct |> List.ofSeq
-
         // Definition
         let definition = MultiUnion.definition
 
-    module Intersection = 
-        
+    module Intersection =
+
         let oF left right = Set.intersect left right
-        
+
         let oFList (left:list< 'a >) (right:list< 'a >) =
             let cache = HashSet< 'a >(right, HashIdentity.Structural)
             left |> List.filter (fun n -> cache.Contains n)
             |> Seq.distinct |> List.ofSeq
-        
         // Definition
         let definition = Intersect.definition
 
-    module MuliIntersection = 
+    module MuliIntersection =
 
         let oF sets = Set.intersectMany sets
-        
-        let oFLists lists = 
+
+        let oFLists lists =
             List.reduce (fun acc x -> Intersection.oFList acc x) lists
 
         // Definition
         let definition = MultiIntersect.definition
-    
-    module Difference = 
+
+    module Difference =
 
         let oF left right = Set.difference left right
 
@@ -100,22 +90,22 @@ module Set =
 [<RequireQualifiedAccess>]
 module Bag =
 
-    let countItem bag x = 
+    let countItem bag x =
         match Seq.exists (fun x' -> x' = x) bag  with
         | true -> snd (Seq.find (fun x -> fst x = true) (Seq.countBy (fun elem -> elem = x) bag))
         | false -> 0
 
-    let union b1 b2 = 
+    let union b1 b2 =
         let intersection = Set.Union.oFList b1 b2
-        List.map (fun x -> 
+        List.map (fun x ->
                  match (countItem b1 x) > (countItem b2 x) with
-                 | true -> (x,(countItem b1 x)) 
-                 | false -> (x,(countItem b2 x))) intersection 
+                 | true -> (x,(countItem b1 x))
+                 | false -> (x,(countItem b2 x))) intersection
         |> List.collect (fun x -> [for i in 1..(snd x) -> (fst x)])
 
-    let intersection b1 b2 = 
+    let intersection b1 b2 =
         let intersection = Set.Union.oFList b1 b2
-        List.map (fun x -> 
+        List.map (fun x ->
                  match (countItem b1 x) > (countItem b2 x) with
                  | true -> (x,(countItem b2 x))
                  | false -> (x,(countItem b1 x))) intersection

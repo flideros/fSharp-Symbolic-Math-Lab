@@ -1,4 +1,4 @@
-﻿namespace Math.Pure.Change
+namespace Math.Pure.Change
 
 open Math.Pure.Objects
 open Math.Pure.Quantity
@@ -8,8 +8,7 @@ open Math.Pure.Structure.ExpressionStructure
 
 module Calculus =
 
-    module Differential =
-        
+    module Differential = 
 
         let rec derivativeOf u x = 
             match u = x with

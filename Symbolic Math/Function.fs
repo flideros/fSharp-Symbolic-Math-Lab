@@ -1,8 +1,10 @@
-﻿namespace Math.Pure.Objects
+namespace Math.Pure.Objects
 
 open OpenMath
 
-type Function = 
+open OpenMath
+
+type Function =
 
     | Abs // Implemented
     | And
@@ -73,7 +75,7 @@ type Function =
     | Inverse
     | Kernel
     | Laplacian
-    | Lcm  
+    | Lcm
     | LeftCompose
     | LeftInverse
     | Leq
@@ -92,7 +94,7 @@ type Function =
     | Mean
     | Median
     | Min
-    | Minus
+    | Minus // Implemented
     | Mode
     | DataMoment
     | Moment
@@ -164,7 +166,7 @@ type Function =
     | Vectorproduct
     | Xnor
     | Xor
-    | AntiDerivative 
+    | AntiDerivative
     | Derivative // Implemented
     | FractionType // Implemented
 
@@ -336,7 +338,7 @@ type Function =
         | _ -> None
 
     member this.symbol =
-        match this with 
+        match this with
         | Abs -> (GET.definitionEntry (FROM.cD "arith1") "abs").Value.Name
         | And -> (GET.definitionEntry (FROM.cD "logic1") "and").Value.Name
         | ApplyToList -> (GET.definitionEntry (FROM.cD "fns2") "apply_to_list").Value.Name
@@ -498,9 +500,8 @@ type Function =
         | Xnor -> (GET.definitionEntry (FROM.cD "logic1") "xnor").Value.Name
         | Xor -> (GET.definitionEntry (FROM.cD "logic1") "xor").Value.Name
         | FractionType -> (GET.definitionEntry (FROM.cD "nums1") "rational").Value.Name
-        | _ -> ""  
- 
-module Function =
-    
-    let defenition = "TODO"
+        | _ -> ""
 
+module Function =
+
+    let defenition = "TODO"
