@@ -60,6 +60,11 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Symbolic Math\Symbolic Math.fsproj">
+      <Name>Symbolic Math</Name>
+      <Project>{03e8055f-412d-498f-9cd1-c712257fad32}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.Control.Reactive">
       <HintPath>..\packages\FSharp.Control.Reactive.4.1.0\lib\net46\FSharp.Control.Reactive.dll</HintPath>
     </Reference>
@@ -119,11 +124,6 @@
     <ProjectReference Include="..\Graphing Calculator\Graphing Calculator.fsproj">
       <Name>Graphing Calculator</Name>
       <Project>{5484b4f9-2495-45d0-9696-0a72c17070c3}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Symbolic Math\Symbolic Math 1.fsproj">
-      <Name>Symbolic Math 1</Name>
-      <Project>{03e8055f-412d-498f-9cd1-c712257fad32}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math 1", "Symbolic Math\Symbolic Math 1.fsproj", "{03E8055F-412D-498F-9CD1-C712257FAD32}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math", "Symbolic Math\Symbolic Math.fsproj", "{03E8055F-412D-498F-9CD1-C712257FAD32}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BasicCalculator", "BasicCalculator\BasicCalculator.fsproj", "{80918DBD-CFCA-4D94-B1A0-0941828708CD}"
 EndProject
