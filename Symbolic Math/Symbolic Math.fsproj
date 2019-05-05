@@ -113,6 +113,9 @@
     <Reference Include="FSharp.Data.TypeProviders">
       <HintPath>..\packages\FSharp.Data.TypeProviders.5.0.0.6\lib\net40\FSharp.Data.TypeProviders.dll</HintPath>
     </Reference>
+    <Reference Include="FSharp.Desktop.UI">
+      <HintPath>..\packages\FSharp.Desktop.UI.0.7.1\lib\net45\FSharp.Desktop.UI.dll</HintPath>
+    </Reference>
     <Reference Include="FSharp.IO.FileSystem">
       <HintPath>..\packages\FSharp.IO.FileSystem.3.2.1\lib\net451\FSharp.IO.FileSystem.dll</HintPath>
     </Reference>
