@@ -1,9 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26228.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math 1", "Symbolic Math\Symbolic Math 1.fsproj", "{03E8055F-412D-498F-9CD1-C712257FAD32}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math", "Symbolic Math\Symbolic Math.fsproj", "{03E8055F-412D-498F-9CD1-C712257FAD32}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BasicCalculator", "BasicCalculator\BasicCalculator.fsproj", "{80918DBD-CFCA-4D94-B1A0-0941828708CD}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math UI", "Symbolic Math UI\Symbolic Math UI.fsproj", "{73E118D2-706E-4DDE-896D-C23EA714F7EC}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Graphing Calculator", "Graphing Calculator\Graphing Calculator.fsproj", "{5484B4F9-2495-45D0-9696-0A72C17070C3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Database Lab", "Data Base Lab\Database Lab.fsproj", "{362F9170-4DF5-41FE-851B-F5D800DE2C44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +23,22 @@ Global
 		{03E8055F-412D-498F-9CD1-C712257FAD32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03E8055F-412D-498F-9CD1-C712257FAD32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03E8055F-412D-498F-9CD1-C712257FAD32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80918DBD-CFCA-4D94-B1A0-0941828708CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73E118D2-706E-4DDE-896D-C23EA714F7EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5484B4F9-2495-45D0-9696-0A72C17070C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5484B4F9-2495-45D0-9696-0A72C17070C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5484B4F9-2495-45D0-9696-0A72C17070C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5484B4F9-2495-45D0-9696-0A72C17070C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{362F9170-4DF5-41FE-851B-F5D800DE2C44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{362F9170-4DF5-41FE-851B-F5D800DE2C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{362F9170-4DF5-41FE-851B-F5D800DE2C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{362F9170-4DF5-41FE-851B-F5D800DE2C44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

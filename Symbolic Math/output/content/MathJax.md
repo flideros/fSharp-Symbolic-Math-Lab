@@ -1,9 +1,32 @@
 ﻿# MathJax
 
+  <br><br><br>
 
 
 
-$ \(     8 + 202x + 18x^2 + 7x^3 + x^4           \) $
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" mathbackground="lightskyblue">
+<mfrac>
+  <mo> &#x2146;<!--DOUBLE-STRUCK ITALIC SMALL D--> </mo>
+  <mrow>
+    <mo> &#x2146;<!--DOUBLE-STRUCK ITALIC SMALL D--> </mo>
+    <mi> x </mi>
+  </mrow>
+</mfrac>
+</math>
+
+
+
+<br><br>
+
+<Math>        
+<mo mathsize="2in">&#x1F0DF;</m0>
+</math>
+
+
+<br><br><br><br><br>
+
+$ \(     8 + 202x + 18x^2 + 7x^3 + x^4        \) $
 
 $\rm\TeX $
 $\rm\LaTeX $
