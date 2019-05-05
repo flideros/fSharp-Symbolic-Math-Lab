@@ -10,9 +10,9 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyTitle("Graphing Calculator")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
-[<assembly: AssemblyCompany("HP Inc.")>]
+[<assembly: AssemblyCompany("")>]
 [<assembly: AssemblyProduct("Graphing Calculator")>]
-[<assembly: AssemblyCopyright("Copyright © HP Inc. 2019")>]
+[<assembly: AssemblyCopyright("Copyright ©  2019")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
 

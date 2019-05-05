@@ -7,7 +7,7 @@
 #load "Operator.fs"
 #load "TypeExtension.fs"
 #load "Container.fs"
-#load "Control.fs"
+//#load "Control.fs"
 
 open System
 open System.Windows          
@@ -19,70 +19,121 @@ open Operator
 //open Control
 open System.Windows.Shapes
 
+let command exec =
+    let event = Event<_,_>()
+    { new System.Windows.Input.ICommand with
+        member __.CanExecute(_) = true
+        member __.Execute(arg) = exec arg
+        [<CLIEvent>]
+        member __.CanExecuteChanged = event.Publish
+    }
 
-Rectangle().GetType()
+let helloCommand =
+    command (fun _ -> MessageBox.Show("Hello") |> ignore)
+
+let menu = 
+    
+    let header1 = MenuItem(Header = "Graph")
+    let header1_Item1 = MenuItem(Header = "Text", Command = helloCommand )
+    let header1_Item2 = MenuItem(Header = "Graph")
+    let header1_Item3 = MenuItem(Header = "Graph2D")
+    let header1_Item4 = MenuItem(Header = "Graph3D")
+
+    do  header1.Items.Add(header1_Item1) |> ignore
+        header1.Items.Add(header1_Item2) |> ignore
+        header1.Items.Add(header1_Item3) |> ignore
+        header1.Items.Add(header1_Item4) |> ignore
+
+    let header2 = MenuItem(Header = "Options")
+    let header2_Item1 = MenuItem(Header = "Graph")
+    let header2_Item2 = MenuItem(Header = "Graph2D")
+    let header2_Item3 = MenuItem(Header = "Graph3D")
+    
+    do  header2.Items.Add(header2_Item1) |> ignore
+        header2.Items.Add(header2_Item2) |> ignore
+        header2.Items.Add(header2_Item3) |> ignore
+
+    let m = Menu()
+    do  m.SetValue(Grid.RowProperty,0)
+        m.Items.Add(header1) |> ignore
+        m.Items.Add(header2) |> ignore
+        
+    m
+
+
+(menu.Items.Item(0) :?> MenuItem).Items.Count //<-
+
+((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
+
+menu.Items.CurrentItem :?> MenuItem
+
+//menu.
+
+
+type Animal = {spices:string;breed:string}
 
 
 
-let brush = Brushes.Bisque
-
-//
-// compose controls
-//
-
-type Browser(page:Uri) =
-     inherit UIElement()  
-     let browser = new WebBrowser()
-     do browser.Navigate(page)
 
 
-let canvas = StackPanel(Orientation=Orientation.Vertical)
-//canvas.HorizontalAlignment <- HorizontalAlignment.Stretch
-//canvas.VerticalAlignment <- VerticalAlignment.Stretch
-//canvas.Background <- brush
+let addSubItems items (branch:TreeViewItem) = items |> Seq.iter (fun item -> 
+    item |> branch.Items.Add |> ignore)
 
-let browser = Browser(Uri("https://docs.microsoft.com/en-us/dotnet/api/system.windows.controls.webbrowser?view=netframework-4.7.2")) //$ canvas.add //
-//browser 
+let tree = new TreeView()
+
+tree.Items.Add
+   (let animalBranch = new TreeViewItem(Header="Animal")
+
+    animalBranch.Items.Add
+       (let branch = new TreeViewItem(Header="Dog")
+        let dogs = ["Poodle";"Irish Setter";"German Shepherd"]
+        addSubItems dogs branch
+        branch) |>ignore
+
+    animalBranch.Items.Add
+       (let branch = new TreeViewItem(Header="Cat")
+        branch.Items.Add(new TreeViewItem(Header="Alley Cat")) |>ignore
+        branch.Items.Add(new Button(Content="Noodles")) |>ignore
+        branch.Items.Add("Siamese") |>ignore
+        branch) |> ignore
+
+    animalBranch.Items.Add
+       (let branch = new TreeViewItem(Header="Primate")
+        let primates = ["Chimpanzee";"Bonobo";"Human"]
+        addSubItems primates branch
+        branch) |> ignore
+    animalBranch) |> ignore
+      
+tree.Items.Add
+   (let branch = new TreeViewItem(Header="Mineral")
+    let minerals = ["Calcium";"Zinc";"Iron"]
+    addSubItems minerals branch
+    branch) |> ignore
+
+tree.Items.Add
+   (let branch = new TreeViewItem(Header="Vegetable")
+    let vegetables = ["Carrot";"Asparagus";"Broccoli"]
+    addSubItems vegetables branch
+    branch) |> ignore
+
+let template = new HierarchicalDataTemplate(typeof<Animal>)
+
+let oo = tree.Items.[0] :?> System.Windows.Controls.TreeViewItem
+
+oo.Header
 
 
-let window = Window(Title="F# is fun!",Width=260., Height=420., Content=browser)
-window.Show()
+   
+let window = new Window(Title="Manually Populate TreeView",
+                        Content=tree)
+
+[<STAThread()>]
+do 
+    let app =  Application() in
+    app.Run(window) |> ignore
+
+//////////////////////////////////////////////////////////////////////////////
 
 
 
-
-
-
-
-let triangle = PointCollection()    
-triangle.Add(Point(1.0,50.0)); triangle.Add(Point(10.0,80.0)); triangle.Add(Point(51.0,50.0))
-/// This StackPanel contains every control in this program
-let stackPanel = StackPanel(Orientation=Orientation.Vertical)
-
-let width = SharedValue(120)
-Volume("Width",(50, 240),width) |> stackPanel.add // add a volume to the StackPanel
-
-let height = SharedValue(80)
-Volume("Height",(50, 200),height) |> stackPanel.add // add a volume to the StackPanel
-
-let color = SharedValue(Colors.Blue)
-ColorVolume(color) |> stackPanel.add // add volumes to the StackPanel
-
-let shapes = SharedValue(UI.Shapes.Ellipse)
-
-let ellipseButton   = Button(Content="Ellipse") $ stackPanel.add
-ellipseButton.Click.Add(  fun _ -> shapes.Set UI.Shapes.Ellipse)   // add event handler to fire dependency calculation
-
-let rectangleButton = Button(Content="Rectangle") $ stackPanel.add
-rectangleButton.Click.Add(fun _ -> shapes.Set UI.Shapes.Rectangle)
-
-let polygonButton = Button(Content="Polygon") $ stackPanel.add
-polygonButton.Click.Add(fun _ -> shapes.Set (UI.Shapes.Polygon triangle))
-
-// This is a shape control shown in the bottom of this program's window
-ShapeContainer(shapes,width,height,color) |> stackPanel.add
-
-// Make a window and show it
-let window2 = Window(Title="F# is fun!",Width=260., Height=420., Content=stackPanel)
-window2.Show()
 

@@ -10,9 +10,9 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyTitle("Data Base Lab")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
-[<assembly: AssemblyCompany("HP Inc.")>]
+[<assembly: AssemblyCompany("")>]
 [<assembly: AssemblyProduct("Data Base Lab")>]
-[<assembly: AssemblyCopyright("Copyright © HP Inc. 2019")>]
+[<assembly: AssemblyCopyright("Copyright ©  2019")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
 

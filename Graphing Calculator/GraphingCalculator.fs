@@ -14,11 +14,21 @@ open Utilities
 open Style
 //open GraphingCalculatorDomain
 
+type View =
+    | PlotCanvas of Grid
+    | Text of CalcTextBox
+    | Function of Grid
+    | Function2D of Grid
+    | Function3D of Grid
+    | Option of Grid
+    | Option2D of Grid
+    | Option3D of Grid
+
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
 
-
-// ------Create Types---------        
+// ------Create Views---------        
+    //-----Calculator--------//
     let calculator_Grid = Grid()    
     let calculator_Rectangle = 
         Rectangle(
@@ -47,7 +57,7 @@ type GraphingCalculator() as graphingCalculator =
             grid.ColumnDefinitions.Add(column2)
             grid.ColumnDefinitions.Add(column3)
 
-        let row1 = RowDefinition(Height = GridLength(3.))
+        let row1 = RowDefinition(Height = GridLength(3., GridUnitType.Star))
         let row2 = RowDefinition(Height = GridLength.Auto)
         let row3 = RowDefinition(Height = GridLength.Auto)
         let row4 = RowDefinition(Height = GridLength.Auto)
@@ -64,13 +74,15 @@ type GraphingCalculator() as graphingCalculator =
         calculator_Grid.Children.Add(calculator_Rectangle)             |> ignore
         calculator_Grid.Children.Add(calculator_modelNumber_TextBlock) |> ignore
     
+    //-----Screen
     let screen_Border = 
         let gb = Border(
                     Margin = Thickness(left = 5., top = 5., right = 5., bottom = 5.),
                     BorderBrush = black,
                     BorderThickness = Thickness(1.5)
                     )        
-        do gb.SetValue(Grid.RowSpanProperty,5)
+        do gb.SetValue(Grid.ColumnSpanProperty,3)
+        do gb.SetValue(Grid.RowSpanProperty,2)
         gb
     let screen_Grid = 
         let g = 
@@ -119,7 +131,8 @@ type GraphingCalculator() as graphingCalculator =
         screen_Grid.Children.Add(screen_Text_TextBox) |> ignore
         screen_Grid.Children.Add(screen_Canvas)       |> ignore
         screen_Grid.Children.Add(selection_Rectangle) |> ignore
-  
+
+    //-----Function  
     let function_Grid =     
         let grid = Grid(Visibility = Visibility.Hidden)
         
@@ -180,6 +193,7 @@ type GraphingCalculator() as graphingCalculator =
         function_Grid .Children.Add(function_y_TextBox) |> ignore      
         function_Grid .Children.Add(function_Button_Grid) |> ignore
     
+    //-----Function 2D Parametric
     let function2D_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -287,6 +301,7 @@ type GraphingCalculator() as graphingCalculator =
         function2D_Grid .Children.Add(function2D_ShapeButton_Grid) |> ignore
         function2D_Grid .Children.Add(function2D_GraphButton_Grid) |> ignore
 
+    //-----Function 3D Parametric
     let function3D_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -418,6 +433,7 @@ type GraphingCalculator() as graphingCalculator =
         function3D_Grid .Children.Add(function3D_ShapeButton_Grid) |> ignore
         function3D_Grid .Children.Add(function3D_SolidMeshButton_Grid) |> ignore
 
+    //-----Function Options
     let option_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -522,6 +538,7 @@ type GraphingCalculator() as graphingCalculator =
         option_Grid .Children.Add(option_yMax_TextBox) |> ignore
         option_Grid .Children.Add(option_Button_Grid) |> ignore
 
+    //-----Function 2D Options
     let option2D_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
         
@@ -668,8 +685,9 @@ type GraphingCalculator() as graphingCalculator =
         option2D_Grid .Children.Add(option2D_tStep_TextBox) |> ignore
         option2D_Grid .Children.Add(option2D_Button_Grid) |> ignore
 
+    //-----Function 3D Options
     let option3D_Grid =     
-        let grid = Grid(Visibility = Visibility.Visible)        
+        let grid = Grid(Visibility = Visibility.Collapsed)        
         do grid.SetValue(Grid.RowProperty, 1)
         
         let column1 = ColumnDefinition()
@@ -798,15 +816,61 @@ type GraphingCalculator() as graphingCalculator =
         option3D_Grid .Children.Add(option3D_vGrid_TextBox) |> ignore
         option3D_Grid .Children.Add(option3D_Button_Grid) |> ignore
 
+// ------Create Command Functions------
+    //-----Implementation of ICommand for views
+    let viewCommand (exec : (View -> unit) )=
+        let event = Event<_,_>()
+        { new System.Windows.Input.ICommand with
+            member __.CanExecute(_) = true
+            member __.Execute(arg) = exec (arg :?> View)
+            [<CLIEvent>]
+            member __.CanExecuteChanged = event.Publish
+        }
+    
+    let setActiveDisplayTo display =
+        let screens = 
+            [PlotCanvas screen_Canvas; 
+             Text screen_Text_TextBox; 
+             Function function_Grid; 
+             Option option_Grid; 
+             Function2D function2D_Grid; 
+             Option2D option2D_Grid; 
+             Function3D function3D_Grid; 
+             Option3D option3D_Grid]
+        do  List.iter (fun x -> 
+                match x with
+                | View.PlotCanvas p
+                | View.Function p
+                | View.Function2D p
+                | View.Function3D p
+                | View.Option p
+                | View.Option2D p
+                | View.Option3D p -> (p.Visibility <- Visibility.Collapsed)
+                | View.Text t -> (t.Visibility <- Visibility.Collapsed)) screens
+        match display with
+        | View.PlotCanvas p
+        | View.Function p
+        | View.Function2D p
+        | View.Function3D p
+        | View.Option p
+        | View.Option2D p
+        | View.Option3D p -> (p.Visibility <- Visibility.Visible)
+        | View.Text t -> (t.Visibility <- Visibility.Visible) 
+ 
+
+
+
+
+
+ // ------Create Buttons and Menu------
+    //-----Menu
     let menu = 
         
-        let itemsControlTemplate = ItemsPanelTemplate()
-
         let header1 = MenuItem(Header = "Graph")
-        let header1_Item1 = MenuItem(Header = "Text")
-        let header1_Item2 = MenuItem(Header = "Graph")
-        let header1_Item3 = MenuItem(Header = "Graph2D")
-        let header1_Item4 = MenuItem(Header = "Graph3D")
+        let header1_Item1 = MenuItem(Header = "Text", Command = viewCommand (setActiveDisplayTo), CommandParameter = Text screen_Text_TextBox)
+        let header1_Item2 = MenuItem(Header = "Graph", Command = viewCommand (setActiveDisplayTo), CommandParameter = Function function_Grid)
+        let header1_Item3 = MenuItem(Header = "Graph2D", Command = viewCommand (setActiveDisplayTo), CommandParameter = Function2D function2D_Grid)
+        let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplayTo), CommandParameter = Function3D function3D_Grid)
 
         do  header1.Items.Add(header1_Item1) |> ignore
             header1.Items.Add(header1_Item2) |> ignore
@@ -814,9 +878,9 @@ type GraphingCalculator() as graphingCalculator =
             header1.Items.Add(header1_Item4) |> ignore
 
         let header2 = MenuItem(Header = "Options")
-        let header2_Item1 = MenuItem(Header = "Graph")
-        let header2_Item2 = MenuItem(Header = "Graph2D")
-        let header2_Item3 = MenuItem(Header = "Graph3D")
+        let header2_Item1 = MenuItem(Header = "Graph Options", Command = viewCommand (setActiveDisplayTo), CommandParameter = Option option_Grid)
+        let header2_Item2 = MenuItem(Header = "Graph2D Options", Command = viewCommand (setActiveDisplayTo), CommandParameter = Option2D option2D_Grid)
+        let header2_Item3 = MenuItem(Header = "Graph3D Options", Command = viewCommand (setActiveDisplayTo), CommandParameter = Option3D option3D_Grid)
         
         do  header2.Items.Add(header2_Item1) |> ignore
             header2.Items.Add(header2_Item2) |> ignore
@@ -829,12 +893,234 @@ type GraphingCalculator() as graphingCalculator =
             
         m
 
+    //-----Immediate Text Box
     let immediate =
-        let im = TextBox()
-
+        let im = 
+            TextBox(            
+                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+                MaxLines = 1,
+                Background = screenColor
+                )
+        do  im.SetValue(Grid.ColumnSpanProperty,3)
+            im.SetValue(Grid.RowProperty,2)
+            im.SetValue(TextBlock.TextAlignmentProperty,TextAlignment.Right)
         im
 
+    //-----Function Buttons
+    let funcButton_Grid =
+        let grid = Grid()
+        
+        let column1 = ColumnDefinition()
+        let column2 = ColumnDefinition()
+        let column3 = ColumnDefinition()
+        let column4 = ColumnDefinition()
+        let column5 = ColumnDefinition()
+        let column6 = ColumnDefinition()
+        let column7 = ColumnDefinition()
 
+        do  grid.ColumnDefinitions.Add(column1)
+            grid.ColumnDefinitions.Add(column2)
+            grid.ColumnDefinitions.Add(column3)
+            grid.ColumnDefinitions.Add(column4)
+            grid.ColumnDefinitions.Add(column5)
+            grid.ColumnDefinitions.Add(column6)
+            grid.ColumnDefinitions.Add(column7)
+            
+        let row1 = RowDefinition()
+        let row2 = RowDefinition()
+        
+        do  grid.RowDefinitions.Add(row1)
+            grid.RowDefinitions.Add(row2)
+            grid.SetValue(Grid.RowProperty,3)
+            grid.SetValue(Grid.ColumnProperty,1)
+
+        grid
+    let sin_Button = 
+        FuncButton(Content = "sin")
+    let cos_Button = 
+        FuncButton(Content = "cos")
+    let tan_Button = 
+        FuncButton(Content = "tan")
+    let xSquared_Button = 
+        FuncButton(Content = "x^2")
+    let xPowY_Button = 
+        FuncButton(Content = "x^y")
+    let pi_Button = 
+        FuncButton(Content = "pi")
+    let e_Button = 
+        FuncButton(Content = "e")
+    let x_Button = 
+        FuncButton(
+            Content = "x",
+            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Height = Double.NaN
+            )
+    let t_Button = 
+        FuncButton(
+            Content = "t",
+            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Height = Double.NaN
+            )
+    let u_Button = 
+        FuncButton(
+            Content = "u",
+            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Height = Double.NaN
+            )
+    let v_Button = 
+        FuncButton(
+            Content = "v",
+            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Height = Double.NaN
+            )
+    let dx_Button = 
+        FuncButton(
+            Content = "dX",
+            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Height = Double.NaN
+            )
+    let funcButtons = 
+        [
+           sin_Button; 
+           cos_Button; 
+           tan_Button; 
+           xSquared_Button; 
+           xPowY_Button
+           pi_Button;
+           e_Button;
+           x_Button;
+           t_Button;
+           u_Button;
+           v_Button;
+           dx_Button
+        ]
+
+    do // Place buttons in a grid
+        List.iter ( fun x -> funcButton_Grid.Children.Add(x) |> ignore) funcButtons //
+
+    do  // Arrange the buttons on the grid.
+        sin_Button      .SetValue(Grid.RowProperty,0); sin_Button      .SetValue(Grid.ColumnProperty,0);
+        cos_Button      .SetValue(Grid.RowProperty,0); cos_Button      .SetValue(Grid.ColumnProperty,1);
+        tan_Button      .SetValue(Grid.RowProperty,0); tan_Button      .SetValue(Grid.ColumnProperty,2);
+        xSquared_Button .SetValue(Grid.RowProperty,0); xSquared_Button .SetValue(Grid.ColumnProperty,3);
+        xPowY_Button    .SetValue(Grid.RowProperty,0); xPowY_Button    .SetValue(Grid.ColumnProperty,4);
+        pi_Button       .SetValue(Grid.RowProperty,0); pi_Button       .SetValue(Grid.ColumnProperty,5);
+        e_Button        .SetValue(Grid.RowProperty,0); e_Button        .SetValue(Grid.ColumnProperty,6);
+        x_Button        .SetValue(Grid.RowProperty,1); x_Button        .SetValue(Grid.ColumnProperty,0);
+        t_Button        .SetValue(Grid.RowProperty,1); t_Button        .SetValue(Grid.ColumnProperty,1);
+        u_Button        .SetValue(Grid.RowProperty,1); u_Button        .SetValue(Grid.ColumnProperty,2);
+        v_Button        .SetValue(Grid.RowProperty,1); v_Button        .SetValue(Grid.ColumnProperty,3);
+        dx_Button       .SetValue(Grid.RowProperty,1); dx_Button       .SetValue(Grid.ColumnProperty,4);
+
+    //-----Calc Buttons     
+    let calcButton_Grid =
+        let grid = Grid()
+        
+        let column1 = ColumnDefinition()
+        let column2 = ColumnDefinition()
+        let column3 = ColumnDefinition()
+        let column4 = ColumnDefinition()
+        let column5 = ColumnDefinition()
+        
+        do  grid.ColumnDefinitions.Add(column1)
+            grid.ColumnDefinitions.Add(column2)
+            grid.ColumnDefinitions.Add(column3)
+            grid.ColumnDefinitions.Add(column4)
+            grid.ColumnDefinitions.Add(column5)
+                        
+        let row1 = RowDefinition()
+        let row2 = RowDefinition()
+        let row3 = RowDefinition()
+        let row4 = RowDefinition()
+        let row5 = RowDefinition()
+        let row6 = RowDefinition()
+        
+        do  grid.RowDefinitions.Add(row1)
+            grid.RowDefinitions.Add(row2)
+            grid.RowDefinitions.Add(row3)
+            grid.RowDefinitions.Add(row4)
+            grid.RowDefinitions.Add(row5)
+            grid.RowDefinitions.Add(row6)
+            
+            grid.SetValue(Grid.RowProperty,5)
+            grid.SetValue(Grid.ColumnProperty,1)
+
+        grid
+    let one =           CalcButton(Name = "oneButton", Content = "1")
+    let two =           CalcButton(Name = "twoButton", Content = "2")
+    let three =         CalcButton(Name = "threeButton",  Content = "3")
+    let four =          CalcButton(Name = "fourButton", Content = "4")
+    let five =          CalcButton(Name = "fiveButton", Content = "5")
+    let six =           CalcButton(Name = "sixButton", Content = "6")
+    let seven =         CalcButton(Name = "sevenButton", Content = "7")
+    let eight =         CalcButton(Name = "eightButton", Content = "8")
+    let nine =          CalcButton(Name = "nineButton", Content = "9")
+    let zero =          CalcButton(Name = "zeroButton", Content = "0")
+    let decimalPoint =  CalcButton(Name = "decimalPointButton", Content = ".")
+    let add =           CalcButton(Name = "addButton", Content = "+")
+    let subtract =      CalcButton(Name = "subtractButton", Content = "-")
+    let multiply =      CalcButton(Name = "multiplyButton", Content = "*")
+    let divide =        CalcButton(Name = "divideButton", Content = "/")
+    let equals =        CalcButton(Name = "equalsButton", Content = "=")
+    let root =          CalcButton(Name = "rootButton", Content = "\u221A")
+    let changeSign =    CalcButton(Name = "signButton", Content = "\u00B1")
+    let inverse =       CalcButton(Name = "inverseButton", Content = "1/x")
+    let percent =       CalcButton(Name = "percentButton", Content = "%")
+    let back =          CalcButton(Name = "backButton", Content = "\u2b05")
+    let clear =         CalcButton(Name = "clearButton", Content = "C")
+    let clearEntry =    CalcButton(Name = "clearEntryButton", Content = "CE")
+    let clearMemory =   CalcButton(Name = "clearMemoryButton",Content = "MC")
+    let recallMemory =  CalcButton(Name = "recallMemoryButton", Content = "MR")
+    let storeMemory =   CalcButton(Name = "storeMemoryButton", Content = "MS")
+    let addToMemory =   CalcButton(Name = "addToMemoryButton", Content = "M+")
+    let subtractFromMemoy = CalcButton(Name = "subtractFromButton", Content = "M-")
+    let openParentheses =   CalcButton(Name = "openParentheses", Content = "(")
+    let closeParentheses =  CalcButton(Name = "closeParentheses", Content = ")")
+    let calcButtons = [one; two; three; four; five; six; seven; eight; nine; zero; 
+        decimalPoint; add; subtract; multiply; divide; openParentheses; 
+        equals; root; changeSign; inverse; percent; back; clear; closeParentheses;
+        clearMemory; recallMemory; storeMemory; clearEntry; addToMemory; subtractFromMemoy]
+
+    do // Place buttons in a grid
+           List.iter ( fun x -> calcButton_Grid.Children.Add(x) |> ignore) calcButtons //
+
+    do  // Arrange the buttons on the grid.
+        one                 .SetValue(Grid.RowProperty,4); one                  .SetValue(Grid.ColumnProperty,0);
+        two                 .SetValue(Grid.RowProperty,4); two                  .SetValue(Grid.ColumnProperty,1);
+        three               .SetValue(Grid.RowProperty,4); three                .SetValue(Grid.ColumnProperty,2);
+        four                .SetValue(Grid.RowProperty,3); four                 .SetValue(Grid.ColumnProperty,0);
+        five                .SetValue(Grid.RowProperty,3); five                 .SetValue(Grid.ColumnProperty,1);
+        six                 .SetValue(Grid.RowProperty,3); six                  .SetValue(Grid.ColumnProperty,2);
+        seven               .SetValue(Grid.RowProperty,2); seven                .SetValue(Grid.ColumnProperty,0);
+        eight               .SetValue(Grid.RowProperty,2); eight                .SetValue(Grid.ColumnProperty,1);
+        nine                .SetValue(Grid.RowProperty,2); nine                 .SetValue(Grid.ColumnProperty,2);
+        zero                .SetValue(Grid.RowProperty,5); zero                 .SetValue(Grid.ColumnProperty,0);
+        decimalPoint        .SetValue(Grid.RowProperty,5); decimalPoint         .SetValue(Grid.ColumnProperty,1);
+        add                 .SetValue(Grid.RowProperty,5); add                  .SetValue(Grid.ColumnProperty,3);
+        subtract            .SetValue(Grid.RowProperty,4); subtract             .SetValue(Grid.ColumnProperty,3);
+        multiply            .SetValue(Grid.RowProperty,3); multiply             .SetValue(Grid.ColumnProperty,3);
+        divide              .SetValue(Grid.RowProperty,2); divide               .SetValue(Grid.ColumnProperty,3);
+        equals              .SetValue(Grid.RowProperty,5); equals               .SetValue(Grid.ColumnProperty,2);
+        root                .SetValue(Grid.RowProperty,2); root                 .SetValue(Grid.ColumnProperty,4);
+        changeSign          .SetValue(Grid.RowProperty,1); changeSign           .SetValue(Grid.ColumnProperty,3);
+        inverse             .SetValue(Grid.RowProperty,1); inverse              .SetValue(Grid.ColumnProperty,4);
+        percent             .SetValue(Grid.RowProperty,3); percent              .SetValue(Grid.ColumnProperty,4);
+        back                .SetValue(Grid.RowProperty,1); back                 .SetValue(Grid.ColumnProperty,2);
+        clear               .SetValue(Grid.RowProperty,1); clear                .SetValue(Grid.ColumnProperty,1);
+        clearMemory         .SetValue(Grid.RowProperty,0); clearMemory          .SetValue(Grid.ColumnProperty,2);
+        recallMemory        .SetValue(Grid.RowProperty,0); recallMemory         .SetValue(Grid.ColumnProperty,1);
+        storeMemory         .SetValue(Grid.RowProperty,0); storeMemory          .SetValue(Grid.ColumnProperty,0);
+        clearEntry          .SetValue(Grid.RowProperty,1); clearEntry           .SetValue(Grid.ColumnProperty,0);        
+        addToMemory         .SetValue(Grid.RowProperty,0); addToMemory          .SetValue(Grid.ColumnProperty,3);
+        subtractFromMemoy   .SetValue(Grid.RowProperty,0); subtractFromMemoy    .SetValue(Grid.ColumnProperty,4);
+        openParentheses     .SetValue(Grid.RowProperty,4); openParentheses      .SetValue(Grid.ColumnProperty,4);
+        closeParentheses    .SetValue(Grid.RowProperty,5); closeParentheses     .SetValue(Grid.ColumnProperty,4);
+
+
+    
+
+
+//////////////////////////////////////////////
     do  // Assemble the pieces        
         screen_Grid.Children.Add(menu) |> ignore
         screen_Grid.Children.Add(function_Grid) |> ignore
@@ -843,31 +1129,13 @@ type GraphingCalculator() as graphingCalculator =
         screen_Grid.Children.Add(option_Grid) |> ignore
         screen_Grid.Children.Add(option2D_Grid) |> ignore
         screen_Grid.Children.Add(option3D_Grid) |> ignore
-
-
-        
         screen_Border.Child <- screen_Grid
+        
         calculator_Layout_Grid.Children.Add(screen_Border) |> ignore
+        calculator_Layout_Grid.Children.Add(immediate) |> ignore
+        calculator_Layout_Grid.Children.Add(funcButton_Grid) |> ignore
+        calculator_Layout_Grid.Children.Add(calcButton_Grid) |> ignore
+
         calculator_Grid.Children.Add(calculator_Layout_Grid) |> ignore
         
-        
         graphingCalculator.Content <- calculator_Grid
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(*
-screen_Grid.MouseLeftButtonDown="OnCanvasClickStart"
-screen_Grid.MouseLeftButtonUp="OnCanvasClickFinish" MouseMove="OnCanvasMouseMove"
-screen_Grid.MouseRightButtonDown="OnCanvasRightClick"> 
-*)

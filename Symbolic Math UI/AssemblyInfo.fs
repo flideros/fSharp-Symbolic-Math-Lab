@@ -10,9 +10,9 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyTitle("Symbolic Math App")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
-[<assembly: AssemblyCompany("HP Inc.")>]
+[<assembly: AssemblyCompany("")>]
 [<assembly: AssemblyProduct("Symbolic Math App")>]
-[<assembly: AssemblyCopyright("Copyright © HP Inc. 2019")>]
+[<assembly: AssemblyCopyright("Copyright ©  2019")>]
 [<assembly: AssemblyTrademark("")>]
 [<assembly: AssemblyCulture("")>]
 
