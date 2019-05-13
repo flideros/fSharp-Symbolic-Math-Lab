@@ -18,7 +18,6 @@ open UI
 open Operator
 //open Control
 open System.Windows.Shapes
-
 //////////////////////////////////////////////////////////////////////////////
 type Record = {a:int; b:string}
 
@@ -38,6 +37,7 @@ do
 
 
 
+(menu.Items.Item(0) :?> MenuItem).Items.Count //<-
 
 ///////////////////////////////////////////////////
 let command exec =

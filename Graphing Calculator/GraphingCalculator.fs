@@ -24,6 +24,16 @@ type View =
     | Option2D of Grid
     | Option3D of Grid
 
+type View =
+    | PlotCanvas of Grid
+    | Text of CalcTextBox
+    | Function of Grid
+    | Function2D of Grid
+    | Function3D of Grid
+    | Option of Grid
+    | Option2D of Grid
+    | Option3D of Grid
+
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
 
@@ -908,7 +918,6 @@ type GraphingCalculator() as graphingCalculator =
                 | View.Text t when t.IsVisible = true -> Some x
                 | _ -> Some x) viewList
         d
-
  // ------Create Buttons and Menu------
     //-----Menu
     let menu = 
@@ -1189,8 +1198,22 @@ type GraphingCalculator() as graphingCalculator =
         setPendingOpText (calculatorServices.getPendingOpFromState calculatorState)
         setMemoText (calculatorServices.getMemoFromState calculatorState)
 //////////////////////////////////////////////    
+    do // Place buttons in a grid
+        List.iter ( fun x -> funcButton_Grid.Children.Add(x) |> ignore) funcButtons //
 
-
+    do  // Arrange the buttons on the grid.
+        sin_Button      .SetValue(Grid.RowProperty,0); sin_Button      .SetValue(Grid.ColumnProperty,0);
+        cos_Button      .SetValue(Grid.RowProperty,0); cos_Button      .SetValue(Grid.ColumnProperty,1);
+        tan_Button      .SetValue(Grid.RowProperty,0); tan_Button      .SetValue(Grid.ColumnProperty,2);
+        xSquared_Button .SetValue(Grid.RowProperty,0); xSquared_Button .SetValue(Grid.ColumnProperty,3);
+        xPowY_Button    .SetValue(Grid.RowProperty,0); xPowY_Button    .SetValue(Grid.ColumnProperty,4);
+        pi_Button       .SetValue(Grid.RowProperty,0); pi_Button       .SetValue(Grid.ColumnProperty,5);
+        e_Button        .SetValue(Grid.RowProperty,0); e_Button        .SetValue(Grid.ColumnProperty,6);
+        x_Button        .SetValue(Grid.RowProperty,1); x_Button        .SetValue(Grid.ColumnProperty,0);
+        t_Button        .SetValue(Grid.RowProperty,1); t_Button        .SetValue(Grid.ColumnProperty,1);
+        u_Button        .SetValue(Grid.RowProperty,1); u_Button        .SetValue(Grid.ColumnProperty,2);
+        v_Button        .SetValue(Grid.RowProperty,1); v_Button        .SetValue(Grid.ColumnProperty,3);
+        dx_Button       .SetValue(Grid.RowProperty,1); dx_Button       .SetValue(Grid.ColumnProperty,4);
 
     // a function that sets active hadler based on the active display
     let handleInput input =
@@ -1233,5 +1256,5 @@ type GraphingCalculator() as graphingCalculator =
         inverse          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Inverse))) 
         percent          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Percent)))
         root             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Root)))
-
-
+    do // Place buttons in a grid
+           List.iter ( fun x -> calcButton_Grid.Children.Add(x) |> ignore) calcButtons //
