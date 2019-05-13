@@ -95,6 +95,7 @@ module Style =
     type CalcTextBox() as textBox = 
         inherit TextBox()
         do textBox.FontFamily <- FontFamily("Courier New")
+        do textBox.FontSize <- 22.
    
     type FunctionTextBox() as textBox = 
         inherit TextBox()

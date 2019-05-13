@@ -1,11 +1,11 @@
-﻿namespace BasicCalculator
+﻿namespace GraphingCalculator
 
 (* Related blog post: http://fsharpforfunandprofit.com/posts/calculator-complete-v2/ *)
 
 // ================================================
 // Domain using a state machine
 // ================================================          
-module CalculatorDomain =
+module Domain =
     
     // Calculators use numbers...Duh!
     type Number = float    
@@ -95,7 +95,7 @@ module CalculatorDomain =
 // Implementation of Calculator
 // ================================================          
 module CalculatorImplementation =
-    open CalculatorDomain
+    open Domain
     open Utilities
 
     let accumulateNonZeroDigit services digit accumulatorData =
@@ -567,7 +567,7 @@ module CalculatorImplementation =
 // Implementation of CalculatorServices 
 // ================================================          
 module CalculatorServices =
-    open CalculatorDomain
+    open Domain
     open Utilities
 
     let appendToAccumulator maxLen (accumulator:DigitAccumulator) appendCh = 
@@ -690,7 +690,6 @@ module CalculatorServices =
             | ComputedState stateData -> getMemoFrom stateData.memory
             | ErrorState stateData -> getMemoFrom stateData.memory
 
-
     let createServices () = {
         accumulateNonZeroDigit = accumulateNonZeroDigit (10)
         accumulateZero = accumulateZero (15)
@@ -700,4 +699,6 @@ module CalculatorServices =
         getDisplayFromState = getDisplayFromState ("ERR-DIV0")
         getPendingOpFromState = getPendingOpFromState
         getMemoFromState = getMemoFromState }
+
+
 
