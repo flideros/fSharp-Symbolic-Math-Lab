@@ -18,7 +18,28 @@ open UI
 open Operator
 //open Control
 open System.Windows.Shapes
+//////////////////////////////////////////////////////////////////////////////
+type Record = {a:int; b:string}
 
+let data = seq{ for i in 0..10 -> {a = i; b = i.ToString()} } |> Seq.toArray
+
+let dataGrid = DataGrid(ItemsSource = data)
+
+do  dataGrid.AutoGeneratingColumn .AddHandler(fun _ _ -> dataGrid.SetValue(DataGrid.ColumnWidthProperty, DataGridLength(150.) ) )
+   
+let window = new Window(Title="Manually Populate TreeView",
+                        Content = dataGrid)//tree)//)
+
+[<STAThread()>]
+do 
+    let app =  Application() in
+    app.Run(window) |> ignore
+
+
+
+(menu.Items.Item(0) :?> MenuItem).Items.Count //<-
+
+///////////////////////////////////////////////////
 let command exec =
     let event = Event<_,_>()
     { new System.Windows.Input.ICommand with
@@ -121,18 +142,6 @@ let template = new HierarchicalDataTemplate(typeof<Animal>)
 let oo = tree.Items.[0] :?> System.Windows.Controls.TreeViewItem
 
 oo.Header
-
-
-   
-let window = new Window(Title="Manually Populate TreeView",
-                        Content=tree)
-
-[<STAThread()>]
-do 
-    let app =  Application() in
-    app.Run(window) |> ignore
-
-//////////////////////////////////////////////////////////////////////////////
 
 
 

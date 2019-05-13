@@ -29,3 +29,8 @@ Connection.test d connString
 d.State.ToString()
 d.Close()
 try d.Open() finally ()
+
+type Record = {a:int; b:string}
+
+let data = seq{for i in 0..10 -> {a = i; b = i.ToString()} } |> Seq.toArray
+

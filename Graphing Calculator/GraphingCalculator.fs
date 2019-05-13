@@ -12,7 +12,17 @@ open System.Reflection
 open System.Windows.Media.Imaging
 open Utilities
 open Style
-//open GraphingCalculatorDomain
+open Domain
+
+type View =
+    | PlotCanvas of Grid
+    | Text of CalcTextBox
+    | Function of Grid
+    | Function2D of Grid
+    | Function3D of Grid
+    | Option of Grid
+    | Option2D of Grid
+    | Option3D of Grid
 
 type View =
     | PlotCanvas of Grid
@@ -97,13 +107,13 @@ type GraphingCalculator() as graphingCalculator =
         g
     let screen_Text_TextBox = 
         let t = CalcTextBox(                    
-                    Visibility = Visibility.Hidden,
+                    Visibility = Visibility.Visible,
                     IsReadOnly = true,
                     VerticalScrollBarVisibility = ScrollBarVisibility.Visible
                     )
         do t.SetValue(Grid.RowProperty, 1)
         t
-    let canvas = Canvas( Visibility = Visibility.Visible, 
+    let canvas = Canvas( Visibility = Visibility.Hidden, 
                          ClipToBounds = true)
     let screen_Canvas =
         let g = Grid()
@@ -816,19 +826,30 @@ type GraphingCalculator() as graphingCalculator =
         option3D_Grid .Children.Add(option3D_vGrid_TextBox) |> ignore
         option3D_Grid .Children.Add(option3D_Button_Grid) |> ignore
 
-// ------Create Command Functions------
-    //-----Implementation of ICommand for views
-    let viewCommand (exec : (View -> unit) )=
-        let event = Event<_,_>()
-        { new System.Windows.Input.ICommand with
-            member __.CanExecute(_) = true
-            member __.Execute(arg) = exec (arg :?> View)
-            [<CLIEvent>]
-            member __.CanExecuteChanged = event.Publish
-        }
-    
-    let setActiveDisplayTo display =
-        let screens = 
+    //-----Immediate Text Box
+    let immediate =
+        let im = 
+            TextBox(            
+                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+                MaxLines = 1,
+                Background = screenColor
+                )
+        do  im.SetValue(Grid.ColumnSpanProperty,3)
+            im.SetValue(Grid.RowProperty,2)
+            im.SetValue(TextBlock.TextAlignmentProperty,TextAlignment.Right)
+        im
+
+    //-----Memo Text Block
+    let memo =
+        let im = 
+            TextBlock()
+        do  im.SetValue(Grid.ColumnSpanProperty,2)
+            im.SetValue(TextBlock.TextAlignmentProperty,TextAlignment.Center)
+            im.SetValue(TextBlock.VerticalAlignmentProperty,VerticalAlignment.Center)
+        im
+
+// -----List of the various Views 
+    let viewList = 
             [PlotCanvas screen_Canvas; 
              Text screen_Text_TextBox; 
              Function function_Grid; 
@@ -837,16 +858,31 @@ type GraphingCalculator() as graphingCalculator =
              Option2D option2D_Grid; 
              Function3D function3D_Grid; 
              Option3D option3D_Grid]
+
+// ------Create Command Functions------
+    //-----Implementation of ICommand for views
+    let viewCommand ( exec : (View -> unit) )=
+        let event = Event<_,_>()
+        { new System.Windows.Input.ICommand with
+            member __.CanExecute(_) = true
+            member __.Execute(arg) = exec (arg :?> View)
+            [<CLIEvent>]
+            member __.CanExecuteChanged = event.Publish
+        }
+    
+    // ----- Setters
+    // a function that sets active display
+    let setActiveDisplayTo display =
         do  List.iter (fun x -> 
-                match x with
-                | View.PlotCanvas p
-                | View.Function p
-                | View.Function2D p
-                | View.Function3D p
-                | View.Option p
-                | View.Option2D p
-                | View.Option3D p -> (p.Visibility <- Visibility.Collapsed)
-                | View.Text t -> (t.Visibility <- Visibility.Collapsed)) screens
+            match x with
+            | View.PlotCanvas p
+            | View.Function p
+            | View.Function2D p
+            | View.Function3D p
+            | View.Option p
+            | View.Option2D p
+            | View.Option3D p -> (p.Visibility <- Visibility.Collapsed)
+            | View.Text t -> (t.Visibility <- Visibility.Collapsed)) viewList
         match display with
         | View.PlotCanvas p
         | View.Function p
@@ -855,13 +891,33 @@ type GraphingCalculator() as graphingCalculator =
         | View.Option p
         | View.Option2D p
         | View.Option3D p -> (p.Visibility <- Visibility.Visible)
-        | View.Text t -> (t.Visibility <- Visibility.Visible) 
- 
+        | View.Text t -> (t.Visibility <- Visibility.Visible)        
+    // a function that sets the displayed text
+    let setDisplayedText = 
+        fun text -> screen_Text_TextBox.Text <- text 
+    // a function that sets the pending op text
+    let setMemoText = 
+        fun text -> memo.Text <- text
+    // a function that sets the pending op text
+    let setPendingOpText = 
+        fun text -> immediate.Text <- text 
 
-
-
-
-
+    //  ----- Getters
+    // a function that gets active display
+    let getActiveDisplay = 
+        let d =
+            List.pick (fun x -> 
+                match x with
+                | View.PlotCanvas p when p.IsVisible = true -> Some x
+                | View.Function p when p.IsVisible = true -> Some x
+                | View.Function2D p when p.IsVisible = true -> Some x
+                | View.Function3D p when p.IsVisible = true -> Some x
+                | View.Option p when p.IsVisible = true -> Some x
+                | View.Option2D p when p.IsVisible = true -> Some x
+                | View.Option3D p when p.IsVisible = true -> Some x
+                | View.Text t when t.IsVisible = true -> Some x
+                | _ -> Some x) viewList
+        d
  // ------Create Buttons and Menu------
     //-----Menu
     let menu = 
@@ -892,19 +948,6 @@ type GraphingCalculator() as graphingCalculator =
             m.Items.Add(header2) |> ignore
             
         m
-
-    //-----Immediate Text Box
-    let immediate =
-        let im = 
-            TextBox(            
-                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
-                MaxLines = 1,
-                Background = screenColor
-                )
-        do  im.SetValue(Grid.ColumnSpanProperty,3)
-            im.SetValue(Grid.RowProperty,2)
-            im.SetValue(TextBlock.TextAlignmentProperty,TextAlignment.Right)
-        im
 
     //-----Function Buttons
     let funcButton_Grid =
@@ -995,8 +1038,11 @@ type GraphingCalculator() as graphingCalculator =
            dx_Button
         ]
 
-    do // Place buttons in a grid
+    do  // Place buttons in a grid
         List.iter ( fun x -> funcButton_Grid.Children.Add(x) |> ignore) funcButtons //
+        
+    do  // Place the memo text block in the button grid
+        funcButton_Grid.Children.Add(memo) |> ignore
 
     do  // Arrange the buttons on the grid.
         sin_Button      .SetValue(Grid.RowProperty,0); sin_Button      .SetValue(Grid.ColumnProperty,0);
@@ -1011,7 +1057,8 @@ type GraphingCalculator() as graphingCalculator =
         u_Button        .SetValue(Grid.RowProperty,1); u_Button        .SetValue(Grid.ColumnProperty,2);
         v_Button        .SetValue(Grid.RowProperty,1); v_Button        .SetValue(Grid.ColumnProperty,3);
         dx_Button       .SetValue(Grid.RowProperty,1); dx_Button       .SetValue(Grid.ColumnProperty,4);
-
+        memo            .SetValue(Grid.RowProperty,1); memo            .SetValue(Grid.ColumnProperty,5);
+       
     //-----Calc Buttons     
     let calcButton_Grid =
         let grid = Grid()
@@ -1048,7 +1095,7 @@ type GraphingCalculator() as graphingCalculator =
         grid
     let one =           CalcButton(Name = "oneButton", Content = "1")
     let two =           CalcButton(Name = "twoButton", Content = "2")
-    let three =         CalcButton(Name = "threeButton",  Content = "3")
+    let three =         CalcButton(Name = "threeButton", Content = "3")
     let four =          CalcButton(Name = "fourButton", Content = "4")
     let five =          CalcButton(Name = "fiveButton", Content = "5")
     let six =           CalcButton(Name = "sixButton", Content = "6")
@@ -1116,11 +1163,6 @@ type GraphingCalculator() as graphingCalculator =
         openParentheses     .SetValue(Grid.RowProperty,4); openParentheses      .SetValue(Grid.ColumnProperty,4);
         closeParentheses    .SetValue(Grid.RowProperty,5); closeParentheses     .SetValue(Grid.ColumnProperty,4);
 
-
-    
-
-
-//////////////////////////////////////////////
     do  // Assemble the pieces        
         screen_Grid.Children.Add(menu) |> ignore
         screen_Grid.Children.Add(function_Grid) |> ignore
@@ -1139,3 +1181,80 @@ type GraphingCalculator() as graphingCalculator =
         calculator_Grid.Children.Add(calculator_Layout_Grid) |> ignore
         
         graphingCalculator.Content <- calculator_Grid
+
+
+//////////////////////////////////////////////
+    //-------setup calculator logic----------
+    let calculatorServices = CalculatorServices.createServices()
+    let calculate = CalculatorImplementation.createCalculate calculatorServices 
+    
+    // set initial state
+    let mutable calculatorState = Domain.ZeroState {pendingOp=None;memory=""}
+
+    let handleCalculatorInput input =
+        let newState = calculate(input,calculatorState)
+        calculatorState <- newState 
+        setDisplayedText (calculatorServices.getDisplayFromState calculatorState)
+        setPendingOpText (calculatorServices.getPendingOpFromState calculatorState)
+        setMemoText (calculatorServices.getMemoFromState calculatorState)
+//////////////////////////////////////////////    
+    do // Place buttons in a grid
+        List.iter ( fun x -> funcButton_Grid.Children.Add(x) |> ignore) funcButtons //
+
+    do  // Arrange the buttons on the grid.
+        sin_Button      .SetValue(Grid.RowProperty,0); sin_Button      .SetValue(Grid.ColumnProperty,0);
+        cos_Button      .SetValue(Grid.RowProperty,0); cos_Button      .SetValue(Grid.ColumnProperty,1);
+        tan_Button      .SetValue(Grid.RowProperty,0); tan_Button      .SetValue(Grid.ColumnProperty,2);
+        xSquared_Button .SetValue(Grid.RowProperty,0); xSquared_Button .SetValue(Grid.ColumnProperty,3);
+        xPowY_Button    .SetValue(Grid.RowProperty,0); xPowY_Button    .SetValue(Grid.ColumnProperty,4);
+        pi_Button       .SetValue(Grid.RowProperty,0); pi_Button       .SetValue(Grid.ColumnProperty,5);
+        e_Button        .SetValue(Grid.RowProperty,0); e_Button        .SetValue(Grid.ColumnProperty,6);
+        x_Button        .SetValue(Grid.RowProperty,1); x_Button        .SetValue(Grid.ColumnProperty,0);
+        t_Button        .SetValue(Grid.RowProperty,1); t_Button        .SetValue(Grid.ColumnProperty,1);
+        u_Button        .SetValue(Grid.RowProperty,1); u_Button        .SetValue(Grid.ColumnProperty,2);
+        v_Button        .SetValue(Grid.RowProperty,1); v_Button        .SetValue(Grid.ColumnProperty,3);
+        dx_Button       .SetValue(Grid.RowProperty,1); dx_Button       .SetValue(Grid.ColumnProperty,4);
+
+    // a function that sets active hadler based on the active display
+    let handleInput input =
+        match getActiveDisplay with 
+        |PlotCanvas x -> handleCalculatorInput input
+        |Text x -> handleCalculatorInput input
+        |Function x -> handleCalculatorInput input
+        |Option x -> handleCalculatorInput input
+        |Function2D x -> handleCalculatorInput input
+        |Option2D x -> handleCalculatorInput input
+        |Function3D x -> handleCalculatorInput input
+        |Option3D x -> handleCalculatorInput input
+
+    do //add event handler to each button
+        one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One))) 
+        two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two)))
+        three            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Three)))
+        four             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Four)))
+        five             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Five)))
+        six              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Six)))
+        seven            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Seven)))
+        eight            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Eight)))
+        nine             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Nine)))
+        zero             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Zero)))
+        decimalPoint     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (DecimalSeparator)))
+        add              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Add)))
+        subtract         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Subtract)))
+        multiply         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Multiply)))
+        divide           .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Divide)))        
+        equals           .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Equals)))
+        clear            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Clear)))
+        clearEntry       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (ClearEntry)))
+        clearMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryClear)))
+        storeMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryStore)))
+        recallMemory     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryRecall)))
+        changeSign       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp ChangeSign)))
+        back             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Back)))
+        addToMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp MemoryAdd)))
+        subtractFromMemoy.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp MemorySubtract)))
+        inverse          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Inverse))) 
+        percent          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Percent)))
+        root             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Root)))
+    do // Place buttons in a grid
+           List.iter ( fun x -> calcButton_Grid.Children.Add(x) |> ignore) calcButtons //
