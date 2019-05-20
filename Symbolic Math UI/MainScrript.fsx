@@ -7,7 +7,7 @@
 #load "Operator.fs"
 #load "TypeExtension.fs"
 #load "Container.fs"
-//#load "Control.fs"
+//#load "App.xaml"
 
 open System
 open System.Windows          
@@ -21,6 +21,9 @@ open System.Windows.Shapes
 //////////////////////////////////////////////////////////////////////////////
 type Record = {a:int; b:string}
 
+//////////////////////////////////////////////////////////////////////////////
+type Record = {a:int; b:string}
+
 let data = seq{ for i in 0..10 -> {a = i; b = i.ToString()} } |> Seq.toArray
 
 let dataGrid = DataGrid(ItemsSource = data)
@@ -30,16 +33,25 @@ do  dataGrid.AutoGeneratingColumn .AddHandler(fun _ _ -> dataGrid.SetValue(DataG
 let window = new Window(Title="Manually Populate TreeView",
                         Content = dataGrid)//tree)//)
 
+
 [<STAThread()>]
 do 
     let app =  Application() in
     app.Run(window) |> ignore
 
 
-
-(menu.Items.Item(0) :?> MenuItem).Items.Count //<-
-
 ///////////////////////////////////////////////////
+let command exec =
+    let event = Event<_,_>()
+    { new System.Windows.Input.ICommand with
+        member __.CanExecute(_) = true
+        member __.Execute(arg) = exec arg
+        [<CLIEvent>]
+        member __.CanExecuteChanged = event.Publish
+    }
+
+
+/////////////////////////////////////////////////////////////////////////////
 let command exec =
     let event = Event<_,_>()
     { new System.Windows.Input.ICommand with
@@ -80,8 +92,7 @@ let menu =
         m.Items.Add(header2) |> ignore
         
     m
-
-
+((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
 (menu.Items.Item(0) :?> MenuItem).Items.Count //<-
 
 ((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
@@ -146,3 +157,4 @@ oo.Header
 
 
 
+new Uri(@"\Graphing Calculator\5091-512.png", UriKind.RelativeOrAbsolute)

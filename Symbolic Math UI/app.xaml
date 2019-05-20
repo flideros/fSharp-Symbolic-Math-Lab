@@ -1382,7 +1382,8 @@
 
         <!--Style and template for the button in the upper left corner of the DataGrid.-->
         <Style TargetType="{x:Type Button}"
-               x:Key="{ComponentResourceKey ResourceId=DataGridSelectAllButtonStyle,TypeInTargetAssembly={x:Type DataGrid}}">
+       x:Key="{ComponentResourceKey ResourceId=DataGridSelectAllButtonStyle, 
+  TypeInTargetAssembly={x:Type DataGrid}}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -1917,9 +1918,9 @@
                         <Grid>
                             <VisualStateManager.VisualStateGroups>
                                 <!--This example does not specify an appearance for every
-                                    state.  You can add storyboard to the states that are listed
-                                    to change the appearance of the DataGridRowHeader when it is
-                                    in a specific state.-->
+                state.  You can add storyboard to the states that are listed
+                to change the appearance of the DataGridRowHeader when it is
+                in a specific state.-->
                                 <VisualStateGroup x:Name="CommonStates">
                                     <VisualState x:Name="Normal" />
                                     <VisualState x:Name="Normal_CurrentRow" />
@@ -1928,9 +1929,10 @@
                                     <VisualState x:Name="MouseOver">
                                         <Storyboard>
                                             <ColorAnimationUsingKeyFrames Storyboard.TargetName="rowHeaderBorder"
-                                                                          Storyboard.TargetProperty="(Panel.Background).
-                                                                          (GradientBrush.GradientStops)[1].(GradientStop.Color)">
-                                                <EasingColorKeyFrame KeyTime="0" Value="{StaticResource ControlMouseOverColor}" />
+                                                Storyboard.TargetProperty="(Panel.Background).
+                      (GradientBrush.GradientStops)[1].(GradientStop.Color)">
+                                                <EasingColorKeyFrame KeyTime="0"
+                                         Value="{StaticResource ControlMouseOverColor}" />
                                             </ColorAnimationUsingKeyFrames>
                                         </Storyboard>
                                     </VisualState>
@@ -1948,41 +1950,44 @@
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
                             <Border x:Name="rowHeaderBorder"
-                                      Width="10"
-                                      BorderThickness="1">
+                  Width="10"
+                  BorderThickness="1">
                                 <Border.BorderBrush>
                                     <LinearGradientBrush EndPoint="0.5,1"
-                                                         StartPoint="0.5,0">
+                                   StartPoint="0.5,0">
                                         <GradientStop Color="{DynamicResource BorderLightColor}"
-                                                      Offset="0" />
+                              Offset="0" />
                                         <GradientStop Color="{DynamicResource BorderDarkColor}"
-                                                      Offset="1" />
+                              Offset="1" />
                                     </LinearGradientBrush>
                                 </Border.BorderBrush>
                                 <Border.Background>
                                     <LinearGradientBrush EndPoint="0.5,1"
-                                                         StartPoint="0.5,0">
+                                   StartPoint="0.5,0">
                                         <GradientStop Color="{DynamicResource ControlLightColor}"
-                                                      Offset="0" />
+                              Offset="0" />
                                         <GradientStop Color="{DynamicResource ControlMediumColor}"
-                                                      Offset="1" />
+                              Offset="1" />
                                     </LinearGradientBrush>
                                 </Border.Background>
                                 <StackPanel Orientation="Horizontal">
                                     <ContentPresenter VerticalAlignment="Center"
-                                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                                     <Control SnapsToDevicePixels="false"
-                                             Template="{Binding ValidationErrorTemplate, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}"
-                                             Visibility="{Binding (Validation.ErrorTemplate), Converter={StaticResource bool2VisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" />
+                       Template="{Binding ValidationErrorTemplate, 
+                  RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}"
+                       Visibility="{Binding (Validation.HasError), 
+                  Converter={StaticResource bool2VisibilityConverter}, 
+                  RelativeSource={RelativeSource AncestorType={x:Type DataGridRow}}}" />
                                 </StackPanel>
                             </Border>
 
                             <Thumb x:Name="PART_TopHeaderGripper"
-                                   Style="{StaticResource RowHeaderGripperStyle}"
-                                   VerticalAlignment="Top" />
+                 Style="{StaticResource RowHeaderGripperStyle}"
+                 VerticalAlignment="Top" />
                             <Thumb x:Name="PART_BottomHeaderGripper"
-                                   Style="{StaticResource RowHeaderGripperStyle}"
-                                   VerticalAlignment="Bottom" />
+                 Style="{StaticResource RowHeaderGripperStyle}"
+                 VerticalAlignment="Bottom" />
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -2079,7 +2084,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
+            
         <!--In this example, an implecit style for Calendar is defined elsewhere 
             in the application.  DatePickerCalendarStyle is based on the implicit 
             style so that the DatePicker will use the application's calendar style.-->
@@ -4169,7 +4174,7 @@
                                 <SolidColorBrush Color="{DynamicResource BorderMediumColor}" />
                             </Border.BorderBrush>
                             <ScrollViewer CanContentScroll="True"
-                        Style="{StaticResource MenuScrollViewer}">
+                        Style="{DynamicResource MenuScrollViewer}">
                                 <StackPanel IsItemsHost="True"
                         KeyboardNavigation.DirectionalNavigation="Cycle" />
                             </ScrollViewer>
