@@ -18,6 +18,8 @@ open UI
 open Operator
 //open Control
 open System.Windows.Shapes
+//////////////////////////////////////////////////////////////////////////////
+type Record = {a:int; b:string}
 
 //////////////////////////////////////////////////////////////////////////////
 type Record = {a:int; b:string}
@@ -38,6 +40,15 @@ do
     app.Run(window) |> ignore
 
 
+///////////////////////////////////////////////////
+let command exec =
+    let event = Event<_,_>()
+    { new System.Windows.Input.ICommand with
+        member __.CanExecute(_) = true
+        member __.Execute(arg) = exec arg
+        [<CLIEvent>]
+        member __.CanExecuteChanged = event.Publish
+    }
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -81,8 +92,7 @@ let menu =
         m.Items.Add(header2) |> ignore
         
     m
-
-
+((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
 (menu.Items.Item(0) :?> MenuItem).Items.Count //<-
 
 ((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
