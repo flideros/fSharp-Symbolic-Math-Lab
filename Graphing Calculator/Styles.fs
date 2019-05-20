@@ -20,6 +20,9 @@ open Utilities
 
 module Style = 
     
+    //Images
+    let checkedBox = Image(Source = new BitmapImage(new Uri((__SOURCE_DIRECTORY__ + "/5091-512.png"), UriKind.RelativeOrAbsolute)),Width=20., Height=20. )
+    
     //Colors
     let black = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0x00", byte "0x00", byte "0x00"))
     let screenColor = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE"))

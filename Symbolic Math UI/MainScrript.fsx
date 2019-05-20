@@ -7,7 +7,7 @@
 #load "Operator.fs"
 #load "TypeExtension.fs"
 #load "Container.fs"
-//#load "Control.fs"
+//#load "App.xaml"
 
 open System
 open System.Windows          
@@ -31,6 +31,7 @@ do  dataGrid.AutoGeneratingColumn .AddHandler(fun _ _ -> dataGrid.SetValue(DataG
 let window = new Window(Title="Manually Populate TreeView",
                         Content = dataGrid)//tree)//)
 
+
 [<STAThread()>]
 do 
     let app =  Application() in
@@ -39,7 +40,7 @@ do
 
 
 
-///////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 let command exec =
     let event = Event<_,_>()
     { new System.Windows.Input.ICommand with
@@ -146,3 +147,4 @@ oo.Header
 
 
 
+new Uri(@"\Graphing Calculator\5091-512.png", UriKind.RelativeOrAbsolute)

@@ -24,8 +24,20 @@ type View =
     | Option2D of Grid
     | Option3D of Grid
 
+type CalculatorMode =
+    | Conventional
+    | RPN
+
+type State = {calculator:CalculatorState; 
+              mode:CalculatorMode }
+
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
+    
+    // set initial state
+    let mutable state = 
+        { calculator = Domain.ZeroState {pendingOp=None;memory=""}; 
+          mode = Conventional}
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -38,7 +50,7 @@ type GraphingCalculator() as graphingCalculator =
             RadiusX = 10., 
             RadiusY = 10.
             )
-    let calculator_modelNumber_TextBlock = 
+    let calculator_ModelNumber_TextBlock = 
         TextBlock(
             Margin = Thickness(left=0.,top=1.5,right=15.,bottom=0.),
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -72,7 +84,7 @@ type GraphingCalculator() as graphingCalculator =
     
     do  // Assemble the pieces
         calculator_Grid.Children.Add(calculator_Rectangle)             |> ignore
-        calculator_Grid.Children.Add(calculator_modelNumber_TextBlock) |> ignore
+        calculator_Grid.Children.Add(calculator_ModelNumber_TextBlock) |> ignore
     
     //-----Screen
     let screen_Border = 
@@ -862,7 +874,7 @@ type GraphingCalculator() as graphingCalculator =
     
     // ----- Setters
     // a function that sets active display
-    let setActiveDisplayTo display =
+    let setActiveDisplay display =
         do  List.iter (fun x -> 
             match x with
             | View.PlotCanvas p
@@ -891,7 +903,11 @@ type GraphingCalculator() as graphingCalculator =
     // a function that sets the pending op text
     let setPendingOpText = 
         fun text -> immediate.Text <- text 
-
+    // a function that sets the input mode
+    let setInputMode mode = 
+        let newState = {calculator = state.calculator; mode = mode}
+        state <- newState
+    
     //  ----- Getters
     // a function that gets active display
     let getActiveDisplay = 
@@ -911,23 +927,35 @@ type GraphingCalculator() as graphingCalculator =
 
  // ------Create Buttons and Menu------
     //-----Menu
-    let menu = 
+    let menu = // 
+        let header1 = MenuItem(Header = "Mode")
+        let header1_Item1 = MenuItem(Header = "Calculator") //, Command = viewCommand (setActiveDisplayTo), CommandParameter = Text screen_Text_TextBox)
+        let header1_Item1_1 = MenuItem(Header = "RPN Stack", Command = viewCommand (setActiveDisplay), CommandParameter = Text screen_Text_TextBox)
+        let header1_Item1_2 = MenuItem(Header = "Conventional", Command = viewCommand (setActiveDisplay), CommandParameter = Text screen_Text_TextBox, Icon = checkedBox)
         
-        let header1 = MenuItem(Header = "Graph")
-        let header1_Item1 = MenuItem(Header = "Text", Command = viewCommand (setActiveDisplayTo), CommandParameter = Text screen_Text_TextBox)
-        let header1_Item2 = MenuItem(Header = "Graph", Command = viewCommand (setActiveDisplayTo), CommandParameter = Function function_Grid)
-        let header1_Item3 = MenuItem(Header = "Graph2D", Command = viewCommand (setActiveDisplayTo), CommandParameter = Function2D function2D_Grid)
-        let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplayTo), CommandParameter = Function3D function3D_Grid)
+        let handleCheck (item1:MenuItem) (item2:MenuItem) = 
+            do  item1.Icon <- checkedBox                
+                match item1.Name with
+                | "RPN Stack" -> setInputMode RPN
+                | "Conventional" -> setInputMode Conventional
+                | _ -> ()
+                item2.Icon <- None
+        
+        let header1_Item2 = MenuItem(Header = "Graph", Command = viewCommand (setActiveDisplay), CommandParameter = Function function_Grid)
+        let header1_Item3 = MenuItem(Header = "Graph2D", Command = viewCommand (setActiveDisplay), CommandParameter = Function2D function2D_Grid)
+        let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplay), CommandParameter = Function3D function3D_Grid)
 
-        do  header1.Items.Add(header1_Item1) |> ignore
+        do  header1_Item1.Items.Add(header1_Item1_1) |> ignore
+            header1_Item1.Items.Add(header1_Item1_2) |> ignore
+            header1.Items.Add(header1_Item1) |> ignore
             header1.Items.Add(header1_Item2) |> ignore
             header1.Items.Add(header1_Item3) |> ignore
             header1.Items.Add(header1_Item4) |> ignore
 
         let header2 = MenuItem(Header = "Options")
-        let header2_Item1 = MenuItem(Header = "Graph Options", Command = viewCommand (setActiveDisplayTo), CommandParameter = Option option_Grid)
-        let header2_Item2 = MenuItem(Header = "Graph2D Options", Command = viewCommand (setActiveDisplayTo), CommandParameter = Option2D option2D_Grid)
-        let header2_Item3 = MenuItem(Header = "Graph3D Options", Command = viewCommand (setActiveDisplayTo), CommandParameter = Option3D option3D_Grid)
+        let header2_Item1 = MenuItem(Header = "Graph Options", Command = viewCommand (setActiveDisplay), CommandParameter = Option option_Grid)
+        let header2_Item2 = MenuItem(Header = "Graph2D Options", Command = viewCommand (setActiveDisplay), CommandParameter = Option2D option2D_Grid)
+        let header2_Item3 = MenuItem(Header = "Graph3D Options", Command = viewCommand (setActiveDisplay), CommandParameter = Option3D option3D_Grid)
         
         do  header2.Items.Add(header2_Item1) |> ignore
             header2.Items.Add(header2_Item2) |> ignore
@@ -937,7 +965,8 @@ type GraphingCalculator() as graphingCalculator =
         do  m.SetValue(Grid.RowProperty,0)
             m.Items.Add(header1) |> ignore
             m.Items.Add(header2) |> ignore
-            
+            header1_Item1_1.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleCheck header1_Item1_1 header1_Item1_2))            
+            header1_Item1_2.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleCheck header1_Item1_2 header1_Item1_1))
         m
 
     //-----Function Buttons
@@ -1173,38 +1202,38 @@ type GraphingCalculator() as graphingCalculator =
         
         graphingCalculator.Content <- calculator_Grid
 
-
 //////////////////////////////////////////////
     //-------setup calculator logic----------
     let calculatorServices = CalculatorServices.createServices()
     let calculate = CalculatorImplementation.createCalculate calculatorServices 
     
-    // set initial state
-    let mutable calculatorState = Domain.ZeroState {pendingOp=None;memory=""}
+    let handleConventionalInput input =
+        let newState = calculate(input,state.calculator)
+        state <- {calculator = newState; mode = Conventional}
+        setDisplayedText (calculatorServices.getDisplayFromState state.calculator)
+        setPendingOpText (calculatorServices.getPendingOpFromState state.calculator)
+        setMemoText (calculatorServices.getMemoFromState state.calculator)
 
-    let handleCalculatorInput input =
-        let newState = calculate(input,calculatorState)
-        calculatorState <- newState 
-        setDisplayedText (calculatorServices.getDisplayFromState calculatorState)
-        setPendingOpText (calculatorServices.getPendingOpFromState calculatorState)
-        setMemoText (calculatorServices.getMemoFromState calculatorState)
+    let handleRpnInput input = ()
+
 //////////////////////////////////////////////    
-
-
 
     // a function that sets active hadler based on the active display
     let handleInput input =
         match getActiveDisplay with 
-        |PlotCanvas x -> handleCalculatorInput input
-        |Text x -> handleCalculatorInput input
-        |Function x -> handleCalculatorInput input
-        |Option x -> handleCalculatorInput input
-        |Function2D x -> handleCalculatorInput input
-        |Option2D x -> handleCalculatorInput input
-        |Function3D x -> handleCalculatorInput input
-        |Option3D x -> handleCalculatorInput input
+        |PlotCanvas _ -> handleConventionalInput input
+        |Text _ -> 
+            match state.mode with
+            | Conventional -> handleConventionalInput input
+            | RPN -> handleRpnInput input
+        |Function _ -> handleConventionalInput input
+        |Option _ -> handleConventionalInput input
+        |Function2D _ -> handleConventionalInput input
+        |Option2D _ -> handleConventionalInput input
+        |Function3D _ -> handleConventionalInput input
+        |Option3D _ -> handleConventionalInput input
 
-    do //add event handler to each button
+    do  //add event handler to each button
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One))) 
         two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two)))
         three            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Three)))
