@@ -12,7 +12,7 @@ open System.Reflection
 open System.Windows.Media.Imaging
 open Utilities
 open Style
-open Domain
+open ConventionalDomain
 
 type View =
     | PlotCanvas of Grid
@@ -36,7 +36,7 @@ type GraphingCalculator() as graphingCalculator =
     
     // set initial state
     let mutable state = 
-        { calculator = Domain.ZeroState {pendingOp=None;memory=""}; 
+        { calculator = ConventionalDomain.ZeroState {pendingOp=None;memory=""}; 
           mode = Conventional}
 
 // ------Create Views---------        

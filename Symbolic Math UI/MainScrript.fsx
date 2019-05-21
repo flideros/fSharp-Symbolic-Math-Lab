@@ -92,7 +92,9 @@ let menu =
         m.Items.Add(header2) |> ignore
         
     m
+
 ((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
+
 (menu.Items.Item(0) :?> MenuItem).Items.Count //<-
 
 ((menu.Items.Item(0) :?> MenuItem).Items.Item(0) :?> MenuItem).Header   //<-
