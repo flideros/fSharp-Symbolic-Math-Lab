@@ -5,7 +5,7 @@
 // ================================================
 // Domain using a state machine
 // ================================================          
-module Domain =
+module ConventionalDomain =
     
     // Calculators use numbers...Duh!
     type Number = float    
@@ -95,7 +95,7 @@ module Domain =
 // Implementation of Calculator
 // ================================================          
 module CalculatorImplementation =
-    open Domain
+    open ConventionalDomain
     open Utilities
 
     let accumulateNonZeroDigit services digit accumulatorData =
@@ -567,7 +567,7 @@ module CalculatorImplementation =
 // Implementation of CalculatorServices 
 // ================================================          
 module CalculatorServices =
-    open Domain
+    open ConventionalDomain
     open Utilities
 
     let appendToAccumulator maxLen (accumulator:DigitAccumulator) appendCh = 

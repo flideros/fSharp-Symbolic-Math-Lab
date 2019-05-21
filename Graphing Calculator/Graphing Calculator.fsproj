@@ -45,7 +45,7 @@
     <Compile Include="Utilities.fs" />
     <Compile Include="Settings.fs" />
     <Compile Include="Styles.fs" />
-    <Compile Include="Domain.fs" />
+    <Compile Include="ConventionalDomain.fs" />
     <Compile Include="GraphingCalculator.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
