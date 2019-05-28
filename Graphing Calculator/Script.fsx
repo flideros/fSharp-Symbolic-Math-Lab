@@ -141,4 +141,3 @@ let SUM_NUMBERS_UPTO =
     >> MUL   // n(n+1) 1 item on stack
     >> TWO   // n(n+1), 2 2 items on stack 
     >> DIV   // n(n+1)/2 1 item on stack
-
