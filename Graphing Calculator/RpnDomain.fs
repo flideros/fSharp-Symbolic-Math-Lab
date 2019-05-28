@@ -32,8 +32,8 @@ module RpnDomain =
     // States
     type CalculatorState =         
         | ReadyState of ReadyStateData
-        | DigitAccumulator of DigitAccumulatorStateData
-        | DecimalAccumulator of DigitAccumulatorStateData
+        | DigitAccumulatorState of DigitAccumulatorStateData
+        | DecimalAccumulatorState of DigitAccumulatorStateData
         | ErrorState of ErrorStateData
 
     // Services used by the calculator itself
@@ -69,8 +69,8 @@ module RpnImplementation =
         let newAccumulatorData = { accumulatorData with digits = newDigits }
         newAccumulatorData // return
 
-    let doStackOperation services stack input =
-        //let stack = stackData.stack
+    let doStackOperation services stackData input =
+        let stack = stackData.stack
         let newStack = services.doStackOperation (input,stack)
         newStack
 
@@ -86,10 +86,10 @@ module RpnImplementation =
             | StackOp s -> 
                 match s with 
                 | Push -> ReadyState {stack = stack} // stay in ReadyState  
-                | Drop -> doStackOperation services stack s
-                | Duplicate -> doStackOperation services stack s  
+                | Drop -> doStackOperation services digitAccumulatorStateData s
+                | Duplicate -> doStackOperation services digitAccumulatorStateData s  
                 | ClearStack -> ReadyState {stack = StackContents []}
-                | Swap -> doStackOperation services stack s  
+                | Swap -> doStackOperation services digitAccumulatorStateData s  
             | MathOp m -> 
                 match m with
                 | Add
@@ -108,11 +108,11 @@ module RpnImplementation =
             | Digit d -> 
                 digitAccumulatorStateData 
                 |> accumulateNonZeroDigit services d
-                |> DigitAccumulator  // transition to AccumulatorState
+                |> DigitAccumulatorState  // transition to AccumulatorState
             | DecimalSeparator -> 
                 digitAccumulatorStateData 
                 |> accumulateSeparator services
-                |> DigitAccumulator  // transition to AccumulatorState 
+                |> DigitAccumulatorState  // transition to AccumulatorState 
             | Equals  -> ReadyState {stack = stack} // not used in RPN mode
             | Clear -> ReadyState {stack = stack} // not used in RPN mode
             | ClearEntry -> ReadyState {stack = stack} // ToDO
@@ -123,4 +123,47 @@ module RpnImplementation =
             | MemoryRecall -> ReadyState {stack = stack} // not used in RPN mode
         | Enter -> ReadyState {stack = stack} 
 
-   
+    let handleDigitAccumulatorState services stateData input =
+        match input with
+        | Op op -> 
+            match op with
+            | StackOp s -> 
+                match s with 
+                | Push -> doStackOperation services stateData s                    
+                | Drop -> DigitAccumulatorState stateData
+                | Duplicate -> DigitAccumulatorState stateData  
+                | ClearStack -> DigitAccumulatorState stateData
+                | Swap -> DigitAccumulatorState stateData  
+            | MathOp m -> 
+                match m with
+                | Add
+                | Subtract 
+                | Multiply 
+                | Divide 
+                | Inverse 
+                | Percent 
+                | Root 
+                | ChangeSign
+                | MemoryAdd
+                | MemorySubtract -> DigitAccumulatorState stateData
+(*        | Input i -> 
+            match i with
+            | Zero -> ReadyState {stack = stack} // stay in ReadyState
+            | Digit d -> 
+                digitAccumulatorStateData 
+                |> accumulateNonZeroDigit services d
+                |> DigitAccumulatorState  // transition to AccumulatorState
+            | DecimalSeparator -> 
+                digitAccumulatorStateData 
+                |> accumulateSeparator services
+                |> DigitAccumulatorState  // transition to AccumulatorState 
+            | Equals  -> ReadyState {stack = stack} // not used in RPN mode
+            | Clear -> ReadyState {stack = stack} // not used in RPN mode
+            | ClearEntry -> ReadyState {stack = stack} // ToDO
+            | Back -> ReadyState {stack = stack} // ToDO
+            | ConventionalDomain.MathOp op -> ReadyState {stack = stack} // not used in RPN mode
+            | MemoryStore
+            | MemoryClear
+            | MemoryRecall -> ReadyState {stack = stack} // not used in RPN mode
+        | Enter -> ReadyState {stack = stack} 
+*)
