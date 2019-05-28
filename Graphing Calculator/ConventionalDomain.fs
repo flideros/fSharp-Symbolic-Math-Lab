@@ -34,7 +34,7 @@ module ConventionalDomain =
     type PendingOp = (CalculatorMathOp * Number)
     
     // types to describe errors
-    type MathOperationError = | DivideByZero    
+    type MathOperationError = | DivideByZero | UnknownError
     type MathOperationResult = 
         | Success of Number 
         | Failure of MathOperationError
@@ -42,7 +42,7 @@ module ConventionalDomain =
     // data associated with each state    
     type AccumulatorStateData = {digits:DigitAccumulator; pendingOp:PendingOp option; memory:DigitAccumulator}
     type ComputedStateData = {displayNumber:Number; pendingOp:PendingOp option; memory:DigitAccumulator}    
-    type ErrorStateData = {error:MathOperationError;memory:string}
+    type ErrorStateData = {error:MathOperationError;memory:DigitAccumulator}
     type ZeroStateData = {pendingOp:PendingOp option; memory:DigitAccumulator}  
     
     // five states        
@@ -180,6 +180,7 @@ module CalculatorImplementation =
             | MemorySubtract -> ZeroState {pendingOp = pendingOp; memory = memory}
             | ChangeSign -> AccumulatorState {digits = "-"; pendingOp = pendingOp; memory = memory}
             | Inverse -> ErrorState {error = DivideByZero; memory = memory}
+            | _ -> ErrorState {error = UnknownError; memory = memory}
         | Equals -> 
             let nextOp = None
             let newState = getComputationState services accumulatorStateData nextOp 
@@ -623,6 +624,7 @@ module CalculatorServices =
         | Divide when f2 = 0. -> Failure DivideByZero 
         | Divide -> Success (f1 / f2)        
         | ChangeSign  -> Success (f1 * -1.)
+        | _ -> Failure UnknownError
 
     let getDisplayFromState divideByZeroMsg :GetDisplayFromState =
         
@@ -643,7 +645,8 @@ module CalculatorServices =
             | ErrorState stateData -> 
                 match stateData with
                 | {error=DivideByZero;memory = _} -> divideByZeroMsg
-
+                | {error = UnknownError; memory = memory} -> "Unknown error"
+    
     let getPendingOpFromState :GetPendingOpFromState=
 
         let opToString = function
@@ -653,7 +656,7 @@ module CalculatorServices =
             | Divide -> "/"
             | ChangeSign -> "(change sign)"
             | Inverse -> "(inverse)"
-
+            | _ -> ""
         let displayStringForPendingOp pendingOp =
             maybe {
                 let! op, number = pendingOp 
