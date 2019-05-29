@@ -245,4 +245,3 @@ module RpnImplementation =
 module RpnServices =
     open RpnDomain
     
-
