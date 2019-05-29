@@ -22,7 +22,7 @@ module RpnDomain =
     // Data associated with each state 
     type ReadyStateData = {stack : Stack}
     type DigitAccumulatorStateData = {digits:DigitAccumulator; stack : Stack}
-    type ErrorStateData = {error:MathOperationError} 
+    type ErrorStateData = {error:MathOperationError; currentstack : Stack} 
 
     type CalculatorInput =
         | Op of CalculatorOp
@@ -36,6 +36,8 @@ module RpnDomain =
         | DecimalAccumulatorState of DigitAccumulatorStateData
         | ErrorState of ErrorStateData
 
+    type Calculate = CalculatorInput * CalculatorState -> CalculatorState
+
     // Services used by the calculator itself
     type DoStackOperation = StackOperation * Stack -> CalculatorState
     type DoMathOperation = CalculatorMathOp * Stack -> CalculatorState
@@ -43,6 +45,7 @@ module RpnDomain =
     type RpnServices = {        
         doStackOperation :DoStackOperation
         doMathOperation :DoMathOperation
+        accumulateZero :AccumulateZero
         accumulateNonZeroDigit :AccumulateNonZeroDigit
         accumulateSeparator :AccumulateSeparator
         }
@@ -146,24 +149,99 @@ module RpnImplementation =
                 | ChangeSign
                 | MemoryAdd
                 | MemorySubtract -> DigitAccumulatorState stateData
-(*        | Input i -> 
+        | Input i -> 
             match i with
-            | Zero -> ReadyState {stack = stack} // stay in ReadyState
+            | Zero -> 
+                stateData 
+                |> accumulateZero services 
+                |> DigitAccumulatorState
             | Digit d -> 
-                digitAccumulatorStateData 
+                stateData
                 |> accumulateNonZeroDigit services d
                 |> DigitAccumulatorState  // transition to AccumulatorState
             | DecimalSeparator -> 
-                digitAccumulatorStateData 
+                stateData
                 |> accumulateSeparator services
                 |> DigitAccumulatorState  // transition to AccumulatorState 
-            | Equals  -> ReadyState {stack = stack} // not used in RPN mode
-            | Clear -> ReadyState {stack = stack} // not used in RPN mode
-            | ClearEntry -> ReadyState {stack = stack} // ToDO
-            | Back -> ReadyState {stack = stack} // ToDO
-            | ConventionalDomain.MathOp op -> ReadyState {stack = stack} // not used in RPN mode
+            | Equals  -> DigitAccumulatorState stateData // not used in RPN mode
+            | Clear -> DigitAccumulatorState stateData // not used in RPN mode
+            | ClearEntry -> DigitAccumulatorState stateData // ToDO
+            | Back -> DigitAccumulatorState stateData // ToDO
+            | ConventionalDomain.MathOp op -> DigitAccumulatorState stateData // not used in RPN mode
             | MemoryStore
             | MemoryClear
-            | MemoryRecall -> ReadyState {stack = stack} // not used in RPN mode
-        | Enter -> ReadyState {stack = stack} 
-*)
+            | MemoryRecall -> DigitAccumulatorState stateData // not used in RPN mode
+        | Enter -> doStackOperation services stateData Push
+
+    let handleDecimalAccumulatorState services stateData input =
+        match input with
+        | Op op -> 
+            match op with
+            | StackOp s -> 
+                match s with 
+                | Push -> doStackOperation services stateData s                    
+                | Drop -> DecimalAccumulatorState stateData
+                | Duplicate -> DecimalAccumulatorState stateData  
+                | ClearStack -> DecimalAccumulatorState stateData
+                | Swap -> DecimalAccumulatorState stateData  
+            | MathOp m -> 
+                match m with
+                | Add
+                | Subtract 
+                | Multiply 
+                | Divide 
+                | Inverse 
+                | Percent 
+                | Root 
+                | ChangeSign
+                | MemoryAdd
+                | MemorySubtract -> DecimalAccumulatorState stateData
+        | Input i -> 
+            match i with
+            | Zero -> 
+                stateData 
+                |> accumulateZero services 
+                |> DecimalAccumulatorState
+            | Digit d -> 
+                stateData
+                |> accumulateNonZeroDigit services d
+                |> DecimalAccumulatorState  // transition to AccumulatorState
+            | DecimalSeparator -> DecimalAccumulatorState stateData // ignore 
+            | Equals  -> DecimalAccumulatorState stateData // not used in RPN mode
+            | Clear -> DecimalAccumulatorState stateData // not used in RPN mode
+            | ClearEntry -> DecimalAccumulatorState stateData // ToDO
+            | Back -> DecimalAccumulatorState stateData // ToDO
+            | ConventionalDomain.MathOp op -> DecimalAccumulatorState stateData // not used in RPN mode
+            | MemoryStore
+            | MemoryClear
+            | MemoryRecall -> DecimalAccumulatorState stateData // not used in RPN mode
+        | Enter -> doStackOperation services stateData Push
+
+    let handleErrorState stateData input =
+        match input with
+        | Op _
+        | Input _ -> ErrorState stateData
+        | Enter -> ReadyState {stack = stateData.currentstack}
+
+    let createCalculate (services:RpnServices) : Calculate = 
+        // create some local functions with partially applied services
+        let handleReady = handleReadyState services
+        let handleDigitAccumulator = handleDigitAccumulatorState services
+        let handleDecimalAccumulator = handleDecimalAccumulatorState services
+        let handleError = handleErrorState 
+
+        fun (input,state) -> 
+            match state with
+            | ReadyState stateData -> 
+                handleReady stateData.stack input
+            | DigitAccumulatorState stateData -> 
+                handleDigitAccumulator stateData input 
+            | DecimalAccumulatorState stateData -> 
+                handleDecimalAccumulator stateData input
+            | ErrorState stateData -> 
+                handleError stateData input
+
+(**)
+module RpnServices =
+    open RpnDomain
+    
