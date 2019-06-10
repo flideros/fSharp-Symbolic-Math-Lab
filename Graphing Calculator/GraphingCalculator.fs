@@ -1228,6 +1228,7 @@ type GraphingCalculator() as graphingCalculator =
         setPendingOpText (calculatorServices.getPendingOpFromState newState)
         setMemoText (calculatorServices.getMemoFromState newState)
 
+//////////////////////////////////////////////    
 
     let handleRpnInput input = 
         let rState = match state.rpn.IsSome with 
@@ -1257,7 +1258,6 @@ type GraphingCalculator() as graphingCalculator =
             | MemoryStore -> Input MemoryStore
             | MemoryClear -> Input MemoryClear
             | MemoryRecall -> Input MemoryRecall (**)
-
         match getActiveDisplay with 
         |PlotCanvas _ -> handleConventionalInput input
         |Text _ -> 

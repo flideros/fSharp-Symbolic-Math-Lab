@@ -485,4 +485,3 @@ module RpnServices =
         doMathOperation = doMathOperation 
         doStackOperation = doStackOperation
         getNumberFromAccumulator = getNumberFromAccumulator}
-
