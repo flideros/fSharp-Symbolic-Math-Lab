@@ -441,8 +441,7 @@ module RpnServices =
                 | None -> Failure (TooFewArguments (StackContents stack))
             | ClearStack -> Success (StackContents [])
             | Drop -> Failure (EmptyStack (StackContents stack))
-            | Duplicate -> Failure (EmptyStack (StackContents stack))
-            
+            | Duplicate -> Failure (EmptyStack (StackContents stack))            
             | Swap -> Failure (TooFewArguments (StackContents stack))
             | _ -> Failure (UnknownError (StackContents stack))
         | x when x = 1 -> 
@@ -462,7 +461,6 @@ module RpnServices =
         | x -> 
             let f1 = stack.[0] 
             let f2 = stack.[1]
-            let update = fun l i r -> StackContents (r :: List.skip i l)
             match op with
             | Push -> 
                 match number with 
@@ -480,4 +478,10 @@ module RpnServices =
             | ClearStack -> Success (StackContents [])
             | _ -> Failure (UnknownError (StackContents stack))
 
-
+    let createServices () = {
+        accumulateNonZeroDigit = accumulateNonZeroDigit (10)
+        accumulateZero = accumulateZero (15)
+        accumulateSeparator = accumulateSeparator (15)
+        doMathOperation = doMathOperation 
+        doStackOperation = doStackOperation
+        getNumberFromAccumulator = getNumberFromAccumulator}

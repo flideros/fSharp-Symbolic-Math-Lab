@@ -13,6 +13,7 @@ open System.Windows.Media.Imaging
 open Utilities
 open Style
 open ConventionalDomain
+open RpnDomain
 
 type View =
     | PlotCanvas of Grid
@@ -28,16 +29,17 @@ type CalculatorMode =
     | Conventional
     | RPN
 
-type State = {calculator:CalculatorState; 
-              mode:CalculatorMode }
+type State = {rpn:RpnDomain.CalculatorState option;
+              conventional:ConventionalDomain.CalculatorState option;
+              mode:CalculatorMode}
 
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
     
     // set initial state
-    let mutable state = 
-        { calculator = ConventionalDomain.ZeroState {pendingOp=None;memory=""}; 
-          mode = Conventional}
+    let conventional =  ConventionalDomain.CalculatorState.ZeroState {pendingOp = None; memory=""}
+    let rpn = RpnDomain.CalculatorState.ReadyState {stack = RpnDomain.StackContents []}
+    let mutable state = { rpn = None; conventional = Some conventional; mode = Conventional }
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -905,8 +907,13 @@ type GraphingCalculator() as graphingCalculator =
         fun text -> immediate.Text <- text 
     // a function that sets the input mode
     let setInputMode mode = 
-        let newState = {calculator = state.calculator; mode = mode}
-        state <- newState
+        match mode with 
+        | Conventional -> 
+            let newState = {state with mode = Conventional; rpn = None}
+            state <- newState
+        | RPN ->
+            let newState = {state with mode = RPN; conventional = None}
+            state <- newState
     
     //  ----- Getters
     // a function that gets active display
@@ -934,6 +941,8 @@ type GraphingCalculator() as graphingCalculator =
         let header1_Item1_2 = MenuItem(Header = "Conventional", Command = viewCommand (setActiveDisplay), CommandParameter = Text screen_Text_TextBox, Icon = checkedBox)
         
         let handleCheck (item1:MenuItem) (item2:MenuItem) = 
+            
+            
             do  item1.Icon <- checkedBox                
                 match item1.Name with
                 | "RPN Stack" -> setInputMode RPN
@@ -1205,39 +1214,68 @@ type GraphingCalculator() as graphingCalculator =
 //////////////////////////////////////////////
     //-------setup calculator logic----------
     let calculatorServices = CalculatorServices.createServices()
+    let rpnServices = RpnServices.createServices()
     let calculate = CalculatorImplementation.createCalculate calculatorServices 
-    
-    let handleConventionalInput input =
-        let newState = calculate(input,state.calculator)
-        state <- {calculator = newState; mode = Conventional}
-        setDisplayedText (calculatorServices.getDisplayFromState state.calculator)
-        setPendingOpText (calculatorServices.getPendingOpFromState state.calculator)
-        setMemoText (calculatorServices.getMemoFromState state.calculator)
+    let calculateRpn = RpnImplementation.createCalculate rpnServices
 
-    let handleRpnInput input = ()
+    let handleConventionalInput input =  
+        let cState = match state.conventional.IsSome with 
+                     | true -> state.conventional.Value
+                     | false -> conventional         
+        let newState =  calculate(input,cState)
+        state <- { state with conventional = Some newState}
+        setDisplayedText (calculatorServices.getDisplayFromState newState)
+        setPendingOpText (calculatorServices.getPendingOpFromState newState)
+        setMemoText (calculatorServices.getMemoFromState newState)
 
 //////////////////////////////////////////////    
 
-    // a function that sets active hadler based on the active display
-    let handleInput input =
+    let handleRpnInput input = 
+        let rState = match state.rpn.IsSome with 
+                     | true -> state.rpn.Value
+                     | false -> rpn         
+        let newState =  calculateRpn(input,rState)
+        state <- { state with rpn = Some newState}
+        //setDisplayedText (calculatorServices.getDisplayFromState newState)
+        //setPendingOpText (calculatorServices.getPendingOpFromState newState)
+        //setMemoText (calculatorServices.getMemoFromState newState)
+
+//////////////////////////////////////////////    
+
+    // a function that sets active handler based on the active display
+    let handleInput input =                  
+  
+        let rpnInput = 
+            match input with
+            | Zero -> Input Zero 
+            | Digit d -> Input (Digit d)
+            | DecimalSeparator -> Input DecimalSeparator
+            | ConventionalDomain.MathOp op -> Op (MathOp (op))
+            | Equals -> Enter
+            | Clear -> Input Clear
+            | ClearEntry -> Input ClearEntry
+            | Back -> Input Back
+            | MemoryStore -> Input MemoryStore
+            | MemoryClear -> Input MemoryClear
+            | MemoryRecall -> Input MemoryRecall (**)
         match getActiveDisplay with 
         |PlotCanvas _ -> handleConventionalInput input
         |Text _ -> 
             match state.mode with
-            | Conventional -> handleConventionalInput input
-            | RPN -> handleRpnInput input
+            | Conventional  -> handleConventionalInput input
+            | RPN -> handleRpnInput rpnInput            
         |Function _ -> handleConventionalInput input
         |Option _ -> handleConventionalInput input
         |Function2D _ -> handleConventionalInput input
         |Option2D _ -> handleConventionalInput input
         |Function3D _ -> handleConventionalInput input
-        |Option3D _ -> handleConventionalInput input
+        |Option3D _  -> handleConventionalInput input
 
     do  //add event handler to each button
-        one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One))) 
-        two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two)))
+        one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
+        two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two))) 
         three            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Three)))
-        four             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Four)))
+        four             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Four))) 
         five             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Five)))
         six              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Six)))
         seven            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Seven)))
@@ -1245,22 +1283,22 @@ type GraphingCalculator() as graphingCalculator =
         nine             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Nine)))
         zero             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Zero)))
         decimalPoint     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (DecimalSeparator)))
-        add              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Add)))
-        subtract         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Subtract)))
-        multiply         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Multiply)))
-        divide           .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Divide)))        
+        add              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Add))) 
+        subtract         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Subtract)))
+        multiply         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Multiply)))
+        divide           .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Divide)))
         equals           .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Equals)))
         clear            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Clear)))
         clearEntry       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (ClearEntry)))
         clearMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryClear)))
         storeMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryStore)))
         recallMemory     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MemoryRecall)))
-        changeSign       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp ChangeSign)))
-        back             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Back)))
-        addToMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp MemoryAdd)))
-        subtractFromMemoy.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp MemorySubtract)))
-        inverse          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Inverse))) 
-        percent          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Percent)))
-        root             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (MathOp Root)))
+        changeSign       .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp ChangeSign))) 
+        back             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Back))) 
+        addToMemory      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp MemoryAdd))) 
+        subtractFromMemoy.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp MemorySubtract))) 
+        inverse          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Inverse)))  
+        percent          .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Percent))) 
+        root             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (CalculatorInput.MathOp Root))) 
 
-
+       

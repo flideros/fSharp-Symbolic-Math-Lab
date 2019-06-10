@@ -8,6 +8,4 @@
 
 open GraphingCalculator.ConventionalDomain
 
-// ==============================================
-
 
