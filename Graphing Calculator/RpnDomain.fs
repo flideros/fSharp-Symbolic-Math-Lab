@@ -54,7 +54,8 @@ module RpnDomain =
     type DoStackOperation = StackOperation * Number option * Stack -> OperationResult
     type DoMathOperation = CalculatorMathOp * Stack -> OperationResult
     type GetNumberFromAccumulator = DigitAccumulatorStateData -> Number
-    
+    type GetDisplayFromStack = CalculatorState -> string
+    type GetDisplayFromRpnState = CalculatorState -> string
     type RpnServices = {        
         doStackOperation :DoStackOperation
         doMathOperation :DoMathOperation
@@ -62,6 +63,8 @@ module RpnDomain =
         accumulateNonZeroDigit :AccumulateNonZeroDigit
         accumulateSeparator :AccumulateSeparator
         getNumberFromAccumulator :GetNumberFromAccumulator
+        getDisplayFromStack :GetDisplayFromStack
+        getDisplayFromRpnState :GetDisplayFromRpnState
         }
 
 module StackOperations =
@@ -165,7 +168,7 @@ module RpnImplementation =
             match op with
             | StackOp s -> 
                 match s with 
-                | ClearStack
+                | ClearStack -> ReadyState {stack = StackOperations.clearStack}
                 | Push -> ReadyState {stack = stack} // stay in ReadyState 
                 | Pop
                 | Drop
@@ -187,13 +190,12 @@ module RpnImplementation =
             match i with
             | Zero -> ReadyState {stack = stack} // stay in ReadyState
             | Digit d -> 
-                {digits=""; stack = stack} 
-                |> accumulateNonZeroDigit services d
-                |> DigitAccumulatorState  // transition to AccumulatorState
+                let newData = (accumulateNonZeroDigit services d { digits = ""; stack = stack } ) 
+                DigitAccumulatorState newData        
             | DecimalSeparator -> 
                 {digits=""; stack = stack} 
                 |> accumulateSeparator services
-                |> DigitAccumulatorState  // transition to AccumulatorState 
+                |> DecimalAccumulatorState  // transition to AccumulatorState 
             | Equals  -> ReadyState {stack = stack} // not used in RPN mode
             | Clear -> ReadyState {stack = stack} // not used in RPN mode
             | ClearEntry -> ReadyState {stack = stack} // ToDO
@@ -234,13 +236,13 @@ module RpnImplementation =
                 match stateData with
                 | DigitAccumulatorState x -> {digits = x.digits; stack = x.stack}
                 | DecimalAccumulatorState x -> {digits = x.digits; stack = x.stack}
-                | ReadyState x -> {digits = ""; stack = x.stack}
+                | ReadyState x -> {digits = "0"; stack = x.stack}
                 | ErrorState e -> 
                     match e.error with
                     | DivideByZero x
                     | UnknownError x
                     | EmptyStack x
-                    | TooFewArguments x -> {digits = ""; stack = x}
+                    | TooFewArguments x -> {digits = "0"; stack = x}
             match i with
             | Zero -> DigitAccumulatorState (accumulateZero services digits)
             | Digit d -> DigitAccumulatorState (accumulateNonZeroDigit services d digits)
@@ -249,7 +251,7 @@ module RpnImplementation =
             | ClearEntry -> DigitAccumulatorState digits 
             | Back -> DigitAccumulatorState digits             
             // not used in RPN mode
-            | ConventionalDomain.MathOp op -> DigitAccumulatorState digits
+            | ConventionalDomain.MathOp _
             | Equals   
             | Clear 
             | MemoryStore
@@ -302,7 +304,7 @@ module RpnImplementation =
             | ClearEntry -> DecimalAccumulatorState digits 
             | Back -> DecimalAccumulatorState digits             
             // not used in RPN mode
-            | ConventionalDomain.MathOp op -> DecimalAccumulatorState digits
+            | ConventionalDomain.MathOp _
             | Equals   
             | Clear 
             | MemoryStore
@@ -313,13 +315,14 @@ module RpnImplementation =
     let handleErrorState stateData input =
         match input with
         | Op _
-        | Input _ -> ErrorState stateData
+        | Input _ //-> ErrorState stateData
         | Enter -> 
             let errorStack =
                 match stateData.error with
                 | DivideByZero e
                 | UnknownError e
-                | EmptyStack e -> e
+                | EmptyStack e 
+                | TooFewArguments e-> e
             ReadyState {stack = errorStack}
 
     let createCalculate (services:RpnServices) : Calculate = 
@@ -430,53 +433,85 @@ module RpnServices =
                 Success (push calc toStack1)
             | _ -> Failure (UnknownError stack)
 
-    let doStackOperation :DoStackOperation = fun (op,number,StackContents stack) ->        
+    let doStackOperation :DoStackOperation = fun (op,number,StackContents numberList) ->        
         
-        match stack.Length with
+        match numberList.Length with
         | x when x = 0 -> 
             match op with
             | Push -> 
                 match number with 
-                | Some n -> Success (push n (StackContents stack))
-                | None -> Failure (TooFewArguments (StackContents stack))
+                | Some n -> Success (push n (StackContents numberList))
+                | None -> Success (push 0. (StackContents numberList))
             | ClearStack -> Success (StackContents [])
-            | Drop -> Failure (EmptyStack (StackContents stack))
-            | Duplicate -> Failure (EmptyStack (StackContents stack))            
-            | Swap -> Failure (TooFewArguments (StackContents stack))
-            | _ -> Failure (UnknownError (StackContents stack))
+            | Drop -> Failure (EmptyStack (StackContents numberList))
+            | Duplicate -> Failure (EmptyStack (StackContents numberList))            
+            | Swap -> Failure (TooFewArguments (StackContents numberList))
+            | _ -> Failure (UnknownError (StackContents numberList))
         | x when x = 1 -> 
-            let f1 = stack.Head 
+            let f1 = numberList.Head 
             match op with
             | Push -> 
                 match number with 
-                | Some n -> Success (push n (StackContents stack))
-                | None -> Failure (TooFewArguments (StackContents stack))
+                | Some n -> Success (push n (StackContents numberList))
+                | None -> Success (push 0. (StackContents numberList))
             | Drop -> Success (StackContents [])
             | Duplicate -> 
-                let newStack = f1::stack
+                let newStack = f1::numberList
                 Success (StackContents newStack)
             | ClearStack -> Success (StackContents [])
-            | Swap -> Failure (TooFewArguments (StackContents stack))
-            | _ -> Failure (UnknownError (StackContents stack))
+            | Swap -> Failure (TooFewArguments (StackContents numberList))
+            | _ -> Failure (UnknownError (StackContents numberList))
         | x -> 
-            let f1 = stack.[0] 
-            let f2 = stack.[1]
+            let f1 = numberList.[0] 
+            let f2 = numberList.[1]
             match op with
             | Push -> 
                 match number with 
-                | Some n -> Success (push n (StackContents stack))
-                | None -> Failure (TooFewArguments (StackContents stack))
+                | Some n -> Success (push n (StackContents numberList))
+                | None -> Success (push 0. (StackContents numberList))
             | Drop -> 
-                let newStack = match stack with | x::rest -> rest | [] -> []
+                let newStack = match numberList with | x::rest -> rest | [] -> []
                 Success (StackContents newStack)
             | Duplicate -> 
-                let newStack = f1::stack
+                let newStack = f1::numberList
                 Success (StackContents newStack)            
             | Swap -> 
-                let newStack = f2::(f1::stack)
+                let newStack = f2::(f1::(List.skip 2 numberList))
                 Success (StackContents newStack)
             | ClearStack -> Success (StackContents [])
-            | _ -> Failure (UnknownError (StackContents stack))
+            | _ -> Failure (UnknownError (StackContents numberList))
+
+    let getDisplayFromStack :GetDisplayFromStack =
+        
+        // helper
+        let floatToString = sprintf ">>%g\n" 
+        let stackStringFrom numberList = 
+            match numberList with
+            | [] -> "Empty \nStack"
+            | x::rest -> List.fold (fun acc x -> (floatToString x) + acc) "" (List.rev numberList)
+        fun rpnState ->
+            match rpnState with
+            | ReadyState data -> 
+                match data.stack with
+                | StackContents numberList -> stackStringFrom numberList
+
+            | DigitAccumulatorState stateData 
+            | DecimalAccumulatorState stateData -> 
+                let numberList = match stateData.stack with StackContents sc -> sc
+                let numberFromAccumulator = stateData |> getNumberFromAccumulator 
+                let displayString = numberFromAccumulator.ToString() + " \n" + (stackStringFrom numberList)
+                displayString
+            | ErrorState stateData -> stateData.error.ToString()
+
+    let getDisplayFromRpnState :GetDisplayFromRpnState =        
+        // helper
+        let floatToString = sprintf ">>%g"         
+        fun rpnState ->
+            match rpnState with
+            | ReadyState data -> "Ready"
+            | DigitAccumulatorState stateData 
+            | DecimalAccumulatorState stateData -> stateData.digits
+            | ErrorState stateData -> stateData.error.ToString()
 
     let createServices () = {
         accumulateNonZeroDigit = accumulateNonZeroDigit (10)
@@ -484,5 +519,7 @@ module RpnServices =
         accumulateSeparator = accumulateSeparator (15)
         doMathOperation = doMathOperation 
         doStackOperation = doStackOperation
-        getNumberFromAccumulator = getNumberFromAccumulator}
+        getNumberFromAccumulator = getNumberFromAccumulator
+        getDisplayFromStack = getDisplayFromStack
+        getDisplayFromRpnState = getDisplayFromRpnState}
 
