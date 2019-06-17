@@ -1,20 +1,21 @@
 ﻿namespace GraphingCalculator
 
+// Using types and functions from Conventional Domain
+// that are common to the RPN Domain.
 open GraphingCalculator.ConventionalDomain
-
 
 module RpnDomain =
 
     // -------------Types
     type Stack = StackContents of Number list
 
-    type StackOperation =    
+    type StackOperation =
         | Push       /// Pushes a value onto the stack.    
         | Pop        /// Pop a value from the stack and return it and the new stack as a tuple
         | Drop       /// Removes the top value from the stack (if it exists).    
         | Duplicate  /// Pushes a duplicate copy of the top value onto the stack.    
         | ClearStack /// Clears the entire stack contents.    
-        | Swap       /// Swaps the two top values on the stack.
+        | Swap /// Swaps the two top values on the stack.
 
     type CalculatorOp = 
         | StackOp of StackOperation
@@ -343,7 +344,6 @@ module RpnImplementation =
             | ErrorState stateData -> 
                 handleError stateData input
 
-(**)
 module RpnServices =
     open RpnDomain
     open StackOperations
@@ -523,3 +523,4 @@ module RpnServices =
         getDisplayFromStack = getDisplayFromStack
         getDisplayFromRpnState = getDisplayFromRpnState}
 
+(**)

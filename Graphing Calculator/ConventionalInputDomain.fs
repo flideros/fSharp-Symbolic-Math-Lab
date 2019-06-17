@@ -702,6 +702,3 @@ module CalculatorServices =
         getDisplayFromState = getDisplayFromState ("ERR-DIV0")
         getPendingOpFromState = getPendingOpFromState
         getMemoFromState = getMemoFromState }
-
-
-

@@ -6,6 +6,9 @@ open System.Reflection
 open System
 open System.IO
 open System.Windows.Markup
+open System.Collections.Generic
+open System.Windows.Input
+open System.Windows.Media.Media3D
 
 // to bind to Xaml components in code-behind, see example below
 
