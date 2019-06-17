@@ -1279,7 +1279,6 @@ type GraphingCalculator() as graphingCalculator =
              header1_Item1_2.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleCheck header1_Item1_2 header1_Item1_1))
          m
 
-
     do  // Assemble the pieces        
         screen_Grid.Children.Add(menu) |> ignore
         screen_Grid.Children.Add(function_Grid) |> ignore
@@ -1396,4 +1395,3 @@ type GraphingCalculator() as graphingCalculator =
         drop             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Drop)))
         enter            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Push)))
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
-        

@@ -5,5 +5,3 @@
 #r @"UIAutomationTypes"
 #load "Utilities.fs"
 #load "ConventionalDomain.fs"
-
-open GraphingCalculator.ConventionalDomain
