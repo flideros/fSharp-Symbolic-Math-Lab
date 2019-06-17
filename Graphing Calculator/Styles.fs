@@ -112,3 +112,5 @@ module Style =
         do  textBox.FontSize <- 14.
             textBox.Margin <- Thickness(left = 5.,top = 5.,right = 5., bottom = 5.)
 
+    
+

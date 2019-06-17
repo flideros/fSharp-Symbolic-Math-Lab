@@ -644,7 +644,7 @@ module CalculatorServices =
                  |> floatToString 
             | ErrorState stateData -> 
                 match stateData with
-                | {error=DivideByZero;memory = _} -> divideByZeroMsg
+                | {error = DivideByZero;memory = _} -> divideByZeroMsg
                 | {error = UnknownError; memory = memory} -> "Unknown error"
     
     let getPendingOpFromState :GetPendingOpFromState=
