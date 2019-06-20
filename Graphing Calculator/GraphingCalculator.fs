@@ -14,6 +14,7 @@ open Utilities
 open Style
 open ConventionalDomain
 open RpnDomain
+open GraphingDomain
 
 type View =
     | PlotCanvas of Grid
@@ -25,25 +26,30 @@ type View =
     | Option2D of Grid
     | Option3D of Grid
 
+type Model =
+    | Trace of Trace
+
 type InputMode = 
     | Conventional of Grid
     | RPN of Grid
 
 type Mode =
     | Conventional
-    | RPN 
+    | RPN
 
 type State = {rpn:RpnDomain.CalculatorState;
-              conventional:ConventionalDomain.CalculatorState
-              mode : Mode}
+              conventional:ConventionalDomain.CalculatorState;
+              mode : Mode;
+              model : Model }
 
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
     
     // set initial state
-    let conventionalDefault =  ConventionalDomain.CalculatorState.ZeroState {pendingOp = None; memory=""}
+    let conventionalDefault =  ConventionalDomain.CalculatorState.ZeroState {pendingOp = None; memory = ""}
     let rpnDefault = RpnDomain.CalculatorState.ReadyState {stack = RpnDomain.StackContents []}
-    let mutable state = { rpn = rpnDefault; conventional = conventionalDefault; mode = Conventional}
+    let modelDefault = {startPoint = (X 10.,Y 20.); traceSegments = [LineSegment (X 50.,Y 30.);LineSegment (X 100.,Y 200.);LineSegment (X 178.,Y 66.)]}
+    let mutable state = { rpn = rpnDefault; conventional = conventionalDefault; mode = Conventional; model = Trace modelDefault}
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -121,14 +127,13 @@ type GraphingCalculator() as graphingCalculator =
                     )
         do t.SetValue(Grid.RowProperty, 1)
         t
-    let canvas = Canvas( Visibility = Visibility.Hidden, 
+    let canvas = Canvas( Visibility = Visibility.Collapsed, 
                          ClipToBounds = true)
     let screen_Canvas =
         let g = Grid()
         do g.SetValue(Grid.RowProperty, 1)        
         do g.Children.Add(canvas) |> ignore
         g
-    
     let selection_Rectangle =
         let r =
             Rectangle(
@@ -143,9 +148,8 @@ type GraphingCalculator() as graphingCalculator =
                 )
         do r.SetValue(Grid.RowProperty, 1)
         r
-    
+
     do  // Assemble the pieces   
-        //screen_Text_TextBox.Text <- "Testing one two, testing."         
         screen_Grid.Children.Add(screen_Text_TextBox) |> ignore
         screen_Grid.Children.Add(screen_Canvas)       |> ignore
         screen_Grid.Children.Add(selection_Rectangle) |> ignore
@@ -1182,10 +1186,16 @@ type GraphingCalculator() as graphingCalculator =
             | View.Function3D p
             | View.Option p
             | View.Option2D p
-            | View.Option3D p -> (p.Visibility <- Visibility.Collapsed)
-            | View.Text t -> (t.Visibility <- Visibility.Collapsed)) viewList
+            | View.Option3D p -> 
+                p.Visibility <- Visibility.Collapsed
+                canvas.Visibility <- Visibility.Collapsed
+            | View.Text t -> 
+                t.Visibility <- Visibility.Collapsed
+                canvas.Visibility <- Visibility.Collapsed) viewList
         match display with
-        | View.PlotCanvas p
+        | View.PlotCanvas p ->
+            p.Visibility <- Visibility.Visible
+            canvas.Visibility <- Visibility.Visible
         | View.Function p
         | View.Function2D p
         | View.Function3D p
@@ -1223,7 +1233,14 @@ type GraphingCalculator() as graphingCalculator =
             setActiveModeButtons mode
             setActiveDisplay (View.Text screen_Text_TextBox)
             setDisplayedText (RpnServices.getDisplayFromStack state.rpn)
-//  ----- Getters
+    // a function that sets the active model
+    let setActivetModel model =        
+        do state <- {state with model = model}
+
+ //  ----- Getters       
+    let getActivetModel =        
+        let model = match state.model with | Trace t -> t
+        GraphingImplementation.testTrace model
     // a function that gets active display
     let getActiveDisplay  = 
         let d =
@@ -1254,13 +1271,16 @@ type GraphingCalculator() as graphingCalculator =
          let header1_Item2 = MenuItem(Header = "Graph", Command = viewCommand (setActiveDisplay), CommandParameter = Function function_Grid)
          let header1_Item3 = MenuItem(Header = "Graph2D", Command = viewCommand (setActiveDisplay), CommandParameter = Function2D function2D_Grid)
          let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplay), CommandParameter = Function3D function3D_Grid)
-
+         
+         let header1_Item5 = MenuItem(Header = "Plot Canvas", Command = viewCommand (setActiveDisplay), CommandParameter = PlotCanvas screen_Canvas)
+         
          do  header1_Item1.Items.Add(header1_Item1_1) |> ignore
              header1_Item1.Items.Add(header1_Item1_2) |> ignore
              header1.Items.Add(header1_Item1) |> ignore
              header1.Items.Add(header1_Item2) |> ignore
              header1.Items.Add(header1_Item3) |> ignore
              header1.Items.Add(header1_Item4) |> ignore
+             header1.Items.Add(header1_Item5) |> ignore
 
          let header2 = MenuItem(Header = "Options")
          let header2_Item1 = MenuItem(Header = "Graph Options", Command = viewCommand (setActiveDisplay), CommandParameter = Option option_Grid)
@@ -1279,6 +1299,7 @@ type GraphingCalculator() as graphingCalculator =
              header1_Item1_2.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleCheck header1_Item1_2 header1_Item1_1))
          m
 
+    
     do  // Assemble the pieces        
         screen_Grid.Children.Add(menu) |> ignore
         screen_Grid.Children.Add(function_Grid) |> ignore
@@ -1342,6 +1363,12 @@ type GraphingCalculator() as graphingCalculator =
             state <- { state with rpn = newState}
             setDisplayedText (rpnServices.getDisplayFromStack newState) 
             setPendingOpText ""
+    let handleGraph () = //model = 
+        //setActivetModel model
+        canvas.Children.Clear()
+        canvas.Children.Add((getActivetModel)) |> ignore
+        setActiveDisplay (PlotCanvas screen_Canvas)
+        
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1395,3 +1422,4 @@ type GraphingCalculator() as graphingCalculator =
         drop             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Drop)))
         enter            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Push)))
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
+        function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraph() ))
