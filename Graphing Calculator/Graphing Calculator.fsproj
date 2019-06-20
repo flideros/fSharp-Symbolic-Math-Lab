@@ -43,10 +43,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utilities.fs" />
-    <Compile Include="Settings.fs" />
     <Compile Include="Styles.fs" />
     <Compile Include="ConventionalInputDomain.fs" />
     <Compile Include="RpnInputDomain.fs" />
+    <Compile Include="GraphingDomain.fs" />
     <Compile Include="GraphingCalculator.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
