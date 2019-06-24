@@ -1,45 +1,63 @@
 ﻿namespace GraphingCalculator
 
 module GraphingDomain =
+    open Math.Pure.Objects
+    open Math.Pure.Quantity 
+    open Math.Pure.Structure
     
-    type X = X of float
-    type Y = Y of float    
+    // Parameters
+
+    type X = X of NumberType
+    type Y = Y of NumberType
+    type Size = {height:NumberType; width:NumberType}
+    type SweepDirection =
+            /// positive-angle direction
+        | Clockwise
+            /// negative-angle direction
+        | CounterClockwise
+    type Drawing2DBounds = {upperX : X; lowerX : X; upperY : Y; lowerY : Y}
+
+    // Geometry
     
-    type Point = X * Y  //{x:Coordinate; y:Coordinate}
-        
+    type Point = X * Y  //-> System.Windows.Point //{x:Coordinate; y:Coordinate}
+    type ArcSegment =
+        { Point : Point
+          Size : Size
+          RotationAngle : NumberType
+          IsLargeArc : bool
+          SweepDirection : SweepDirection }    
+    type BezierSegment =
+        { Point1 : Point
+          Point2 : Point
+          Point3 : Point }
+    type QuadraticBezierSegment =
+        { Point1 : Point
+          Point2 : Point }
+     
     type PathGeometry =
-        | ArcSegment /// Creates an elliptical arc between two points.
-        | BezierSegment /// Creates a cubic Bezier curve between two points.
-        | LineSegment of Point/// Creates a line between two points.
-        | PolyBezierSegment /// Creates a series of cubic Bezier curves.
-        | PolyLineSegment /// Creates a series of lines.
-        | PolyQuadraticBezierSegment /// Creates a series of quadratic Bezier curves.
-        | QuadraticBezierSegment /// Creates a quadratic Bezier curve.
+        /// Creates a line between two points.
+        | LineSegment of Point        
+        /// Creates an elliptical arc between two points.
+        | ArcSegment of ArcSegment
+        /// Creates a cubic Bezier curve between two points.
+        | BezierSegment of BezierSegment
+        /// Creates a quadratic Bezier curve.
+        | QuadraticBezierSegment of QuadraticBezierSegment
+        /// Creates a series of lines.
+        | PolyLineSegment of seq<Point>        
+        /// Creates a series of cubic Bezier curves.
+        | PolyBezierSegment of seq<Point>        
+        /// Creates a series of quadratic Bezier curves.
+        | PolyQuadraticBezierSegment  of seq<Point>         
 
     type Trace = {startPoint:Point; traceSegments:PathGeometry list}
-
-module GraphingImplementation =
-    open System.Windows.Media
-    open System.Windows.Shapes
-    open GraphingDomain
-
-    let t = {startPoint = (X 10.,Y 20.); traceSegments = [LineSegment (X 50.,Y 30.);LineSegment (X 100.,Y 200.);LineSegment (X 178.,Y 66.)]}
     
-   
-   
-    let testTrace trace = 
-        let convertPoint = fun point -> match point with | (X x,Y y) -> System.Windows.Point(x,y)
-        let convertSegment = fun segment -> 
-            match segment with 
-            | LineSegment(X x,Y y) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
-            | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )
-        let segments = List.map (fun segment -> convertSegment segment)trace.traceSegments
-        let pg = PathGeometry()
-        let pf = PathFigure()
-        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.) //, Fill = Brushes.Blue)
-        do  
-            pf.StartPoint <-  convertPoint trace.startPoint 
-            List.iter (fun s -> pf.Segments.Add(s)) segments
-            pg.Figures.Add(pf)
-            path.Data <- pg
-        path
+    // Drawing
+
+    type DrawOp = 
+        Draw2D of Trace * Drawing2DBounds
+     
+    // types to describe errors
+    type DrawError = 
+        | UnknownError
+        | SomeOtherErrorsAsIThinOfThem
