@@ -41,9 +41,9 @@ module ConventionalDomain =
     
     // data associated with each state    
     type AccumulatorStateData = {digits:DigitAccumulator; pendingOp:PendingOp option; memory:DigitAccumulator}
-    type ComputedStateData = {displayNumber:Number; pendingOp:PendingOp option; memory:DigitAccumulator}    
-    type ErrorStateData = {error:MathOperationError;memory:DigitAccumulator}
-    type ZeroStateData = {pendingOp:PendingOp option; memory:DigitAccumulator}  
+    type ComputedStateData =    {displayNumber:Number; pendingOp:PendingOp option; memory:DigitAccumulator}    
+    type ErrorStateData =       {error:MathOperationError;memory:DigitAccumulator}
+    type ZeroStateData =        {pendingOp:PendingOp option; memory:DigitAccumulator}  
     
     // five states        
     type CalculatorState =         

@@ -48,7 +48,7 @@ type GraphingCalculator() as graphingCalculator =
     // set initial state
     let conventionalDefault =  ConventionalDomain.CalculatorState.ZeroState {pendingOp = None; memory = ""}
     let rpnDefault = RpnDomain.CalculatorState.ReadyState {stack = RpnDomain.StackContents []}
-    let modelDefault = {startPoint = (X 10.,Y 20.); traceSegments = [LineSegment (X 50.,Y 30.);LineSegment (X 100.,Y 200.);LineSegment (X 178.,Y 66.)]}
+    let modelDefault = {startPoint = (X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.)); traceSegments = [LineSegment (X (Math.Pure.Quantity.Real 50.),Y (Math.Pure.Quantity.Real 30.)); LineSegment (X (Math.Pure.Quantity.Real 100.),Y (Math.Pure.Quantity.Real 200.));LineSegment (X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66.))]}
     let mutable state = { rpn = rpnDefault; conventional = conventionalDefault; mode = Conventional; model = Trace modelDefault}
 
 // ------Create Views---------        
@@ -1238,11 +1238,25 @@ type GraphingCalculator() as graphingCalculator =
         do state <- {state with model = model}
 
  //  ----- Getters       
+    // a function that gets active model
     let getActivetModel =        
+        let convertPoint = fun point -> match point with | (X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y)) -> System.Windows.Point(x,y)
+        let convertSegment = fun segment -> 
+            match segment with 
+            | LineSegment(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y)) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
+            | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         let model = match state.model with | Trace t -> t
-        GraphingImplementation.testTrace model
+        let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
+        let pg = PathGeometry()
+        let pf = PathFigure()
+        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.) //, Fill = Brushes.Blue)
+        do  pf.StartPoint <-  convertPoint model.startPoint 
+            List.iter (fun s -> pf.Segments.Add(s)) segments
+            pg.Figures.Add(pf)
+            path.Data <- pg
+        path    
     // a function that gets active display
-    let getActiveDisplay  = 
+    let getActiveDisplay = 
         let d =
             List.pick (fun x -> 
                 match x with
@@ -1298,8 +1312,7 @@ type GraphingCalculator() as graphingCalculator =
              header1_Item1_1.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleCheck header1_Item1_1 header1_Item1_2))            
              header1_Item1_2.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleCheck header1_Item1_2 header1_Item1_1))
          m
-
-    
+   
     do  // Assemble the pieces        
         screen_Grid.Children.Add(menu) |> ignore
         screen_Grid.Children.Add(function_Grid) |> ignore
