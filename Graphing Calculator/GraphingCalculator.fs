@@ -29,6 +29,10 @@ type View =
 type Model =
     | Trace of Trace
 
+type ViewPoint = 
+    | Pt of System.Windows.Point
+    | Pt3D of System.Windows.Media.Media3D.Point3D
+
 type InputMode = 
     | Conventional of Grid
     | RPN of Grid
@@ -48,7 +52,7 @@ type GraphingCalculator() as graphingCalculator =
     // set initial state
     let conventionalDefault =  ConventionalDomain.CalculatorState.ZeroState {pendingOp = None; memory = ""}
     let rpnDefault = RpnDomain.CalculatorState.ReadyState {stack = RpnDomain.StackContents []}
-    let modelDefault = {startPoint = (X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.)); traceSegments = [LineSegment (X (Math.Pure.Quantity.Real 50.),Y (Math.Pure.Quantity.Real 30.)); LineSegment (X (Math.Pure.Quantity.Real 100.),Y (Math.Pure.Quantity.Real 200.));LineSegment (X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66.))]}
+    let modelDefault = {startPoint = (Point(X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.))); traceSegments = [LineSegment (Point(X (Math.Pure.Quantity.Real 50.),Y (Math.Pure.Quantity.Real 30.))); LineSegment (Point(X (Math.Pure.Quantity.Real 100.),Y (Math.Pure.Quantity.Real 200.)));LineSegment (Point(X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66.)))]}
     let mutable state = { rpn = rpnDefault; conventional = conventionalDefault; mode = Conventional; model = Trace modelDefault}
 
 // ------Create Views---------        
@@ -1240,17 +1244,22 @@ type GraphingCalculator() as graphingCalculator =
  //  ----- Getters       
     // a function that gets active model
     let getActivetModel =        
-        let convertPoint = fun point -> match point with | (X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y)) -> System.Windows.Point(x,y)
+        let convertPoint = fun point ->            
+            match point with
+            | (Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x,y) )
+            | (Point3D(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y),Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
+            | _ -> failwith "Not a point."
         let convertSegment = fun segment -> 
             match segment with 
-            | LineSegment(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y)) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
+            | LineSegment(Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         let model = match state.model with | Trace t -> t
         let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
         let pg = PathGeometry()
         let pf = PathFigure()
-        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.) //, Fill = Brushes.Blue)
-        do  pf.StartPoint <-  convertPoint model.startPoint 
+        let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."
+        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.)
+        do  pf.StartPoint <- pt
             List.iter (fun s -> pf.Segments.Add(s)) segments
             pg.Figures.Add(pf)
             path.Data <- pg

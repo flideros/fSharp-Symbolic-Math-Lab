@@ -300,7 +300,7 @@ module RpnImplementation =
             match i with
             | Zero -> DecimalAccumulatorState (accumulateZero services digits)
             | Digit d -> DecimalAccumulatorState (accumulateNonZeroDigit services d digits)
-            | DecimalSeparator -> DecimalAccumulatorState (accumulateSeparator services digits)
+            | DecimalSeparator -> DecimalAccumulatorState digits 
             // ToDO
             | ClearEntry -> DecimalAccumulatorState digits 
             | Back -> DecimalAccumulatorState digits             

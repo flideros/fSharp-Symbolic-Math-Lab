@@ -1,5 +1,9 @@
 ﻿namespace GraphingCalculator
 
+// Using types and functions from Conventional Domain
+// that are common to the Graphing data Domain.
+open GraphingCalculator.ConventionalDomain
+
 module GraphingDomain =
     open Math.Pure.Objects
     open Math.Pure.Quantity 
@@ -9,6 +13,7 @@ module GraphingDomain =
 
     type X = X of NumberType
     type Y = Y of NumberType
+    type Z = Z of NumberType
     type Size = {height:NumberType; width:NumberType}
     type SweepDirection =
             /// positive-angle direction
@@ -19,7 +24,10 @@ module GraphingDomain =
 
     // Geometry
     
-    type Point = X * Y  //-> System.Windows.Point //{x:Coordinate; y:Coordinate}
+    type Point = 
+        | Point of X * Y  //-> System.Windows.Point //{x:Coordinate; y:Coordinate}
+        | Point3D of X * Y * Z
+
     type ArcSegment =
         { Point : Point
           Size : Size
@@ -61,3 +69,44 @@ module GraphingDomain =
     type DrawError = 
         | UnknownError
         | SomeOtherErrorsAsIThinOfThem
+       
+    type DrawOperationResult =  
+        | Trace of Trace 
+        | DrawError of DrawError
+
+    type ExpressionInput =
+        | Symbol of Symbol
+        | Number of NumberType
+        | Function of Function
+
+    // data associated with each state    
+    type ExpressionStateData = {expression:Expression; pending:Expression; digits:ConventionalDomain.DigitAccumulator}
+    type DrawStateData =       {expression:Expression; trace:Trace}    
+    type ErrorStateData =      {error:DrawError}
+
+    type CalculatorInput =
+        | ExpressionOp of ExpressionInput
+        | ExpressionInput of ConventionalDomain.CalculatorInput
+        | Draw
+
+    // States
+    type CalculatorState =         
+        | DrawState of DrawStateData
+        | ExpressionDigitAccumulator of ExpressionStateData
+        | ExpressionDecimalAccumulatorState of ExpressionStateData
+        | DrawErrorState of ErrorStateData
+      
+    type Calculate = CalculatorInput * CalculatorState -> CalculatorState
+
+    // Services used by the calculator itself
+    type DoDrawOperation = Expression -> DrawOperationResult
+    type GetNumberFromAccumulator = ExpressionStateData -> NumberType
+    type GetDisplayFromGraphState = CalculatorState -> string
+    type RpnServices = {        
+        doDrawOperation :DoDrawOperation
+        accumulateZero :AccumulateZero
+        accumulateNonZeroDigit :AccumulateNonZeroDigit
+        accumulateSeparator :AccumulateSeparator
+        getNumberFromAccumulator :GetNumberFromAccumulator
+        GetDisplayFromGraphState :GetDisplayFromGraphState
+        }
