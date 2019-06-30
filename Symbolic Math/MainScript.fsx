@@ -35,11 +35,14 @@ let y2 = y**two
 let y3 = y**three
 let y4 = y**four
 let y5 = y**five
-let u = Number(Integer 1I)*x4 +
-        Number(Integer 7I)*x3 + 
-        Number(Integer 18I)*x2 +
-        Number(Integer 202I)*x +
-        Number(Real 8.7)
+let u = Number(Integer 54233480688657908494580122963258952897654000350692006139111119134831511204958711I)
+
+Integer.factorByTrialDivision u
+
+
+
+
+
 
 let v = x5 +
         Number(Integer 7I)*x4 +
