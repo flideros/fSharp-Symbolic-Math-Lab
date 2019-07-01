@@ -58,7 +58,6 @@ module Cata =
         | UnaryOp (op,a) ->  generator (eUnaryOp (op,recurse generator a))
         | NaryOp (op,aList) -> generator (eNaryOp(op,List.map (fun x -> recurse generator x) aList))
 
-
 module ExpressionType =
 
 //Property-based Operators
@@ -570,7 +569,6 @@ module ExpressionStructure =
         let eUnaryOp (op,a) = (match UnaryOp (op,a) = y with | true -> t | false -> UnaryOp (op,a))
         let eNaryOp (op,aList) = (match NaryOp (op,aList) = y with | true -> t | false -> NaryOp (op,aList))
         Cata.recurseExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp u
-        //|> simplifyExpression
   
     let substituteSequential (yList : (Expression*Expression) list) u =        
         List.fold (fun u' (x,y) -> substitute (x, y) u') u yList
@@ -654,27 +652,5 @@ module ExpressionFunction =
         match u with
         | Number n -> Number (Number.floor n)
         | _ -> u
-
-(*[<RequireQualifiedAccess>]
-module Print =
- 
-    let expression x = 
-        let rec getString s treeLevel = 
-            match s, treeLevel < 2 with 
-            | Number (Integer i), _ -> sprintf "%s" (i.ToString())
-            | Number (Rational r), _ -> sprintf "(%s/%s)" (r.numerator.ToString()) (r.denominator.ToString())
-            | Number Undefined, _ -> sprintf "Undefined"
-            | Symbol (Constant c), _ -> sprintf "%s" c.symbol 
-            | Symbol (Variable v), _ -> sprintf "%s" v
-            | ComplexNumber (r,i), _ -> sprintf "(%s,%si)" (getString r (treeLevel + 1)) (getString i (treeLevel + 1))            
-            | BinaryOp(x,op,y), true -> sprintf "%s%s%s" (getString x (treeLevel + 1)) op.symbol (getString y (treeLevel + 1))
-            | BinaryOp(x,op,y), false -> sprintf "(%s%s%s)" (getString x (treeLevel + 1)) op.symbol (getString y (treeLevel + 1))
-            | NaryOp(op,aList), true -> sprintf "%s%s" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail )
-            | NaryOp(op,aList), false when op = Product -> sprintf "%s%s" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail )
-            | NaryOp(op,aList), false -> sprintf "(%s%s)" (getString aList.Head (treeLevel + 1)) (List.fold (fun acc x -> acc + op.symbol + (getString x (treeLevel + 1))) "" aList.Tail)            
-            | UnaryOp(op,x), _ -> sprintf "%s(%s)" op.symbol (getString x (treeLevel + 1))
-            | _ -> sprintf ""  
-        getString x 0*)
-
 
 

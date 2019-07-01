@@ -3,11 +3,12 @@
 // Using types and functions from Conventional Domain
 // that are common to the Graphing data Domain.
 open GraphingCalculator.ConventionalDomain
+open Math.Pure.Objects
+open Math.Pure.Quantity 
+open Math.Pure.Structure
+
 
 module GraphingDomain =
-    open Math.Pure.Objects
-    open Math.Pure.Quantity 
-    open Math.Pure.Structure
     
     // Parameters
 
@@ -110,3 +111,14 @@ module GraphingDomain =
         getNumberFromAccumulator :GetNumberFromAccumulator
         GetDisplayFromGraphState :GetDisplayFromGraphState
         }
+
+module EvaluateExpression = 
+    open ExpressionStructure
+    let for_X = fun (e:Expression) (n:NumberType) ->        
+        let x = 
+            match (variables e).Length = 1 ||
+                  e.isNumber with
+            | true -> Symbol (variables e).Head
+            //I need to throw an error here, but I'll get back to this later.
+            | false -> Symbol (Variable "x") 
+        substitute ( x, Number n ) e

@@ -37,8 +37,10 @@ let y4 = y**four
 let y5 = y**five
 let u = Number(Integer 54233480688657908494580122963258952897654000350692006139111119134831511204958711I)
 
-Integer.factorByTrialDivision u
 
+#time
+Integer.factorByTrialDivision u
+#time
 
 
 
