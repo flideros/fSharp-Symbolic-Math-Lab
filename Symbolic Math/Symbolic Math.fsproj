@@ -59,7 +59,7 @@
     <Compile Include="TypeExtensions.fs" />
     <Compile Include="OperatorDictionary.fs" />
     <Compile Include="MathML.fs" />
-    <Compile Include="OpemMath.fs" />
+    <Compile Include="OpenMath.fs" />
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
     <Compile Include="Number.fs" />
