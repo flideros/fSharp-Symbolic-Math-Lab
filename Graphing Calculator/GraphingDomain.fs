@@ -122,4 +122,3 @@ module EvaluateExpression =
             //I need to throw an error here, but I'll get back to this later.
             | false -> Symbol (Variable "x") 
         substitute ( x, Number n ) e
-
