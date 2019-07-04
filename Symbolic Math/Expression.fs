@@ -489,7 +489,6 @@ module ExpressionStructure =
         | Number (Rational r) -> "Rational"
         | _ -> "Undefined"
         // etc.
-
     let numberOfOperands x = 
         match x with
         | Number n -> Undefined
