@@ -68,7 +68,8 @@ module GraphingDomain =
      
     // types to describe errors
     type DrawError = 
-        | UnknownError
+        | FailedToCreateTrace
+        | LazyCoder
         | SomeOtherErrorsAsIThinOfThem
        
     type DrawOperationResult =  
@@ -77,18 +78,20 @@ module GraphingDomain =
 
     type ExpressionInput =
         | Symbol of Symbol
-        | Number of NumberType
         | Function of Function
+        
 
     // data associated with each state    
+    
     type ExpressionStateData = {expression:Expression; pending:Expression; digits:ConventionalDomain.DigitAccumulator}
     type DrawStateData =       {expression:Expression; trace:Trace}    
     type ErrorStateData =      {error:DrawError}
 
     type CalculatorInput =
-        | ExpressionOp of ExpressionInput
-        | ExpressionInput of ConventionalDomain.CalculatorInput
+        | ExpressionInput of ExpressionInput
+        | CalcInput of ConventionalDomain.CalculatorInput
         | Draw
+        | Enter
 
     // States
     type CalculatorState =         
@@ -116,10 +119,178 @@ module EvaluateExpression =
     open ExpressionStructure
     let for_X = fun (e:Expression) (n:NumberType) ->        
         let x = 
-            match (variables e).Length = 1 ||
-                  e.isNumber with
-            | true -> Symbol (variables e).Head
-            //I need to throw an error here, but I'll get back to this later.
-            | false -> Symbol (Variable "x") 
-        substitute ( x, Number n ) e
+            match (variables e).Length = 1 with
+            | true -> substitute (Symbol (variables e).Head, Number n ) e
+            | false -> 
+                match e.isNumber with
+                | true -> e
+                //I need to throw an error here, but I'll get back to this later.
+                | false ->  substitute ( Symbol (Variable "x"), Number n ) e 
+        x |> ExpressionType.simplifyExpression
 
+module GraphingImplementation =    
+    open GraphingDomain
+
+    let accumulateNonZeroDigit services digit accumulatorData =
+        let digits = accumulatorData.digits
+        let newDigits = services.accumulateNonZeroDigit (digit, digits)
+        let newAccumulatorData = { accumulatorData with digits = newDigits }
+        newAccumulatorData // return
+
+    let accumulateZero services accumulatorData =
+        let digits = accumulatorData.digits
+        let newDigits = services.accumulateZero digits
+        let newAccumulatorData = { accumulatorData with digits = newDigits }
+        newAccumulatorData // return
+
+    let accumulateSeparator services accumulatorData =
+        let digits = accumulatorData.digits
+        let newDigits = services.accumulateSeparator digits
+        let newAccumulatorData = { accumulatorData with digits = newDigits }
+        newAccumulatorData // return
+
+    let doDrawOperation services expression =        
+        let result = services.doDrawOperation expression 
+        match result with
+        | Trace t -> DrawState {expression = expression; trace = t}
+        | DrawError x -> DrawErrorState {error = x}  
+
+    let handleGrahphState services stateData input =
+        match input with
+        | CalcInput op -> 
+            match op with            
+            | MathOp m -> 
+                match m with
+                | Add
+                | Subtract 
+                | Multiply 
+                | Divide 
+                | CalculatorMathOp.Inverse 
+                | Percent 
+                | CalculatorMathOp.Root 
+                | ChangeSign                    
+                | MemoryAdd 
+                | MemorySubtract -> {error = LazyCoder}         
+            | CalculatorInput.Zero                    
+            | DecimalSeparator 
+            | CalculatorInput.Equals 
+            | Clear 
+            | ClearEntry            
+            | MemoryRecall
+            | MemoryClear
+            | MemoryStore 
+            | CalculatorInput.Equals
+            | Back -> {error = LazyCoder}
+            | Digit d -> {error = LazyCoder}
+        | ExpressionInput input -> 
+            match input with 
+            | Symbol s -> {error = LazyCoder}
+            | Function f -> {error = LazyCoder}
+        | Draw -> {error = LazyCoder}
+        | Enter -> {error = LazyCoder}
+
+    let handleExpressionDigitAccumulatorState services stateData input =
+        match input with
+        | CalcInput op -> 
+            match op with            
+            | MathOp m -> 
+                match m with
+                | Add
+                | Subtract 
+                | Multiply 
+                | Divide 
+                | CalculatorMathOp.Inverse 
+                | Percent 
+                | CalculatorMathOp.Root 
+                | ChangeSign                    
+                | MemoryAdd 
+                | MemorySubtract -> {error = LazyCoder}         
+            | CalculatorInput.Zero                    
+            | DecimalSeparator 
+            | CalculatorInput.Equals 
+            | Clear 
+            | ClearEntry            
+            | MemoryRecall
+            | MemoryClear
+            | MemoryStore 
+            | CalculatorInput.Equals
+            | Back -> {error = LazyCoder}
+            | Digit d -> {error = LazyCoder}
+        | ExpressionInput input -> 
+            match input with 
+            | Symbol s -> {error = LazyCoder}
+            | Function f -> {error = LazyCoder}
+        | Draw -> {error = LazyCoder}
+        | Enter -> {error = LazyCoder}
+
+    let handleExpressionDecimalAccumulatorState services stateData input =
+        match input with
+        | CalcInput op -> 
+            match op with            
+            | MathOp m -> 
+                match m with
+                | Add
+                | Subtract 
+                | Multiply 
+                | Divide 
+                | CalculatorMathOp.Inverse 
+                | Percent 
+                | CalculatorMathOp.Root 
+                | ChangeSign                    
+                | MemoryAdd 
+                | MemorySubtract -> {error = LazyCoder}         
+            | CalculatorInput.Zero                    
+            | DecimalSeparator 
+            | CalculatorInput.Equals 
+            | Clear 
+            | ClearEntry            
+            | MemoryRecall
+            | MemoryClear
+            | MemoryStore 
+            | CalculatorInput.Equals
+            | Back -> {error = LazyCoder}
+            | Digit d -> {error = LazyCoder}
+        | ExpressionInput input -> 
+            match input with 
+            | Symbol s -> {error = LazyCoder}
+            | Function f -> {error = LazyCoder}
+        | Draw -> {error = LazyCoder}
+        | Enter -> {error = LazyCoder}
+
+    let handleDrawErrorState services stateData input =
+        match input with
+        | CalcInput op -> 
+            match op with            
+            | MathOp m -> 
+                match m with
+                | Add
+                | Subtract 
+                | Multiply 
+                | Divide 
+                | CalculatorMathOp.Inverse 
+                | Percent 
+                | CalculatorMathOp.Root 
+                | ChangeSign                    
+                | MemoryAdd 
+                | MemorySubtract -> {error = LazyCoder}         
+            | CalculatorInput.Zero                    
+            | DecimalSeparator 
+            | CalculatorInput.Equals 
+            | Clear 
+            | ClearEntry            
+            | MemoryRecall
+            | MemoryClear
+            | MemoryStore 
+            | CalculatorInput.Equals
+            | Back -> {error = LazyCoder}
+            | Digit d -> {error = LazyCoder}
+        | ExpressionInput input -> 
+            match input with 
+            | Symbol s -> {error = LazyCoder}
+            | Function f -> {error = LazyCoder}
+        | Draw -> {error = LazyCoder}
+        | Enter -> {error = LazyCoder}
+
+
+
+             
