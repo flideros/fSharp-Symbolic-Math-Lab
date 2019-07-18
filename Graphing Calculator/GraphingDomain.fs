@@ -92,7 +92,6 @@ module GraphingDomain =
           digits:ConventionalDomain.DigitAccumulator}
     type DrawStateData =       {traceExpression:Expression; trace:Trace}    
     type ErrorStateData =      {lastExpression:Expression; error:DrawError}
-
     type CalculatorInput =
         | ExpressionInput of ExpressionInput
         | CalcInput of ConventionalDomain.CalculatorInput
