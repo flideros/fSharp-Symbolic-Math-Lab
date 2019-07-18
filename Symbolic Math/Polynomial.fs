@@ -2047,19 +2047,19 @@ module Polynomial =
                     | false -> 
                         match freeOf (u/x) x with
                         | true -> Pass ((u/x), Number(Integer 0I))
-                        | false -> Fail
+                        | false -> Fail (Symbol(Error OtherError),(Symbol(Error OtherError)))
                     | true -> Pass (Number(Integer 0I),u)
                 | NaryOp(Sum, xList) ->
                     let f = linear xList.Head x
                     match f with 
-                    | Fail -> Fail
+                    | Fail e -> Fail e
                     | Pass f' -> let r = linear (u-(xList.Head)) x
                                  match r with 
-                                 | Fail -> Fail
+                                 | Fail e -> Fail e
                                  | Pass r' -> Pass (fst f' + fst r', snd f' + snd r')
                 | _ -> match freeOf u x with
                        | true -> Pass (Number(Integer 0I),u)
-                       | false -> Fail
+                       | false -> Fail (Symbol(Error OtherError),(Symbol(Error OtherError)))
      
         ///Returns true when an algebraic expression u has the form ax+by+c, where x and y are symbols and a, b, and c are free of x and y
         let isBilinear u x y =

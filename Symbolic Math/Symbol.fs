@@ -163,28 +163,35 @@ type Constant =
         | Binder -> (GET.definitionEntry "binder" (FROM.cD "sts")).Value.Name
         | NumericalValue -> (GET.definitionEntry "NumericalValue" (FROM.cD "sts")).Value.Name
 
+type Error =
+    | DivideByZeroError
+    | OtherError
+
 type Symbol = 
     | Constant of Constant
     | Variable of string
+    | Error of Error
     | Inconsistent
     with
     member this.definition = 
         match this with
         | Constant _ -> ConstantType.definition
         | Variable _ -> None //GET.definitionEntry (FROM.cD "prog1") "local_var"
-        | Inconsistent -> Error.definition
+        | Error _ -> None
+        | Inconsistent -> None
+
+
 
 type Result<'T> =
     | Pass of 'T
-    | Fail
+    | Fail of 'T
     with
     member this.value = 
         let v = match this with
                 | Pass t -> Some t
-                | Fail -> None
-        v.Value
-
-
+                | Fail _ -> None
+        v.Value // this will return a system error if it fails. I'll need to refactor this.
+    
 
 
     

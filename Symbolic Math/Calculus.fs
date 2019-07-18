@@ -69,7 +69,7 @@ module Calculus =
             | UnaryOp(Sec,Symbol(Variable y)) -> Pass (UnaryOp(Ln,UnaryOp(Abs,UnaryOp(Sec,Symbol(Variable y)) + UnaryOp(Tan,Symbol(Variable y)))))
             | BinaryOp(UnaryOp(Sec,Symbol(Variable y)),ToThePowerOf,two) -> Pass (UnaryOp(Tan,Symbol(Variable y)))
             | NaryOp(Product,[UnaryOp(Sec,x1);UnaryOp(Tan,x2)]) when x1 = x2 -> Pass (UnaryOp(Sec,x))
-            | _ -> Fail
+            | _ -> Fail (Symbol(Error OtherError))
         
         let rec indefinateEval f x =
             
@@ -81,20 +81,20 @@ module Calculus =
                     let seperated = Factor.seperate u x
                     let free, dependant = fst seperated, snd seperated 
                     match free = one with
-                    | true -> Fail
+                    | true -> Fail (Symbol(Error OtherError))
                     | false -> 
                         let tryEval = indefinateEval dependant x
                         match tryEval with
                         | Pass result -> Pass (free * result)
-                        | Fail -> Fail
+                        | Fail error -> Fail error
                 | NaryOp(Sum,xList) -> 
                     let xList' = List.map (fun w -> indefinateEval w x) xList
-                    match List.exists (fun w -> w = Fail) xList' with
+                    match List.exists (fun w -> w = Fail (Symbol(Error OtherError))) xList' with
                     | false -> 
                         let xList'' = List.map (fun (w : Result<Expression>) -> w.value) xList'
                         Pass (NaryOp(Sum, xList''))
-                    | true -> Fail
-                | _ -> Fail
+                    | true -> Fail (Symbol(Error OtherError))
+                | _ -> Fail (Symbol(Error OtherError))
 
             let trialSubstitutions u = 
                 ExpressionStructure.subExpressions u 
@@ -115,11 +115,11 @@ module Calculus =
                             | false -> None
                             | true -> 
                                 match indefinateEval u globalV with
-                                | Fail -> None
+                                | Fail _ -> None
                                 | Pass s -> Some (Pass (ExpressionStructure.substitute (globalV,g) ((indefinateEval u globalV).value)))                
                         ) p  
                 match out with 
-                | None -> Fail
+                | None -> Fail (Symbol(Error OtherError))
                 | Some g -> g          
            
             let rationalReduction1 a b c n x = 
@@ -151,13 +151,13 @@ module Calculus =
                 let fX = indefinateEval g x
                 let expansion = 
                     match fX with
-                    | Fail -> Fail
+                    | Fail e -> Fail e
                     | Pass xVal -> Pass (Expansion.ofGPE p xVal x v)
                 match expansion with 
-                | Fail -> Fail
+                | Fail e -> Fail e
                 | Pass expansionValue -> 
                     match ExpressionStructure.freeOf expansionValue x with
-                    | false -> Fail
+                    | false -> Fail (Symbol(Error OtherError))
                     | true -> 
                         match Degree.ofGPE expansionValue [v] with
                         | Integer i when i = 1I -> 
@@ -168,12 +168,12 @@ module Calculus =
                             | Number (Integer i) when i = 1I -> 
                                 let out = (UnaryOp(Ln,expansionValue))/(Coefficients.leadingGPE expansionValue v)
                                 Pass(ExpressionStructure.substitute (v, fX.value) out)
-                            | _ -> Fail
+                            | _ -> Fail (Symbol(Error OtherError))
                         | Integer i when i = 2I -> 
                             let abc = Coefficients.listOfGPE expansionValue v
                             let out = (rationalReduction2 (Number (Integer 0I)) one abc.[2] abc.[1] abc.[0] j v)
                             Pass(ExpressionStructure.substitute (v, fX.value) out)
-                        | _ -> Fail
+                        | _ -> Fail (Symbol(Error OtherError))
 
             let rationalReduction4 g p j x =
                 let gD = Degree.ofGPE g [x]  
@@ -183,7 +183,7 @@ module Calculus =
                     match j with 
                     | Number (Integer i) when i > 1I -> Pass (-g / ((j-one)*(Coefficients.leadingGPE p x)*p**(j-one)))                            
                     | Number (Integer i) when i = 1I -> Pass (g*(UnaryOp(Ln,p))/(Coefficients.leadingGPE p x))
-                    | _ -> Fail
+                    | _ -> Fail (Symbol(Error OtherError))
                 | Number n, Integer a, Integer b when a = 0I && b = 2I -> 
                     let abc = Coefficients.listOfGPE p x
                     Pass (Number n*(rationalReduction1 abc.[2] abc.[1] abc.[0] j x))
@@ -192,7 +192,7 @@ module Calculus =
                     let rs = Coefficients.listOfGPE g x
                     Pass (rationalReduction2 rs.[1] rs.[0] abc.[2] abc.[1] abc.[0] j x)
                 | _, Integer a, Integer b when b > 2I -> rationalReduction3 g p j x
-                | _ -> Fail
+                | _ -> Fail (Symbol(Error OtherError))
             
             let rationalIntegrate f x = 
                 let g = RationalExpression.numerator f
@@ -202,23 +202,23 @@ module Calculus =
                 | false -> 
                     match Check.isPolynomialGPE p [x] with
                     | true -> rationalReduction4 g p j x
-                    | false -> Fail
+                    | false -> Fail (Symbol(Error OtherError))
                 | true ->  rationalReduction4 g p j x
             
             match F with
             | Pass result as out -> out
-            | Fail -> 
+            | Fail _ -> 
                 match linearProperties f x with
                 | Pass result as out -> out
-                | Fail -> 
+                | Fail _ -> 
                     match substitutionMethod f x with
                     | Pass result as out -> out
-                    | Fail -> 
+                    | Fail _ -> 
                         let g = Expand.algebraicExpression f
                         let r = rationalIntegrate f x
                         match r with 
                         | Pass result as out -> out
-                        | Fail ->
+                        | Fail _ ->
                             match g = f with
                             | false -> indefinateEval g x
                             | true -> rationalIntegrate g x

@@ -69,29 +69,36 @@ module GraphingDomain =
     // types to describe errors
     type DrawError = 
         | FailedToCreateTrace
-        | LazyCoder
-        | SomeOtherErrorsAsIThinOfThem
+        | LazyCoder        
        
     type DrawOperationResult =  
         | Trace of Trace 
         | DrawError of DrawError
 
+    type ExpressionOperationResult =  
+        | ExpressionSuccess of Expression 
+        | ExpressionError of Error
+
     type ExpressionInput =
         | Symbol of Symbol
-        | Function of Function
-        
+        | Function of Function        
 
     // data associated with each state    
     
-    type ExpressionStateData = {expression:Expression; pending:Expression; digits:ConventionalDomain.DigitAccumulator}
-    type DrawStateData =       {expression:Expression; trace:Trace}    
-    type ErrorStateData =      {error:DrawError}
+    type ExpressionStateData = 
+        { expression:Expression; 
+          pendingexpression:Expression option; 
+          pendingFunction:Function option;
+          digits:ConventionalDomain.DigitAccumulator}
+    type DrawStateData =       {traceExpression:Expression; trace:Trace}    
+    type ErrorStateData =      {lastExpression:Expression; error:DrawError}
 
     type CalculatorInput =
         | ExpressionInput of ExpressionInput
         | CalcInput of ConventionalDomain.CalculatorInput
+        | Stack of RpnDomain.CalculatorInput
         | Draw
-        | Enter
+        | EnterExpression
 
     // States
     type CalculatorState =         
@@ -99,20 +106,26 @@ module GraphingDomain =
         | ExpressionDigitAccumulator of ExpressionStateData
         | ExpressionDecimalAccumulatorState of ExpressionStateData
         | DrawErrorState of ErrorStateData
+        | ExpressionErrorState of ErrorStateData
       
     type Calculate = CalculatorInput * CalculatorState -> CalculatorState
 
     // Services used by the calculator itself
     type DoDrawOperation = Expression -> DrawOperationResult
+    type DoExpressionOperation = CalculatorState -> Result<Expression>
+    type GetDisplayFromExpression = Expression -> string
     type GetNumberFromAccumulator = ExpressionStateData -> NumberType
     type GetDisplayFromGraphState = CalculatorState -> string
-    type RpnServices = {        
+    
+    type GraphServices = {        
         doDrawOperation :DoDrawOperation
+        doExpressionOperation :DoExpressionOperation
         accumulateZero :AccumulateZero
         accumulateNonZeroDigit :AccumulateNonZeroDigit
         accumulateSeparator :AccumulateSeparator
         getNumberFromAccumulator :GetNumberFromAccumulator
-        GetDisplayFromGraphState :GetDisplayFromGraphState
+        getDisplayFromExpression :GetDisplayFromExpression
+        getDisplayFromGraphState :GetDisplayFromGraphState
         }
 
 module EvaluateExpression = 
@@ -127,6 +140,10 @@ module EvaluateExpression =
                 //I need to throw an error here, but I'll get back to this later.
                 | false ->  substitute ( Symbol (Variable "x"), Number n ) e 
         x |> ExpressionType.simplifyExpression
+
+    let getErrorFrom = fun e -> 
+        match e with
+        | Symbol (Error e) -> e | _ -> OtherError
 
 module GraphingImplementation =    
     open GraphingDomain
@@ -149,30 +166,46 @@ module GraphingImplementation =
         let newAccumulatorData = { accumulatorData with digits = newDigits }
         newAccumulatorData // return
 
-    let doDrawOperation services expression =        
-        let result = services.doDrawOperation expression 
+    let doDrawOperation services stateData =        
+        let result = services.doDrawOperation stateData.expression 
         match result with
-        | Trace t -> DrawState {expression = expression; trace = t}
-        | DrawError x -> DrawErrorState {error = x}  
+        | Trace t -> DrawState {traceExpression = stateData.expression; trace = t}
+        | DrawError x -> DrawErrorState {lastExpression = stateData.expression; error = x}  
+
+    let doExpressionOperation services stateData = 
+        let result = services.doExpressionOperation stateData
+        match result with
+        | Pass r -> ExpressionSuccess r
+        | Fail e -> ExpressionError (EvaluateExpression.getErrorFrom e)
 
     let handleGrahphState services stateData input =
+        let expr = stateData.traceExpression        
+        let newExpressionStateData =  
+                {expression=expr; 
+                 pendingexpression=None; 
+                 pendingFunction=None;
+                 digits=""}
         match input with
+        | Stack _ -> DrawState stateData
         | CalcInput op -> 
-            match op with            
+            match op with
             | MathOp m -> 
                 match m with
-                | Add
-                | Subtract 
-                | Multiply 
-                | Divide 
+                | Add ->      (ExpressionDigitAccumulator {newExpressionStateData with pendingFunction = Some Plus})
+                | Subtract -> (ExpressionDigitAccumulator {newExpressionStateData with pendingFunction = Some Minus})
+                | Multiply -> (ExpressionDigitAccumulator {newExpressionStateData with pendingFunction = Some Times})
+                | Divide ->   (ExpressionDigitAccumulator {newExpressionStateData with pendingFunction = Some DividedBy})
                 | CalculatorMathOp.Inverse 
                 | Percent 
                 | CalculatorMathOp.Root 
                 | ChangeSign                    
                 | MemoryAdd 
-                | MemorySubtract -> {error = LazyCoder}         
-            | CalculatorInput.Zero                    
-            | DecimalSeparator 
+                | MemorySubtract -> DrawState stateData         
+            | CalculatorInput.Zero -> ExpressionDigitAccumulator newExpressionStateData                    
+            | DecimalSeparator -> 
+                newExpressionStateData 
+                |> accumulateSeparator services
+                |> ExpressionDigitAccumulator 
             | CalculatorInput.Equals 
             | Clear 
             | ClearEntry            
@@ -180,14 +213,17 @@ module GraphingImplementation =
             | MemoryClear
             | MemoryStore 
             | CalculatorInput.Equals
-            | Back -> {error = LazyCoder}
-            | Digit d -> {error = LazyCoder}
+            | Back -> ExpressionDigitAccumulator newExpressionStateData
+            | Digit d -> 
+                newExpressionStateData
+                |> accumulateNonZeroDigit services d
+                |> ExpressionDigitAccumulator 
         | ExpressionInput input -> 
             match input with 
-            | Symbol s -> {error = LazyCoder}
-            | Function f -> {error = LazyCoder}
-        | Draw -> {error = LazyCoder}
-        | Enter -> {error = LazyCoder}
+            | Symbol s -> DrawState stateData
+            | Function f -> DrawState stateData
+        | Draw -> DrawState stateData
+        | EnterExpression -> DrawState stateData
 
     let handleExpressionDigitAccumulatorState services stateData input =
         match input with
@@ -204,7 +240,7 @@ module GraphingImplementation =
                 | CalculatorMathOp.Root 
                 | ChangeSign                    
                 | MemoryAdd 
-                | MemorySubtract -> {error = LazyCoder}         
+                | MemorySubtract -> {lastExpression = stateData.expression; error = LazyCoder}         
             | CalculatorInput.Zero                    
             | DecimalSeparator 
             | CalculatorInput.Equals 
@@ -214,14 +250,14 @@ module GraphingImplementation =
             | MemoryClear
             | MemoryStore 
             | CalculatorInput.Equals
-            | Back -> {error = LazyCoder}
-            | Digit d -> {error = LazyCoder}
+            | Back -> {lastExpression = stateData.expression; error = LazyCoder}
+            | Digit d -> {lastExpression = stateData.expression; error = LazyCoder}
         | ExpressionInput input -> 
             match input with 
-            | Symbol s -> {error = LazyCoder}
-            | Function f -> {error = LazyCoder}
-        | Draw -> {error = LazyCoder}
-        | Enter -> {error = LazyCoder}
+            | Symbol s -> {lastExpression = stateData.expression; error = LazyCoder}
+            | Function f -> {lastExpression = stateData.expression; error = LazyCoder}
+        | Draw -> {lastExpression = stateData.expression; error = LazyCoder}
+        | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
 
     let handleExpressionDecimalAccumulatorState services stateData input =
         match input with
@@ -238,7 +274,7 @@ module GraphingImplementation =
                 | CalculatorMathOp.Root 
                 | ChangeSign                    
                 | MemoryAdd 
-                | MemorySubtract -> {error = LazyCoder}         
+                | MemorySubtract -> {lastExpression = stateData.expression; error = LazyCoder}         
             | CalculatorInput.Zero                    
             | DecimalSeparator 
             | CalculatorInput.Equals 
@@ -248,14 +284,14 @@ module GraphingImplementation =
             | MemoryClear
             | MemoryStore 
             | CalculatorInput.Equals
-            | Back -> {error = LazyCoder}
-            | Digit d -> {error = LazyCoder}
+            | Back -> {lastExpression = stateData.expression; error = LazyCoder}
+            | Digit d -> {lastExpression = stateData.expression; error = LazyCoder}
         | ExpressionInput input -> 
             match input with 
-            | Symbol s -> {error = LazyCoder}
-            | Function f -> {error = LazyCoder}
-        | Draw -> {error = LazyCoder}
-        | Enter -> {error = LazyCoder}
+            | Symbol s -> {lastExpression = stateData.expression; error = LazyCoder}
+            | Function f -> {lastExpression = stateData.expression; error = LazyCoder}
+        | Draw -> {lastExpression = stateData.expression; error = LazyCoder}
+        | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
 
     let handleDrawErrorState services stateData input =
         match input with
@@ -272,7 +308,7 @@ module GraphingImplementation =
                 | CalculatorMathOp.Root 
                 | ChangeSign                    
                 | MemoryAdd 
-                | MemorySubtract -> {error = LazyCoder}         
+                | MemorySubtract -> {lastExpression = stateData.expression; error = LazyCoder}         
             | CalculatorInput.Zero                    
             | DecimalSeparator 
             | CalculatorInput.Equals 
@@ -282,14 +318,14 @@ module GraphingImplementation =
             | MemoryClear
             | MemoryStore 
             | CalculatorInput.Equals
-            | Back -> {error = LazyCoder}
-            | Digit d -> {error = LazyCoder}
+            | Back -> {lastExpression = stateData.expression; error = LazyCoder}
+            | Digit d -> {lastExpression = stateData.expression; error = LazyCoder}
         | ExpressionInput input -> 
             match input with 
-            | Symbol s -> {error = LazyCoder}
-            | Function f -> {error = LazyCoder}
-        | Draw -> {error = LazyCoder}
-        | Enter -> {error = LazyCoder}
+            | Symbol s -> {lastExpression = stateData.expression; error = LazyCoder}
+            | Function f -> {lastExpression = stateData.expression; error = LazyCoder}
+        | Draw -> {lastExpression = stateData.expression; error = LazyCoder}
+        | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
 
 
 
