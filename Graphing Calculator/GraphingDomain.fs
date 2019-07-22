@@ -388,5 +388,3 @@ module GraphingImplementation =
         | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
 
 
-
-             
