@@ -146,7 +146,7 @@ module CalculatorImplementation =
 
     let replacePendingOp (computedStateData:ComputedStateData) nextOp = 
         let newPending = maybe {
-            let! existingOp,displayNumber  = computedStateData.pendingOp
+            let! existingOp,displayNumber = computedStateData.pendingOp
             let! next = nextOp
             return next,displayNumber  
             }
