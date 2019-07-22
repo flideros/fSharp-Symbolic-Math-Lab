@@ -189,8 +189,8 @@ type Result<'T> =
     member this.value = 
         let v = match this with
                 | Pass t -> Some t
-                | Fail _ -> None
-        v.Value // this will return a system error if it fails. I'll need to refactor this.
+                | Fail f -> Some f
+        v.Value
     
 
 
