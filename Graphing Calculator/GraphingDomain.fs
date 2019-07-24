@@ -89,9 +89,12 @@ module GraphingDomain =
     // data associated with each state    
     
     type ExpressionStateData = 
-        { expression:Expression; 
+        { expression : Expression
           pendingFunction:PendingFunction option;
           digits:ConventionalDomain.DigitAccumulator }
+    type EvaluatedStateData =
+        { evaluatedExpression:Expression; 
+          pendingFunction:PendingFunction option }
     type DrawStateData =  {traceExpression:Expression; trace:Trace; pendingFunction:PendingFunction option;}    
     type ErrorStateData = {lastExpression:Expression; error:DrawError}
 
@@ -104,13 +107,14 @@ module GraphingDomain =
 
     // States
     type CalculatorState =         
+        | EvaluatedState of EvaluatedStateData
         | DrawState of DrawStateData
         | ExpressionDigitAccumulatorState of ExpressionStateData
         | ExpressionDecimalAccumulatorState of ExpressionStateData
         | DrawErrorState of ErrorStateData
         | ExpressionErrorState of ErrorStateData
       
-    type Calculate = CalculatorInput * CalculatorState -> CalculatorState
+    type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
 
     // Services used by the calculator itself
     type DoDrawOperation = Expression -> DrawOperationResult
@@ -169,15 +173,15 @@ module GraphingImplementation =
         let newAccumulatorData = { accumulatorData with digits = newDigits }
         newAccumulatorData // return
 
-    let getExpressionState services (expressionStateData:ExpressionStateData) nextFunc = 
+    let getEvaluationState services (expressionStateData:ExpressionStateData) nextFunc = 
 
-        // helper to create a new ExpressionState from a given displayExpression 
+        // helper to create a new EvaluatedState from a given displayExpression 
         // and the nextOp parameter
         let getNewState displayExpression =
             let newPendingFunc = 
-                nextFunc |> Option.map (fun op -> displayExpression, op )
-            {expression=displayExpression; pendingFunction=newPendingFunc; digits=expressionStateData.digits}
-            |> ExpressionDigitAccumulatorState
+                nextFunc |> Option.map (fun func -> displayExpression, func )
+            {evaluatedExpression = displayExpression; pendingFunction=newPendingFunc}
+            |> EvaluatedState
 
         let currentNumber = 
             services.getNumberFromAccumulator expressionStateData 
@@ -187,21 +191,21 @@ module GraphingImplementation =
 
         maybe {            
             let! (previousExpression,func) = expressionStateData.pendingFunction
-            let result = services.doExpressionOperation(func,previousExpression,expressionStateData.expression)
+            let result = services.doExpressionOperation(func,previousExpression,Number currentNumber)
             let newState =
                 match result with
                 | Pass resultExpression ->
-                    // If there was a pending op, create a new ComputedState using the result
+                    // If there was a pending op, create a new ExpressionState using the result
                     getNewState resultExpression 
-                | Fail error -> ExpressionErrorState {lastExpression=expressionStateData.expression; error = Error (EvaluateExpression.getErrorFrom error)}
+                | Fail error -> ExpressionErrorState {lastExpression = previousExpression; error = Error (EvaluateExpression.getErrorFrom error)}
             return newState
             } |> ifNone computeStateWithNoPendingOp 
 
-    let doDrawOperation services stateData =        
-        let result = services.doDrawOperation stateData.expression 
+    let doDrawOperation services expression =        
+        let result = services.doDrawOperation expression 
         match result with
-        | Trace t -> DrawState {traceExpression = stateData.expression; trace = t; pendingFunction = stateData.pendingFunction}
-        | DrawError x -> DrawErrorState {lastExpression = stateData.expression; error = x}  
+        | Trace t -> DrawState {traceExpression = expression; trace = t; pendingFunction = None}
+        | DrawError x -> DrawErrorState {lastExpression = expression; error = x}  
 
     let doExpressionOperation services stateData = 
         let result = services.doExpressionOperation stateData
@@ -236,22 +240,23 @@ module GraphingImplementation =
                 | Divide ->   replacePendingFunction newExpressionStateData (Some DividedBy)
                 | CalculatorMathOp.Inverse ->
                     let nextOp = None//Some op
-                    let newState = getExpressionState services {expression=expr;pendingFunction = Some (expr,Inverse); digits = "1"} nextOp 
+                    let newState = 
+                        getEvaluationState services 
+                            { expression = expr;
+                              pendingFunction = Some (expr,Inverse); 
+                              digits = "1" } nextOp 
                     let finalState =
                         match stateData.pendingFunction = None with
                         | true -> newState
                         | false -> 
                             match newState with                            
-                            | ExpressionDigitAccumulatorState e ->  
+                            | EvaluatedState ev -> 
                                 ExpressionDigitAccumulatorState 
-                                    { digits = e.digits; 
+                                    { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
-                                      expression=stateData.traceExpression }
-                            | ExpressionDecimalAccumulatorState e ->  
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = e.digits; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression=stateData.traceExpression }                                
+                                      expression=ev.evaluatedExpression }
+                            | ExpressionDigitAccumulatorState _ 
+                            | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
                             | DrawErrorState _
                             | ExpressionErrorState _ -> newState
@@ -388,3 +393,5 @@ module GraphingImplementation =
         | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
 
 
+
+             
