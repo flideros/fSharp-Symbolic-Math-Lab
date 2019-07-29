@@ -431,7 +431,8 @@ module CalculatorImplementation =
         let emptyAccumulatorStateData = {digits=""; pendingOp=stateData.pendingOp; memory = stateData.memory}
         match input with
         | Zero -> 
-            ZeroState {pendingOp = emptyAccumulatorStateData.pendingOp; memory = stateData.memory} // transition to ZeroState with any pending ops
+            ZeroState {pendingOp = emptyAccumulatorStateData.pendingOp; 
+                       memory = stateData.memory} // transition to ZeroState with any pending ops
         | Digit digit -> 
             emptyAccumulatorStateData 
             |> accumulateNonZeroDigit services digit 
