@@ -95,8 +95,13 @@ module GraphingDomain =
     type EvaluatedStateData =
         { evaluatedExpression:Expression; 
           pendingFunction:PendingFunction option }
-    type DrawStateData =  {traceExpression:Expression; trace:Trace; pendingFunction:PendingFunction option;}    
-    type ErrorStateData = {lastExpression:Expression; error:DrawError}
+    type DrawStateData =  
+        { traceExpression:Expression; 
+          trace:Trace; 
+          pendingFunction:PendingFunction option }    
+    type ErrorStateData = 
+        { lastExpression:Expression; 
+          error:DrawError }
 
     type CalculatorInput =
         | ExpressionInput of ExpressionInput
@@ -117,6 +122,7 @@ module GraphingDomain =
     type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
 
     // Services used by the calculator itself
+    type AccumulateSymbol = ExpressionStateData -> Symbol -> ExpressionStateData
     type DoDrawOperation = Expression -> DrawOperationResult
     type DoExpressionOperation = Function*Expression*Expression -> Result<Expression>
     type GetDisplayFromExpression = Expression -> string
@@ -126,6 +132,7 @@ module GraphingDomain =
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
         doExpressionOperation :DoExpressionOperation
+        accumulateSymbol :AccumulateSymbol
         accumulateZero :AccumulateZero
         accumulateNonZeroDigit :AccumulateNonZeroDigit
         accumulateSeparator :AccumulateSeparator
@@ -173,6 +180,10 @@ module GraphingImplementation =
         let newAccumulatorData = { accumulatorData with digits = newDigits }
         newAccumulatorData // return
 
+    let accumulateSymbol services symbol expressionData  =
+        let newAccumulatorData = services.accumulateSymbol expressionData symbol
+        newAccumulatorData // return
+
     let getEvaluationState services (expressionStateData:ExpressionStateData) nextFunc = 
 
         // helper to create a new EvaluatedState from a given displayExpression 
@@ -213,31 +224,59 @@ module GraphingImplementation =
         | Pass r -> ExpressionSuccess r
         | Fail e -> ExpressionError (EvaluateExpression.getErrorFrom e)
 
-    let replacePendingFunction (expressionStateData:ExpressionStateData) nextFun = 
+    let replacePendingFunction (evaluatedStateData:EvaluatedStateData) nextFun = 
         let newPending = maybe {
-            let! expression,existingFunc  = expressionStateData.pendingFunction
+            let! expression,existingFunc  = evaluatedStateData.pendingFunction
             let! next = nextFun
             return expression,next
             }
-        {expressionStateData with pendingFunction=newPending}
-        |> ExpressionDigitAccumulatorState
+        {evaluatedStateData with pendingFunction=newPending}
+        |> EvaluatedState
 
-    let handleGrahphState services stateData input =
+    let handleDrawState stateData input = //Only the'Back' function implimented here.
         let expr = stateData.traceExpression        
+        let newEvaluatedStateData =  
+                {evaluatedExpression=expr;  
+                 pendingFunction=None}
+        match input with
+        | Stack _ -> DrawState stateData 
+        | CalcInput op -> 
+            match op with
+            | MathOp m -> DrawState stateData    
+            | CalculatorInput.Zero -> DrawState stateData               
+            | DecimalSeparator -> DrawState stateData 
+            | CalculatorInput.Equals -> DrawState stateData
+            | ClearEntry
+            | Clear                         
+            | MemoryRecall
+            | MemoryClear
+            | MemoryStore 
+            | CalculatorInput.Equals
+            | Back ->
+                newEvaluatedStateData
+                |> EvaluatedState 
+            | Digit d -> DrawState stateData
+        | ExpressionInput input -> DrawState stateData
+        | Draw -> DrawState stateData
+        | EnterExpression -> DrawState stateData
+
+    let handleEvaluatedState services stateData input =
+        let zero = Number (Integer 0I)
+        let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
                 {expression=expr;  
-                 pendingFunction=None;
+                 pendingFunction=stateData.pendingFunction;
                  digits=""}
         match input with
-        | Stack _ -> DrawState stateData
+        | Stack _ -> EvaluatedState stateData
         | CalcInput op -> 
             match op with
             | MathOp m -> 
                 match m with
-                | Add ->      replacePendingFunction newExpressionStateData (Some Plus)
-                | Subtract -> replacePendingFunction newExpressionStateData (Some Minus)
-                | Multiply -> replacePendingFunction newExpressionStateData (Some Times)
-                | Divide ->   replacePendingFunction newExpressionStateData (Some DividedBy)
+                | Add -> replacePendingFunction stateData (Some Plus)                    
+                | Subtract -> replacePendingFunction stateData (Some Minus)                    
+                | Multiply -> replacePendingFunction stateData (Some Times)                    
+                | Divide -> replacePendingFunction stateData (Some DividedBy)                    
                 | CalculatorMathOp.Inverse ->
                     let nextOp = None//Some op
                     let newState = 
@@ -261,137 +300,701 @@ module GraphingImplementation =
                             | DrawErrorState _
                             | ExpressionErrorState _ -> newState
                     finalState
-                | Percent 
-                | CalculatorMathOp.Root 
-                | ChangeSign                    
+                | Percent ->
+                    let nextOp = None//Some op
+                    let newState = 
+                        getEvaluationState services 
+                            { expression = expr;
+                              pendingFunction = Some (expr,Function.Quotient); 
+                              digits = "100" } nextOp 
+                    let finalState =
+                        match stateData.pendingFunction = None with
+                        | true -> newState
+                        | false -> 
+                            match newState with                            
+                            | EvaluatedState ev -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression }
+                            | ExpressionDigitAccumulatorState _ 
+                            | ExpressionDecimalAccumulatorState _                             
+                            | DrawState _
+                            | DrawErrorState _
+                            | ExpressionErrorState _ -> newState
+                    finalState
+                | CalculatorMathOp.Root ->
+                    let nextOp = None//Some op
+                    let newState = 
+                        getEvaluationState services 
+                            { expression = expr;
+                                pendingFunction = Some (expr,Function.Root); 
+                                digits = "0.5" } nextOp 
+                    let finalState =
+                        match stateData.pendingFunction = None with
+                        | true -> newState
+                        | false -> 
+                            match newState with                            
+                            | EvaluatedState ev -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                        pendingFunction = stateData.pendingFunction; 
+                                        expression=ev.evaluatedExpression }
+                            | ExpressionDigitAccumulatorState _ 
+                            | ExpressionDecimalAccumulatorState _                             
+                            | DrawState _
+                            | DrawErrorState _
+                            | ExpressionErrorState _ -> newState
+                    finalState
+                | ChangeSign ->
+                    let nextOp = None//Some op
+                    let newState = 
+                        getEvaluationState services 
+                            { expression = expr;
+                                pendingFunction = Some (expr,Function.Times); 
+                                digits = "-1" } nextOp 
+                    let finalState =
+                        match stateData.pendingFunction = None with
+                        | true -> newState
+                        | false -> 
+                            match newState with                            
+                            | EvaluatedState ev -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                        pendingFunction = stateData.pendingFunction; 
+                                        expression=ev.evaluatedExpression }
+                            | ExpressionDigitAccumulatorState _ 
+                            | ExpressionDecimalAccumulatorState _                             
+                            | DrawState _
+                            | DrawErrorState _
+                            | ExpressionErrorState _ -> newState
+                    finalState
                 | MemoryAdd 
-                | MemorySubtract -> DrawState stateData         
-            | CalculatorInput.Zero -> ExpressionDigitAccumulatorState newExpressionStateData                    
+                | MemorySubtract -> EvaluatedState stateData         
+            | CalculatorInput.Zero -> stateData |> EvaluatedState                     
             | DecimalSeparator -> 
-                newExpressionStateData 
-                |> accumulateSeparator services
-                |> ExpressionDigitAccumulatorState 
-            | CalculatorInput.Equals 
-            | Clear 
-            | ClearEntry            
-            | MemoryRecall
-            | MemoryClear
-            | MemoryStore 
-            | CalculatorInput.Equals
-            | Back -> ExpressionDigitAccumulatorState newExpressionStateData
+                match stateData.pendingFunction with
+                | None -> stateData |> EvaluatedState
+                | Some _ ->
+                    newExpressionStateData 
+                    |> accumulateSeparator services
+                    |> ExpressionDigitAccumulatorState 
+            | CalculatorInput.Equals -> replacePendingFunction stateData None                
+            | ClearEntry ->                 
+                    match stateData.pendingFunction with
+                    | None -> stateData |> EvaluatedState
+                    | Some po -> 
+                        let _oldExpression, oldPendingFunction = po
+                        let zero = Number (Integer 0I)
+                        {stateData with pendingFunction = Some (zero,oldPendingFunction)}
+                        |> EvaluatedState
+            | Clear -> EvaluatedState {evaluatedExpression = zero; pendingFunction=None}
+            | MemoryRecall -> EvaluatedState stateData //not used
+            | MemoryClear -> EvaluatedState stateData //not used
+            | MemoryStore -> EvaluatedState stateData //not used
+            | Back -> EvaluatedState stateData 
             | Digit d -> 
-                newExpressionStateData
-                |> accumulateNonZeroDigit services d
-                |> ExpressionDigitAccumulatorState 
+                match stateData.pendingFunction with
+                | None -> stateData |> EvaluatedState
+                | Some _ ->                    
+                    newExpressionStateData
+                    |> accumulateNonZeroDigit services d
+                    |> ExpressionDigitAccumulatorState 
         | ExpressionInput input -> 
             match input with 
-            | Symbol s -> DrawState stateData
-            | Function f -> DrawState stateData
-        | Draw -> DrawState stateData
-        | EnterExpression -> DrawState stateData
+            | Symbol s -> 
+                match stateData.pendingFunction with
+                | None -> stateData |> EvaluatedState
+                | Some _ ->
+                    newExpressionStateData
+                    |> accumulateSymbol services s
+                    |> ExpressionDigitAccumulatorState
+            | Function f -> EvaluatedState stateData
+        | Draw -> EvaluatedState stateData
+        | EnterExpression -> EvaluatedState stateData
 
-    let handleExpressionDigitAccumulatorState services stateData input =
-        match input with
-        | CalcInput op -> 
-            match op with            
-            | MathOp m -> 
-                match m with
-                | Add
-                | Subtract 
-                | Multiply 
-                | Divide 
-                | CalculatorMathOp.Inverse 
-                | Percent 
-                | CalculatorMathOp.Root 
-                | ChangeSign                    
-                | MemoryAdd 
-                | MemorySubtract -> {lastExpression = stateData.expression; error = LazyCoder}         
-            | CalculatorInput.Zero                    
-            | DecimalSeparator 
-            | CalculatorInput.Equals 
-            | Clear 
-            | ClearEntry            
-            | MemoryRecall
-            | MemoryClear
-            | MemoryStore 
-            | CalculatorInput.Equals
-            | Back -> {lastExpression = stateData.expression; error = LazyCoder}
-            | Digit d -> {lastExpression = stateData.expression; error = LazyCoder}
-        | ExpressionInput input -> 
-            match input with 
-            | Symbol s -> {lastExpression = stateData.expression; error = LazyCoder}
-            | Function f -> {lastExpression = stateData.expression; error = LazyCoder}
-        | Draw -> {lastExpression = stateData.expression; error = LazyCoder}
-        | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
+    let handleExpressionDigitAccumulatorState services stateData input=
+           let zero = Number (Integer 0I)
+           let expr = stateData.evaluatedExpression        
+           let newExpressionStateData =  
+                   {expression=expr;  
+                    pendingFunction=stateData.pendingFunction;
+                    digits=""}
+           match input with
+           | Stack _ -> EvaluatedState stateData
+           | CalcInput op -> 
+               match op with
+               | MathOp m -> 
+                   match m with
+                   | Add -> replacePendingFunction stateData (Some Plus)                    
+                   | Subtract -> replacePendingFunction stateData (Some Minus)                    
+                   | Multiply -> replacePendingFunction stateData (Some Times)                    
+                   | Divide -> replacePendingFunction stateData (Some DividedBy)                    
+                   | CalculatorMathOp.Inverse ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Inverse); 
+                                 digits = "1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | Percent ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Function.Quotient); 
+                                 digits = "100" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | CalculatorMathOp.Root ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Root); 
+                                   digits = "0.5" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | ChangeSign ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Times); 
+                                   digits = "-1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | MemoryAdd 
+                   | MemorySubtract -> EvaluatedState stateData         
+               | CalculatorInput.Zero -> 
+                   stateData
+                   |> EvaluatedState                     
+               | DecimalSeparator -> 
+                   newExpressionStateData 
+                   |> accumulateSeparator services
+                   |> ExpressionDigitAccumulatorState 
+               | CalculatorInput.Equals -> replacePendingFunction stateData None
+               | ClearEntry ->                 
+                       match stateData.pendingFunction with
+                       | None -> stateData |> EvaluatedState
+                       | Some po -> 
+                           let _oldExpression, oldPendingFunction = po
+                           let zero = Number (Integer 0I)
+                           {stateData with pendingFunction = Some (zero,oldPendingFunction)}
+                           |> EvaluatedState
+               | Clear -> EvaluatedState {evaluatedExpression = zero; pendingFunction=None}
+               | MemoryRecall -> EvaluatedState stateData //not used
+               | MemoryClear -> EvaluatedState stateData //not used
+               | MemoryStore -> EvaluatedState stateData //not used
+               | Back -> EvaluatedState stateData 
+               | Digit d -> 
+                   newExpressionStateData
+                   |> accumulateNonZeroDigit services d
+                   |> ExpressionDigitAccumulatorState 
+           | ExpressionInput input -> 
+               match input with 
+               | Symbol s -> 
+                   newExpressionStateData
+                   |> accumulateSymbol services s
+                   |> ExpressionDigitAccumulatorState
+               | Function f -> EvaluatedState stateData
+           | Draw -> EvaluatedState stateData
+           | EnterExpression -> EvaluatedState stateData
 
-    let handleExpressionDecimalAccumulatorState services stateData input =
-        match input with
-        | CalcInput op -> 
-            match op with            
-            | MathOp m -> 
-                match m with
-                | Add
-                | Subtract 
-                | Multiply 
-                | Divide 
-                | CalculatorMathOp.Inverse 
-                | Percent 
-                | CalculatorMathOp.Root 
-                | ChangeSign                    
-                | MemoryAdd 
-                | MemorySubtract -> {lastExpression = stateData.expression; error = LazyCoder}         
-            | CalculatorInput.Zero                    
-            | DecimalSeparator 
-            | CalculatorInput.Equals 
-            | Clear 
-            | ClearEntry            
-            | MemoryRecall
-            | MemoryClear
-            | MemoryStore 
-            | CalculatorInput.Equals
-            | Back -> {lastExpression = stateData.expression; error = LazyCoder}
-            | Digit d -> {lastExpression = stateData.expression; error = LazyCoder}
-        | ExpressionInput input -> 
-            match input with 
-            | Symbol s -> {lastExpression = stateData.expression; error = LazyCoder}
-            | Function f -> {lastExpression = stateData.expression; error = LazyCoder}
-        | Draw -> {lastExpression = stateData.expression; error = LazyCoder}
-        | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
+    let handleExpressionDecimalAccumulatorState services stateData input=
+           let zero = Number (Integer 0I)
+           let expr = stateData.evaluatedExpression        
+           let newExpressionStateData =  
+                   {expression=expr;  
+                    pendingFunction=stateData.pendingFunction;
+                    digits=""}
+           match input with
+           | Stack _ -> EvaluatedState stateData
+           | CalcInput op -> 
+               match op with
+               | MathOp m -> 
+                   match m with
+                   | Add -> replacePendingFunction stateData (Some Plus)                    
+                   | Subtract -> replacePendingFunction stateData (Some Minus)                    
+                   | Multiply -> replacePendingFunction stateData (Some Times)                    
+                   | Divide -> replacePendingFunction stateData (Some DividedBy)                    
+                   | CalculatorMathOp.Inverse ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Inverse); 
+                                 digits = "1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | Percent ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Function.Quotient); 
+                                 digits = "100" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | CalculatorMathOp.Root ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Root); 
+                                   digits = "0.5" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | ChangeSign ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Times); 
+                                   digits = "-1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | MemoryAdd 
+                   | MemorySubtract -> EvaluatedState stateData         
+               | CalculatorInput.Zero -> 
+                   stateData
+                   |> EvaluatedState                     
+               | DecimalSeparator -> 
+                   newExpressionStateData 
+                   |> accumulateSeparator services
+                   |> ExpressionDigitAccumulatorState 
+               | CalculatorInput.Equals -> replacePendingFunction stateData None
+               | ClearEntry ->                 
+                       match stateData.pendingFunction with
+                       | None -> stateData |> EvaluatedState
+                       | Some po -> 
+                           let _oldExpression, oldPendingFunction = po
+                           let zero = Number (Integer 0I)
+                           {stateData with pendingFunction = Some (zero,oldPendingFunction)}
+                           |> EvaluatedState
+               | Clear -> EvaluatedState {evaluatedExpression = zero; pendingFunction=None}
+               | MemoryRecall -> EvaluatedState stateData //not used
+               | MemoryClear -> EvaluatedState stateData //not used
+               | MemoryStore -> EvaluatedState stateData //not used
+               | Back -> EvaluatedState stateData 
+               | Digit d -> 
+                   newExpressionStateData
+                   |> accumulateNonZeroDigit services d
+                   |> ExpressionDigitAccumulatorState 
+           | ExpressionInput input -> 
+               match input with 
+               | Symbol s -> 
+                   newExpressionStateData
+                   |> accumulateSymbol services s
+                   |> ExpressionDigitAccumulatorState
+               | Function f -> EvaluatedState stateData
+           | Draw -> EvaluatedState stateData
+           | EnterExpression -> EvaluatedState stateData
 
-    let handleDrawErrorState services stateData input =
-        match input with
-        | CalcInput op -> 
-            match op with            
-            | MathOp m -> 
-                match m with
-                | Add
-                | Subtract 
-                | Multiply 
-                | Divide 
-                | CalculatorMathOp.Inverse 
-                | Percent 
-                | CalculatorMathOp.Root 
-                | ChangeSign                    
-                | MemoryAdd 
-                | MemorySubtract -> {lastExpression = stateData.expression; error = LazyCoder}         
-            | CalculatorInput.Zero                    
-            | DecimalSeparator 
-            | CalculatorInput.Equals 
-            | Clear 
-            | ClearEntry            
-            | MemoryRecall
-            | MemoryClear
-            | MemoryStore 
-            | CalculatorInput.Equals
-            | Back -> {lastExpression = stateData.expression; error = LazyCoder}
-            | Digit d -> {lastExpression = stateData.expression; error = LazyCoder}
-        | ExpressionInput input -> 
-            match input with 
-            | Symbol s -> {lastExpression = stateData.expression; error = LazyCoder}
-            | Function f -> {lastExpression = stateData.expression; error = LazyCoder}
-        | Draw -> {lastExpression = stateData.expression; error = LazyCoder}
-        | EnterExpression -> {lastExpression = stateData.expression; error = LazyCoder}
+    let handleDrawErrorState services stateData input=
+           let zero = Number (Integer 0I)
+           let expr = stateData.evaluatedExpression        
+           let newExpressionStateData =  
+                   {expression=expr;  
+                    pendingFunction=stateData.pendingFunction;
+                    digits=""}
+           match input with
+           | Stack _ -> EvaluatedState stateData
+           | CalcInput op -> 
+               match op with
+               | MathOp m -> 
+                   match m with
+                   | Add -> replacePendingFunction stateData (Some Plus)                    
+                   | Subtract -> replacePendingFunction stateData (Some Minus)                    
+                   | Multiply -> replacePendingFunction stateData (Some Times)                    
+                   | Divide -> replacePendingFunction stateData (Some DividedBy)                    
+                   | CalculatorMathOp.Inverse ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Inverse); 
+                                 digits = "1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | Percent ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Function.Quotient); 
+                                 digits = "100" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | CalculatorMathOp.Root ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Root); 
+                                   digits = "0.5" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | ChangeSign ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Times); 
+                                   digits = "-1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | MemoryAdd 
+                   | MemorySubtract -> EvaluatedState stateData         
+               | CalculatorInput.Zero -> 
+                   stateData
+                   |> EvaluatedState                     
+               | DecimalSeparator -> 
+                   newExpressionStateData 
+                   |> accumulateSeparator services
+                   |> ExpressionDigitAccumulatorState 
+               | CalculatorInput.Equals -> replacePendingFunction stateData None
+               | ClearEntry ->                 
+                       match stateData.pendingFunction with
+                       | None -> stateData |> EvaluatedState
+                       | Some po -> 
+                           let _oldExpression, oldPendingFunction = po
+                           let zero = Number (Integer 0I)
+                           {stateData with pendingFunction = Some (zero,oldPendingFunction)}
+                           |> EvaluatedState
+               | Clear -> EvaluatedState {evaluatedExpression = zero; pendingFunction=None}
+               | MemoryRecall -> EvaluatedState stateData //not used
+               | MemoryClear -> EvaluatedState stateData //not used
+               | MemoryStore -> EvaluatedState stateData //not used
+               | Back -> EvaluatedState stateData 
+               | Digit d -> 
+                   newExpressionStateData
+                   |> accumulateNonZeroDigit services d
+                   |> ExpressionDigitAccumulatorState 
+           | ExpressionInput input -> 
+               match input with 
+               | Symbol s -> 
+                   newExpressionStateData
+                   |> accumulateSymbol services s
+                   |> ExpressionDigitAccumulatorState
+               | Function f -> EvaluatedState stateData
+           | Draw -> EvaluatedState stateData
+           | EnterExpression -> EvaluatedState stateData
 
-
+    let handleExpressionErrorState services stateData input=
+           let zero = Number (Integer 0I)
+           let expr = stateData.evaluatedExpression        
+           let newExpressionStateData =  
+                   {expression=expr;  
+                    pendingFunction=stateData.pendingFunction;
+                    digits=""}
+           match input with
+           | Stack _ -> EvaluatedState stateData
+           | CalcInput op -> 
+               match op with
+               | MathOp m -> 
+                   match m with
+                   | Add -> replacePendingFunction stateData (Some Plus)                    
+                   | Subtract -> replacePendingFunction stateData (Some Minus)                    
+                   | Multiply -> replacePendingFunction stateData (Some Times)                    
+                   | Divide -> replacePendingFunction stateData (Some DividedBy)                    
+                   | CalculatorMathOp.Inverse ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Inverse); 
+                                 digits = "1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | Percent ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                 pendingFunction = Some (expr,Function.Quotient); 
+                                 digits = "100" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                         pendingFunction = stateData.pendingFunction; 
+                                         expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | CalculatorMathOp.Root ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Root); 
+                                   digits = "0.5" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | ChangeSign ->
+                       let nextOp = None//Some op
+                       let newState = 
+                           getEvaluationState services 
+                               { expression = expr;
+                                   pendingFunction = Some (expr,Function.Times); 
+                                   digits = "-1" } nextOp 
+                       let finalState =
+                           match stateData.pendingFunction = None with
+                           | true -> newState
+                           | false -> 
+                               match newState with                            
+                               | EvaluatedState ev -> 
+                                   ExpressionDigitAccumulatorState 
+                                       { digits = ""; 
+                                           pendingFunction = stateData.pendingFunction; 
+                                           expression=ev.evaluatedExpression }
+                               | ExpressionDigitAccumulatorState _ 
+                               | ExpressionDecimalAccumulatorState _                             
+                               | DrawState _
+                               | DrawErrorState _
+                               | ExpressionErrorState _ -> newState
+                       finalState
+                   | MemoryAdd 
+                   | MemorySubtract -> EvaluatedState stateData         
+               | CalculatorInput.Zero -> 
+                   stateData
+                   |> EvaluatedState                     
+               | DecimalSeparator -> 
+                   newExpressionStateData 
+                   |> accumulateSeparator services
+                   |> ExpressionDigitAccumulatorState 
+               | CalculatorInput.Equals -> replacePendingFunction stateData None
+               | ClearEntry ->                 
+                       match stateData.pendingFunction with
+                       | None -> stateData |> EvaluatedState
+                       | Some po -> 
+                           let _oldExpression, oldPendingFunction = po
+                           let zero = Number (Integer 0I)
+                           {stateData with pendingFunction = Some (zero,oldPendingFunction)}
+                           |> EvaluatedState
+               | Clear -> EvaluatedState {evaluatedExpression = zero; pendingFunction=None}
+               | MemoryRecall -> EvaluatedState stateData //not used
+               | MemoryClear -> EvaluatedState stateData //not used
+               | MemoryStore -> EvaluatedState stateData //not used
+               | Back -> EvaluatedState stateData 
+               | Digit d -> 
+                   newExpressionStateData
+                   |> accumulateNonZeroDigit services d
+                   |> ExpressionDigitAccumulatorState 
+           | ExpressionInput input -> 
+               match input with 
+               | Symbol s -> 
+                   newExpressionStateData
+                   |> accumulateSymbol services s
+                   |> ExpressionDigitAccumulatorState
+               | Function f -> EvaluatedState stateData
+           | Draw -> EvaluatedState stateData
+           | EnterExpression -> EvaluatedState stateData
 
              
