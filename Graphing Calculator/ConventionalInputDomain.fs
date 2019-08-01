@@ -414,7 +414,10 @@ module CalculatorImplementation =
         | Back ->            
             match stateData.digits.Length with
             | x when x <= 1 -> ZeroState {pendingOp = stateData.pendingOp ; memory = stateData.memory}
-            | x -> AccumulatorWithDecimalState {digits = stateData.digits.Remove(x-1); pendingOp = stateData.pendingOp ; memory = stateData.memory} //         
+            | x -> let revisedDigits = stateData.digits.Remove(x-1)
+                   match revisedDigits.EndsWith(".") with
+                   | false -> {digits = revisedDigits; pendingOp = stateData.pendingOp ; memory = stateData.memory} |>  AccumulatorWithDecimalState 
+                   | true -> {digits = revisedDigits.Remove(x-2); pendingOp = stateData.pendingOp ; memory = stateData.memory} |>  AccumulatorState   
         | MemoryStore ->
             AccumulatorWithDecimalState {digits = stateData.digits; pendingOp = stateData.pendingOp; memory = stateData.digits} // store current digits in memory
         | MemoryClear ->
