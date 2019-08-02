@@ -755,4 +755,78 @@ module GraphingImplementation =
                    |> EvaluatedState
            | ExpressionInput i -> DrawErrorState stateData
            | Draw -> DrawErrorState stateData
-             
+    
+    let createEvaluate (services:GraphServices) : Evaluate = 
+         // create some local functions with partially applied services
+         let handleDrawState = handleDrawState 
+         let handleEvaluatedState = handleEvaluatedState services
+         let handleExpressionDigitAccumulatorState = handleExpressionDigitAccumulatorState services
+         let handleExpressionDecimalAccumulatorState = handleExpressionDecimalAccumulatorState services
+         let handleDrawErrorState = handleDrawErrorState 
+         let handleExpressionErrorState = handleExpressionErrorState
+
+         fun (input,state) -> 
+             match state with
+             | DrawState stateData -> 
+                 handleDrawState stateData input 
+             | EvaluatedState stateData -> 
+                 handleEvaluatedState stateData input 
+             | ExpressionDigitAccumulatorState stateData -> 
+                 handleExpressionDigitAccumulatorState stateData input
+             | ExpressionDecimalAccumulatorState stateData -> 
+                 handleExpressionDecimalAccumulatorState stateData input
+             | DrawErrorState stateData -> 
+                 handleDrawErrorState stateData input
+             | ExpressionErrorState stateData -> 
+                 handleExpressionErrorState stateData input
+
+    module GraphServices =
+        open GraphingDomain
+        open Utilities
+        (*type GraphServices = {        
+        doDrawOperation :DoDrawOperation
+        doExpressionOperation :DoExpressionOperation
+        accumulateSymbol :AccumulateSymbol
+        //accumulateZero :AccumulateZero
+        //accumulateNonZeroDigit :AccumulateNonZeroDigit
+        //accumulateSeparator :AccumulateSeparator
+        //getNumberFromAccumulator :GetNumberFromAccumulator
+        getDisplayFromExpression :GetDisplayFromExpression
+        getDisplayFromGraphState :GetDisplayFromGraphState
+        }*)
+
+    
+        let accumulateNonZeroDigit maxLen :AccumulateNonZeroDigit = 
+            fun (digit, accumulator) ->
+    
+            // determine what character should be appended to the display
+            let appendCh= 
+                match digit with
+                | ConventionalDomain.One -> "1"
+                | Two -> "2"
+                | Three-> "3"
+                | Four -> "4"
+                | Five -> "5"
+                | Six-> "6"
+                | Seven-> "7"
+                | Eight-> "8"
+                | Nine-> "9"
+            CalculatorServices.appendToAccumulator maxLen accumulator appendCh
+    
+        let accumulateZero maxLen :AccumulateZero = 
+            fun accumulator -> CalculatorServices.appendToAccumulator maxLen accumulator "0"
+    
+        let accumulateSeparator maxLen :AccumulateSeparator = 
+            fun accumulator ->
+                let appendCh = 
+                    if accumulator = "" then "0." else "."
+                CalculatorServices.appendToAccumulator maxLen accumulator appendCh
+    
+        let getNumberFromAccumulator :GetNumberFromAccumulator =
+            fun accumulatorStateData ->
+                let digits = accumulatorStateData.digits
+                match System.Double.TryParse digits with
+                | true, d -> Real d
+                | false, _ -> Real 0.0
+    
+        
