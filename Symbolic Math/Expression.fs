@@ -156,7 +156,7 @@ module ExpressionType =
         | UnaryOp(op, x), Symbol v when x = Symbol v -> -1 //O-12.1
         | UnaryOp(op, x), Symbol v when x <> Symbol v -> compareExpressions (UnaryOp(op, x)) (UnaryOp(op, Symbol v)) //O-12.2        
         | _ -> -1 * (compareExpressions v u) //O-13
-     
+ 
 // Simplification Operators
     let rec simplifyPower x =
         let rec simplifyIntegerPower x =        
@@ -173,12 +173,14 @@ module ExpressionType =
                 let eList' = List.map (fun x -> simplifyIntegerPower (BinaryOp(x,ToThePowerOf,Number(Integer i)))) eList
                 simplifyProduct (NaryOp(Product,eList'))
             | _ -> x //SINTPOW-6        
+        
+        
         match x with
         | BinaryOp(base',ToThePowerOf,power') when base' = Number Undefined || power' = Number Undefined -> Number Undefined //SPOW-1
         | BinaryOp(base',ToThePowerOf,Number n) when base' = Number Number.Zero && n.isNegative = false -> Number Number.Zero //SPOW-2
-        | BinaryOp(base',ToThePowerOf,power') when base' = Number Number.Zero -> Number Undefined //SPOW-2
-        | BinaryOp(base',ToThePowerOf,power') when base' = Number Number.One -> Number Number.One //SPOW-3
-        | BinaryOp(base',ToThePowerOf,Number (Integer n)) -> simplifyIntegerPower x //SPOW-4        
+        | BinaryOp(base',ToThePowerOf,_) when base' = Number Number.Zero -> Number Undefined //SPOW-2
+        | BinaryOp(base',ToThePowerOf,_) when base' = Number Number.One -> Number Number.One //SPOW-3
+        | BinaryOp(_,ToThePowerOf,Number (Integer n)) -> simplifyIntegerPower x //SPOW-4        
         | _ -> x //SPOW-5        
  
     and simplifyProduct p =      
@@ -285,7 +287,7 @@ module ExpressionType =
             | []-> Number Number.Zero 
             | [x1] -> x1 
             | _ -> NaryOp(Sum,x') 
-        | _ -> Number Undefined    
+        | _ -> Number Undefined
 
     //Simplify function form quotient (use inline operator '/' for simplfication of all other expressions)
     let simplifyQuotient u =
@@ -458,7 +460,7 @@ module ExpressionType =
         let eNaryOp acc x = acc + 1
         let acc = 0
         Cata.foldExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp acc x
-      
+     
 type Expression with
     member this.isNumber = ExpressionType.isNumber this    
     member this.isNegativeNumber = ExpressionType.isNegativeNumber this
@@ -487,6 +489,7 @@ module ExpressionStructure =
         match x with
         | Number (Integer i) -> "Integer"
         | Number (Rational r) -> "Rational"
+        | Number (Real r) -> "Real"
         | _ -> "Undefined"
         // etc.
     let numberOfOperands x = 
@@ -651,5 +654,14 @@ module ExpressionFunction =
         match u with
         | Number n -> Number (Number.floor n)
         | _ -> u
-
-
+    let evaluateRealPowersOfExpression (u:Expression) =
+        let eNumber (n:Expression) = n
+        let eComplexNumber (a,b) = ComplexNumber(a,b)
+        let eSymbol (v:Expression) = v
+        let eBinaryOp (a,op,b) = 
+            match op with
+            | ToThePowerOf -> a**b
+            | _ -> BinaryOp(a,op,b)
+        let eUnaryOp (op,a) = UnaryOp (op,a)
+        let eNaryOp (op,aList) = NaryOp (op,aList)
+        Cata.recurseExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp u

@@ -795,7 +795,28 @@ module GraphingImplementation =
         getDisplayFromGraphState :GetDisplayFromGraphState
         }*)
 
-    
+        let doDrawOperation xMin xMax yMin yMax resolution expression :DrawOperationResult = 
+            let xPoints = seq { xMin .. resolution .. xMax }
+            let x = 
+                match Polynomial.Variables.ofExpression expression with
+                | [] -> Number Number.One
+                | [x] -> x
+                | x::t -> x 
+
+            let evaluate expression xValue = 
+                ExpressionStructure.substitute (x, xValue) expression 
+                |> ExpressionFunction.evaluateRealPowersOfExpression 
+                |> ExpressionType.simplifyExpression
+            
+            
+            (DrawError LazyCoder)
+
+
+
+        let doExpressionOperation = ()
+
+        let accumulateSymbol = ()
+
         let accumulateNonZeroDigit maxLen :AccumulateNonZeroDigit = 
             fun (digit, accumulator) ->
     
@@ -829,4 +850,18 @@ module GraphingImplementation =
                 | true, d -> Real d
                 | false, _ -> Real 0.0
     
-        
+        let getDisplayFromExpression = ()
+
+        let getDisplayFromGraphState = ()
+
+        (*let createGraphServices = {        
+            doDrawOperation =  doDrawOperation
+            doExpressionOperation =  doExpressionOperation
+            accumulateSymbol =  accumulateSymbol
+            accumulateZero = accumulateZero (15)
+            accumulateNonZeroDigit = accumulateNonZeroDigit (10)
+            accumulateSeparator = accumulateSeparator (15)
+            getNumberFromAccumulator = getNumberFromAccumulator
+            getDisplayFromExpression = getDisplayFromExpression
+            getDisplayFromGraphState = getDisplayFromGraphState
+            }*)

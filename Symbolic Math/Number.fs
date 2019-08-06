@@ -138,6 +138,7 @@ type NumberType with
         | Complex x -> Complex (-x) 
         | Integer x -> Integer (-x)
         | Rational f -> Rational {f with numerator = -f.numerator}
+        | Real r -> Real (-r)
         | PositiveInfinity -> NegativeInfinity
         | NegativeInfinity -> PositiveInfinity
         | _ -> Undefined //Use until all defenitions are made    
@@ -166,6 +167,9 @@ type NumberType with
             match dTemp / hcfTemp = 1I with
             | true -> Integer (nTemp / hcfTemp)
             | false -> Rational { numerator = nTemp / hcfTemp; denominator = dTemp / hcfTemp }
+        | Real r1, Real r2 -> Real (r1 + r2)
+        | Real r1, Integer i2 -> Real (r1 + float i2)   
+        | Integer i2,Real r1  -> Real (r1 + float i2)
         | PositiveInfinity, PositiveInfinity -> PositiveInfinity
         | NegativeInfinity, NegativeInfinity -> NegativeInfinity
         | NegativeInfinity, PositiveInfinity -> Undefined
@@ -196,6 +200,9 @@ type NumberType with
             match dTemp / hcfTemp = 1I with
             | true -> Integer (nTemp / hcfTemp)
             | false -> Rational { numerator = nTemp / hcfTemp; denominator = dTemp / hcfTemp }
+        | Real r1, Real r2 -> Real (r1 * r2)
+        | Real r1, Integer i2 -> Real (r1 * float i2)   
+        | Integer i2,Real r1  -> Real (r1 * float i2) 
         | PositiveInfinity, PositiveInfinity -> PositiveInfinity
         | NegativeInfinity, NegativeInfinity -> NegativeInfinity
         | NegativeInfinity, PositiveInfinity -> Undefined
@@ -216,6 +223,9 @@ type NumberType with
         | NegativeInfinity, NegativeInfinity -> NegativeInfinity
         | NegativeInfinity, PositiveInfinity -> Undefined
         | PositiveInfinity, NegativeInfinity -> Undefined
+        | Real r1, Real r2 -> Real (r1 ** r2)
+        | Real r1, Integer i2 -> Real (r1 ** float i2)   
+        | Integer i2,Real r1  -> Real (float i2 ** r1)
         | _ -> Undefined //Use until all defenitions are made     
     static member (!*) x = 
         let rec factorial n =

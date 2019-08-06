@@ -45,7 +45,6 @@ Integer.factorByTrialDivision u
 
 
 
-
 let v = x5 +
         Number(Integer 7I)*x4 +
         Number(Integer 17I)*x3 + 
@@ -53,7 +52,36 @@ let v = x5 +
         Number(Integer 7I)*x +
         Number(Integer 1I)
 
-let _out = squareFree u x
+let _out = ExpressionStructure.substitute (x, Number(Real 1.4)) v |> ExpressionFunction.evaluateRealPowersOfExpression |> ExpressionType.simplifyExpression
+Polynomial.Variables.ofExpression v
+
+let _u = (Number(Integer 2I)**Number(Real 1.3)) |> ExpressionType.simplifyExpression 
+
+
+let expressionVariables = Polynomial.Variables.ofExpression v
+let check = Polynomial.Check.isPolynomialSV v
+
+let evaluate expression = 
+    match check with
+    | false -> Number Undefined
+    | true -> ExpressionStructure.substitute (x, Number(Real 1.4)) expression |> ExpressionFunction.evaluateRealPowersOfExpression |> ExpressionType.simplifyExpression
+
+
+
+
+let u = Number(Integer 54233480688657908494580122963258952897654000350692006139111119134831511204958711I)
+
+
+#time
+Integer.factorByTrialDivision u
+#time
+
+
+
+
+
+
+
 
 //Print.expression _out
 
