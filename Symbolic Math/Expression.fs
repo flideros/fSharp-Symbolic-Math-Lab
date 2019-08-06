@@ -654,7 +654,6 @@ module ExpressionFunction =
         match u with
         | Number n -> Number (Number.floor n)
         | _ -> u
-
     let evaluateRealPowersOfExpression (u:Expression) =
         let eNumber (n:Expression) = n
         let eComplexNumber (a,b) = ComplexNumber(a,b)
