@@ -2081,10 +2081,12 @@ module Polynomial =
                 | false -> false
             | _ -> false
 
-        
         let GMEtoMultivariate u =
             let freeOfSort s =  ExpressionStructure.freeOfSort s
             let tList = Variables.ofExpression u |> freeOfSort
             let rList = [for i in 1 .. tList.Length  -> Symbol (Variable("x" + i.ToString()))]
             let yList = List.zip tList rList
             substituteSequential yList u
+
+        
+            

@@ -666,3 +666,14 @@ module ExpressionFunction =
         let eUnaryOp (op,a) = UnaryOp (op,a)
         let eNaryOp (op,aList) = NaryOp (op,aList)
         Cata.recurseExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp u
+
+    let getSymbolsFrom (u:Expression) =
+        let acc = []
+        let eNumber acc (_n:Expression) = acc
+        let eComplexNumber acc _c = acc
+        let eSymbol acc (v:Expression) = v::acc
+        let eBinaryOp acc _bOp = acc
+        let eUnaryOp acc _uOp = acc
+        let eNaryOp acc _nOp = acc
+        Cata.foldExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp acc u
+
