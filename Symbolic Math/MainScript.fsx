@@ -35,14 +35,6 @@ let y2 = y**two
 let y3 = y**three
 let y4 = y**four
 let y5 = y**five
-let u = Number(Integer 54233480688657908494580122963258952897654000350692006139111119134831511204958711I)
-
-
-#time
-Integer.factorByTrialDivision u
-#time
-
-
 
 
 let v = x5 +
@@ -66,8 +58,7 @@ let evaluate expression =
     | false -> Number Undefined
     | true -> ExpressionStructure.substitute (x, Number(Real 1.4)) expression |> ExpressionFunction.evaluateRealPowersOfExpression |> ExpressionType.simplifyExpression
 
-
-
+seq {for x in  1.1 .. 0.2 .. 5.2 -> Number (Real x) }
 
 let u = Number(Integer 54233480688657908494580122963258952897654000350692006139111119134831511204958711I)
 

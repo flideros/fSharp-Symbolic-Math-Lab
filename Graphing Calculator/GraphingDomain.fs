@@ -780,88 +780,117 @@ module GraphingImplementation =
              | ExpressionErrorState stateData -> 
                  handleExpressionErrorState stateData input
 
-    module GraphServices =
-        open GraphingDomain
-        open Utilities
-        (*type GraphServices = {        
-        doDrawOperation :DoDrawOperation
-        doExpressionOperation :DoExpressionOperation
-        accumulateSymbol :AccumulateSymbol
-        //accumulateZero :AccumulateZero
-        //accumulateNonZeroDigit :AccumulateNonZeroDigit
-        //accumulateSeparator :AccumulateSeparator
-        //getNumberFromAccumulator :GetNumberFromAccumulator
-        getDisplayFromExpression :GetDisplayFromExpression
-        getDisplayFromGraphState :GetDisplayFromGraphState
-        }*)
+module GraphServices =
+    open GraphingDomain
+    open Utilities
+    (*type GraphServices = {        
+    doDrawOperation :DoDrawOperation
+    doExpressionOperation :DoExpressionOperation
+    accumulateSymbol :AccumulateSymbol
+    //accumulateZero :AccumulateZero
+    //accumulateNonZeroDigit :AccumulateNonZeroDigit
+    //accumulateSeparator :AccumulateSeparator
+    //getNumberFromAccumulator :GetNumberFromAccumulator
+    getDisplayFromExpression :GetDisplayFromExpression
+    getDisplayFromGraphState :GetDisplayFromGraphState
+    }*)
 
-        let doDrawOperation xMin xMax yMin yMax resolution expression :DrawOperationResult = 
-            let xPoints = seq { xMin .. resolution .. xMax }
-            let x = 
-                match Polynomial.Variables.ofExpression expression with
-                | [] -> Number Number.One
-                | [x] -> x
-                | x::t -> x 
-
-            let evaluate expression xValue = 
-                ExpressionStructure.substitute (x, xValue) expression 
-                |> ExpressionFunction.evaluateRealPowersOfExpression 
-                |> ExpressionType.simplifyExpression
+    let doDrawOperation (xMin:float) xMax yMin yMax resolution expression :DrawOperationResult = 
+        let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
+        
+        let x = 
+            match ExpressionFunction.getSymbolsFrom expression with
+            | [] -> Expression.Symbol (Constant Null)
+            | [x] -> x
+            | x::t as vList -> x
+        
+        let makePoint xExpression yExpression = 
+            let xValue =
+                match xExpression with
+                | Number n -> n
+                | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
+                | Expression.Symbol (Constant E ) -> Real (System.Math.E )
+                | _ -> Undefined
+            let yValue =
+                match yExpression with
+                | Number n -> n
+                | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
+                | Expression.Symbol (Constant E ) -> Real (System.Math.E )
+                | _ -> Undefined
+            Point(X xValue,Y yValue)
+        
+        let evaluate expression xValue = 
+            ExpressionStructure.substitute (x, xValue) expression 
+            |> ExpressionFunction.evaluateRealPowersOfExpression 
+            |> ExpressionType.simplifyExpression
+            |> makePoint xValue
             
-            
-            (DrawError LazyCoder)
+        let pointSequence = seq { for x in xCoordinates do yield evaluate expression x } 
+        
+        let checkForUndefinedPoints = 
+            pointSequence |>
+            Seq.exists (fun x -> 
+                match x with 
+                | Point(X x,Y y) when x = Undefined || x = Undefined-> true 
+                | _ -> false)  
 
+        match checkForUndefinedPoints with
+        | true -> DrawError FailedToCreateTrace
+        | false -> Trace { startPoint = Seq.head pointSequence; 
+                           traceSegments = 
+                           Seq.tail pointSequence 
+                           |> Seq.toList 
+                           |> List.map (fun x -> LineSegment x) }
 
+    let doExpressionOperation = ()
 
-        let doExpressionOperation = ()
+    let accumulateSymbol = ()
 
-        let accumulateSymbol = ()
-
-        let accumulateNonZeroDigit maxLen :AccumulateNonZeroDigit = 
-            fun (digit, accumulator) ->
+    let accumulateNonZeroDigit maxLen :AccumulateNonZeroDigit = 
+        fun (digit, accumulator) ->
     
-            // determine what character should be appended to the display
-            let appendCh= 
-                match digit with
-                | ConventionalDomain.One -> "1"
-                | Two -> "2"
-                | Three-> "3"
-                | Four -> "4"
-                | Five -> "5"
-                | Six-> "6"
-                | Seven-> "7"
-                | Eight-> "8"
-                | Nine-> "9"
+        // determine what character should be appended to the display
+        let appendCh= 
+            match digit with
+            | ConventionalDomain.One -> "1"
+            | Two -> "2"
+            | Three-> "3"
+            | Four -> "4"
+            | Five -> "5"
+            | Six-> "6"
+            | Seven-> "7"
+            | Eight-> "8"
+            | Nine-> "9"
+        CalculatorServices.appendToAccumulator maxLen accumulator appendCh
+    
+    let accumulateZero maxLen :AccumulateZero = 
+        fun accumulator -> CalculatorServices.appendToAccumulator maxLen accumulator "0"
+    
+    let accumulateSeparator maxLen :AccumulateSeparator = 
+        fun accumulator ->
+            let appendCh = 
+                if accumulator = "" then "0." else "."
             CalculatorServices.appendToAccumulator maxLen accumulator appendCh
     
-        let accumulateZero maxLen :AccumulateZero = 
-            fun accumulator -> CalculatorServices.appendToAccumulator maxLen accumulator "0"
+    let getNumberFromAccumulator :GetNumberFromAccumulator =
+        fun accumulatorStateData ->
+            let digits = accumulatorStateData.digits
+            match System.Double.TryParse digits with
+            | true, d -> Real d
+            | false, _ -> Real 0.0
     
-        let accumulateSeparator maxLen :AccumulateSeparator = 
-            fun accumulator ->
-                let appendCh = 
-                    if accumulator = "" then "0." else "."
-                CalculatorServices.appendToAccumulator maxLen accumulator appendCh
-    
-        let getNumberFromAccumulator :GetNumberFromAccumulator =
-            fun accumulatorStateData ->
-                let digits = accumulatorStateData.digits
-                match System.Double.TryParse digits with
-                | true, d -> Real d
-                | false, _ -> Real 0.0
-    
-        let getDisplayFromExpression = ()
+    let getDisplayFromExpression = ()
 
-        let getDisplayFromGraphState = ()
+    let getDisplayFromGraphState = ()
 
-        (*let createGraphServices = {        
-            doDrawOperation =  doDrawOperation
-            doExpressionOperation =  doExpressionOperation
-            accumulateSymbol =  accumulateSymbol
-            accumulateZero = accumulateZero (15)
-            accumulateNonZeroDigit = accumulateNonZeroDigit (10)
-            accumulateSeparator = accumulateSeparator (15)
-            getNumberFromAccumulator = getNumberFromAccumulator
-            getDisplayFromExpression = getDisplayFromExpression
-            getDisplayFromGraphState = getDisplayFromGraphState
-            }*)
+    (*let createGraphServices = {        
+        doDrawOperation =  doDrawOperation
+        doExpressionOperation =  doExpressionOperation
+        accumulateSymbol =  accumulateSymbol
+        accumulateZero = accumulateZero (15)
+        accumulateNonZeroDigit = accumulateNonZeroDigit (10)
+        accumulateSeparator = accumulateSeparator (15)
+        getNumberFromAccumulator = getNumberFromAccumulator
+        getDisplayFromExpression = getDisplayFromExpression
+        getDisplayFromGraphState = getDisplayFromGraphState
+        }*)

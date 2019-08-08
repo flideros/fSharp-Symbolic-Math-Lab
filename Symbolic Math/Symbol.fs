@@ -180,8 +180,6 @@ type Symbol =
         | Error _ -> None
         | Inconsistent -> None
 
-
-
 type Result<'T> =
     | Pass of 'T
     | Fail of 'T
