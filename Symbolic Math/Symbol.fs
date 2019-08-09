@@ -166,6 +166,7 @@ type Constant =
 type Error =
     | DivideByZeroError
     | OtherError
+    | LazyCoder
 
 type Symbol = 
     | Constant of Constant

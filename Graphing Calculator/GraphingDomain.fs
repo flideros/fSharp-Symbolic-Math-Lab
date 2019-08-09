@@ -423,10 +423,10 @@ module GraphingImplementation =
                match op with
                | MathOp m -> 
                    match m with
-                   | Add -> getEvaluationState services stateData (Some Plus)                    
+                   | Add ->      getEvaluationState services stateData (Some Plus)                    
                    | Subtract -> getEvaluationState services stateData (Some Minus)                    
                    | Multiply -> getEvaluationState services stateData (Some Times)                    
-                   | Divide -> getEvaluationState services stateData (Some DividedBy)                    
+                   | Divide ->   getEvaluationState services stateData (Some DividedBy)                    
                    | CalculatorMathOp.Inverse ->
                        let nextOp = None//Some op
                        let newState = 
@@ -784,7 +784,7 @@ module GraphServices =
     open GraphingDomain
     open Utilities
     (*type GraphServices = {        
-    doDrawOperation :DoDrawOperation
+    //doDrawOperation :DoDrawOperation
     doExpressionOperation :DoExpressionOperation
     accumulateSymbol :AccumulateSymbol
     //accumulateZero :AccumulateZero
@@ -813,6 +813,9 @@ module GraphServices =
                 | _ -> Undefined
             let yValue =
                 match yExpression with
+                | Number (Real r) when r <= yMax && r >= yMin -> Real r
+                | Number (Real r) when r > yMax -> Real yMax
+                | Number (Real r) when r < yMin -> Real yMin
                 | Number n -> n
                 | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
@@ -842,7 +845,23 @@ module GraphServices =
                            |> Seq.toList 
                            |> List.map (fun x -> LineSegment x) }
 
-    let doExpressionOperation = ()
+    let doExpressionOperation opData :ExpressionOperationResult = 
+        let func, (expression_1 :Expression), expression_2 = opData
+        
+        let checkResult expression = 
+            match expression with
+            | Expression.Symbol (Symbol.Error e) -> ExpressionError e
+            | _ -> expression |> ExpressionSuccess
+        
+        match func with
+        | Plus ->       expression_1 + expression_2 |> checkResult
+        | Minus ->      expression_1 - expression_2 |> checkResult
+        | Times ->      expression_1 * expression_2 |> checkResult
+        | DividedBy 
+        | Quotient ->   expression_1 / expression_2 |> checkResult
+        | Inverse ->    expression_2 / expression_1 |> checkResult
+        | Root ->       expression_1** expression_2 |> checkResult
+        | _ ->          expression_1 |> checkResult
 
     let accumulateSymbol = ()
 
