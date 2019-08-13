@@ -121,13 +121,15 @@ module GraphingDomain =
     type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
 
     // Services used by the calculator itself
-    type AccumulateSymbol = ExpressionStateData -> Symbol -> ExpressionStateData
+    type AccumulateSymbol = ExpressionStateData -> Symbol -> Expression //StateData
     type DoDrawOperation = Expression -> DrawOperationResult
     type DoExpressionOperation = Function * Expression * Expression -> Result<Expression>
     type GetDisplayFromExpression = Expression -> string
     type GetNumberFromAccumulator = ExpressionStateData -> NumberType
     type GetDisplayFromGraphState = CalculatorState -> string
-    
+    type GetErrorFromExpression = Expression -> Error
+
+
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
         doExpressionOperation :DoExpressionOperation
@@ -138,24 +140,8 @@ module GraphingDomain =
         getNumberFromAccumulator :GetNumberFromAccumulator
         getDisplayFromExpression :GetDisplayFromExpression
         getDisplayFromGraphState :GetDisplayFromGraphState
+        getErrorFromExpression :GetErrorFromExpression
         }
-
-module EvaluateExpression = 
-    open ExpressionStructure
-    let for_X = fun (e:Expression) (n:NumberType) ->        
-        let x = 
-            match (variables e).Length = 1 with
-            | true -> substitute (Symbol (variables e).Head, Number n ) e
-            | false -> 
-                match e.isNumber with
-                | true -> e
-                //I need to throw an error here, but I'll get back to this later.
-                | false ->  substitute ( Symbol (Variable "x"), Number n ) e 
-        x |> ExpressionType.simplifyExpression
-
-    let getErrorFrom = fun e -> 
-        match e with
-        | Symbol (Error e) -> e | _ -> OtherError
 
 module GraphingImplementation =    
     open GraphingDomain
@@ -179,8 +165,8 @@ module GraphingImplementation =
         let newAccumulatorData = { accumulatorData with digits = newDigits }
         newAccumulatorData // return
 
-    let accumulateSymbol services symbol expressionData  =
-        let newAccumulatorData = services.accumulateSymbol expressionData symbol
+    let accumulateSymbol services symbol expressionStateData  =
+        let newAccumulatorData = services.accumulateSymbol expressionStateData symbol
         newAccumulatorData // return
 
     let getEvaluationState services (expressionStateData:ExpressionStateData) nextFunc = 
@@ -207,7 +193,7 @@ module GraphingImplementation =
                 | Pass resultExpression ->
                     // If there was a pending op, create a new ExpressionState using the result
                     getNewState resultExpression 
-                | Fail error -> ExpressionErrorState {lastExpression = previousExpression; error = Error (EvaluateExpression.getErrorFrom error)}
+                | Fail error -> ExpressionErrorState {lastExpression = previousExpression; error = services.getErrorFromExpression error |> Error}
             return newState
             } |> ifNone computeStateWithNoPendingOp 
 
@@ -221,11 +207,11 @@ module GraphingImplementation =
         let result = services.doExpressionOperation stateData
         match result with
         | Pass r -> ExpressionSuccess r
-        | Fail e -> ExpressionError (EvaluateExpression.getErrorFrom e)
+        | Fail e -> ExpressionError (services.getErrorFromExpression e)
 
     let replacePendingFunction (evaluatedStateData:EvaluatedStateData) nextFun = 
         let newPending = maybe {
-            let! expression,existingFunc  = evaluatedStateData.pendingFunction
+            let! expression, _existingFunc = evaluatedStateData.pendingFunction
             let! next = nextFun
             return expression,next
             }
@@ -404,9 +390,9 @@ module GraphingImplementation =
                 match stateData.pendingFunction with
                 | None -> stateData |> EvaluatedState
                 | Some _ ->
-                    newExpressionStateData
-                    |> accumulateSymbol services s
-                    |> ExpressionDigitAccumulatorState
+                    let newExpression = accumulateSymbol services s newExpressionStateData
+                    {evaluatedExpression = newExpression; pendingFunction = newExpressionStateData.pendingFunction}
+                    |> EvaluatedState
             | Function f -> replacePendingFunction stateData (Some f)
         | Draw -> doDrawOperation services stateData.evaluatedExpression
         
@@ -478,7 +464,7 @@ module GraphingImplementation =
                        let newState = 
                            getEvaluationState services 
                                { expression = expr;
-                                   pendingFunction = Some (expr,Function.Root); 
+                                   pendingFunction = Some (expr,Function.ToThePowerOf); 
                                    digits = "0.5" } nextOp 
                        let finalState =
                            match stateData.pendingFunction = None with
@@ -554,9 +540,9 @@ module GraphingImplementation =
            | ExpressionInput input -> 
                match input with 
                | Symbol s -> 
-                   newExpressionStateData
-                   |> accumulateSymbol services s
-                   |> ExpressionDigitAccumulatorState
+                   let newExpression = accumulateSymbol services s newExpressionStateData
+                   {evaluatedExpression = newExpression; pendingFunction = newExpressionStateData.pendingFunction}
+                   |> EvaluatedState
                | Function f -> getEvaluationState services stateData (Some f)
            | Draw -> doDrawOperation services stateData.expression
            
@@ -706,9 +692,9 @@ module GraphingImplementation =
         | ExpressionInput input -> 
             match input with 
             | Symbol s -> 
-                newExpressionStateData
-                |> accumulateSymbol services s
-                |> ExpressionDecimalAccumulatorState
+                let newExpression = accumulateSymbol services s newExpressionStateData
+                {evaluatedExpression = newExpression; pendingFunction = newExpressionStateData.pendingFunction}
+                |> EvaluatedState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services stateData.expression
         
@@ -785,7 +771,7 @@ module GraphServices =
     open Utilities
     (*type GraphServices = {        
     //doDrawOperation :DoDrawOperation
-    doExpressionOperation :DoExpressionOperation
+    //doExpressionOperation :DoExpressionOperation
     accumulateSymbol :AccumulateSymbol
     //accumulateZero :AccumulateZero
     //accumulateNonZeroDigit :AccumulateNonZeroDigit
@@ -794,6 +780,21 @@ module GraphServices =
     getDisplayFromExpression :GetDisplayFromExpression
     getDisplayFromGraphState :GetDisplayFromGraphState
     }*)
+    
+    let getNumberFromAccumulator :GetNumberFromAccumulator =
+        fun accumulatorStateData ->
+            let digits = accumulatorStateData.digits
+            match System.Double.TryParse digits with
+            | true, d -> Real d
+            | false, _ -> Real 0.0
+    
+    let getDisplayFromExpression = ()
+
+    let getDisplayFromGraphState = ()
+
+    let getErrorFromExpression = fun e -> 
+        match e with
+        | Expression.Symbol (Symbol.Error e) -> e | _ -> OtherError
 
     let doDrawOperation (xMin:float) xMax yMin yMax resolution expression :DrawOperationResult = 
         let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
@@ -854,16 +855,53 @@ module GraphServices =
             | _ -> expression |> ExpressionSuccess
         
         match func with
-        | Plus ->       expression_1 + expression_2 |> checkResult
-        | Minus ->      expression_1 - expression_2 |> checkResult
-        | Times ->      expression_1 * expression_2 |> checkResult
+        | Plus ->         expression_1 + expression_2 |> checkResult
+        | Minus ->        expression_1 - expression_2 |> checkResult
+        | Times ->        expression_1 * expression_2 |> checkResult
         | DividedBy 
-        | Quotient ->   expression_1 / expression_2 |> checkResult
-        | Inverse ->    expression_2 / expression_1 |> checkResult
-        | Root ->       expression_1** expression_2 |> checkResult
-        | _ ->          expression_1 |> checkResult
+        | Quotient ->     expression_1 / expression_2 |> checkResult
+        | Inverse ->      expression_2 / expression_1 |> checkResult
+        | ToThePowerOf -> expression_1** expression_2 |> checkResult
+        | _ ->            expression_1 |> checkResult
 
-    let accumulateSymbol = ()
+    let accumulateSymbol (expressionStateData :ExpressionStateData) input = 
+        let expression, pendingOp, digits = 
+            expressionStateData.expression, 
+            expressionStateData.pendingFunction,
+            expressionStateData.digits
+        let symbol = Expression.Symbol input
+        let getResult =
+            fun opResult ->
+                match opResult with
+                | ExpressionSuccess e -> e
+                | ExpressionError e -> Expression.Symbol (Symbol.Error e)
+
+        match pendingOp, digits = "" with 
+        | None, true -> 
+            match expression with
+            | Number z when z = Integer 0I -> symbol //Zero State
+            | _ -> expression //symbol <-- Toggle between expression and symbol for desired behavior
+        
+        | None, false -> 
+            let number = 
+                getNumberFromAccumulator expressionStateData
+                |> Number            
+            doExpressionOperation (Times,number,symbol)
+            |> getResult
+        
+        | Some (expression,op), true -> 
+            doExpressionOperation (op,expression,symbol)
+            |> getResult        
+        
+        | Some (expression,op), false -> 
+            let number = 
+                getNumberFromAccumulator expressionStateData
+                |> Number            
+            let numberXsymbol = 
+                doExpressionOperation (Times,number,symbol)
+                |> getResult
+            doExpressionOperation (op,expression,numberXsymbol)
+            |> getResult
 
     let accumulateNonZeroDigit maxLen :AccumulateNonZeroDigit = 
         fun (digit, accumulator) ->
@@ -891,16 +929,6 @@ module GraphServices =
                 if accumulator = "" then "0." else "."
             CalculatorServices.appendToAccumulator maxLen accumulator appendCh
     
-    let getNumberFromAccumulator :GetNumberFromAccumulator =
-        fun accumulatorStateData ->
-            let digits = accumulatorStateData.digits
-            match System.Double.TryParse digits with
-            | true, d -> Real d
-            | false, _ -> Real 0.0
-    
-    let getDisplayFromExpression = ()
-
-    let getDisplayFromGraphState = ()
 
     (*let createGraphServices = {        
         doDrawOperation =  doDrawOperation
@@ -912,4 +940,3 @@ module GraphServices =
         getNumberFromAccumulator = getNumberFromAccumulator
         getDisplayFromExpression = getDisplayFromExpression
         getDisplayFromGraphState = getDisplayFromGraphState
-        }*)
