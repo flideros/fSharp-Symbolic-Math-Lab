@@ -930,7 +930,6 @@ module GraphServices =
             CalculatorServices.appendToAccumulator maxLen accumulator appendCh
     
 
-
     (*let createGraphServices = {        
         doDrawOperation =  doDrawOperation
         doExpressionOperation =  doExpressionOperation
@@ -941,4 +940,3 @@ module GraphServices =
         getNumberFromAccumulator = getNumberFromAccumulator
         getDisplayFromExpression = getDisplayFromExpression
         getDisplayFromGraphState = getDisplayFromGraphState
-        }*)
