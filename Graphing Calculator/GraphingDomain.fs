@@ -22,7 +22,7 @@ module GraphingDomain =
             /// negative-angle direction
         | CounterClockwise
     type Drawing2DBounds = {upperX : X; lowerX : X; upperY : Y; lowerY : Y}
-    
+
     // Geometry
     
     type Point = 
