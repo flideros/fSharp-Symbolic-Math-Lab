@@ -82,7 +82,6 @@ module GraphingDomain =
 
     type PendingFunction = (Expression * Function)
 
-    // data associated with each state        
     type ExpressionStateData = 
         { expression : Expression;
           pendingFunction:PendingFunction option;
