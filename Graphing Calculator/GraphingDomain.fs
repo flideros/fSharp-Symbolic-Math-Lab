@@ -11,7 +11,6 @@ open Math.Pure.Structure
 module GraphingDomain =
     
     // Parameters
-
     type X = X of NumberType
     type Y = Y of NumberType
     type Z = Z of NumberType
@@ -23,8 +22,7 @@ module GraphingDomain =
         | CounterClockwise
     type Drawing2DBounds = {upperX : X; lowerX : X; upperY : Y; lowerY : Y}
     
-    // Geometry
-    
+    // Geometry    
     type Point = 
         | Point of X * Y  //-> System.Windows.Point //{x:Coordinate; y:Coordinate}
         | Point3D of X * Y * Z
@@ -62,7 +60,6 @@ module GraphingDomain =
     type Trace = {startPoint:Point; traceSegments:PathGeometry list}
     
     // Drawing
-
     type DrawOp = Expression * Drawing2DBounds
      
     // types to describe errors
@@ -85,8 +82,7 @@ module GraphingDomain =
 
     type PendingFunction = (Expression * Function)
 
-    // data associated with each state    
-    
+    // data associated with each state        
     type ExpressionStateData = 
         { expression : Expression;
           pendingFunction:PendingFunction option;
@@ -218,13 +214,16 @@ module GraphingImplementation =
 
     let doExpressionOperation services stateData = services.doExpressionOperation stateData
         
-    let replacePendingFunction (evaluatedStateData:EvaluatedStateData) nextFun = 
+    let replacePendingFunction (evaluatedStateData:EvaluatedStateData) nextFun =         
         let newPending = maybe {
             let! expression, _existingFunc = evaluatedStateData.pendingFunction
             let! next = nextFun
             return expression,next }
-        {evaluatedStateData with pendingFunction=newPending}
-        |> EvaluatedState
+        match newPending, nextFun with 
+        | Some _, _ -> {evaluatedStateData with pendingFunction=newPending}
+        | None, Some func -> {evaluatedStateData with pendingFunction=Some (evaluatedStateData.evaluatedExpression,func)}
+        | _ -> evaluatedStateData
+        |> EvaluatedState 
 
     let handleDrawState stateData input = //Only the'Back' function implimented here.
         let expr = stateData.traceExpression        
@@ -409,7 +408,10 @@ module GraphingImplementation =
             | Back -> EvaluatedState stateData 
             | Digit d -> 
                 match stateData.pendingFunction with
-                | None -> stateData |> EvaluatedState
+                | None ->                    
+                    newExpressionStateData
+                    |> accumulateNonZeroDigit services d
+                    |> ExpressionDigitAccumulatorState
                 | Some _ ->                    
                     newExpressionStateData
                     |> accumulateNonZeroDigit services d
@@ -555,7 +557,7 @@ module GraphingImplementation =
                    |> accumulateZero services 
                    |> ExpressionDigitAccumulatorState                     
                | DecimalSeparator -> 
-                   newExpressionStateData 
+                   stateData 
                    |> accumulateSeparator services
                    |> ExpressionDecimalAccumulatorState 
                | CalculatorInput.Equals -> getEvaluationState services stateData None
@@ -587,7 +589,7 @@ module GraphingImplementation =
            | ExpressionInput input -> 
                match input with 
                | Symbol s -> 
-                   let newExpression = accumulateSymbol services s newExpressionStateData
+                   let newExpression = accumulateSymbol services s stateData
                    {evaluatedExpression = newExpression; 
                     pendingFunction = newExpressionStateData.pendingFunction;
                     drawing2DBounds=stateData.drawing2DBounds}
@@ -754,7 +756,7 @@ module GraphingImplementation =
         | ExpressionInput input -> 
             match input with 
             | Symbol s -> 
-                let newExpression = accumulateSymbol services s newExpressionStateData
+                let newExpression = accumulateSymbol services s stateData
                 {evaluatedExpression = newExpression; 
                  pendingFunction = newExpressionStateData.pendingFunction;
                  drawing2DBounds=stateData.drawing2DBounds}
@@ -847,7 +849,14 @@ module GraphServices =
         fun e -> e.ToString()
 
     let getDisplayFromGraphState :GetDisplayFromGraphState = 
-        fun g -> g.ToString()
+        fun g -> 
+            match g with 
+            | EvaluatedState e -> e.evaluatedExpression.ToString()
+            | DrawState d -> d.trace.ToString()
+            | ExpressionDigitAccumulatorState d -> d.digits
+            | ExpressionDecimalAccumulatorState d -> d.digits
+            | DrawErrorState de -> "derror"
+            | ExpressionErrorState ee -> "eerror"
 
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
@@ -899,16 +908,16 @@ module GraphServices =
             pointSequence |>
             Seq.exists (fun x -> 
                 match x with 
-                | Point(X x,Y y) when x = Undefined || x = Undefined-> true 
+                | Point(X x,Y y) when x = Undefined || y = Undefined-> true 
                 | _ -> false)  
 
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> Trace { startPoint = Seq.head pointSequence; 
                            traceSegments = 
-                           Seq.tail pointSequence 
-                           |> Seq.toList 
-                           |> List.map (fun x -> LineSegment x) }
+                               Seq.tail pointSequence 
+                               |> Seq.toList 
+                               |> List.map (fun x -> LineSegment x) }
 
     let doExpressionOperation opData :ExpressionOperationResult = 
         

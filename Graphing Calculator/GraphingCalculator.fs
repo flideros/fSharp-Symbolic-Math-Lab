@@ -36,24 +36,55 @@ type ViewPoint =
 type InputMode = 
     | Conventional of Grid
     | RPN of Grid
-
-type Mode =
+    | Graph of Grid
+    
+type Mode =    
     | Conventional
     | RPN
+    | Graph
 
-type State = {rpn:RpnDomain.CalculatorState;
-              conventional:ConventionalDomain.CalculatorState;
-              mode : Mode;
-              model : Model }
+type State = 
+    { rpn:RpnDomain.CalculatorState;
+      conventional:ConventionalDomain.CalculatorState;
+      graph:GraphingDomain.CalculatorState;
+      mode : Mode;
+      model : Model }
 
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
     
-    // set initial state
-    let conventionalDefault =  ConventionalDomain.CalculatorState.ZeroState {pendingOp = None; memory = ""}
-    let rpnDefault = RpnDomain.CalculatorState.ReadyState {stack = RpnDomain.StackContents []}
-    let modelDefault = {startPoint = (Point(X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.))); traceSegments = [LineSegment (Point(X (Math.Pure.Quantity.Real 50.),Y (Math.Pure.Quantity.Real 30.))); LineSegment (Point(X (Math.Pure.Quantity.Real 100.),Y (Math.Pure.Quantity.Real 200.)));LineSegment (Point(X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66.)))]}
-    let mutable state = { rpn = rpnDefault; conventional = conventionalDefault; mode = Conventional; model = Trace modelDefault}
+    // set initial state -- DEFAULTS --
+    let conventionalDefault =  
+        { pendingOp = None; 
+          memory = "" }
+        |> ConventionalDomain.CalculatorState.ZeroState 
+    let rpnDefault = 
+        {stack = RpnDomain.StackContents []}
+        |> RpnDomain.CalculatorState.ReadyState 
+    let modelDefault = 
+        { startPoint = (Point(X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.))); 
+          traceSegments = 
+            [ LineSegment (Point(X (Math.Pure.Quantity.Real 50.), Y (Math.Pure.Quantity.Real 30. ))); 
+              LineSegment (Point(X (Math.Pure.Quantity.Real 100.),Y (Math.Pure.Quantity.Real 200.)));
+              LineSegment (Point(X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66. ))) ]}
+        |> Trace 
+    let graphDefault = 
+        { evaluatedExpression = 
+            Math.Pure.Quantity.Number.Zero 
+            |> Math.Pure.Structure.Number; 
+          pendingFunction = None; 
+          drawing2DBounds = 
+            { upperX = X (Math.Pure.Quantity.Real 500.); 
+              lowerX = X (Math.Pure.Quantity.Real 50.); 
+              upperY = Y (Math.Pure.Quantity.Real 500.); 
+              lowerY = Y (Math.Pure.Quantity.Real 50.)}}
+        |> EvaluatedState
+    let mutable state = 
+        { rpn = rpnDefault; 
+          conventional = conventionalDefault; 
+          mode = Conventional; 
+          model = modelDefault; 
+          graph = graphDefault}
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -184,7 +215,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function_y_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 0)
+        let tb = FunctionTextBox(MaxLines = 5, TabIndex = 0)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function_Button = 
@@ -1177,8 +1208,35 @@ type GraphingCalculator() as graphingCalculator =
             member __.CanExecuteChanged = event.Publish
         }
     // -----List of the various Modes
-    let modeButtonList = [InputMode.Conventional memoryButton_Grid; InputMode.RPN rpnButton_Grid]
-
+    let modeButtonList = 
+        [ InputMode.Conventional memoryButton_Grid; 
+          InputMode.RPN rpnButton_Grid 
+          InputMode.Graph memoryButton_Grid ]
+    
+    //  ----- Getters       
+    // a function that gets active model
+    let getActivetModel (s:State) = 
+        let convertPoint = fun point ->            
+            match point with
+            | (Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x,y) )
+            | (Point3D(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y),Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
+            | _ -> failwith "Not a point."
+        let convertSegment = fun segment -> 
+            match segment with 
+            | LineSegment(Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
+            | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
+        let model = match s.model with | Trace t -> t
+        let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
+        let pg = PathGeometry()
+        let pf = PathFigure()
+        let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."
+        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.)
+        do  pf.StartPoint <- pt
+            List.iter (fun s -> pf.Segments.Add(s)) segments
+            pg.Figures.Add(pf)
+            path.Data <- pg
+        path    
+    
 // ----- Setters
     // a function that sets active display
     let setActiveDisplay display =
@@ -1208,8 +1266,13 @@ type GraphingCalculator() as graphingCalculator =
         | View.Option3D p -> (p.Visibility <- Visibility.Visible)
         | View.Text t -> (t.Visibility <- Visibility.Visible)        
     // a function that sets the displayed text
-    let setDisplayedText = 
-        fun text -> screen_Text_TextBox.Text <- text 
+    let setDisplayedText =         
+        fun text ->
+            let mode = state.mode
+            match mode with
+            | RPN 
+            | Conventional -> screen_Text_TextBox.Text <- text 
+            | Graph -> function_y_TextBox.Text <- text
     // a function that sets the pending op text
     let setMemoText = 
         fun text -> memo.Text <- text
@@ -1221,10 +1284,12 @@ type GraphingCalculator() as graphingCalculator =
         do  List.iter (fun x -> 
             match x with
             | InputMode.Conventional c -> (c.Visibility <- Visibility.Collapsed)
-            | InputMode.RPN r -> (r.Visibility <- Visibility.Collapsed)) modeButtonList      
+            | InputMode.RPN r -> (r.Visibility <- Visibility.Collapsed)   
+            | InputMode.Graph g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
         match mode with
         | Mode.Conventional -> (memoryButton_Grid.Visibility <- Visibility.Visible)
         | Mode.RPN -> (rpnButton_Grid.Visibility <- Visibility.Visible)
+        | Mode.Graph -> (memoryButton_Grid.Visibility <- Visibility.Visible)
     // a function that sets the input mode
     let setInputMode mode = 
         do state <- {state with mode = mode}
@@ -1237,48 +1302,13 @@ type GraphingCalculator() as graphingCalculator =
             setActiveModeButtons mode
             setActiveDisplay (View.Text screen_Text_TextBox)
             setDisplayedText (RpnServices.getDisplayFromStack state.rpn)
+        | Graph ->
+            setActiveModeButtons mode
+            setActiveDisplay (View.Function function_Grid)
+            setDisplayedText (GraphServices.getDisplayFromGraphState state.graph)
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
-
- //  ----- Getters       
-    // a function that gets active model
-    let getActivetModel =        
-        let convertPoint = fun point ->            
-            match point with
-            | (Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x,y) )
-            | (Point3D(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y),Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
-            | _ -> failwith "Not a point."
-        let convertSegment = fun segment -> 
-            match segment with 
-            | LineSegment(Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
-            | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
-        let model = match state.model with | Trace t -> t
-        let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
-        let pg = PathGeometry()
-        let pf = PathFigure()
-        let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."
-        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.)
-        do  pf.StartPoint <- pt
-            List.iter (fun s -> pf.Segments.Add(s)) segments
-            pg.Figures.Add(pf)
-            path.Data <- pg
-        path    
-    // a function that gets active display
-    let getActiveDisplay = 
-        let d =
-            List.pick (fun x -> 
-                match x with
-                | View.PlotCanvas p when p.IsVisible = true -> Some x
-                | View.Function p when p.IsVisible = true -> Some x
-                | View.Function2D p when p.IsVisible = true -> Some x
-                | View.Function3D p when p.IsVisible = true -> Some x
-                | View.Option p when p.IsVisible = true -> Some x
-                | View.Option2D p when p.IsVisible = true -> Some x
-                | View.Option3D p when p.IsVisible = true -> Some x
-                | View.Text t when t.IsVisible = true -> Some x
-                | _ -> Some x) viewList
-        d
 
 //-----Create Menu
     let menu = // 
@@ -1291,7 +1321,7 @@ type GraphingCalculator() as graphingCalculator =
              do  item1.Icon <- checkedBox                
                  item2.Icon <- None
 
-         let header1_Item2 = MenuItem(Header = "Graph", Command = viewCommand (setActiveDisplay), CommandParameter = Function function_Grid)
+         let header1_Item2 = MenuItem(Header = "Graph", Command = modeCommand (setInputMode), CommandParameter = Graph)
          let header1_Item3 = MenuItem(Header = "Graph2D", Command = viewCommand (setActiveDisplay), CommandParameter = Function2D function2D_Grid)
          let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplay), CommandParameter = Function3D function3D_Grid)
          
@@ -1345,8 +1375,10 @@ type GraphingCalculator() as graphingCalculator =
     //-------setup calculator logic----------
     let calculatorServices = CalculatorServices.createServices()
     let rpnServices = RpnServices.createServices()
+    let graphServices = GraphServices.createGraphServices()
     let calculate = CalculatorImplementation.createCalculate calculatorServices 
     let calculateRpn = RpnImplementation.createCalculate rpnServices
+    let calculateGraph = GraphingImplementation.createEvaluate graphServices
     //-------create event handlers----------
     let handleConventionalInput input =         
         let newState =  calculate(input,state.conventional)
@@ -1385,11 +1417,28 @@ type GraphingCalculator() as graphingCalculator =
             state <- { state with rpn = newState}
             setDisplayedText (rpnServices.getDisplayFromStack newState) 
             setPendingOpText ""
-    let handleGraph () = //model = 
-        //setActivetModel model
-        canvas.Children.Clear()
-        canvas.Children.Add((getActivetModel)) |> ignore
-        setActiveDisplay (PlotCanvas screen_Canvas)
+    let handleGraphInput input =  
+        let newState =  calculateGraph (input,state.graph)        
+        let expText = 
+            match newState with
+            | DrawState d -> "Graph"
+            | EvaluatedState e -> graphServices.getDisplayFromExpression e.evaluatedExpression           
+            | ExpressionDigitAccumulatorState e -> graphServices.getDisplayFromExpression e.expression          
+            | ExpressionDecimalAccumulatorState e -> graphServices.getDisplayFromExpression e.expression           
+            | ExpressionErrorState e -> graphServices.getDisplayFromExpression e.lastExpression          
+            | DrawErrorState d -> graphServices.getDisplayFromExpression d.lastExpression
+        state <- { state with graph = newState }
+        setDisplayedText expText          
+        match newState with
+        | DrawState d -> 
+            do                
+                canvas.Children.Clear()
+                setActivetModel (Trace d.trace)                    
+                canvas.Children.Add((getActivetModel state)) |> ignore
+                setActiveDisplay (PlotCanvas screen_Canvas)
+                setPendingOpText (graphServices.getDisplayFromGraphState newState)
+        | _ -> setPendingOpText (graphServices.getDisplayFromGraphState newState)
+
         
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
@@ -1406,9 +1455,25 @@ type GraphingCalculator() as graphingCalculator =
             | MemoryStore -> Input MemoryStore
             | MemoryClear -> Input MemoryClear
             | MemoryRecall -> Input MemoryRecall (**)
+        let graphInput = 
+            match input with
+            | Zero -> CalcInput Zero 
+            | Digit d -> CalcInput (Digit d)
+            | DecimalSeparator -> CalcInput DecimalSeparator
+            | ConventionalDomain.MathOp _ -> CalcInput input
+            | Equals -> CalcInput Equals
+            | Clear -> CalcInput Clear
+            | ClearEntry -> CalcInput ClearEntry
+            | Back -> CalcInput Back
+            | MemoryStore -> CalcInput MemoryStore
+            | MemoryClear -> CalcInput MemoryClear
+            | MemoryRecall -> CalcInput MemoryRecall (**)
         match state.mode with
         | RPN -> handleRpnInput rpnInput
         | Conventional -> handleConventionalInput input
+        | Graph -> handleGraphInput graphInput
+
+    let x = (Math.Pure.Objects.Symbol.Variable "x") |> ExpressionInput.Symbol |> ExpressionInput
 
     do  //add event handler to each button
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
@@ -1444,4 +1509,8 @@ type GraphingCalculator() as graphingCalculator =
         drop             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Drop)))
         enter            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Push)))
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
-        function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraph() ))
+        x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> (Math.Pure.Objects.Symbol.Variable "x") 
+                                                                         |> ExpressionInput.Symbol 
+                                                                         |> ExpressionInput 
+                                                                         |> handleGraphInput ))        
+        function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
