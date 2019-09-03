@@ -886,10 +886,7 @@ module GraphServices =
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
                 | _ -> Undefined
             let yValue =
-                match yExpression with
-                | Number (Real r) when r <= yMax && r >= yMin -> Real r
-                | Number (Real r) when r > yMax -> Real yMax
-                | Number (Real r) when r < yMin -> Real yMin
+                match yExpression with                
                 | Number n -> n
                 | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
