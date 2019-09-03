@@ -74,10 +74,10 @@ type GraphingCalculator() as graphingCalculator =
             |> Math.Pure.Structure.Number; 
           pendingFunction = None; 
           drawing2DBounds = 
-            { upperX = X (Math.Pure.Quantity.Real 500.); 
-              lowerX = X (Math.Pure.Quantity.Real 50.); 
-              upperY = Y (Math.Pure.Quantity.Real 500.); 
-              lowerY = Y (Math.Pure.Quantity.Real 50.)}}
+            { upperX = X (Math.Pure.Quantity.Real 150.); 
+              lowerX = X (Math.Pure.Quantity.Real -150.); 
+              upperY = Y (Math.Pure.Quantity.Real 150.); 
+              lowerY = Y (Math.Pure.Quantity.Real -150.)}}
         |> EvaluatedState
     let mutable state = 
         { rpn = rpnDefault; 
@@ -162,12 +162,41 @@ type GraphingCalculator() as graphingCalculator =
                     )
         do t.SetValue(Grid.RowProperty, 1)
         t
-    let canvas = Canvas( Visibility = Visibility.Collapsed, 
-                         ClipToBounds = true)
+    let canvasGridLines_CheckBox = 
+        let c = CheckBox(Content = "Show Grid Lines")
+        do  c.SetValue(Grid.RowProperty, 0)
+        c
+    let canvasGridLine_Slider =
+        let s = 
+            Slider(
+                Margin = Thickness(left = 5., top = 20., right = 0., bottom = 0.),
+                Minimum = 5.,
+                Maximum = 100.,
+                TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight,
+                TickFrequency = 5.,
+                IsSnapToTickEnabled = true,
+                IsEnabled = false)        
+        do s.SetValue(Grid.RowProperty, 0)
+        s
+    let canvas_DockPanel_Grid =
+        let g = Grid()
+        do 
+            g.SetValue(DockPanel.DockProperty,Dock.Top)
+            g.Children.Add(canvasGridLines_CheckBox) |> ignore
+            g.Children.Add(canvasGridLine_Slider) |> ignore
+        g    
+    let canvas = Canvas(ClipToBounds = true)
+    let canvas_DockPanel =
+        let d = DockPanel()
+        do d.Children.Add(canvas_DockPanel_Grid) |> ignore
+        do d.Children.Add(canvas) |> ignore
+        do d.Visibility <- Visibility.Collapsed
+        d
     let screen_Canvas =
         let g = Grid()
         do g.SetValue(Grid.RowProperty, 1)        
-        do g.Children.Add(canvas) |> ignore
+        do g.Children.Add(canvas_DockPanel) |> ignore
+        
         g
     let selection_Rectangle =
         let r =
@@ -185,6 +214,8 @@ type GraphingCalculator() as graphingCalculator =
         r
 
     do  // Assemble the pieces   
+        
+        
         screen_Grid.Children.Add(screen_Text_TextBox) |> ignore
         screen_Grid.Children.Add(screen_Canvas)       |> ignore
         screen_Grid.Children.Add(selection_Rectangle) |> ignore
@@ -1213,17 +1244,24 @@ type GraphingCalculator() as graphingCalculator =
           InputMode.RPN rpnButton_Grid 
           InputMode.Graph memoryButton_Grid ]
     
-    //  ----- Getters       
+//  ----- Getters       
     // a function that gets active model
     let getActivetModel (s:State) = 
+        let w, h = function_Grid.ActualWidth, function_Grid.ActualHeight
+        let mapXToCanvas x = System.Math.Floor (x + w/2.)
+        let mapYToCanvas y = System.Math.Floor (-y + h/2.)
         let convertPoint = fun point ->            
             match point with
-            | (Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x,y) )
-            | (Point3D(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y),Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
+            | (Point(X (Math.Pure.Quantity.Real x),
+                     Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x |> mapXToCanvas,y |> mapYToCanvas))
+            | (Point3D(X (Math.Pure.Quantity.Real x),
+                       Y (Math.Pure.Quantity.Real y),
+                       Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
             | _ -> failwith "Not a point."
         let convertSegment = fun segment -> 
             match segment with 
-            | LineSegment(Point(X (Math.Pure.Quantity.Real x),Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x,y),true )
+            | LineSegment(Point(X (Math.Pure.Quantity.Real x),
+                                Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x |> mapXToCanvas, y |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         let model = match s.model with | Trace t -> t
         let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
@@ -1250,14 +1288,14 @@ type GraphingCalculator() as graphingCalculator =
             | View.Option2D p
             | View.Option3D p -> 
                 p.Visibility <- Visibility.Collapsed
-                canvas.Visibility <- Visibility.Collapsed
+                canvas_DockPanel.Visibility <- Visibility.Collapsed
             | View.Text t -> 
                 t.Visibility <- Visibility.Collapsed
-                canvas.Visibility <- Visibility.Collapsed) viewList
+                canvas_DockPanel.Visibility <- Visibility.Collapsed) viewList
         match display with
         | View.PlotCanvas p ->
             p.Visibility <- Visibility.Visible
-            canvas.Visibility <- Visibility.Visible
+            canvas_DockPanel.Visibility <- Visibility.Visible
         | View.Function p
         | View.Function2D p
         | View.Function3D p
@@ -1310,6 +1348,66 @@ type GraphingCalculator() as graphingCalculator =
     let setActivetModel model =        
         do state <- {state with model = model}
 
+//----- Gridlines
+    let makeGridLines yOffset xOffset = 
+        let lines = Image()        
+        //do  lines.SetValue(Panel.ZIndexProperty, -100)
+        
+        let gridLinesVisual = DrawingVisual() 
+        let context = gridLinesVisual.RenderOpen()
+        let color1 = SolidColorBrush(Color.FromArgb(Convert.ToByte(250), Convert.ToByte(255), Convert.ToByte(187), Convert.ToByte(187)))
+        let color2 = SolidColorBrush(Color.FromArgb(Convert.ToByte(250), Convert.ToByte(255), Convert.ToByte(229), Convert.ToByte(229)))
+        let lightPen, darkPen = Pen(color1, 0.5), Pen(color2, 1.)
+        
+        do  lightPen.Freeze()
+            darkPen.Freeze()
+        
+        let rows = (int)(SystemParameters.PrimaryScreenHeight)
+        let columns = (int)(SystemParameters.PrimaryScreenWidth)
+        let x = System.Windows.Point(0., 0.5)
+        let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.5)
+        let y = System.Windows.Point(0.5,0.)        
+        let y' = System.Windows.Point(0.5, SystemParameters.PrimaryScreenHeight)        
+        let horozontalLines = 
+            seq{for i in 0..rows -> 
+                    match i%5 = 0 with
+                    | true -> context.DrawLine(lightPen,x,x')
+                              x.Offset(0.,yOffset)
+                              x'.Offset(0.,yOffset)
+                    | false -> context.DrawLine(darkPen,x,x')
+                               x.Offset(0.,yOffset)
+                               x'.Offset(0.,yOffset)}
+        let verticalLines = 
+            seq{for i in 0..columns -> 
+                    match i%5 = 0 with
+                    | true -> context.DrawLine(lightPen,y,y')
+                              y.Offset(xOffset,0.)
+                              y'.Offset(xOffset,0.)
+                    | false -> context.DrawLine(darkPen,y,y')
+                               y.Offset(xOffset,0.)
+                               y'.Offset(xOffset,0.)}
+        
+        do  
+            Seq.iter (fun x -> x) horozontalLines
+            Seq.iter (fun y -> y) verticalLines
+            context.Close()
+ 
+        let bitmap = 
+            RenderTargetBitmap(
+                (int)SystemParameters.PrimaryScreenWidth,
+                (int)SystemParameters.PrimaryScreenHeight, 
+                96., 
+                96., 
+                PixelFormats.Pbgra32)
+        
+        do  
+            bitmap.Render(gridLinesVisual)
+            bitmap.Freeze()
+            lines.Source <- bitmap
+        lines
+    let removeGridLines () =         
+        do canvas.Children.RemoveAt(0)                                
+     
 //-----Create Menu
     let menu = // 
          let header1 = MenuItem(Header = "Mode")
@@ -1419,7 +1517,7 @@ type GraphingCalculator() as graphingCalculator =
             setPendingOpText ""
     let handleGraphInput input =  
         let newState =  calculateGraph (input,state.graph)        
-        let expText = 
+        let expressionText = 
             match newState with
             | DrawState d -> "Graph"
             | EvaluatedState e -> graphServices.getDisplayFromExpression e.evaluatedExpression           
@@ -1428,7 +1526,7 @@ type GraphingCalculator() as graphingCalculator =
             | ExpressionErrorState e -> graphServices.getDisplayFromExpression e.lastExpression          
             | DrawErrorState d -> graphServices.getDisplayFromExpression d.lastExpression
         state <- { state with graph = newState }
-        setDisplayedText expText          
+        setDisplayedText expressionText          
         match newState with
         | DrawState d -> 
             do                
@@ -1437,9 +1535,28 @@ type GraphingCalculator() as graphingCalculator =
                 canvas.Children.Add((getActivetModel state)) |> ignore
                 setActiveDisplay (PlotCanvas screen_Canvas)
                 setPendingOpText (graphServices.getDisplayFromGraphState newState)
-        | _ -> setPendingOpText (graphServices.getDisplayFromGraphState newState)
+                // add grid if checked
+                match canvasGridLines_CheckBox.IsChecked.HasValue = true &&
+                      canvasGridLines_CheckBox.IsChecked.Value = true with
+                | true -> 
+                    let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
+                    do  canvas.Children.Insert(0,gl) 
+                        canvasGridLine_Slider.IsEnabled <- true
+                | false -> ()
 
-        
+        | _ ->  setPendingOpText (graphServices.getDisplayFromGraphState newState)
+    let handleGridLinesOnCheck () =          
+        let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
+        do  canvas.Children.Insert(0,gl) 
+            canvasGridLine_Slider.IsEnabled <- true
+    let handleGridLinesOnUnCheck () =     
+        removeGridLines ()
+        canvasGridLine_Slider.IsEnabled <- false
+    let handleSliderValueOnValueChange () =
+        removeGridLines ()
+        let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
+        do  canvas.Children.Insert(0,gl)
+
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1509,8 +1626,8 @@ type GraphingCalculator() as graphingCalculator =
         drop             .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Drop)))
         enter            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Push)))
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
-        x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> (Math.Pure.Objects.Symbol.Variable "x") 
-                                                                         |> ExpressionInput.Symbol 
-                                                                         |> ExpressionInput 
-                                                                         |> handleGraphInput ))        
+        x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
+        canvasGridLines_CheckBox.Checked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
+        canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
+        canvasGridLine_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueOnValueChange ()))
