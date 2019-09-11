@@ -1466,6 +1466,14 @@ type GraphingCalculator() as graphingCalculator =
     let setActivetModel model =        
         do state <- {state with model = model}
 
+=======
+//----- Gridlines
+    let makeGridLines yOffset xOffset = 
+        let lines = Image()        
+        //do  lines.SetValue(Panel.ZIndexProperty, -100)
+        
+        let gridLinesVisual = DrawingVisual() 
+        let context = gridLinesVisual.RenderOpen()
 //-----Create Menu
     let menu = // 
          let header1 = MenuItem(Header = "Mode")
