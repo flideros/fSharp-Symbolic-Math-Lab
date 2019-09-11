@@ -169,7 +169,7 @@ type GraphingCalculator() as graphingCalculator =
     let canvasGridLine_Slider =
         let s = 
             Slider(
-                Margin = Thickness(left = 5., top = 20., right = 0., bottom = 0.),
+                Margin = Thickness(left = 0., top = 20., right = 0., bottom = 0.),
                 Minimum = 5.,
                 Maximum = 100.,
                 TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight,
@@ -246,7 +246,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function_y_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 5, TabIndex = 0)
+        let tb = FunctionTextBox(MaxLines = 25, TabIndex = 0, IsReadOnly = true)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function_Button = 
@@ -1207,6 +1207,127 @@ type GraphingCalculator() as graphingCalculator =
         swap                .SetValue(Grid.RowProperty,0); swap                 .SetValue(Grid.ColumnProperty,2);
         clearStack          .SetValue(Grid.RowProperty,0); clearStack           .SetValue(Grid.ColumnProperty,0);
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
+
+    //----- Gridlines
+    let makeGridLines yOffset xOffset = 
+        let xBias =  
+            let resolution = canvasGridLine_Slider.Value
+            let w = floor(function_Grid.ActualWidth / 2.)
+            let bias = (w % resolution)
+            bias
+        let yBias =  
+            let resolution = canvasGridLine_Slider.Value
+            let h = floor(function_Grid.ActualHeight / 2.)
+            let bias = (h % resolution) 
+            bias
+        
+        let lines = Image()        
+        do  lines.SetValue(Panel.ZIndexProperty, -100)
+    
+        let gridLinesVisual = DrawingVisual() 
+        let context = gridLinesVisual.RenderOpen()
+        let color1 = SolidColorBrush(Colors.Blue)
+        let color2 = SolidColorBrush(Colors.Green)
+        let pen1, pen2 = Pen(color1, 0.8), Pen(color2, 0.5)        
+        do  pen1.Freeze()
+            pen2.Freeze()
+    
+        let rows = (int)(SystemParameters.PrimaryScreenHeight)
+        let columns = (int)(SystemParameters.PrimaryScreenWidth)
+
+        let x = System.Windows.Point(0., 0.)
+        let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
+        let xInterval = 5
+        
+        let y = System.Windows.Point(0.,0.)        
+        let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
+        let yInterval = 5
+        
+        //lines
+        let horozontalLines = 
+            seq{for i in 0..rows -> 
+                    match i % yInterval = int(yBias) with //Interval
+                    | true -> context.DrawLine(pen1,x,x')
+                              x.Offset(0.,yOffset)
+                              x'.Offset(0.,yOffset)
+                    | false -> context.DrawLine(pen2,x,x')
+                               x.Offset(0.,yOffset)
+                               x'.Offset(0.,yOffset)}
+        let verticalLines = 
+            seq{for i in 0..columns -> 
+                    match i % xInterval = int(xBias) with //Interval
+                    | true -> context.DrawLine(pen1,y,y')
+                              y.Offset(xOffset,0.)
+                              y'.Offset(xOffset,0.)
+                    | false -> context.DrawLine(pen2,y,y')
+                               y.Offset(xOffset,0.)
+                               y'.Offset(xOffset,0.)}        
+        do  
+            Seq.iter (fun x -> x) horozontalLines
+            Seq.iter (fun y -> y) verticalLines
+            context.Close()
+ 
+        let bitmap = 
+            RenderTargetBitmap(
+                (int)SystemParameters.PrimaryScreenWidth,
+                (int)SystemParameters.PrimaryScreenHeight, 
+                96.,
+                96.,
+                PixelFormats.Pbgra32)        
+        do  
+            bitmap.Render(gridLinesVisual)
+            bitmap.Freeze()
+            lines.Source <- bitmap
+        lines
+    let removeGridLines () =         
+        do canvas.Children.RemoveAt(0)                                
+    
+    //----- Orgin Point    
+    let mapXToCanvas x = 
+        let resolution = 
+            match canvasGridLine_Slider.Value with
+            | x when x = 5. -> 25.            
+            | _ -> canvasGridLine_Slider.Value
+        let w = floor(function_Grid.ActualWidth / 2.)
+        let bias = w % resolution
+        let w' = w - bias 
+        (x + w')
+    let mapYToCanvas y = 
+        let resolution = 
+            match canvasGridLine_Slider.Value with
+            | x when x = 5. -> 25.
+            | _ -> canvasGridLine_Slider.Value
+        let h = floor(function_Grid.ActualHeight / 2.)
+        let bias = h % resolution
+        let h' = h - bias
+        -(y - h')
+    let placeOrginPoint x y = 
+        let orgin = Image()        
+        do  orgin.SetValue(Panel.ZIndexProperty, 100)        
+    
+        let orginVisual = DrawingVisual() 
+        let context = orginVisual.RenderOpen()
+        let color = SolidColorBrush(Colors.Blue)        
+        let color' = SolidColorBrush(Colors.Red)
+        let pen = Pen(color', 7.)
+        do  pen.Freeze()                
+    
+        let orginPoint = System.Windows.Point(x,y)
+        do  context.DrawEllipse(color,pen,orginPoint,1.,1.)
+            context.Close()
+ 
+        let bitmap = 
+            RenderTargetBitmap(
+                (int)SystemParameters.PrimaryScreenWidth,
+                (int)SystemParameters.PrimaryScreenHeight, 
+                96., 
+                96., 
+                PixelFormats.Pbgra32)
+        do  
+            bitmap.Render(orginVisual)
+            bitmap.Freeze()
+            orgin.Source <- bitmap
+        orgin
     
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
@@ -1218,7 +1339,7 @@ type GraphingCalculator() as graphingCalculator =
             [<CLIEvent>]
             member __.CanExecuteChanged = event.Publish
         }
-    // -----List of the various Views 
+    // ----- List of the various Views 
     let viewList = 
             [PlotCanvas screen_Canvas; 
              Text screen_Text_TextBox; 
@@ -1229,7 +1350,7 @@ type GraphingCalculator() as graphingCalculator =
              Function3D function3D_Grid; 
              Option3D option3D_Grid]
     
-    //-----Implementation of ICommand for modes
+    //----- Implementation of ICommand for modes
     let modeCommand ( exec : (Mode -> unit) )=
         let event = Event<_,_>()
         { new System.Windows.Input.ICommand with
@@ -1247,9 +1368,6 @@ type GraphingCalculator() as graphingCalculator =
 //  ----- Getters       
     // a function that gets active model
     let getActivetModel (s:State) = 
-        let w, h = function_Grid.ActualWidth, function_Grid.ActualHeight
-        let mapXToCanvas x = System.Math.Floor (x + w/2.)
-        let mapYToCanvas y = System.Math.Floor (-y + h/2.)
         let convertPoint = fun point ->            
             match point with
             | (Point(X (Math.Pure.Quantity.Real x),
@@ -1268,7 +1386,7 @@ type GraphingCalculator() as graphingCalculator =
         let pg = PathGeometry()
         let pf = PathFigure()
         let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."
-        let path = Path(Stroke = Brushes.Black, StrokeThickness= 2.)
+        let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
         do  pf.StartPoint <- pt
             List.iter (fun s -> pf.Segments.Add(s)) segments
             pg.Figures.Add(pf)
@@ -1348,66 +1466,6 @@ type GraphingCalculator() as graphingCalculator =
     let setActivetModel model =        
         do state <- {state with model = model}
 
-//----- Gridlines
-    let makeGridLines yOffset xOffset = 
-        let lines = Image()        
-        //do  lines.SetValue(Panel.ZIndexProperty, -100)
-        
-        let gridLinesVisual = DrawingVisual() 
-        let context = gridLinesVisual.RenderOpen()
-        let color1 = SolidColorBrush(Color.FromArgb(Convert.ToByte(250), Convert.ToByte(255), Convert.ToByte(187), Convert.ToByte(187)))
-        let color2 = SolidColorBrush(Color.FromArgb(Convert.ToByte(250), Convert.ToByte(255), Convert.ToByte(229), Convert.ToByte(229)))
-        let lightPen, darkPen = Pen(color1, 0.5), Pen(color2, 1.)
-        
-        do  lightPen.Freeze()
-            darkPen.Freeze()
-        
-        let rows = (int)(SystemParameters.PrimaryScreenHeight)
-        let columns = (int)(SystemParameters.PrimaryScreenWidth)
-        let x = System.Windows.Point(0., 0.5)
-        let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.5)
-        let y = System.Windows.Point(0.5,0.)        
-        let y' = System.Windows.Point(0.5, SystemParameters.PrimaryScreenHeight)        
-        let horozontalLines = 
-            seq{for i in 0..rows -> 
-                    match i%5 = 0 with
-                    | true -> context.DrawLine(lightPen,x,x')
-                              x.Offset(0.,yOffset)
-                              x'.Offset(0.,yOffset)
-                    | false -> context.DrawLine(darkPen,x,x')
-                               x.Offset(0.,yOffset)
-                               x'.Offset(0.,yOffset)}
-        let verticalLines = 
-            seq{for i in 0..columns -> 
-                    match i%5 = 0 with
-                    | true -> context.DrawLine(lightPen,y,y')
-                              y.Offset(xOffset,0.)
-                              y'.Offset(xOffset,0.)
-                    | false -> context.DrawLine(darkPen,y,y')
-                               y.Offset(xOffset,0.)
-                               y'.Offset(xOffset,0.)}
-        
-        do  
-            Seq.iter (fun x -> x) horozontalLines
-            Seq.iter (fun y -> y) verticalLines
-            context.Close()
- 
-        let bitmap = 
-            RenderTargetBitmap(
-                (int)SystemParameters.PrimaryScreenWidth,
-                (int)SystemParameters.PrimaryScreenHeight, 
-                96., 
-                96., 
-                PixelFormats.Pbgra32)
-        
-        do  
-            bitmap.Render(gridLinesVisual)
-            bitmap.Freeze()
-            lines.Source <- bitmap
-        lines
-    let removeGridLines () =         
-        do canvas.Children.RemoveAt(0)                                
-     
 //-----Create Menu
     let menu = // 
          let header1 = MenuItem(Header = "Mode")
@@ -1529,10 +1587,11 @@ type GraphingCalculator() as graphingCalculator =
         setDisplayedText expressionText          
         match newState with
         | DrawState d -> 
-            do                
-                canvas.Children.Clear()
+            let x,y = function_Grid.ActualWidth, function_Grid.ActualHeight
+            do  canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
-                canvas.Children.Add((getActivetModel state)) |> ignore
+                canvas.Children.Add(( getActivetModel state )) |> ignore
+                canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore
                 setActiveDisplay (PlotCanvas screen_Canvas)
                 setPendingOpText (graphServices.getDisplayFromGraphState newState)
                 // add grid if checked
@@ -1543,13 +1602,12 @@ type GraphingCalculator() as graphingCalculator =
                     do  canvas.Children.Insert(0,gl) 
                         canvasGridLine_Slider.IsEnabled <- true
                 | false -> ()
-
         | _ ->  setPendingOpText (graphServices.getDisplayFromGraphState newState)
-    let handleGridLinesOnCheck () =          
+    let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
         do  canvas.Children.Insert(0,gl) 
             canvasGridLine_Slider.IsEnabled <- true
-    let handleGridLinesOnUnCheck () =     
+    let handleGridLinesOnUnCheck () =
         removeGridLines ()
         canvasGridLine_Slider.IsEnabled <- false
     let handleSliderValueOnValueChange () =
