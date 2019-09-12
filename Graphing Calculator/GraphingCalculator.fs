@@ -1237,8 +1237,7 @@ type GraphingCalculator() as graphingCalculator =
         let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
         let y = System.Windows.Point(0.,0.)        
         let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
-        
-        
+         
         //lines
         let horozontalLines = 
             seq{for i in 0..rows -> 
