@@ -1209,17 +1209,15 @@ type GraphingCalculator() as graphingCalculator =
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
 
     //----- Gridlines
+    let resolution (slider:Slider)= 
+            match slider.Value with
+            | x when x = 5. -> 25.            
+            | _ -> slider.Value
     let makeGridLines yOffset xOffset = 
-        let xBias =  
-            let resolution = canvasGridLine_Slider.Value
-            let w = floor(function_Grid.ActualWidth / 2.)
-            let bias = (w % resolution)
-            bias
-        let yBias =  
-            let resolution = canvasGridLine_Slider.Value
-            let h = floor(function_Grid.ActualHeight / 2.)
-            let bias = (h % resolution) 
-            bias
+        let xInterval = 5
+        let yInterval = 5
+        let xBias = 0
+        let yBias = 0
         
         let lines = Image()        
         do  lines.SetValue(Panel.ZIndexProperty, -100)
@@ -1228,7 +1226,7 @@ type GraphingCalculator() as graphingCalculator =
         let context = gridLinesVisual.RenderOpen()
         let color1 = SolidColorBrush(Colors.Blue)
         let color2 = SolidColorBrush(Colors.Green)
-        let pen1, pen2 = Pen(color1, 0.8), Pen(color2, 0.5)        
+        let pen1, pen2 = Pen(color1, 0.8), Pen(color2, 0.5)
         do  pen1.Freeze()
             pen2.Freeze()
     
@@ -1237,16 +1235,14 @@ type GraphingCalculator() as graphingCalculator =
 
         let x = System.Windows.Point(0., 0.)
         let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
-        let xInterval = 5
-        
         let y = System.Windows.Point(0.,0.)        
         let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
-        let yInterval = 5
+        
         
         //lines
         let horozontalLines = 
             seq{for i in 0..rows -> 
-                    match i % yInterval = int(yBias) with //Interval
+                    match i % yInterval = yBias with //Interval
                     | true -> context.DrawLine(pen1,x,x')
                               x.Offset(0.,yOffset)
                               x'.Offset(0.,yOffset)
@@ -1255,7 +1251,7 @@ type GraphingCalculator() as graphingCalculator =
                                x'.Offset(0.,yOffset)}
         let verticalLines = 
             seq{for i in 0..columns -> 
-                    match i % xInterval = int(xBias) with //Interval
+                    match i % xInterval = xBias with //Interval
                     | true -> context.DrawLine(pen1,y,y')
                               y.Offset(xOffset,0.)
                               y'.Offset(xOffset,0.)
@@ -1283,22 +1279,14 @@ type GraphingCalculator() as graphingCalculator =
         do canvas.Children.RemoveAt(0)                                
     
     //----- Orgin Point    
-    let mapXToCanvas x = 
-        let resolution = 
-            match canvasGridLine_Slider.Value with
-            | x when x = 5. -> 25.            
-            | _ -> canvasGridLine_Slider.Value
+    let mapXToCanvas x =         
         let w = floor(function_Grid.ActualWidth / 2.)
-        let bias = w % resolution
+        let bias = w % resolution canvasGridLine_Slider
         let w' = w - bias 
         (x + w')
-    let mapYToCanvas y = 
-        let resolution = 
-            match canvasGridLine_Slider.Value with
-            | x when x = 5. -> 25.
-            | _ -> canvasGridLine_Slider.Value
+    let mapYToCanvas y =         
         let h = floor(function_Grid.ActualHeight / 2.)
-        let bias = h % resolution
+        let bias = h % resolution canvasGridLine_Slider
         let h' = h - bias
         -(y - h')
     let placeOrginPoint x y = 
@@ -1587,7 +1575,6 @@ type GraphingCalculator() as graphingCalculator =
         setDisplayedText expressionText          
         match newState with
         | DrawState d -> 
-            let x,y = function_Grid.ActualWidth, function_Grid.ActualHeight
             do  canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
                 canvas.Children.Add(( getActivetModel state )) |> ignore
