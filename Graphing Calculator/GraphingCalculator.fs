@@ -84,7 +84,7 @@ type GraphingCalculator() as graphingCalculator =
           conventional = conventionalDefault; 
           mode = Conventional; 
           model = modelDefault; 
-          graph = graphDefault}
+          graph = graphDefault }
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -1208,16 +1208,10 @@ type GraphingCalculator() as graphingCalculator =
         clearStack          .SetValue(Grid.RowProperty,0); clearStack           .SetValue(Grid.ColumnProperty,0);
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
 
-    //----- Gridlines
-    let resolution (slider:Slider)= 
-            match slider.Value with
-            | x when x = 5. -> 25.            
-            | _ -> slider.Value
+    //----- Gridlines    
+    let xInterval = 5
+    let yInterval = 5
     let makeGridLines yOffset xOffset = 
-        let xInterval = 5
-        let yInterval = 5
-        let xBias = 0
-        let yBias = 0
         
         let lines = Image()        
         do  lines.SetValue(Panel.ZIndexProperty, -100)
@@ -1241,7 +1235,7 @@ type GraphingCalculator() as graphingCalculator =
         //lines
         let horozontalLines = 
             seq{for i in 0..rows -> 
-                    match i % yInterval = yBias with //Interval
+                    match i % yInterval = 0 with //Interval
                     | true -> context.DrawLine(pen1,x,x')
                               x.Offset(0.,yOffset)
                               x'.Offset(0.,yOffset)
@@ -1250,7 +1244,7 @@ type GraphingCalculator() as graphingCalculator =
                                x'.Offset(0.,yOffset)}
         let verticalLines = 
             seq{for i in 0..columns -> 
-                    match i % xInterval = xBias with //Interval
+                    match i % xInterval = 0 with //Interval
                     | true -> context.DrawLine(pen1,y,y')
                               y.Offset(xOffset,0.)
                               y'.Offset(xOffset,0.)
@@ -1261,7 +1255,7 @@ type GraphingCalculator() as graphingCalculator =
             Seq.iter (fun x -> x) horozontalLines
             Seq.iter (fun y -> y) verticalLines
             context.Close()
- 
+
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
@@ -1276,16 +1270,16 @@ type GraphingCalculator() as graphingCalculator =
         lines
     let removeGridLines () =         
         do canvas.Children.RemoveAt(0)                                
-    
-    //----- Orgin Point    
+    //----- Orgin Point
+    let resolution (r) = (canvasGridLine_Slider.Value * float(r))         
     let mapXToCanvas x =         
         let w = floor(function_Grid.ActualWidth / 2.)
-        let bias = w % resolution canvasGridLine_Slider
+        let bias = w % resolution xInterval
         let w' = w - bias 
         (x + w')
     let mapYToCanvas y =         
-        let h = floor(function_Grid.ActualHeight / 2.)
-        let bias = h % resolution canvasGridLine_Slider
+        let h = ceil(function_Grid.ActualHeight / 2.)
+        let bias = h % resolution yInterval
         let h' = h - bias
         -(y - h')
     let placeOrginPoint x y = 
@@ -1302,7 +1296,7 @@ type GraphingCalculator() as graphingCalculator =
         let orginPoint = System.Windows.Point(x,y)
         do  context.DrawEllipse(color,pen,orginPoint,1.,1.)
             context.Close()
- 
+
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
@@ -1315,6 +1309,7 @@ type GraphingCalculator() as graphingCalculator =
             bitmap.Freeze()
             orgin.Source <- bitmap
         orgin
+
     
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
@@ -1588,6 +1583,8 @@ type GraphingCalculator() as graphingCalculator =
                     do  canvas.Children.Insert(0,gl) 
                         canvasGridLine_Slider.IsEnabled <- true
                 | false -> ()
+        | EvaluatedState ev ->
+            do setActiveDisplay (Function function_Grid)
         | _ ->  setPendingOpText (graphServices.getDisplayFromGraphState newState)
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
@@ -1600,7 +1597,8 @@ type GraphingCalculator() as graphingCalculator =
         removeGridLines ()
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
         do  canvas.Children.Insert(0,gl)
-
+            setActiveDisplay (Function function_Grid)
+            handleGraphInput Draw
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1672,6 +1670,8 @@ type GraphingCalculator() as graphingCalculator =
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
         x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
-        canvasGridLines_CheckBox.Checked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
+        
+        canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
+        
         canvasGridLine_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueOnValueChange ()))
