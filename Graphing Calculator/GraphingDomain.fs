@@ -176,22 +176,26 @@ module GraphingImplementation =
         let getNewState displayExpression =
             let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState expressionStateData)
             let newPendingFunc = 
-                nextFunc |> Option.map (fun func -> displayExpression, func )
+                nextFunc 
+                |> Option.map ( fun func -> displayExpression, func )
             {evaluatedExpression = displayExpression; 
              //parenthetical = None;
              pendingFunction = newPendingFunc;
              drawing2DBounds = bounds }
             |> EvaluatedState
 
-        let currentNumber = 
-            services.getNumberFromAccumulator expressionStateData 
+        let currentExpression = 
+            let number = services.getNumberFromAccumulator expressionStateData |> Number
+            match expressionStateData.parenthetical with
+            | None -> number
+            | Some x -> x
 
-        // If there is no pending function, create a new ExpressionState using the currentNumber
-        let computeStateWithNoPendingOp = getNewState (Number currentNumber)
+        // If there is no pending function, create a new ExpressionState using the currentNumber`   `                                                                                                               
+        let computeStateWithNoPendingOp = getNewState currentExpression
 
         maybe {            
             let! (previousExpression,func) = expressionStateData.pendingFunction
-            let result = services.doExpressionOperation(func,previousExpression,Number currentNumber)
+            let result = services.doExpressionOperation (func,previousExpression, currentExpression)
             let newState =
                 match result with
                 | ExpressionSuccess resultExpression ->
@@ -306,13 +310,13 @@ module GraphingImplementation =
                 | Percent ->
                     let nextOp = None//Some op
                     let newState = 
-                        getEvaluationState services 
+                        getEvaluationState services
                             { expression = expr;
-                              pendingFunction = Some (expr,Function.Quotient); 
+                              pendingFunction = Some (expr,Function.Quotient);
                               digits = "100";
                               drawing2DBounds = bounds;
                               parenthetical = None
-                            } nextOp 
+                            } nextOp
                     let finalState =
                         match stateData.pendingFunction = None with
                         | true -> newState
@@ -431,22 +435,20 @@ module GraphingImplementation =
             | Symbol s -> 
                 match stateData.pendingFunction with
                 | None -> 
-                    let check = 
-                        match stateData.evaluatedExpression = Number Math.Pure.Quantity.Number.Zero with
-                        | true -> 
-                            {evaluatedExpression = Expression.Symbol s;
-                             pendingFunction = newExpressionStateData.pendingFunction;
-                             drawing2DBounds=stateData.drawing2DBounds}
-                            |> EvaluatedState
-                        | false -> stateData |> EvaluatedState
-                    check
-                    
-                | Some _ ->
-                    let newExpression = accumulateSymbol services s newExpressionStateData
-                    {evaluatedExpression = Expression.Symbol s; 
-                     pendingFunction = newExpressionStateData.pendingFunction;
+                    { expression = expr;
+                      pendingFunction = None; 
+                      digits = "";
+                      drawing2DBounds = bounds;
+                      parenthetical = Some (Expression.Symbol s) 
+                    } 
+                    |> ExpressionDigitAccumulatorState
+                | Some pendingfunc ->                    
+                    {expression = expr; 
+                     pendingFunction = Some pendingfunc;
+                     digits = "";
+                     parenthetical = Some (Expression.Symbol s);
                      drawing2DBounds = stateData.drawing2DBounds}
-                    |> EvaluatedState
+                    |> ExpressionDigitAccumulatorState
             | Function f -> replacePendingFunction stateData (Some f)
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawing2DBounds)
@@ -619,11 +621,22 @@ module GraphingImplementation =
            | ExpressionInput input -> 
                match input with 
                | Symbol s -> 
-                   let newExpression = accumulateSymbol services s stateData
-                   {evaluatedExpression = newExpression; 
-                    pendingFunction = newExpressionStateData.pendingFunction;
-                    drawing2DBounds = bounds }
-                   |> EvaluatedState
+                   match stateData.pendingFunction with
+                   | None -> 
+                       { expression = expr;
+                         pendingFunction = None; 
+                         digits = "";
+                         drawing2DBounds = bounds;
+                         parenthetical = Some (Expression.Symbol s) 
+                       } 
+                       |> ExpressionDigitAccumulatorState
+                   | Some pendingfunc ->                    
+                       {expression = expr; 
+                        pendingFunction = Some pendingfunc;
+                        digits = "";
+                        parenthetical = Some (Expression.Symbol s);
+                        drawing2DBounds = stateData.drawing2DBounds}
+                       |> ExpressionDigitAccumulatorState
                | Function f -> getEvaluationState services stateData (Some f)
            | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
            
@@ -796,11 +809,22 @@ module GraphingImplementation =
         | ExpressionInput input -> 
             match input with 
             | Symbol s -> 
-                let newExpression = accumulateSymbol services s stateData
-                {evaluatedExpression = newExpression; 
-                 pendingFunction = newExpressionStateData.pendingFunction;
-                 drawing2DBounds = bounds}
-                |> EvaluatedState
+                match stateData.pendingFunction with
+                | None -> 
+                    { expression = expr;
+                      pendingFunction = None; 
+                      digits = "";
+                      drawing2DBounds = bounds;
+                      parenthetical = Some (Expression.Symbol s) 
+                    } 
+                    |> ExpressionDecimalAccumulatorState
+                | Some pendingfunc ->                    
+                    {expression = expr; 
+                     pendingFunction = Some pendingfunc;
+                     digits = "";
+                     parenthetical = Some (Expression.Symbol s);
+                     drawing2DBounds = stateData.drawing2DBounds}
+                    |> ExpressionDecimalAccumulatorState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
         
@@ -896,8 +920,18 @@ module GraphServices =
             match g with 
             | EvaluatedState e -> e.evaluatedExpression.ToString()
             | DrawState d -> d.trace.ToString()
-            | ExpressionDigitAccumulatorState d -> d.digits
-            | ExpressionDecimalAccumulatorState d -> d.digits
+            | ExpressionDigitAccumulatorState d -> 
+                let func = 
+                    match d.pendingFunction with
+                    | None -> ""
+                    | Some f -> f.ToString()
+                match d.digits.Length = 0 with
+                | false -> d.digits 
+                | true -> 
+                    match d.parenthetical with
+                    | Some expression -> expression.ToString() + func
+                    | None -> ""
+            | ExpressionDecimalAccumulatorState d -> d.digits 
             | DrawErrorState _de -> "derror"
             | ExpressionErrorState _ee -> "eerror"
 
@@ -906,11 +940,13 @@ module GraphServices =
             match g with 
             | EvaluatedState e -> e.drawing2DBounds
             | DrawState d -> d.drawing2DBounds
+            | ExpressionDecimalAccumulatorState e -> e.drawing2DBounds
+            | ExpressionDigitAccumulatorState e -> e.drawing2DBounds
             | _ -> 
                 { upperX = X (Math.Pure.Quantity.Real 15.); 
                   lowerX = X (Math.Pure.Quantity.Real -15.); 
                   upperY = Y (Math.Pure.Quantity.Real 15.); 
-                  lowerY = Y (Math.Pure.Quantity.Real -15.)}
+                  lowerY = Y (Math.Pure.Quantity.Real -15.) }
    
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
@@ -990,10 +1026,13 @@ module GraphServices =
         | _ ->            expression_1 |> checkResult
 
     let accumulateSymbol (expressionStateData :ExpressionStateData) input = 
-        let expression, pendingOp, digits = 
-            expressionStateData.expression, 
+        let expression = 
+            match expressionStateData.parenthetical with
+            | Some p -> p
+            | None -> expressionStateData.expression
+        let pendingOp, digits =              
             expressionStateData.pendingFunction,
-            expressionStateData.digits
+            expressionStateData.digits            
         let symbol = Expression.Symbol input
         let getResult =
             fun opResult ->
