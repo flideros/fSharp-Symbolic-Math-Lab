@@ -129,6 +129,7 @@ module GraphingDomain =
     type GetDisplayFromGraphState = CalculatorState -> string
     type GetErrorFromExpression = Expression -> Error
     type GetDrawing2DBounds = CalculatorState -> Drawing2DBounds
+    type GetDisplayFromPendingFunction = PendingFunction option -> string
 
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
@@ -141,6 +142,7 @@ module GraphingDomain =
         getDisplayFromExpression :GetDisplayFromExpression
         getDisplayFromGraphState :GetDisplayFromGraphState
         getDrawing2DBounds :GetDrawing2DBounds
+        getDisplayFromPendingFunction :GetDisplayFromPendingFunction
         }
 
 module GraphingImplementation =    
@@ -902,7 +904,7 @@ module GraphingImplementation =
 
 module GraphServices =
     open GraphingDomain
-    open Utilities
+    //open Utilities
     
     let getNumberFromAccumulator :GetNumberFromAccumulator =
         fun accumulatorStateData ->
@@ -926,15 +928,20 @@ module GraphServices =
                     | None -> ""
                     | Some f -> f.ToString()
                 match d.digits.Length = 0 with
-                | false -> d.digits 
+                | false -> func + d.digits 
                 | true -> 
                     match d.parenthetical with
-                    | Some expression -> expression.ToString() + func
+                    | Some expression -> func + expression.ToString()
                     | None -> ""
             | ExpressionDecimalAccumulatorState d -> d.digits 
             | DrawErrorState _de -> "derror"
             | ExpressionErrorState _ee -> "eerror"
 
+    let getDisplayFromPendingFunction (pendingFunction : PendingFunction option) =
+        match pendingFunction with
+        | Some x -> x.ToString()
+        | None -> ""
+    
     let getDrawing2DBounds :GetDrawing2DBounds = 
         fun g -> 
             match g with 
@@ -1104,4 +1111,5 @@ module GraphServices =
         getDisplayFromExpression = getDisplayFromExpression
         getDisplayFromGraphState = getDisplayFromGraphState
         getDrawing2DBounds = getDrawing2DBounds 
+        getDisplayFromPendingFunction = getDisplayFromPendingFunction
         }

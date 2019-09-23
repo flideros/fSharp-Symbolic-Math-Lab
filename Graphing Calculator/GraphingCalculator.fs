@@ -214,8 +214,6 @@ type GraphingCalculator() as graphingCalculator =
         r
 
     do  // Assemble the pieces   
-        
-        
         screen_Grid.Children.Add(screen_Text_TextBox) |> ignore
         screen_Grid.Children.Add(screen_Canvas)       |> ignore
         screen_Grid.Children.Add(selection_Rectangle) |> ignore
@@ -909,12 +907,12 @@ type GraphingCalculator() as graphingCalculator =
         let im = 
             TextBox(            
                 Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
-                MaxLines = 1,
+                MaxLines = 7,
                 Background = screenColor
                 )
         do  im.SetValue(Grid.ColumnSpanProperty,3)
             im.SetValue(Grid.RowProperty,2)
-            im.SetValue(TextBlock.TextAlignmentProperty,TextAlignment.Right)
+            im.SetValue(TextBlock.TextAlignmentProperty,TextAlignment.Left)
         im
 
     //-----Memo Text Block
@@ -1309,7 +1307,6 @@ type GraphingCalculator() as graphingCalculator =
             bitmap.Freeze()
             orgin.Source <- bitmap
         orgin
-
     
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
@@ -1416,7 +1413,9 @@ type GraphingCalculator() as graphingCalculator =
         fun text -> memo.Text <- text
     // a function that sets the pending op text
     let setPendingOpText = 
-        fun text -> immediate.Text <- text 
+        fun text -> 
+            immediate.Text <- text 
+            immediate.ScrollToEnd()
     // a function that sets the active mode buttons
     let setActiveModeButtons mode =
         do  List.iter (fun x -> 
@@ -1517,6 +1516,7 @@ type GraphingCalculator() as graphingCalculator =
     let calculate = CalculatorImplementation.createCalculate calculatorServices 
     let calculateRpn = RpnImplementation.createCalculate rpnServices
     let calculateGraph = GraphingImplementation.createEvaluate graphServices
+    
     //-------create event handlers----------
     let handleConventionalInput input =         
         let newState =  calculate(input,state.conventional)
@@ -1564,9 +1564,9 @@ type GraphingCalculator() as graphingCalculator =
             | ExpressionDigitAccumulatorState e -> graphServices.getDisplayFromExpression e.expression          
             | ExpressionDecimalAccumulatorState e -> graphServices.getDisplayFromExpression e.expression           
             | ExpressionErrorState e -> graphServices.getDisplayFromExpression e.lastExpression          
-            | DrawErrorState d -> graphServices.getDisplayFromExpression d.lastExpression
+            | DrawErrorState d -> graphServices.getDisplayFromExpression d.lastExpression        
         state <- { state with graph = newState }
-        setDisplayedText expressionText          
+        setDisplayedText expressionText
         match newState with
         | DrawState d -> 
             do  canvas.Children.Clear()
@@ -1574,7 +1574,7 @@ type GraphingCalculator() as graphingCalculator =
                 canvas.Children.Add(( getActivetModel state )) |> ignore
                 canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore
                 setActiveDisplay (PlotCanvas screen_Canvas)
-                setPendingOpText (graphServices.getDisplayFromGraphState newState)
+                setPendingOpText "graph" 
                 // add grid if checked
                 match canvasGridLines_CheckBox.IsChecked.HasValue = true &&
                       canvasGridLines_CheckBox.IsChecked.Value = true with
@@ -1585,7 +1585,12 @@ type GraphingCalculator() as graphingCalculator =
                 | false -> ()
         | EvaluatedState ev ->
             do setActiveDisplay (Function function_Grid)
-        | _ ->  setPendingOpText (graphServices.getDisplayFromGraphState newState)
+               setPendingOpText (graphServices.getDisplayFromPendingFunction ev.pendingFunction)
+        | ExpressionDigitAccumulatorState ed ->
+            do setPendingOpText (graphServices.getDisplayFromGraphState newState)
+        | ExpressionDecimalAccumulatorState ed ->
+            do setPendingOpText (graphServices.getDisplayFromGraphState newState)        
+        | _ -> setPendingOpText (graphServices.getDisplayFromGraphState newState)
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
         do  canvas.Children.Insert(0,gl) 
