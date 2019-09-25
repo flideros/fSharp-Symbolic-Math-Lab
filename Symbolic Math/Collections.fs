@@ -52,7 +52,7 @@ module Set =
         let oFManyLists lists =
            List.fold (fun acc x ->List.append acc x) [] lists |> Seq.distinct |> List.ofSeq
         // Definition
-        let definition = MultiUnion.definition
+        //let definition = MultiUnion.definition
 
     module Intersection = 
         
@@ -73,7 +73,7 @@ module Set =
             List.reduce (fun acc x -> Intersection.oFList acc x) lists
 
         // Definition
-        let definition = MultiIntersect.definition
+        //let definition = MultiIntersect.definition
     
     module Difference = 
 
@@ -85,7 +85,7 @@ module Set =
             |> Seq.distinct |> List.ofSeq
 
         // Definition
-        let definition = Setdiff.definition
+        //let definition = Setdiff.definition
 
 [<RequireQualifiedAccess>]
 module Bag =

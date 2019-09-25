@@ -6,177 +6,173 @@ open OpenMath
 
 type Function = 
 
-    | Abs // Implemented
-    | And
-    | ApplyToList
-    | Approx
-    | ArcCos // Implemented
-    | ArcCosh
-    | ArcCot // Implemented
-    | ArcCoth
-    | ArcCsc // Implemented
-    | ArcCsch
-    | ArcSec // Implemented
-    | ArcSech
-    | ArcSin // Implemented
-    | ArcSinh
-    | ArcTan // Implemented
-    | ArcTanh
-    | Argument
-    | BasedFloat
-    | BasedInteger
-    | BigFloat
-    | BigFloatPrec
-    | CartesianProduct
-    | MultiCartesianProduct
-    | Ceiling
-    | ComplexCartesian
-    | ComplexPolar
-    | Conjugate
-    | Cos // Implemented
+// Common Arithmetic Functions
+    | Lcm
+    | Gcd
+    | Plus          // binary op
+    | UnaryMinus    // Unary op
+    | Minus         // binary op
+    | Times         // binary op
+    | Product       // n-ary op
+    | DividedBy     // binary op
+    | ToThePowerOf  // binary op
+    | ExplicitToThePowerOf 
+    | Abs
+    | Root
+    | Sum           // n-ary op
+// Transcendental functions    
+    | Ln
+    | Log
+    | Exp     
+    | Sin 
+    | Cos
+    | Tan    
+    | Sec
+    | Csc
+    | Cot
+    | Sinh
     | Cosh
-    | Cot // Implemented
-    | Coth
-    | Csc // Implemented
-    | Csch
-    | Curl
-    | Defint
-    | Determinant
-    | Diff
-    | Divergence
-    | DividedBy // Implemented
+    | Tanh
+    | Sech
+    | Csch 
+    | Coth    
+    | ArcCos 
+    | ArcCosh
+    | ArcCot 
+    | ArcCoth
+    | ArcCsc 
+    | ArcCsch
+    | ArcSec 
+    | ArcSech
+    | ArcSin 
+    | ArcSinh
+    | ArcTan 
+    | ArcTanh 
+// Common arithmetic relations
+    | Equals
+    | LessThan
+    | GreaterThan
+    | NotEqual
+    | LessThanOrEqualTo
+    | GreaterThanOrEqualTo
+    | ApproximateEquality
+// Set functions for basic set theory.   
+    | CartesianProduct
+    | Map
+    | Size
+    | SuchThat
+    | Set
+    | Intersect
+    | Union 
+    | SetDiff
+    | SubSet
+    | In
+    | NotIn
+    | ProperSubset
+    | NotSubSet
+    | NotProperSubSet
+    | Multiset
+// Calculus operations
+    | AntiDerivative 
+    | Derivative 
+    | Differentiation
+    | NthDifferentiation
+    | PartialDifferentiation
+    | PartialDifferentiationDegree
+    | IndefiniteIntegration
+    | DefiniteIntegration
+// Complex number operations
+    | RealPart
+    | ImaginaryPart
+    | Argument
+    | Conjugate
+// Set of functions concerning functions themselves
+    | RightCompose
+    | RightIinverse
+    | LeftCompose
+    | LeftInverse
+    | Identity
+    | Range
+    | Restriction
     | Domain
     | DomainOfApplication
-    | Equals
-    | Equivalent
-    | Exp  // Implemented
-    | Factorial
-    | Factorof
-    | Floor
-    | Gcd
-    | Geq
-    | Grad
-    | GreaterThan
-    | Identity
     | Image
-    | Imaginary
-    | Implies
-    | In
-    | MultiIn
-    | Int
-    | IntegerInterval
-    | Intersect // Implemented
-    | MultiIntersect // Implemented
+    | Inverse
+    | Kernel
+    | ApplyToList
+    | PredicateOnList
+// Basic integer functions
+    | FactorOf
+    | Factorial
+    | Quotient
+    | Remainder
+// Discrete and continuous 1-dimensional intervals (with open/closed end points)
+    | IntegerInterval     
+    | OrientedInterval
     | Interval
     | IntervalCC
     | IntervalCO
     | IntervalOC
-    | IntervalOO
-    | Inverse
-    | Kernel
-    | Laplacian
-    | Lcm  
-    | LeftCompose
-    | LeftInverse
-    | Leq
+    | IntervalOO 
+//  Basic notion of the limits of unary functions whilst its variable tend (either from above, below or both sides) to a particular value
     | Limit
-    | List
-    | Ln // Implemented
-    | Log
-    | LessThan
-    | ListMap
-    | Map
-    | Matrix
-    | MatrixSelector
-    | Matrixrow
-    | Max
-    | DataMean
-    | Mean
-    | Median
-    | Min
-    | Minus // Implemented
-    | Mode
-    | DataMoment
-    | Moment
-    | Multiset
-    | Nand
-    | Neq
-    | Nor
-    | Not
-    | MultiNotin
-    | Notin
-    | MultiNotProperSubset
-    | Notprsubset
-    | MultiNotSubset
-    | Notsubset
-    | NthDiff
-    | Or
-    | OrientedInterval
-    | Otherwise
-    | Outerproduct
-    | PartialDiff
-    | PartialDiffDegree
-    | Piece
-    | Piecewise
-    | Plus // Implemented
-    | ExplicitToThePowerOf
-    | ToThePowerOf // Implemented
-    | PredicateOnList
-    | Product  // Implemented
-    | MultiProperSubset
-    | Prsubset
-    | Quotient
-    | Range
-    | RealPart
-    | Remainder
-    | Restriction
-    | RightCompose
-    | RightIinverse
-    | Root
-    | Round
-    | Scalarproduct
-    | DataSdev
-    | Sdev
-    | Sec
-    | Sech
-    | Set
-    | MultiSetdiff
-    | Setdiff // Implemented
-    | Sin // Implemented
-    | Sinh
-    | MultiSize
-    | Size
-    | MultiSubset
-    | Subset
-    | ListSuchthat
-    | SuchThat
-    | Sum // Implemented
-    | Tan // Implemented
-    | Tanh
-    | Times // Implemented
+// Operations on Matrices (independent of the matrix representation)
+    | VectorProduct
+    | ScalarProduct
+    | OuterProduct
+    | MatrixSelector    
+    | VectorSelector
     | Transpose
-    | Trunc
-    | UnaryMinus
-    | MultiUnion // Implemented
-    | Union // Implemented
-    | DataVariance
-    | Variance
+    | Determinant    
     | Vector
-    | Vectorselector
-    | Vectorproduct
+    | Matrix
+    | MatrixRow
+// Basic logic functions
+    | Equivalent
+    | Not
+    | And
+    | Nand
+    | Nor
     | Xnor
     | Xor
-    | AntiDerivative 
-    | Derivative // Implemented
-    | FractionType // Implemented
+    | Or
+    | Implies
+// Basic statistical functions used on random variables
+    | Min 
+    | Max
+    | Mean
+    | Median
+    | Sdev
+    | Variance
+    | Mode
+    | Moment
+// Basic statistical functions used on used on sample data
+    | DataMean
+    | DataMoment
+    | DataVariance
+    | DataSdev
+// Basic rounding concepts 
+    | Ceiling
+    | Round
+    | Trunc
+    | Floor 
+// Functions which are concerned with vector calculus
+    | Curl
+    | Divergence
+    | Grad
+    | Laplacian
+// Set of operators for piece-wise defined expressions
+    | Piece
+    | Piecewise
+    | Otherwise
 
-    with
+    with // I'm going to do this differently...got to think about it more though...
     member this.definition =
         match this with
         | Abs -> GET.definitionEntry "abs" (FROM.cD "arith1")
         | And -> GET.definitionEntry "and" (FROM.cD "logic1")
         | ApplyToList -> GET.definitionEntry "apply_to_list" (FROM.cD "fns2")
-        | Approx -> GET.definitionEntry "approx" (FROM.cD "relation1")
+        | ApproximateEquality -> GET.definitionEntry "approx" (FROM.cD "relation1")
         | ArcCos -> GET.definitionEntry "arccos" (FROM.cD "transc1")
         | ArcCosh -> GET.definitionEntry "arccosh" (FROM.cD "transc1")
         | ArcCot -> GET.definitionEntry "arccot" (FROM.cD "transc1")
@@ -190,15 +186,8 @@ type Function =
         | ArcTan -> GET.definitionEntry "arctan" (FROM.cD "transc1")
         | ArcTanh -> GET.definitionEntry "arctanh" (FROM.cD "transc1")
         | Argument -> GET.definitionEntry "argument" (FROM.cD "complex1")
-        | BasedFloat -> GET.definitionEntry "based_float" (FROM.cD "nums1")
-        | BasedInteger -> GET.definitionEntry "based_integer" (FROM.cD "nums1")
-        | BigFloat -> GET.definitionEntry "bigfloat" (FROM.cD "bigfloat1")
-        | BigFloatPrec -> GET.definitionEntry "bigfloatprec" (FROM.cD "bigfloat1")
         | CartesianProduct -> GET.definitionEntry "cartesian_product" (FROM.cD "set1")
-        | MultiCartesianProduct -> GET.definitionEntry "cartesian_product" (FROM.cD "multiset1")
         | Ceiling -> GET.definitionEntry "ceiling" (FROM.cD "rounding1")
-        | ComplexCartesian -> GET.definitionEntry "complex_cartesian" (FROM.cD "complex1")
-        | ComplexPolar -> GET.definitionEntry "complex_polar" (FROM.cD "complex1")
         | Conjugate -> GET.definitionEntry "conjugate" (FROM.cD "complex1")
         | Cos -> GET.definitionEntry "cos" (FROM.cD "transc1")
         | Cosh -> GET.definitionEntry "cosh" (FROM.cD "transc1")
@@ -207,9 +196,9 @@ type Function =
         | Csc -> GET.definitionEntry "csc" (FROM.cD "transc1")
         | Csch -> GET.definitionEntry "csch" (FROM.cD "transc1")
         | Curl -> GET.definitionEntry "curl" (FROM.cD "veccalc1")
-        | Defint -> GET.definitionEntry "defint" (FROM.cD "calculus1")
+        | DefiniteIntegration -> GET.definitionEntry "defint" (FROM.cD "calculus1")
         | Determinant -> GET.definitionEntry "determinant" (FROM.cD "linalg1")
-        | Diff -> GET.definitionEntry "diff" (FROM.cD "calculus1")
+        | Differentiation -> GET.definitionEntry "diff" (FROM.cD "calculus1")
         | Divergence -> GET.definitionEntry "divergence" (FROM.cD "veccalc1")
         | DividedBy -> GET.definitionEntry "divide" (FROM.cD "arith1")
         | Domain -> GET.definitionEntry "domain" (FROM.cD "fns1")
@@ -218,22 +207,20 @@ type Function =
         | Equivalent -> GET.definitionEntry "equivalent" (FROM.cD "logic1")
         | Exp -> GET.definitionEntry "exp" (FROM.cD "transc1")
         | Factorial -> GET.definitionEntry "factorial" (FROM.cD "integer1")
-        | Factorof -> GET.definitionEntry "factorof" (FROM.cD "integer1")
+        | FactorOf -> GET.definitionEntry "factorof" (FROM.cD "integer1")
         | Floor -> GET.definitionEntry "floor" (FROM.cD "rounding1")
         | Gcd -> GET.definitionEntry "gcd" (FROM.cD "arith1")
-        | Geq -> GET.definitionEntry "geq" (FROM.cD "relation1")
+        | GreaterThanOrEqualTo -> GET.definitionEntry "geq" (FROM.cD "relation1")
         | Grad -> GET.definitionEntry "grad" (FROM.cD "veccalc1")
         | GreaterThan -> GET.definitionEntry "gt" (FROM.cD "relation1")
         | Identity -> GET.definitionEntry "identity" (FROM.cD "fns1")
         | Image -> GET.definitionEntry "image" (FROM.cD "fns1")
-        | Imaginary -> GET.definitionEntry "imaginary" (FROM.cD "complex1")
+        | ImaginaryPart -> GET.definitionEntry "imaginary" (FROM.cD "complex1")
         | Implies -> GET.definitionEntry "implies" (FROM.cD "logic1")
         | In -> GET.definitionEntry "in" (FROM.cD "set1")
-        | MultiIn -> GET.definitionEntry "in" (FROM.cD "multiset1")
-        | Int -> GET.definitionEntry "int" (FROM.cD "calculus1")
+        | IndefiniteIntegration -> GET.definitionEntry "int" (FROM.cD "calculus1")
         | IntegerInterval -> GET.definitionEntry "integer_interval" (FROM.cD "interval1")
         | Intersect -> GET.definitionEntry "intersect" (FROM.cD "set1")
-        | MultiIntersect -> GET.definitionEntry "intersect" (FROM.cD "multiset1")
         | Interval -> GET.definitionEntry "interval" (FROM.cD "interval1")
         | IntervalCC -> GET.definitionEntry "interval_cc" (FROM.cD "interval1")
         | IntervalCO -> GET.definitionEntry "interval_co" (FROM.cD "interval1")
@@ -245,17 +232,15 @@ type Function =
         | Lcm -> GET.definitionEntry "lcm" (FROM.cD "arith1")
         | LeftCompose -> GET.definitionEntry "left_compose" (FROM.cD "fns1")
         | LeftInverse -> GET.definitionEntry "left_inverse" (FROM.cD "fns1")
-        | Leq -> GET.definitionEntry "leq" (FROM.cD "relation1")
+        | LessThanOrEqualTo -> GET.definitionEntry "leq" (FROM.cD "relation1")
         | Limit -> GET.definitionEntry "limit" (FROM.cD "limit1")
-        | List -> GET.definitionEntry "list" (FROM.cD "list1")
         | Ln -> GET.definitionEntry "ln" (FROM.cD "transc1")
         | Log -> GET.definitionEntry "log" (FROM.cD "transc1")
         | LessThan -> GET.definitionEntry "lt" (FROM.cD "relation1")
-        | ListMap -> GET.definitionEntry "map" (FROM.cD "list1")
         | Map -> GET.definitionEntry "map" (FROM.cD "set1")
         | Matrix -> GET.definitionEntry "matrix" (FROM.cD "linalg2")
         | MatrixSelector -> GET.definitionEntry "matrix_selector" (FROM.cD "linalg1")
-        | Matrixrow -> GET.definitionEntry "matrixrow" (FROM.cD "linalg2")
+        | MatrixRow -> GET.definitionEntry "matrixrow" (FROM.cD "linalg2")
         | Max -> GET.definitionEntry "max" (FROM.cD "minmax1")
         | DataMean -> GET.definitionEntry "mean" (FROM.cD "s_data1")
         | Mean -> GET.definitionEntry "mean" (FROM.cD "s_dist1")
@@ -267,22 +252,19 @@ type Function =
         | Moment -> GET.definitionEntry "moment" (FROM.cD "s_dist1")
         | Multiset -> GET.definitionEntry "multiset" (FROM.cD "multiset1")
         | Nand -> GET.definitionEntry "nand" (FROM.cD "logic1")
-        | Neq -> GET.definitionEntry "neq" (FROM.cD "relation1")
+        | NotEqual -> GET.definitionEntry "neq" (FROM.cD "relation1")
         | Nor -> GET.definitionEntry "nor" (FROM.cD "logic1")
         | Not -> GET.definitionEntry "not" (FROM.cD "logic1")
-        | MultiNotin -> GET.definitionEntry "notin" (FROM.cD "multiset1")
-        | Notin -> GET.definitionEntry "notin" (FROM.cD "set1")
-        | MultiNotProperSubset -> GET.definitionEntry "notprsubset" (FROM.cD "multiset1")
-        | Notprsubset -> GET.definitionEntry "notprsubset" (FROM.cD "set1")
-        | MultiNotSubset -> GET.definitionEntry "notsubset" (FROM.cD "multiset1")
-        | Notsubset -> GET.definitionEntry "notsubset" (FROM.cD "set1")
-        | NthDiff -> GET.definitionEntry "nthdiff" (FROM.cD "calculus1")
+        | NotIn -> GET.definitionEntry "notin" (FROM.cD "set1")
+        | NotProperSubSet -> GET.definitionEntry "notprsubset" (FROM.cD "set1")
+        | NotSubSet -> GET.definitionEntry "notsubset" (FROM.cD "set1")
+        | NthDifferentiation -> GET.definitionEntry "nthdiff" (FROM.cD "calculus1")
         | Or -> GET.definitionEntry "or" (FROM.cD "logic1")
         | OrientedInterval -> GET.definitionEntry "oriented_interval" (FROM.cD "interval1")
         | Otherwise -> GET.definitionEntry "otherwise" (FROM.cD "piece1")
-        | Outerproduct -> GET.definitionEntry "outerproduct" (FROM.cD "linalg1")
-        | PartialDiff -> GET.definitionEntry "partialdiff" (FROM.cD "calculus1")
-        | PartialDiffDegree -> GET.definitionEntry "partialdiffdegree" (FROM.cD "calculus1")
+        | OuterProduct -> GET.definitionEntry "outerproduct" (FROM.cD "linalg1")
+        | PartialDifferentiation -> GET.definitionEntry "partialdiff" (FROM.cD "calculus1")
+        | PartialDifferentiationDegree -> GET.definitionEntry "partialdiffdegree" (FROM.cD "calculus1")
         | Piece -> GET.definitionEntry "piece" (FROM.cD "piece1")
         | Piecewise -> GET.definitionEntry "piecewise" (FROM.cD "piece1")
         | Plus -> GET.definitionEntry "plus" (FROM.cD "arith1")
@@ -290,8 +272,7 @@ type Function =
         | ToThePowerOf -> GET.definitionEntry "power" (FROM.cD "arith1")
         | PredicateOnList -> GET.definitionEntry "predicate_on_list" (FROM.cD "fns2")
         | Product -> GET.definitionEntry "product" (FROM.cD "arith1")
-        | MultiProperSubset -> GET.definitionEntry "prsubset" (FROM.cD "multiset1")
-        | Prsubset -> GET.definitionEntry "prsubset" (FROM.cD "set1")
+        | ProperSubset -> GET.definitionEntry "prsubset" (FROM.cD "set1")
         | Quotient -> GET.definitionEntry "quotient" (FROM.cD "integer1")
         | Range -> GET.definitionEntry "range" (FROM.cD "fns1")
         | RealPart -> GET.definitionEntry "real" (FROM.cD "complex1")
@@ -301,21 +282,17 @@ type Function =
         | RightIinverse -> GET.definitionEntry "right_inverse" (FROM.cD "fns1")
         | Root -> GET.definitionEntry "root" (FROM.cD "arith1")
         | Round -> GET.definitionEntry "round" (FROM.cD "rounding1")
-        | Scalarproduct -> GET.definitionEntry "scalarproduct" (FROM.cD "linalg1")
+        | ScalarProduct -> GET.definitionEntry "scalarproduct" (FROM.cD "linalg1")
         | DataSdev -> GET.definitionEntry "sdev" (FROM.cD "s_data1")
         | Sdev -> GET.definitionEntry "sdev" (FROM.cD "s_dist1")
         | Sec -> GET.definitionEntry "sec" (FROM.cD "transc1")
         | Sech -> GET.definitionEntry "sech" (FROM.cD "transc1")
         | Set -> GET.definitionEntry "set" (FROM.cD "set1")
-        | MultiSetdiff -> GET.definitionEntry "setdiff" (FROM.cD "multiset1")
-        | Setdiff -> GET.definitionEntry "setdiff" (FROM.cD "set1")
+        | SetDiff -> GET.definitionEntry "setdiff" (FROM.cD "set1")
         | Sin -> GET.definitionEntry "sin" (FROM.cD "transc1")
         | Sinh -> GET.definitionEntry "sinh" (FROM.cD "transc1")
-        | MultiSize -> GET.definitionEntry "size" (FROM.cD "multiset1")
         | Size -> GET.definitionEntry "size" (FROM.cD "set1")
-        | MultiSubset -> GET.definitionEntry "subset" (FROM.cD "multiset1")
-        | Subset -> GET.definitionEntry "subset" (FROM.cD "set1")
-        | ListSuchthat -> GET.definitionEntry "suchthat" (FROM.cD "list1")
+        | SubSet -> GET.definitionEntry "subset" (FROM.cD "set1")
         | SuchThat -> GET.definitionEntry "suchthat" (FROM.cD "set1")
         | Sum -> GET.definitionEntry "sum" (FROM.cD "arith1")
         | Tan -> GET.definitionEntry "tan" (FROM.cD "transc1")
@@ -324,16 +301,14 @@ type Function =
         | Transpose -> GET.definitionEntry "transpose" (FROM.cD "linalg1")
         | Trunc -> GET.definitionEntry "trunc" (FROM.cD "rounding1")
         | UnaryMinus -> GET.definitionEntry "unary_minus" (FROM.cD "arith1")
-        | MultiUnion -> GET.definitionEntry "union" (FROM.cD "multiset1")
         | Union -> GET.definitionEntry "union" (FROM.cD "set1")
         | DataVariance -> GET.definitionEntry "variance" (FROM.cD "s_data1")
         | Variance -> GET.definitionEntry "variance" (FROM.cD "s_dist1")
         | Vector -> GET.definitionEntry "vector" (FROM.cD "linalg2")
-        | Vectorselector -> GET.definitionEntry "vector_selector" (FROM.cD "linalg1")
-        | Vectorproduct -> GET.definitionEntry "vectorproduct" (FROM.cD "linalg1")
+        | VectorSelector -> GET.definitionEntry "vector_selector" (FROM.cD "linalg1")
+        | VectorProduct -> GET.definitionEntry "vectorproduct" (FROM.cD "linalg1")
         | Xnor -> GET.definitionEntry "xnor" (FROM.cD "logic1")
         | Xor -> GET.definitionEntry "xor" (FROM.cD "logic1")
-        | FractionType -> GET.definitionEntry "rational)" (FROM.cD "nums1")
         | _ -> None
  
 module Function =
