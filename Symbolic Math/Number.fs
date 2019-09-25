@@ -9,7 +9,7 @@ open System.Numerics
 type Fraction = 
     {numerator: BigInteger; denominator: BigInteger}
     with
-    static member definition = FractionType.definition
+    //static member definition = FractionType.definition
     
     member this.compareTo that = 
         match (this.numerator*that.denominator) > (this.denominator*that.numerator) with
@@ -37,9 +37,11 @@ type Fraction =
     static member Zero = {numerator = 0I; denominator = 1I}
     static member zeroDefinition = Zero.definition
 
+
+
 [<StructuralEquality;NoComparison>]
 type NumberType =
-    | Complex of Complex
+    
     | Rational of Fraction 
     | Integer of BigInteger 
     | Real of float
@@ -47,6 +49,18 @@ type NumberType =
     | NegativeInfinity
     | ComplexInfinity
     | Undefined
+    // Complex numbers
+    | Complex of Complex
+    | ComplexPolar of ComplexPolar
+    | ComplexCartesian of ComplexCartesian
+    // Common representations of "bigfloats"
+    | BigFloat of BigFloat
+    | BigFloatPrecision of BigFloatPrecision
+
+and ComplexPolar = {magnitude:NumberType; theta:NumberType}
+and ComplexCartesian = {x:NumberType; y:NumberType}
+and BigFloat = {mantissa:NumberType; baseNumber:NumberType; exponent:NumberType} // m*r^e 
+and BigFloatPrecision = {bigFloat:BigFloat; newRadix:NumberType; significaantDigits:NumberType}
 
 module Number =
 

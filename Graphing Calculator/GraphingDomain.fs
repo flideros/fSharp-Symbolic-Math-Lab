@@ -928,12 +928,22 @@ module GraphServices =
                     | None -> ""
                     | Some f -> f.ToString()
                 match d.digits.Length = 0 with
-                | false -> func + d.digits 
+                | false -> func + " " + d.digits 
                 | true -> 
                     match d.parenthetical with
-                    | Some expression -> func + expression.ToString()
+                    | Some expression -> func + " " + expression.ToString()
                     | None -> ""
-            | ExpressionDecimalAccumulatorState d -> d.digits 
+            | ExpressionDecimalAccumulatorState d -> 
+                let func = 
+                    match d.pendingFunction with
+                    | None -> ""
+                    | Some f -> f.ToString()
+                match d.digits.Length = 0 with
+                | false -> func + " " + d.digits 
+                | true -> 
+                    match d.parenthetical with
+                    | Some expression -> func + " " + expression.ToString()
+                    | None -> ""
             | DrawErrorState _de -> "derror"
             | ExpressionErrorState _ee -> "eerror"
 
