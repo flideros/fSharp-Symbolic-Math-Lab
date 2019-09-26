@@ -82,7 +82,6 @@ module GraphingDomain =
         
 
     type PendingFunction = (Expression * Function)
-
     type Parenthetical = Parenthetical of (Expression * PendingFunction option * Parenthetical option)
 
     // data associated with each state        
@@ -134,7 +133,6 @@ module GraphingDomain =
     type GetDisplayFromPendingFunction = PendingFunction option -> string
     type GetExpressionFromParenthetical = Parenthetical option -> Expression
     type GetParentheticalFromExpression = Expression -> Parenthetical
-
 
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
