@@ -937,7 +937,7 @@ module GraphingImplementation =
 module GraphServices =
     open GraphingDomain
     //open Utilities
-    
+
     let getNumberFromAccumulator :GetNumberFromAccumulator =
         fun accumulatorStateData ->
             //let x = accumulatorStateData.expression
