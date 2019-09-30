@@ -1556,7 +1556,7 @@ type GraphingCalculator() as graphingCalculator =
             setDisplayedText (rpnServices.getDisplayFromStack newState) 
             setPendingOpText ""
     let handleGraphInput input =  
-        let newState =  calculateGraph (input,state.graph)        
+        let newState = calculateGraph (input, state.graph)        
         let expressionText = 
             match newState with
             | DrawState d -> "Graph"
@@ -1675,7 +1675,8 @@ type GraphingCalculator() as graphingCalculator =
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
         x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
-        
+        openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
+
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
         

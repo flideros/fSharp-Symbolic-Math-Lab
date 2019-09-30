@@ -78,10 +78,10 @@ module GraphingDomain =
 
     type ExpressionInput =
         | Symbol of Symbol
-        | Function of Function
-        
+        | Function of Function        
 
     type PendingFunction = (Expression * Function)
+
     type Parenthetical = Parenthetical of (Expression * PendingFunction option * Parenthetical option)
 
     // data associated with each state        
@@ -109,6 +109,7 @@ module GraphingDomain =
         | CalcInput of ConventionalDomain.CalculatorInput
         | Stack of RpnDomain.CalculatorInput
         | Draw
+        | OpenParentheses
 
     // States
     type CalculatorState =         
@@ -131,8 +132,11 @@ module GraphingDomain =
     type GetErrorFromExpression = Expression -> Error
     type GetDrawing2DBounds = CalculatorState -> Drawing2DBounds
     type GetDisplayFromPendingFunction = PendingFunction option -> string
+    
     type GetExpressionFromParenthetical = Parenthetical option -> Expression
     type GetParentheticalFromExpression = Expression -> Parenthetical
+    type GetParentheticalFromCalculatorState = CalculatorState -> Parenthetical
+    type SetExpressionToParenthetical = Expression * (Parenthetical option) -> Parenthetical
 
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
@@ -148,6 +152,8 @@ module GraphingDomain =
         getDisplayFromPendingFunction :GetDisplayFromPendingFunction
         getExpressionFromParenthetical :GetExpressionFromParenthetical
         getParentheticalFromExpression :GetParentheticalFromExpression
+        getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
+        setExpressionToParenthetical :SetExpressionToParenthetical
         }
 
 module GraphingImplementation =    
@@ -265,6 +271,7 @@ module GraphingImplementation =
             | Digit d -> DrawState stateData
         | ExpressionInput input -> DrawState stateData
         | Draw -> DrawState stateData
+        | OpenParentheses -> DrawState stateData
         
     let handleEvaluatedState services stateData input =
         let bounds = services.getDrawing2DBounds (EvaluatedState stateData)
@@ -460,6 +467,12 @@ module GraphingImplementation =
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawing2DBounds)
             |> doDrawOperation services 
+        | OpenParentheses -> 
+            {newExpressionStateData with 
+                parenthetical = 
+                    (services.getParentheticalFromCalculatorState (ExpressionDigitAccumulatorState newExpressionStateData)) 
+                    |> Some} 
+            |> ExpressionDigitAccumulatorState
         
     let handleExpressionDigitAccumulatorState services stateData input =           
            let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState stateData)
@@ -633,20 +646,25 @@ module GraphingImplementation =
                        { expression = expr;
                          pendingFunction = None; 
                          digits = "";
-                         drawing2DBounds = bounds;
-                         parenthetical = services.getParentheticalFromExpression (Expression.Symbol s) |> Some
-                       } 
+                         parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
+                         drawing2DBounds = bounds} 
                        |> ExpressionDigitAccumulatorState
                    | Some pendingfunc ->                    
-                       {expression = expr; 
-                        pendingFunction = Some pendingfunc;
-                        digits = "";
-                        parenthetical = services.getParentheticalFromExpression (Expression.Symbol s) |> Some;
-                        drawing2DBounds = stateData.drawing2DBounds}
+                       { expression = expr; 
+                         pendingFunction = Some pendingfunc;
+                         digits = "";
+                         parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
+                         drawing2DBounds = stateData.drawing2DBounds}
                        |> ExpressionDigitAccumulatorState
                | Function f -> getEvaluationState services stateData (Some f)
            | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
-           
+           | OpenParentheses -> 
+                {stateData with 
+                    parenthetical = 
+                        (services.getParentheticalFromCalculatorState (ExpressionDigitAccumulatorState stateData)) 
+                        |> Some} 
+                |> ExpressionDigitAccumulatorState
+
     let handleExpressionDecimalAccumulatorState services stateData input =
         let bounds = services.getDrawing2DBounds (ExpressionDecimalAccumulatorState stateData)
         let zero = Number (Integer 0I)
@@ -822,19 +840,26 @@ module GraphingImplementation =
                       pendingFunction = None; 
                       digits = "";
                       drawing2DBounds = bounds;
-                      parenthetical = services.getParentheticalFromExpression (Expression.Symbol s) |> Some 
+                      parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some 
                     } 
                     |> ExpressionDecimalAccumulatorState
                 | Some pendingfunc ->                    
                     {expression = expr; 
                      pendingFunction = Some pendingfunc;
                      digits = "";
-                     parenthetical = services.getParentheticalFromExpression (Expression.Symbol s) |> Some;
+                     parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
                      drawing2DBounds = stateData.drawing2DBounds}
                     |> ExpressionDecimalAccumulatorState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
-        
+        | OpenParentheses -> 
+             {stateData with 
+                 parenthetical = 
+                     (services.getParentheticalFromCalculatorState (ExpressionDecimalAccumulatorState stateData)) 
+                     |> Some} 
+             |> ExpressionDecimalAccumulatorState 
+            
+
     let handleDrawErrorState services stateData input =           
         let bounds = services.getDrawing2DBounds (DrawErrorState stateData)
         match input with
@@ -858,7 +883,8 @@ module GraphingImplementation =
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
-          
+        | OpenParentheses -> DrawErrorState stateData
+        
     let handleExpressionErrorState services stateData input =
         let bounds = services.getDrawing2DBounds (ExpressionErrorState stateData)
         match input with
@@ -882,6 +908,7 @@ module GraphingImplementation =
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
+        | OpenParentheses -> DrawErrorState stateData
     
     let createEvaluate (services:GraphServices) : Evaluate = 
          // create some local functions with partially applied services
@@ -910,19 +937,7 @@ module GraphingImplementation =
 module GraphServices =
     open GraphingDomain
     //open Utilities
-    
-    let rec getExpressionFromParenthetical :GetExpressionFromParenthetical = 
-        fun parenthetical ->
-            match parenthetical with 
-            | None -> Expression.Zero
-            | Some p ->                 
-                match p with
-                | Parenthetical(x, None, None) -> x
-                | Parenthetical(x, _, _) -> x // still need to implement the other scenarios
-    
-    let getParentheticalFromExpression :GetParentheticalFromExpression = 
-        fun expression -> Parenthetical(expression, None, None)            
-    
+
     let getNumberFromAccumulator :GetNumberFromAccumulator =
         fun accumulatorStateData ->
             //let x = accumulatorStateData.expression
@@ -1127,6 +1142,31 @@ module GraphServices =
                 if accumulator = "" then "0." else "."
             CalculatorServices.appendToAccumulator maxLen accumulator appendCh
     
+    let getParentheticalFromExpression :GetParentheticalFromExpression = 
+        fun expression -> Parenthetical(expression, None, None)
+    
+    let setExpressionToParenthetical = 
+        fun (expression, parenthetical) -> 
+            match parenthetical with 
+            | Some (Parenthetical(_,po,p)) -> Parenthetical(expression, po, p)
+            | None -> getParentheticalFromExpression expression
+
+    let getExpressionFromParenthetical :GetExpressionFromParenthetical = 
+        fun parenthetical ->
+            match parenthetical with 
+            | None -> Expression.Zero
+            | Some p -> match p with Parenthetical (x, _, _) -> x   
+            
+    let getParentheticalFromCalculatorState = 
+        fun state ->
+            match state with 
+            | EvaluatedState ev -> (Expression.Zero, ev.pendingFunction, None) |> Parenthetical
+            | ExpressionDigitAccumulatorState es
+            | ExpressionDecimalAccumulatorState es -> 
+                let lastParenthetical = (Expression.Zero, es.pendingFunction, es.parenthetical) |> Parenthetical |> Some
+                (Expression.Zero, es.pendingFunction, lastParenthetical ) |> Parenthetical
+            | _ -> (Expression.Zero, None, None) |> Parenthetical
+
     let createGraphServices () = {        
         doDrawOperation =  doDrawOperation (0.1)
         doExpressionOperation =  doExpressionOperation
@@ -1141,4 +1181,6 @@ module GraphServices =
         getDisplayFromPendingFunction = getDisplayFromPendingFunction
         getExpressionFromParenthetical = getExpressionFromParenthetical
         getParentheticalFromExpression = getParentheticalFromExpression
+        getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
+        setExpressionToParenthetical = setExpressionToParenthetical
         }
