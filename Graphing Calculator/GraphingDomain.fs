@@ -137,6 +137,7 @@ module GraphingDomain =
     type GetParentheticalFromExpression = Expression -> Parenthetical
     type GetParentheticalFromCalculatorState = CalculatorState -> Parenthetical
     type SetExpressionToParenthetical = Expression * (Parenthetical option) -> Parenthetical
+    type CloseParenthetical = ExpressionStateData -> CalculatorState
 
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
@@ -154,6 +155,7 @@ module GraphingDomain =
         getParentheticalFromExpression :GetParentheticalFromExpression
         getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
         setExpressionToParenthetical :SetExpressionToParenthetical
+        closeParenthetical :CloseParenthetical
         }
 
 module GraphingImplementation =    
@@ -1145,7 +1147,7 @@ module GraphServices =
     let getParentheticalFromExpression :GetParentheticalFromExpression = 
         fun expression -> Parenthetical(expression, None, None)
     
-    let setExpressionToParenthetical = 
+    let setExpressionToParenthetical :SetExpressionToParenthetical = 
         fun (expression, parenthetical) -> 
             match parenthetical with 
             | Some (Parenthetical(_,po,p)) -> Parenthetical(expression, po, p)
@@ -1157,7 +1159,7 @@ module GraphServices =
             | None -> Expression.Zero
             | Some p -> match p with Parenthetical (x, _, _) -> x   
             
-    let getParentheticalFromCalculatorState = 
+    let getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState = 
         fun state ->
             match state with 
             | EvaluatedState ev -> (Expression.Zero, ev.pendingFunction, None) |> Parenthetical
@@ -1165,9 +1167,40 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState es -> 
                 let lastParenthetical = (Expression.Zero, es.pendingFunction, es.parenthetical) |> Parenthetical |> Some
                 (Expression.Zero, es.pendingFunction, lastParenthetical ) |> Parenthetical
-            | _ -> (Expression.Zero, None, None) |> Parenthetical
+            | _ -> (Expression.Zero, None, None) |> Parenthetical    
 
-    let createGraphServices () = {        
+    let closeParenthetical :CloseParenthetical =
+        fun expressionStateData -> 
+            let checkForDecimal = expressionStateData.digits .Contains(".")
+            let returnAccumulatorState (e:ExpressionStateData) = 
+                match checkForDecimal with
+                | true -> e |> ExpressionDecimalAccumulatorState
+                | false -> e |> ExpressionDigitAccumulatorState
+
+            let parenthetical = expressionStateData.parenthetical
+            match parenthetical with 
+            | None -> expressionStateData |> ExpressionDigitAccumulatorState
+            | Some p -> 
+                match p with                                
+                | Parenthetical (x, None, Some (Parenthetical(_x,Some (e,po),Some p))) -> 
+                    let result = doExpressionOperation (po,e,x)
+                    match result with
+                    | ExpressionError e ->  
+                        {error=Error e;lastExpression = Expression.Zero} 
+                        |> ExpressionErrorState
+                    | ExpressionSuccess ex ->
+                        {expressionStateData with expression = ex; parenthetical = Some p} 
+                        |> returnAccumulatorState
+                
+                // TODO \/
+                | Parenthetical (x, None, Some (Parenthetical(_x,Some (e,po),None  ))) -> expressionStateData |> returnAccumulatorState
+                | Parenthetical (x, None, Some (Parenthetical(_x,None       ,None  ))) -> expressionStateData |> returnAccumulatorState
+                | Parenthetical (x, None, Some (Parenthetical(_x,None       ,Some p))) -> expressionStateData |> returnAccumulatorState
+                | Parenthetical (x, Some (e,po), Some p) -> expressionStateData |> returnAccumulatorState
+                | Parenthetical (x, Some (e,po), None  ) -> expressionStateData |> returnAccumulatorState
+                | Parenthetical (x, None,        None  ) -> expressionStateData |> returnAccumulatorState
+
+    let createGraphServices () = {
         doDrawOperation =  doDrawOperation (0.1)
         doExpressionOperation =  doExpressionOperation
         accumulateSymbol =  accumulateSymbol
@@ -1183,4 +1216,5 @@ module GraphServices =
         getParentheticalFromExpression = getParentheticalFromExpression
         getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
         setExpressionToParenthetical = setExpressionToParenthetical
+        closeParenthetical = closeParenthetical
         }
