@@ -987,7 +987,6 @@ module GraphingImplementation =
                         |> Some} 
                 |> ExpressionDigitAccumulatorState
            | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
-
     let handleExpressionDecimalAccumulatorState services stateData input =
         let bounds = services.getDrawing2DBounds (ExpressionDecimalAccumulatorState stateData)
         let zero = Number (Integer 0I)
