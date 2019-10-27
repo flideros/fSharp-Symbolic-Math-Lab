@@ -1555,12 +1555,13 @@ type GraphingCalculator() as graphingCalculator =
             state <- { state with rpn = newState}
             setDisplayedText (rpnServices.getDisplayFromStack newState) 
             setPendingOpText ""
-    let handleGraphInput input =  
-        let newState = calculateGraph (input, state.graph)        
+    let handleGraphInput input =
+        let newState = calculateGraph (input, state.graph)
         let expressionText = 
             match newState with
             | DrawState d -> "Graph"
             | EvaluatedState e -> graphServices.getDisplayFromExpression e.evaluatedExpression           
+            | ParentheticalState p -> graphServices.getDisplayFromExpression p.evaluatedExpression
             | ExpressionDigitAccumulatorState e -> graphServices.getDisplayFromExpression e.expression          
             | ExpressionDecimalAccumulatorState e -> graphServices.getDisplayFromExpression e.expression           
             | ExpressionErrorState e -> graphServices.getDisplayFromExpression e.lastExpression          
@@ -1586,6 +1587,9 @@ type GraphingCalculator() as graphingCalculator =
         | EvaluatedState ev ->
             do setActiveDisplay (Function function_Grid)
                setPendingOpText (graphServices.getDisplayFromPendingFunction ev.pendingFunction)
+        | ParentheticalState p ->
+            do setActiveDisplay (Function function_Grid)
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction p.pendingFunction) + "paren")
         | ExpressionDigitAccumulatorState ed ->
             do setPendingOpText (graphServices.getDisplayFromGraphState newState)
         | ExpressionDecimalAccumulatorState ed ->
@@ -1676,6 +1680,7 @@ type GraphingCalculator() as graphingCalculator =
         x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
+        closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))
 
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
