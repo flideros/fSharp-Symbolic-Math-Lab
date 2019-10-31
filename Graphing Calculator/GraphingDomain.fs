@@ -1365,7 +1365,11 @@ module GraphServices =
         let valueOfX coordinate = match coordinate with X x -> getValueFrom x
         let valueOfY coordinate = match coordinate with Y y -> getValueFrom y
 
-        let xMin, xMax, yMin, yMax = valueOfX drawBounds.lowerX, valueOfX drawBounds.upperX, valueOfY drawBounds.lowerY, valueOfY drawBounds.upperY
+        let xMin, xMax, yMin, yMax = 
+            valueOfX drawBounds.lowerX, 
+            valueOfX drawBounds.upperX, 
+            valueOfY drawBounds.lowerY, 
+            valueOfY drawBounds.upperY
 
         let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
         
@@ -1373,7 +1377,7 @@ module GraphServices =
             match ExpressionFunction.getSymbolsFrom expression with
             | [] -> Expression.Symbol (Constant Null)
             | [x] -> x
-            | x::t as vList -> x
+            | x::t -> x
         
         let makePoint xExpression yExpression = 
             let xValue =

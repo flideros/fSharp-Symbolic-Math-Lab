@@ -48,7 +48,8 @@ type State =
       conventional:ConventionalDomain.CalculatorState;
       graph:GraphingDomain.CalculatorState;
       mode : Mode;
-      model : Model }
+      model : Model 
+      scale : ScaleTransform }
 
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
@@ -84,7 +85,8 @@ type GraphingCalculator() as graphingCalculator =
           conventional = conventionalDefault; 
           mode = Conventional; 
           model = modelDefault; 
-          graph = graphDefault }
+          graph = graphDefault 
+          scale = ScaleTransform(scaleX = 1., scaleY = 1., centerX = 0.0, centerY = 0.0)}
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -1206,7 +1208,7 @@ type GraphingCalculator() as graphingCalculator =
         clearStack          .SetValue(Grid.RowProperty,0); clearStack           .SetValue(Grid.ColumnProperty,0);
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
 
-    //----- Gridlines    
+    //----- Gridlines
     let xInterval = 5
     let yInterval = 5
     let makeGridLines yOffset xOffset = 
@@ -1218,7 +1220,7 @@ type GraphingCalculator() as graphingCalculator =
         let context = gridLinesVisual.RenderOpen()
         let color1 = SolidColorBrush(Colors.Blue)
         let color2 = SolidColorBrush(Colors.Green)
-        let pen1, pen2 = Pen(color1, 0.8), Pen(color2, 0.5)
+        let pen1, pen2 = Pen(color1, 0.5), Pen(color2, 0.2)
         do  pen1.Freeze()
             pen2.Freeze()
     
@@ -1446,6 +1448,8 @@ type GraphingCalculator() as graphingCalculator =
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
+    // a function that sets the model scale
+    let setModelScale x y = do state <- {state with scale = ScaleTransform(scaleX = x, scaleY = y, centerX = mapXToCanvas 0.0, centerY = mapYToCanvas 0.0)}
 
 //-----Create Menu
     let menu = // 
@@ -1572,7 +1576,10 @@ type GraphingCalculator() as graphingCalculator =
         | DrawState d -> 
             do  canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
-                canvas.Children.Add(( getActivetModel state )) |> ignore
+            let model = getActivetModel state    
+            do  model.RenderTransform <- state.scale
+                //model.StrokeThickness <- 0.010
+                canvas.Children.Add(model) |> ignore
                 canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore
                 setActiveDisplay (PlotCanvas screen_Canvas)
                 setPendingOpText "graph" 
@@ -1606,8 +1613,9 @@ type GraphingCalculator() as graphingCalculator =
         removeGridLines ()
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
         do  canvas.Children.Insert(0,gl)
-            setActiveDisplay (Function function_Grid)
-            handleGraphInput Draw
+        setActiveDisplay (Function function_Grid)
+        handleGraphInput Draw
+
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
