@@ -1493,16 +1493,7 @@ type GraphingCalculator() as graphingCalculator =
          do  header2.Items.Add(header2_Item1) |> ignore
              header2.Items.Add(header2_Item2) |> ignore
              header2.Items.Add(header2_Item3) |> ignore
-         
-         (*let header3 = MenuItem(Header = "Zoom Level")
-         let header3_Item1 = MenuItem(Header = "1x", Command = viewCommand (setActiveDisplay), CommandParameter = Option option_Grid)
-         let header3_Item2 = MenuItem(Header = "2x", Command = viewCommand (setActiveDisplay), CommandParameter = Option2D option2D_Grid)
-         let header3_Item3 = MenuItem(Header = "3x", Command = viewCommand (setActiveDisplay), CommandParameter = Option3D option3D_Grid)
-         
-         do  header2.Items.Add(header3_Item1) |> ignore
-             header2.Items.Add(header3_Item2) |> ignore
-             header2.Items.Add(header3_Item3) |> ignore*)
-
+             
          let m = Menu()
          do  m.SetValue(Grid.RowProperty,0)
              m.Items.Add(header1) |> ignore
