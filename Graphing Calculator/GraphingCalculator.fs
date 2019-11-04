@@ -49,7 +49,7 @@ type State =
       graph:GraphingDomain.CalculatorState;
       mode : Mode;
       model : Model 
-      scale : ScaleTransform }
+      scale : (float*float) }
 
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
@@ -86,7 +86,7 @@ type GraphingCalculator() as graphingCalculator =
           mode = Conventional; 
           model = modelDefault; 
           graph = graphDefault 
-          scale = ScaleTransform(scaleX = 1., scaleY = 1., centerX = 0.0, centerY = 0.0)}
+          scale = (1., 1.)}
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -1309,7 +1309,16 @@ type GraphingCalculator() as graphingCalculator =
             bitmap.Freeze()
             orgin.Source <- bitmap
         orgin
-    
+    //----- Apply Scale
+    let applyScaleX = 
+        fun x ->
+            let (xScale,_yScale) = state.scale
+            x * xScale
+    let applyScaleY = 
+        fun y ->
+            let (_xScale,yScale) = state.scale
+            y * yScale
+
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
     let viewCommand ( exec : (View -> unit) )=
@@ -1352,7 +1361,7 @@ type GraphingCalculator() as graphingCalculator =
         let convertPoint = fun point ->            
             match point with
             | (Point(X (Math.Pure.Quantity.Real x),
-                     Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x |> mapXToCanvas,y |> mapYToCanvas))
+                     Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x |> applyScaleX |> mapXToCanvas,y |> applyScaleY |> mapYToCanvas))
             | (Point3D(X (Math.Pure.Quantity.Real x),
                        Y (Math.Pure.Quantity.Real y),
                        Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
@@ -1360,7 +1369,7 @@ type GraphingCalculator() as graphingCalculator =
         let convertSegment = fun segment -> 
             match segment with 
             | LineSegment(Point(X (Math.Pure.Quantity.Real x),
-                                Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x |> mapXToCanvas, y |> mapYToCanvas),true )
+                                Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x |> applyScaleX |> mapXToCanvas, y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         let model = match s.model with | Trace t -> t
         let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
@@ -1449,7 +1458,7 @@ type GraphingCalculator() as graphingCalculator =
     let setActivetModel model =        
         do state <- {state with model = model}
     // a function that sets the model scale
-    let setModelScale x y = do state <- {state with scale = ScaleTransform(scaleX = x, scaleY = y, centerX = mapXToCanvas 0.0, centerY = mapYToCanvas 0.0)}
+    let setModelScale x y = do state <- {state with scale = (x,y)}
 
 //-----Create Menu
     let menu = // 
@@ -1484,7 +1493,7 @@ type GraphingCalculator() as graphingCalculator =
          do  header2.Items.Add(header2_Item1) |> ignore
              header2.Items.Add(header2_Item2) |> ignore
              header2.Items.Add(header2_Item3) |> ignore
-              
+             
          let m = Menu()
          do  m.SetValue(Grid.RowProperty,0)
              m.Items.Add(header1) |> ignore
@@ -1577,8 +1586,8 @@ type GraphingCalculator() as graphingCalculator =
             do  canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
             let model = getActivetModel state    
-            do  model.RenderTransform <- state.scale
-                //model.StrokeThickness <- 0.010
+            do  model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
+                //model.StrokeThickness <- 1.
                 canvas.Children.Add(model) |> ignore
                 canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore
                 setActiveDisplay (PlotCanvas screen_Canvas)
@@ -1611,10 +1620,12 @@ type GraphingCalculator() as graphingCalculator =
         canvasGridLine_Slider.IsEnabled <- false
     let handleSliderValueOnValueChange () =
         removeGridLines ()
-        let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
-        do  canvas.Children.Insert(0,gl)
-        setActiveDisplay (Function function_Grid)
-        handleGraphInput Draw
+        let xScale, yScale = (canvasGridLine_Slider.Value,canvasGridLine_Slider.Value)
+        let gl = makeGridLines xScale yScale
+        do  setModelScale (xScale/5.) (yScale/5.)
+            canvas.Children.Insert(0,gl)
+            setActiveDisplay (Function function_Grid)
+            handleGraphInput Draw
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
