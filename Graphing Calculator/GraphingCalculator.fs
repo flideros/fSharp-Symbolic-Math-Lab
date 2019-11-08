@@ -1313,11 +1313,11 @@ type GraphingCalculator() as graphingCalculator =
     let applyScaleX = 
         fun x ->
             let (xScale,_yScale) = state.scale
-            x * xScale
+            x * xScale 
     let applyScaleY = 
         fun y ->
             let (_xScale,yScale) = state.scale
-            y * yScale
+            y * yScale 
 
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
@@ -1361,7 +1361,7 @@ type GraphingCalculator() as graphingCalculator =
         let convertPoint = fun point ->            
             match point with
             | (Point(X (Math.Pure.Quantity.Real x),
-                     Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x |> applyScaleX |> mapXToCanvas,y |> applyScaleY |> mapYToCanvas))
+                     Y (Math.Pure.Quantity.Real y))) -> Pt ( System.Windows.Point(x |> applyScaleX |> mapXToCanvas, y |> applyScaleY |> mapYToCanvas))
             | (Point3D(X (Math.Pure.Quantity.Real x),
                        Y (Math.Pure.Quantity.Real y),
                        Z (Math.Pure.Quantity.Real z))) -> Pt3D ( System.Windows.Media.Media3D.Point3D(x,y,z) )
@@ -1369,7 +1369,11 @@ type GraphingCalculator() as graphingCalculator =
         let convertSegment = fun segment -> 
             match segment with 
             | LineSegment(Point(X (Math.Pure.Quantity.Real x),
-                                Y (Math.Pure.Quantity.Real y))) -> System.Windows.Media.LineSegment( System.Windows.Point(x |> applyScaleX |> mapXToCanvas, y |> applyScaleY |> mapYToCanvas),true )
+                                Y (Math.Pure.Quantity.Real y))) -> 
+                                    System.Windows.Media.LineSegment( 
+                                        System.Windows.Point(
+                                            x |> applyScaleX |> mapXToCanvas, 
+                                            y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         let model = match s.model with | Trace t -> t
         let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
@@ -1494,15 +1498,6 @@ type GraphingCalculator() as graphingCalculator =
              header2.Items.Add(header2_Item2) |> ignore
              header2.Items.Add(header2_Item3) |> ignore
          
-         (*let header3 = MenuItem(Header = "Zoom Level")
-         let header3_Item1 = MenuItem(Header = "1x", Command = viewCommand (setActiveDisplay), CommandParameter = Option option_Grid)
-         let header3_Item2 = MenuItem(Header = "2x", Command = viewCommand (setActiveDisplay), CommandParameter = Option2D option2D_Grid)
-         let header3_Item3 = MenuItem(Header = "3x", Command = viewCommand (setActiveDisplay), CommandParameter = Option3D option3D_Grid)
-         
-         do  header2.Items.Add(header3_Item1) |> ignore
-             header2.Items.Add(header3_Item2) |> ignore
-             header2.Items.Add(header3_Item3) |> ignore*)
-
          let m = Menu()
          do  m.SetValue(Grid.RowProperty,0)
              m.Items.Add(header1) |> ignore
@@ -1596,7 +1591,7 @@ type GraphingCalculator() as graphingCalculator =
                 setActivetModel (Trace d.trace)                    
             let model = getActivetModel state    
             do  model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
-                //model.StrokeThickness <- 1.
+                model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
                 canvas.Children.Add(model) |> ignore
                 canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore
                 setActiveDisplay (PlotCanvas screen_Canvas)

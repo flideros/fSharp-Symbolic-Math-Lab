@@ -473,12 +473,9 @@ module GraphingImplementation =
                 | MemorySubtract -> EvaluatedState stateData         
             | CalculatorInput.Zero -> stateData |> EvaluatedState                     
             | DecimalSeparator -> 
-                match stateData.pendingFunction with
-                | None -> stateData |> EvaluatedState
-                | Some _ ->
-                    newExpressionStateData 
-                    |> accumulateSeparator services
-                    |> ExpressionDecimalAccumulatorState 
+                newExpressionStateData 
+                |> accumulateSeparator services
+                |> ExpressionDecimalAccumulatorState 
             | CalculatorInput.Equals -> replacePendingFunction stateData None                
             | ClearEntry ->                 
                     match stateData.pendingFunction with
@@ -541,6 +538,7 @@ module GraphingImplementation =
     let handleParentheticalState services stateData input =
         let bounds = services.getDrawing2DBounds (ParentheticalState stateData)
         let zero = Number (Integer 0I)
+        
         let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
                 {expression = expr;  
@@ -607,13 +605,13 @@ module GraphingImplementation =
                         match stateData.pendingFunction = None with
                         | true -> newState
                         | false -> 
-                            match newState with                            
+                            match newState with
                             | EvaluatedState ev ->                                 
                                 { digits = ""; 
                                   pendingFunction = stateData.pendingFunction; 
                                   expression = ev.evaluatedExpression;
                                   drawing2DBounds = bounds;
-                                  parenthetical = Some stateData.parenthetical 
+                                  parenthetical = None 
                                 } |> ExpressionDigitAccumulatorState 
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
@@ -649,7 +647,7 @@ module GraphingImplementation =
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
                                       drawing2DBounds = bounds;
-                                      parenthetical = Some stateData.parenthetical}
+                                      parenthetical = None}
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
@@ -684,7 +682,7 @@ module GraphingImplementation =
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
                                       drawing2DBounds = bounds;
-                                      parenthetical = Some stateData.parenthetical 
+                                      parenthetical = None 
                                     }
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
@@ -703,12 +701,9 @@ module GraphingImplementation =
                 | MemorySubtract -> stateData |> ParentheticalState         
             | CalculatorInput.Zero -> stateData |> ParentheticalState                      
             | DecimalSeparator -> 
-                match stateData.pendingFunction with
-                | None -> stateData |> ParentheticalState 
-                | Some _ ->
-                    newExpressionStateData 
-                    |> accumulateSeparator services
-                    |> ExpressionDecimalAccumulatorState 
+                newExpressionStateData 
+                |> accumulateSeparator services
+                |> ExpressionDecimalAccumulatorState 
             | CalculatorInput.Equals -> replacePendingFunctionParenthetical stateData None                
             | ClearEntry ->                 
                     match stateData.pendingFunction with
@@ -732,6 +727,7 @@ module GraphingImplementation =
                 | None ->                    
                     newExpressionStateData
                     |> accumulateNonZeroDigit services d
+                    
                     |> ExpressionDigitAccumulatorState
                 | Some _ ->                    
                     newExpressionStateData
@@ -777,7 +773,7 @@ module GraphingImplementation =
                     pendingFunction=stateData.pendingFunction;
                     digits="";
                     drawing2DBounds = bounds;
-                    parenthetical = None}           
+                    parenthetical = stateData.parenthetical}           
            match input with
            | Stack _ -> ExpressionDigitAccumulatorState stateData
            | CalcInput op -> 
@@ -997,7 +993,7 @@ module GraphingImplementation =
                  pendingFunction=stateData.pendingFunction;
                  digits="";
                  drawing2DBounds = bounds;
-                 parenthetical = None}
+                 parenthetical =  stateData.parenthetical}
         match input with
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
