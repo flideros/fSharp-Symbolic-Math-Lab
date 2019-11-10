@@ -765,7 +765,7 @@ module GraphingImplementation =
 
     let handleExpressionDigitAccumulatorState services stateData input =           
            let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState stateData)
-           
+        
            let zero = Number (Integer 0I)  
            let newExpressionStateData =  
                    {expression = stateData.expression;  
@@ -1046,7 +1046,6 @@ module GraphingImplementation =
                      |> Some} 
              |> ExpressionDigitAccumulatorState
         | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
-
     let handleDrawErrorState services stateData input =           
         let bounds = services.getDrawing2DBounds (DrawErrorState stateData)
         match input with
