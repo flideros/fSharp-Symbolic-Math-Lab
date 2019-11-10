@@ -538,14 +538,13 @@ module GraphingImplementation =
     let handleParentheticalState services stateData input =
         let bounds = services.getDrawing2DBounds (ParentheticalState stateData)
         let zero = Number (Integer 0I)
-        
         let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
                 {expression = expr;  
                  pendingFunction = stateData.pendingFunction;
                  digits = "";
                  drawing2DBounds = bounds;
-                 parenthetical = stateData.parenthetical |> Some}
+                 parenthetical = services.setExpressionToParenthetical (zero, Some stateData.parenthetical) |> Some  }
         match input with
         | Stack _ -> ParentheticalState stateData
         | CalcInput op -> 
@@ -766,19 +765,42 @@ module GraphingImplementation =
 
     let handleExpressionDigitAccumulatorState services stateData input =           
            let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState stateData)
-           let zero = Number (Integer 0I)
-           let expr = stateData.expression        
+        
+           let zero = Number (Integer 0I)  
            let newExpressionStateData =  
-                   {expression=expr;  
-                    pendingFunction=stateData.pendingFunction;
-                    digits="";
+                   {expression = stateData.expression;  
+                    pendingFunction = stateData.pendingFunction;
+                    digits = "";
                     drawing2DBounds = bounds;
-                    parenthetical = stateData.parenthetical}           
+                    parenthetical = 
+                        match stateData.parenthetical with 
+                        | Some _ -> services.setExpressionToParenthetical (zero, stateData.parenthetical) |> Some;
+                        | None -> None}           
            match input with
            | Stack _ -> ExpressionDigitAccumulatorState stateData
            | CalcInput op -> 
                match op with
                | MathOp m -> 
+                   let getFinalStateFrom = fun newState ->
+                       match stateData.pendingFunction = None with
+                       | true -> newState
+                       | false -> 
+                           match newState with                            
+                           | EvaluatedState ev -> 
+                               ExpressionDigitAccumulatorState 
+                                   { newExpressionStateData with                                          
+                                         expression = ev.evaluatedExpression;
+                                         parenthetical = None}
+                           | ParentheticalState p -> 
+                               ExpressionDigitAccumulatorState 
+                                   { newExpressionStateData with
+                                         expression = p.evaluatedExpression;
+                                         parenthetical = Some p.parenthetical}
+                           | ExpressionDigitAccumulatorState _ 
+                           | ExpressionDecimalAccumulatorState _                             
+                           | DrawState _
+                           | DrawErrorState _
+                           | ExpressionErrorState _ -> newState 
                    match m with
                    | Add ->      getEvaluationState services stateData (Some Plus)                    
                    | Subtract -> getEvaluationState services stateData (Some Minus)                    
@@ -786,140 +808,40 @@ module GraphingImplementation =
                    | Divide ->   getEvaluationState services stateData (Some DividedBy)                    
                    | CalculatorMathOp.Inverse ->
                        let nextOp = None//Some op
+                       let expr = stateData.expression
                        let newState = 
                            getEvaluationState services 
-                               { expression = expr;
-                                 pendingFunction = Some (expr,Inverse); 
-                                 digits = "1";
-                                 drawing2DBounds = bounds;
-                                 parenthetical = None} nextOp 
-                       let finalState =
-                           match stateData.pendingFunction = None with
-                           | true -> newState
-                           | false -> 
-                               match newState with                            
-                               | EvaluatedState ev -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression=ev.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = None}
-                               | ParentheticalState p -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression = p.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = Some p.parenthetical}
-                               | ExpressionDigitAccumulatorState _ 
-                               | ExpressionDecimalAccumulatorState _                             
-                               | DrawState _
-                               | DrawErrorState _
-                               | ExpressionErrorState _ -> newState
-                       finalState
+                               { newExpressionStateData with
+                                     pendingFunction = Some (expr,Inverse); 
+                                     digits = "1";} nextOp 
+                       getFinalStateFrom newState
                    | Percent ->
                        let nextOp = None//Some op
+                       let expr = stateData.expression
                        let newState = 
                            getEvaluationState services 
-                               { expression = expr;
-                                 pendingFunction = Some (expr,Function.Quotient); 
-                                 digits = "100";
-                                 drawing2DBounds = bounds;
-                                 parenthetical = None} nextOp 
-                       let finalState =
-                           match stateData.pendingFunction = None with
-                           | true -> newState
-                           | false -> 
-                               match newState with                            
-                               | EvaluatedState ev -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression=ev.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = None}
-                               | ParentheticalState p -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression = p.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = Some p.parenthetical}
-                               | ExpressionDigitAccumulatorState _ 
-                               | ExpressionDecimalAccumulatorState _                             
-                               | DrawState _
-                               | DrawErrorState _
-                               | ExpressionErrorState _ -> newState
-                       finalState
+                               { newExpressionStateData with
+                                     pendingFunction = Some (expr,Function.Quotient); 
+                                     digits = "100"} nextOp 
+                       getFinalStateFrom newState
                    | CalculatorMathOp.Root ->
                        let nextOp = None//Some op
+                       let expr = stateData.expression
                        let newState = 
                            getEvaluationState services 
-                               { expression = expr;
+                               { newExpressionStateData with
                                    pendingFunction = Some (expr,Function.ToThePowerOf); 
-                                   digits = "0.5";
-                                   drawing2DBounds = bounds;
-                                   parenthetical = None} nextOp 
-                       let finalState =
-                           match stateData.pendingFunction = None with
-                           | true -> newState
-                           | false -> 
-                               match newState with                            
-                               | EvaluatedState ev -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression=ev.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = None}
-                               | ParentheticalState p -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression = p.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = Some p.parenthetical}
-                               | ExpressionDigitAccumulatorState _ 
-                               | ExpressionDecimalAccumulatorState _                             
-                               | DrawState _
-                               | DrawErrorState _
-                               | ExpressionErrorState _ -> newState
-                       finalState
+                                   digits = "0.5"} nextOp 
+                       getFinalStateFrom newState
                    | ChangeSign ->
                        let nextOp = None//Some op
+                       let expr = stateData.expression
                        let newState = 
                            getEvaluationState services 
-                               { expression = expr;
+                               { newExpressionStateData with
                                    pendingFunction = Some (expr,Function.Times); 
-                                   digits = "-1";
-                                   drawing2DBounds = bounds;
-                                   parenthetical = None} nextOp 
-                       let finalState =
-                           match stateData.pendingFunction = None with
-                           | true -> newState
-                           | false -> 
-                               match newState with                            
-                               | EvaluatedState ev -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                           pendingFunction = stateData.pendingFunction; 
-                                           expression=ev.evaluatedExpression;
-                                           drawing2DBounds = bounds;
-                                           parenthetical = None}
-                               | ParentheticalState p -> 
-                                   ExpressionDigitAccumulatorState 
-                                       { digits = ""; 
-                                         pendingFunction = stateData.pendingFunction; 
-                                         expression = p.evaluatedExpression;
-                                         drawing2DBounds = bounds;
-                                         parenthetical = Some p.parenthetical}
-                               | ExpressionDigitAccumulatorState _ 
-                               | ExpressionDecimalAccumulatorState _                             
-                               | DrawState _
-                               | DrawErrorState _
-                               | ExpressionErrorState _ -> newState
-                       finalState
+                                   digits = "-1"} nextOp 
+                       getFinalStateFrom newState
                    | MemoryAdd 
                    | MemorySubtract -> ExpressionDigitAccumulatorState stateData         
                | CalculatorInput.Zero -> 
@@ -961,14 +883,14 @@ module GraphingImplementation =
                | Symbol s -> 
                    match stateData.pendingFunction with
                    | None -> 
-                       { expression = expr;
+                       { expression = stateData.expression;
                          pendingFunction = None; 
-                         digits = "";
+                         digits = stateData.digits;
                          parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
                          drawing2DBounds = bounds} 
                        |> ExpressionDigitAccumulatorState
                    | Some pendingfunc ->                    
-                       { expression = expr; 
+                       { expression = stateData.expression; 
                          pendingFunction = Some pendingfunc;
                          digits = "";
                          parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
@@ -986,160 +908,83 @@ module GraphingImplementation =
 
     let handleExpressionDecimalAccumulatorState services stateData input =
         let bounds = services.getDrawing2DBounds (ExpressionDecimalAccumulatorState stateData)
-        let zero = Number (Integer 0I)
-        let expr = stateData.expression        
+        
+        let zero = Number (Integer 0I)  
         let newExpressionStateData =  
-                {expression=expr;  
-                 pendingFunction=stateData.pendingFunction;
-                 digits="";
+                {expression = stateData.expression;  
+                 pendingFunction = stateData.pendingFunction;
+                 digits = "";
                  drawing2DBounds = bounds;
-                 parenthetical =  stateData.parenthetical}
+                 parenthetical = 
+                     match stateData.parenthetical with 
+                     | Some _ -> services.setExpressionToParenthetical (zero, stateData.parenthetical) |> Some;
+                     | None -> None}           
         match input with
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
             match op with
             | MathOp m -> 
+                let getFinalStateFrom = fun newState ->
+                    match stateData.pendingFunction = None with
+                    | true -> newState
+                    | false -> 
+                        match newState with                            
+                        | EvaluatedState ev -> 
+                            ExpressionDecimalAccumulatorState 
+                                { newExpressionStateData with                                          
+                                      expression = ev.evaluatedExpression;
+                                      parenthetical = None}
+                        | ParentheticalState p -> 
+                            ExpressionDecimalAccumulatorState 
+                                { newExpressionStateData with
+                                      expression = p.evaluatedExpression;
+                                      parenthetical = Some p.parenthetical}
+                        | ExpressionDigitAccumulatorState _ 
+                        | ExpressionDecimalAccumulatorState _                             
+                        | DrawState _
+                        | DrawErrorState _
+                        | ExpressionErrorState _ -> newState 
                 match m with
-                | Add -> getEvaluationState services stateData (Some Plus)                    
+                | Add ->      getEvaluationState services stateData (Some Plus)                    
                 | Subtract -> getEvaluationState services stateData (Some Minus)                    
                 | Multiply -> getEvaluationState services stateData (Some Times)                    
-                | Divide -> getEvaluationState services stateData (Some DividedBy)                    
+                | Divide ->   getEvaluationState services stateData (Some DividedBy)                    
                 | CalculatorMathOp.Inverse ->
                     let nextOp = None//Some op
+                    let expr = stateData.expression
                     let newState = 
                         getEvaluationState services 
-                            { expression = expr;
-                              pendingFunction = Some (expr,Inverse); 
-                              digits = "1";
-                              drawing2DBounds = bounds;
-                              parenthetical = None} nextOp 
-                    let finalState =
-                        match stateData.pendingFunction = None with
-                        | true -> newState
-                        | false -> 
-                            match newState with                            
-                            | EvaluatedState ev -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
-                                      parenthetical = None}
-                            | ParentheticalState p -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
-                                      parenthetical = Some p.parenthetical}
-                            | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
-                            | DrawState _
-                            | DrawErrorState _
-                            | ExpressionErrorState _ -> newState
-                    finalState
+                            { newExpressionStateData with
+                                  pendingFunction = Some (expr,Inverse); 
+                                  digits = "1";} nextOp 
+                    getFinalStateFrom newState
                 | Percent ->
                     let nextOp = None//Some op
+                    let expr = stateData.expression
                     let newState = 
                         getEvaluationState services 
-                            { expression = expr;
-                              pendingFunction = Some (expr,Function.Quotient); 
-                              digits = "100";
-                              drawing2DBounds = bounds;
-                              parenthetical = None} nextOp 
-                    let finalState =
-                        match stateData.pendingFunction = None with
-                        | true -> newState
-                        | false -> 
-                            match newState with                            
-                            | EvaluatedState ev -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
-                                      parenthetical = None}
-                            | ParentheticalState p -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
-                                      parenthetical = Some p.parenthetical}
-                            | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
-                            | DrawState _
-                            | DrawErrorState _
-                            | ExpressionErrorState _ -> newState
-                    finalState
+                            { newExpressionStateData with
+                                  pendingFunction = Some (expr,Function.Quotient); 
+                                  digits = "100"} nextOp 
+                    getFinalStateFrom newState
                 | CalculatorMathOp.Root ->
                     let nextOp = None//Some op
+                    let expr = stateData.expression
                     let newState = 
                         getEvaluationState services 
-                            { expression = expr;
-                                pendingFunction = Some (expr,Function.Root); 
-                                digits = "0.5";
-                                drawing2DBounds = bounds;
-                                parenthetical = None} nextOp 
-                    let finalState =
-                        match stateData.pendingFunction = None with
-                        | true -> newState
-                        | false -> 
-                            match newState with                            
-                            | EvaluatedState ev -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                        pendingFunction = stateData.pendingFunction; 
-                                        expression=ev.evaluatedExpression;
-                                        drawing2DBounds = bounds;
-                                        parenthetical = None}
-                            | ParentheticalState p -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
-                                      parenthetical = Some p.parenthetical}
-                            | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
-                            | DrawState _
-                            | DrawErrorState _
-                            | ExpressionErrorState _ -> newState
-                    finalState
+                            { newExpressionStateData with
+                                pendingFunction = Some (expr,Function.ToThePowerOf); 
+                                digits = "0.5"} nextOp 
+                    getFinalStateFrom newState
                 | ChangeSign ->
                     let nextOp = None//Some op
+                    let expr = stateData.expression
                     let newState = 
                         getEvaluationState services 
-                            { expression = expr;
+                            { newExpressionStateData with
                                 pendingFunction = Some (expr,Function.Times); 
-                                digits = "-1";
-                                drawing2DBounds = bounds;
-                                parenthetical = None} nextOp 
-                    let finalState =
-                        match stateData.pendingFunction = None with
-                        | true -> newState
-                        | false -> 
-                            match newState with                            
-                            | EvaluatedState ev -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                        pendingFunction = stateData.pendingFunction; 
-                                        expression=ev.evaluatedExpression;
-                                        drawing2DBounds = bounds;
-                                        parenthetical = None}
-                            | ParentheticalState p -> 
-                                ExpressionDecimalAccumulatorState 
-                                    { digits = ""; 
-                                      pendingFunction = stateData.pendingFunction; 
-                                      expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
-                                      parenthetical = Some p.parenthetical}
-                            | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
-                            | DrawState _
-                            | DrawErrorState _
-                            | ExpressionErrorState _ -> newState
-                    finalState
+                                digits = "-1"} nextOp 
+                    getFinalStateFrom newState
                 | MemoryAdd 
                 | MemorySubtract -> ExpressionDecimalAccumulatorState stateData         
             | CalculatorInput.Zero -> 
@@ -1147,66 +992,60 @@ module GraphingImplementation =
                 |> accumulateZero services 
                 |> ExpressionDecimalAccumulatorState                     
             | DecimalSeparator -> 
-                newExpressionStateData 
-                |> accumulateSeparator services
-                |> ExpressionDecimalAccumulatorState 
+                stateData |> ExpressionDecimalAccumulatorState 
             | CalculatorInput.Equals -> getEvaluationState services stateData None
             | ClearEntry ->                 
                     match stateData.pendingFunction with
-                    | None -> stateData |> ExpressionDecimalAccumulatorState
+                    | None -> stateData |> ExpressionDigitAccumulatorState
                     | Some po -> 
                         let _oldExpression, oldPendingFunction = po
                         let zero = Number (Integer 0I)
                         {stateData with pendingFunction = Some (zero,oldPendingFunction)}
-                        |> ExpressionDecimalAccumulatorState
-            | Clear ->  
-                {evaluatedExpression = zero; 
-                 pendingFunction = None;
-                 drawing2DBounds = bounds}
-                |> EvaluatedState
+                        |> ExpressionDigitAccumulatorState
+            | Clear -> 
+               {evaluatedExpression = zero; 
+                pendingFunction = None;
+                drawing2DBounds = bounds } 
+               |> EvaluatedState
             | MemoryRecall -> ExpressionDecimalAccumulatorState stateData //not used
             | MemoryClear -> ExpressionDecimalAccumulatorState stateData //not used
             | MemoryStore -> ExpressionDecimalAccumulatorState stateData //not used
             | Back -> // I need to come back to this function to incorporate expression type
                  match stateData.digits.Length with
-                 | x when x <= 1 -> newExpressionStateData |> ExpressionDecimalAccumulatorState
-                 | x -> let revisedDigits = stateData.digits.Remove(x-1)
-                        match revisedDigits.EndsWith(".") with //come back to this and refactor to use a decimal separator type
-                        | false -> {newExpressionStateData with digits = revisedDigits.Remove(x-2)} |> ExpressionDigitAccumulatorState
-                        | true -> {newExpressionStateData with digits = revisedDigits} |> ExpressionDecimalAccumulatorState
+                 | x when x <= 2 -> newExpressionStateData |> ExpressionDigitAccumulatorState
+                 | x -> {newExpressionStateData with digits = stateData.digits.Remove(x-1)}
+                        |> ExpressionDigitAccumulatorState  
             | Digit d -> 
                 stateData
                 |> accumulateNonZeroDigit services d
-                |> ExpressionDecimalAccumulatorState 
+                |> ExpressionDigitAccumulatorState 
         | ExpressionInput input -> 
             match input with 
             | Symbol s -> 
                 match stateData.pendingFunction with
                 | None -> 
-                    { expression = expr;
+                    { expression = stateData.expression;
                       pendingFunction = None; 
-                      digits = "";
-                      drawing2DBounds = bounds;
-                      parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some 
-                    } 
-                    |> ExpressionDecimalAccumulatorState
+                      digits = stateData.digits;
+                      parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
+                      drawing2DBounds = bounds} 
+                    |> ExpressionDigitAccumulatorState
                 | Some pendingfunc ->                    
-                    {expression = expr; 
-                     pendingFunction = Some pendingfunc;
-                     digits = "";
-                     parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
-                     drawing2DBounds = stateData.drawing2DBounds}
-                    |> ExpressionDecimalAccumulatorState
+                    { expression = stateData.expression; 
+                      pendingFunction = Some pendingfunc;
+                      digits = "";
+                      parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s), stateData.parenthetical) |> Some;
+                      drawing2DBounds = stateData.drawing2DBounds}
+                    |> ExpressionDigitAccumulatorState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
         | OpenParentheses -> 
              {stateData with 
                  parenthetical = 
-                     (services.getParentheticalFromCalculatorState (ExpressionDecimalAccumulatorState stateData)) 
+                     (services.getParentheticalFromCalculatorState (ExpressionDigitAccumulatorState stateData)) 
                      |> Some} 
-             |> ExpressionDecimalAccumulatorState 
-        | CloseParentheses -> stateData |> ExpressionDecimalAccumulatorState
-
+             |> ExpressionDigitAccumulatorState
+        | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
     let handleDrawErrorState services stateData input =           
         let bounds = services.getDrawing2DBounds (DrawErrorState stateData)
         match input with
