@@ -48,6 +48,8 @@
     <Compile Include="RpnInputDomain.fs" />
     <Compile Include="GraphingDomain.fs" />
     <Compile Include="GraphingCalculator.fs" />
+    <None Include="Pictures\calc1.JPG" />
+    <None Include="Pictures\calc2.JPG" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
   </ItemGroup>
