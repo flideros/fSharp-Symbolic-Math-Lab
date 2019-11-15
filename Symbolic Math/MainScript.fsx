@@ -37,6 +37,15 @@ let y4 = y**four
 let y5 = y**five
 
 
+
+Number (Real 25.)**Number (Real 25.)
+
+5.0**0.5
+
+List.iter (printfn "%A") [for x in -150.0..0.1..150.0 -> 1.0/x]
+
+(Number(Real -150.0)) / (Number(Real 0.0))
+
 let v = x5 +
         Number(Integer 7I)*x4 +
         Number(Integer 17I)*x3 + 
