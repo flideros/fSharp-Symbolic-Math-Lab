@@ -27,7 +27,7 @@ type View =
     | Option3D of Grid
 
 type Model =
-    | Trace of Trace
+    | Trace of Trace list
 
 type ViewPoint = 
     | Pt of System.Windows.Point
@@ -63,12 +63,11 @@ type GraphingCalculator() as graphingCalculator =
         {stack = RpnDomain.StackContents []}
         |> RpnDomain.CalculatorState.ReadyState 
     let modelDefault = 
-        { startPoint = (Point(X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.))); 
+        [{ startPoint = (Point(X (Math.Pure.Quantity.Real 10.),Y (Math.Pure.Quantity.Real 20.))); 
           traceSegments = 
             [ LineSegment (Point(X (Math.Pure.Quantity.Real 50.), Y (Math.Pure.Quantity.Real 30. ))); 
               LineSegment (Point(X (Math.Pure.Quantity.Real 100.),Y (Math.Pure.Quantity.Real 200.)));
-              LineSegment (Point(X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66. ))) ]}
-        |> Trace 
+              LineSegment (Point(X (Math.Pure.Quantity.Real 178.),Y (Math.Pure.Quantity.Real 66. ))) ]}] |> Trace
     let graphDefault = 
         { evaluatedExpression = 
             Math.Pure.Quantity.Number.Zero 
@@ -1118,6 +1117,30 @@ type GraphingCalculator() as graphingCalculator =
             grid.SetValue(Grid.ColumnProperty,0)
             grid.SetValue(Grid.ColumnSpanProperty,5)
         grid    
+    let graphButton_Grid =
+        let grid = Grid()
+        
+        let column1 = ColumnDefinition()
+        let column2 = ColumnDefinition()
+        let column3 = ColumnDefinition()
+        let column4 = ColumnDefinition()
+        let column5 = ColumnDefinition()
+        
+        do  grid.ColumnDefinitions.Add(column1)
+            grid.ColumnDefinitions.Add(column2)
+            grid.ColumnDefinitions.Add(column3)
+            grid.ColumnDefinitions.Add(column4)
+            grid.ColumnDefinitions.Add(column5)
+                        
+        let row1 = RowDefinition()
+                
+        do  grid.RowDefinitions.Add(row1)
+                        
+            grid.SetValue(Grid.RowProperty,0)
+            grid.SetValue(Grid.ColumnProperty,0)
+            grid.SetValue(Grid.ColumnSpanProperty,5)
+        grid    
+    
     let one =           CalcButton(Name = "oneButton", Content = "1")
     let two =           CalcButton(Name = "twoButton", Content = "2")
     let three =         CalcButton(Name = "threeButton", Content = "3")
@@ -1153,6 +1176,7 @@ type GraphingCalculator() as graphingCalculator =
         equals; root; changeSign; inverse; percent; back; clear; closeParentheses]
     let memoryButtons = [storeMemory; clearMemory; recallMemory; addToMemory; subtractFromMemoy]
     
+
     //-----RPN Buttons
     let drop =          CalcButton(Name = "dropButton", Content = "Drop")
     let duplicate =     CalcButton(Name = "duplicateButton", Content = "Dup")
@@ -1161,12 +1185,18 @@ type GraphingCalculator() as graphingCalculator =
     let enter =         CalcButton(Name = "enter", Content = "Enter")
     let rpnButtons = [drop; duplicate; swap; clearStack; enter]    
 
+    //-----Graph Buttons
+    let blank = CalcButton(Name = "blank",Visibility = Visibility.Hidden)
+    let graphButtons = [blank]
+
     do // Place buttons in a grid
         List.iter ( fun x -> calcButton_Grid.Children.Add(x) |> ignore) calcButtons         
         List.iter ( fun x -> rpnButton_Grid.Children.Add(x) |> ignore) rpnButtons
         List.iter ( fun x -> memoryButton_Grid.Children.Add(x) |> ignore) memoryButtons
+        List.iter ( fun x -> graphButton_Grid.Children.Add(x) |> ignore) graphButtons
+        calcButton_Grid.Children.Add(graphButton_Grid) |> ignore
         calcButton_Grid.Children.Add(rpnButton_Grid) |> ignore
-        calcButton_Grid.Children.Add(memoryButton_Grid) |> ignore
+        calcButton_Grid.Children.Add(memoryButton_Grid) |> ignore        
         
     do  // Arrange the buttons on the grid.
         one                 .SetValue(Grid.RowProperty,4); one                  .SetValue(Grid.ColumnProperty,0);
@@ -1207,6 +1237,9 @@ type GraphingCalculator() as graphingCalculator =
         swap                .SetValue(Grid.RowProperty,0); swap                 .SetValue(Grid.ColumnProperty,2);
         clearStack          .SetValue(Grid.RowProperty,0); clearStack           .SetValue(Grid.ColumnProperty,0);
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
+
+        //-----Graph Buttons
+        blank               .SetValue(Grid.RowProperty,0); blank                 .SetValue(Grid.ColumnProperty,0);
 
     //----- Gridlines
     let xInterval = 5
@@ -1353,7 +1386,7 @@ type GraphingCalculator() as graphingCalculator =
     let modeButtonList = 
         [ InputMode.Conventional memoryButton_Grid; 
           InputMode.RPN rpnButton_Grid 
-          InputMode.Graph memoryButton_Grid ]
+          InputMode.Graph graphButton_Grid ]
     
 //  ----- Getters       
     // a function that gets active model
@@ -1375,16 +1408,22 @@ type GraphingCalculator() as graphingCalculator =
                                             x |> applyScaleX |> mapXToCanvas, 
                                             y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
-        let model = match s.model with | Trace t -> t
+        let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
+        
+
+        let models = match s.model with | Trace t -> t
+        
+        let model = match s.model with | Trace t -> t.Head
         let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
         let pg = PathGeometry()
         let pf = PathFigure()
         let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."
-        let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
+        
         do  pf.StartPoint <- pt
             List.iter (fun s -> pf.Segments.Add(s)) segments
             pg.Figures.Add(pf)
             path.Data <- pg
+        
         path    
     
 // ----- Setters
@@ -1441,7 +1480,7 @@ type GraphingCalculator() as graphingCalculator =
         match mode with
         | Mode.Conventional -> (memoryButton_Grid.Visibility <- Visibility.Visible)
         | Mode.RPN -> (rpnButton_Grid.Visibility <- Visibility.Visible)
-        | Mode.Graph -> (memoryButton_Grid.Visibility <- Visibility.Visible)
+        | Mode.Graph -> (graphButton_Grid.Visibility <- Visibility.Visible)
     // a function that sets the input mode
     let setInputMode mode = 
         do state <- {state with mode = mode}
@@ -1588,7 +1627,7 @@ type GraphingCalculator() as graphingCalculator =
         match newState with
         | DrawState d -> 
             do  canvas.Children.Clear()
-                setActivetModel (Trace d.trace)                    
+                setActivetModel (Trace [d.trace])                    
             let model = getActivetModel state    
             do  model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
                 model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)

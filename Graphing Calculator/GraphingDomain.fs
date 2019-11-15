@@ -93,7 +93,6 @@ module GraphingDomain =
           drawing2DBounds : Drawing2DBounds }
     type EvaluatedStateData =
         { evaluatedExpression : Expression
-          //parenthetical : Expression option;
           pendingFunction : PendingFunction option;
           drawing2DBounds : Drawing2DBounds}
     type ParentheticalStateData = 
@@ -765,7 +764,7 @@ module GraphingImplementation =
 
     let handleExpressionDigitAccumulatorState services stateData input =           
            let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState stateData)
-        
+           
            let zero = Number (Integer 0I)  
            let newExpressionStateData =  
                    {expression = stateData.expression;  
@@ -1046,6 +1045,7 @@ module GraphingImplementation =
                      |> Some} 
              |> ExpressionDigitAccumulatorState
         | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
+
     let handleDrawErrorState services stateData input =           
         let bounds = services.getDrawing2DBounds (DrawErrorState stateData)
         match input with
@@ -1168,8 +1168,8 @@ module GraphServices =
                     match d.parenthetical with
                     | Some expression -> func + " " + expression.ToString()
                     | None -> ""
-            | DrawErrorState _de -> "derror"
-            | ExpressionErrorState _ee -> "eerror"
+            | DrawErrorState de -> "derror" + de.ToString()
+            | ExpressionErrorState ee -> "eerror" + ee.ToString()
 
     let getDisplayFromPendingFunction (pendingFunction : PendingFunction option) =
         match pendingFunction with
@@ -1193,6 +1193,7 @@ module GraphServices =
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
         let getValueFrom numberType =            
+            let _op,bounds = drawOp
             match numberType with
             | Real r -> r
             | Integer i -> float i
@@ -1205,7 +1206,7 @@ module GraphServices =
             valueOfX drawBounds.upperX, 
             valueOfY drawBounds.lowerY, 
             valueOfY drawBounds.upperY
-
+        
         let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
         
         let x = 
@@ -1223,6 +1224,10 @@ module GraphServices =
                 | _ -> Undefined
             let yValue =
                 match yExpression with                
+                | Number n when n = PositiveInfinity-> Real yMax
+                | Number n when n = NegativeInfinity-> Real yMin
+                | Number (Real r) when r = infinity -> Real yMax
+                | Number (Real r) when r = -infinity -> Real yMin
                 | Number n -> n
                 | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
@@ -1246,11 +1251,12 @@ module GraphServices =
 
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
-        | false -> Trace { startPoint = Seq.head pointSequence; 
-                           traceSegments = 
-                               Seq.tail pointSequence 
-                               |> Seq.toList 
-                               |> List.map (fun x -> LineSegment x) }
+        | false -> 
+            Trace { startPoint = Seq.head pointSequence; 
+                    traceSegments = 
+                        Seq.tail pointSequence 
+                        |> Seq.toList 
+                        |> List.map (fun x -> LineSegment x) }
 
     let doExpressionOperation opData :ExpressionOperationResult = 
         
@@ -1259,6 +1265,7 @@ module GraphServices =
         let checkResult expression = 
             match expression with
             | Expression.Symbol (Symbol.Error e) -> ExpressionError e
+            | BinaryOp(Number(Real x),ToThePowerOf,Number(Real p)) -> Number(Real (x**p)) |> ExpressionSuccess
             | _ -> expression |> ExpressionSuccess
         
         match func with
@@ -1269,6 +1276,7 @@ module GraphServices =
         | Quotient ->     expression_1 / expression_2 |> checkResult
         | Inverse ->      expression_2 / expression_1 |> checkResult
         | ToThePowerOf -> expression_1** expression_2 |> checkResult
+        | Root ->         expression_1** expression_2 |> checkResult
         | _ ->            expression_1 |> checkResult
 
     let accumulateSymbol (expressionStateData :ExpressionStateData) input = 
