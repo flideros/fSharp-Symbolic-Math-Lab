@@ -36,6 +36,14 @@ let y3 = y**three
 let y4 = y**four
 let y5 = y**five
 
+let partitionInfinity f =
+    let rec loop acc = function
+      | x::xs when x <> infinity -> loop (x::acc) xs
+      | [] -> acc,[]
+      | xs -> (List.rev (xs.Head::acc)), xs      
+    loop [] 
+
+[for x in -150.0..0.1..150.0 -> 1.0/x]
 
 
 Number (Real 25.)**Number (Real 25.)
@@ -95,7 +103,7 @@ open Math.Foundations
 open MathML
 open MathML.Element
 
-let zz = Logic.Set.Difference.definition
+//let zz = Logic.Set.Difference.definition
 
 type UnicodeG = XmlProvider<"D:/MyFolders/Desktop/ucd.nounihan.grouped/ucd.nounihan.grouped.xml">
 
