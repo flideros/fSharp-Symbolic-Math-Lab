@@ -69,7 +69,7 @@ module GraphingDomain =
         | LazyCoder        
        
     type DrawOperationResult =  
-        | Trace of Trace 
+        | Traces of Trace list
         | DrawError of DrawError
 
     type ExpressionOperationResult =  
@@ -102,7 +102,7 @@ module GraphingDomain =
           drawing2DBounds : Drawing2DBounds }
     type DrawStateData =  
         { traceExpression : Expression; 
-          trace:Trace; 
+          trace:Trace list; 
           drawing2DBounds : Drawing2DBounds}    
     type ErrorStateData = 
         { lastExpression : Expression; 
@@ -247,7 +247,7 @@ module GraphingImplementation =
         let result = services.doDrawOperation drawOp 
         let expression, bounds = drawOp
         match result with
-        | Trace t -> DrawState {traceExpression = expression; trace = t; drawing2DBounds = bounds}
+        | Traces t -> DrawState {traceExpression = expression; trace = t; drawing2DBounds = bounds}
         | DrawError x ->  
             {lastExpression = expression; 
              error = x} 
@@ -1192,8 +1192,7 @@ module GraphServices =
    
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
-        let getValueFrom numberType =            
-            let _op,bounds = drawOp
+        let getValueFrom numberType =
             match numberType with
             | Real r -> r
             | Integer i -> float i
@@ -1224,9 +1223,9 @@ module GraphServices =
                 | _ -> Undefined
             let yValue =
                 match yExpression with                
-                | Number n when n = PositiveInfinity-> Real yMax
-                | Number n when n = NegativeInfinity-> Real yMin
-                | Number (Real r) when r = infinity -> Real yMax
+                | Number n when n = PositiveInfinity -> Real yMax
+                | Number n when n = NegativeInfinity -> Real yMin
+                | Number (Real r) when r = infinity  -> Real yMax
                 | Number (Real r) when r = -infinity -> Real yMin
                 | Number n -> n
                 | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
@@ -1241,22 +1240,35 @@ module GraphServices =
             |> makePoint xValue
             
         let pointSequence = seq { for x in xCoordinates do yield evaluate expression x } 
-        
+    
         let checkForUndefinedPoints = 
             pointSequence |>
             Seq.exists (fun x -> 
                 match x with 
                 | Point(X x,Y y) when x = Undefined || y = Undefined-> true 
                 | _ -> false)  
-
+        
+        let rec partitionInfinity =
+            let rec loop acc = function
+                | (Point(X x,Y y))::pl when y <> (Real infinity) -> loop ((Point(X x,Y y))::acc) pl
+                | [] -> acc,[]
+                | pl -> (List.rev (pl.Head::acc)), pl            
+            loop []    
+        
+        let createTrace ps = 
+            { startPoint = Seq.head ps; 
+              traceSegments = 
+                  Seq.tail pointSequence 
+                  |> Seq.toList 
+                  |> List.map (fun x -> LineSegment x) } 
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> 
-            Trace { startPoint = Seq.head pointSequence; 
+            [{ startPoint = Seq.head pointSequence; 
                     traceSegments = 
                         Seq.tail pointSequence 
                         |> Seq.toList 
-                        |> List.map (fun x -> LineSegment x) }
+                        |> List.map (fun x -> LineSegment x) }] |> Traces
 
     let doExpressionOperation opData :ExpressionOperationResult = 
         

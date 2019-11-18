@@ -1408,22 +1408,21 @@ type GraphingCalculator() as graphingCalculator =
                                             x |> applyScaleX |> mapXToCanvas, 
                                             y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
+        
         let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
         
-
         let models = match s.model with | Trace t -> t
         
-        let model = match s.model with | Trace t -> t.Head
-        let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
-        let pg = PathGeometry()
-        let pf = PathFigure()
-        let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."
-        
-        do  pf.StartPoint <- pt
-            List.iter (fun s -> pf.Segments.Add(s)) segments
-            pg.Figures.Add(pf)
-            path.Data <- pg
-        
+        let getPathGeometry model = 
+            let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
+            let pg = PathGeometry()
+            let pf = PathFigure()
+            let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."        
+            do  pf.StartPoint <- pt
+                List.iter (fun s -> pf.Segments.Add(s)) segments
+                pg.Figures.Add(pf)
+            pg            
+        do  List.iter (fun m -> path.Data <- getPathGeometry m) models
         path    
     
 // ----- Setters
@@ -1627,7 +1626,7 @@ type GraphingCalculator() as graphingCalculator =
         match newState with
         | DrawState d -> 
             do  canvas.Children.Clear()
-                setActivetModel (Trace [d.trace])                    
+                setActivetModel (Trace d.trace)                    
             let model = getActivetModel state    
             do  model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
                 model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
