@@ -1261,7 +1261,6 @@ module GraphServices =
                   Seq.tail pointSequence 
                   |> Seq.toList 
                   |> List.map (fun x -> LineSegment x) } 
-
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> 
