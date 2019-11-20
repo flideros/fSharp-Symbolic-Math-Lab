@@ -1409,6 +1409,8 @@ type GraphingCalculator() as graphingCalculator =
                                             y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         
+        let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
+        
         let models = match s.model with | Trace t -> t
         
         let getPathGeometry model = 
