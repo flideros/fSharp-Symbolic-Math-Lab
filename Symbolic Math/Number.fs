@@ -213,7 +213,9 @@ type NumberType with
             | true -> Integer (nTemp / hcfTemp)
             | false -> Rational { numerator = nTemp / hcfTemp; denominator = dTemp / hcfTemp }
         | Real r1, Real r2 -> Real (r1 * r2)
-        | Real r1, Integer i2 -> Real (r1 * float i2)   
+        | Real r1, Integer i2 -> Real (r1 * float i2)
+        | Real r1, Rational rat2 -> Real (r1 * ((float rat2.numerator)/(float rat2.denominator)))
+        | Rational rat2, Real r1 -> Real (r1 * ((float rat2.numerator)/(float rat2.denominator)))
         | Integer i2,Real r1  -> Real (r1 * float i2) 
         | PositiveInfinity, PositiveInfinity -> PositiveInfinity
         | NegativeInfinity, NegativeInfinity -> NegativeInfinity

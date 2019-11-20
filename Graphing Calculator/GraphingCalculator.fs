@@ -1409,8 +1409,6 @@ type GraphingCalculator() as graphingCalculator =
                                             y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         
-        let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
-        
         let models = match s.model with | Trace t -> t
         
         let getPathGeometry model = 
@@ -1418,12 +1416,14 @@ type GraphingCalculator() as graphingCalculator =
             let pg = PathGeometry()
             let pf = PathFigure()
             let pt = match convertPoint model.startPoint  with | Pt x -> x | _ -> failwith "Wrong type of point."        
+            let path = Path(Stroke = Brushes.Black, StrokeThickness = 2.)
             do  pf.StartPoint <- pt
                 List.iter (fun s -> pf.Segments.Add(s)) segments
                 pg.Figures.Add(pf)
-            pg            
-        do  List.iter (fun m -> path.Data <- getPathGeometry m) models
-        path    
+                path.Data <- pg   
+            path
+        let paths = List.map (fun m -> getPathGeometry m) models
+        paths    
     
 // ----- Setters
     // a function that sets active display
@@ -1627,11 +1627,12 @@ type GraphingCalculator() as graphingCalculator =
         | DrawState d -> 
             do  canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
-            let model = getActivetModel state    
-            do  model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
-                model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
-                canvas.Children.Add(model) |> ignore
-                canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore
+            let models = getActivetModel state    
+            do  List.iter (fun (model : System.Windows.Shapes.Path) -> 
+                                        model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
+                                        model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
+                                        canvas.Children.Add(model) |> ignore
+                                        canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
                 setActiveDisplay (PlotCanvas screen_Canvas)
                 setPendingOpText "graph" 
                 // add grid if checked

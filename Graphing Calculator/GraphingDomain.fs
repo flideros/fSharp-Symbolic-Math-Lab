@@ -195,8 +195,7 @@ module GraphingImplementation =
             match expressionStateData.parenthetical with
             | None 
             | Some (Parenthetical(_,None,None)) -> true
-            | _ -> false
-            
+            | _ -> false         
         
         // helper to create a new EvaluatedState from a given displayExpression 
         // and the nextOp parameter
@@ -1239,38 +1238,47 @@ module GraphServices =
             |> ExpressionType.simplifyExpression
             |> makePoint xValue
             
-        let pointSequence = seq { for x in xCoordinates do yield evaluate expression x } 
+        let pointList = seq { for x in xCoordinates do yield evaluate expression x } |> Seq.toList
     
         let checkForUndefinedPoints = 
-            pointSequence |>
+            pointList |>
             Seq.exists (fun x -> 
                 match x with 
                 | Point(X x,Y y) when x = Undefined || y = Undefined-> true 
                 | _ -> false)  
         
-        let rec partitionInfinity =
+        let partitionInfinity =
             let rec loop acc = function
-                | (Point(X x,Y y))::pl when y <> (Real infinity) -> loop ((Point(X x,Y y))::acc) pl
-                | [] -> acc,[]
-                | pl -> (List.rev (pl.Head::acc)), pl            
-            loop []    
-        
+                | (Point(X x,Y y))::pl when y <> (Real yMax) && y <> (Real yMin) -> loop ((Point(X x,Y y))::acc) pl
+                | [] -> acc, []
+                | pl -> 
+                    let infinityPoint = 
+                        match pl.[0],acc.[0] with
+                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMax && y1 < 0. -> Point(X x0,Y (Real yMin))
+                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMin && y1 < 0. -> Point(X x0,Y (Real yMin))
+                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMax && y1 > 0. -> Point(X x0,Y (Real yMax))
+                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMin && y1 > 0. -> Point(X x0,Y (Real yMax))                        
+                        | _ -> pl.Head
+                    (List.rev (infinityPoint::acc), pl)            
+            loop []
+
         let createTrace ps = 
             { startPoint = Seq.head ps; 
               traceSegments = 
-                  Seq.tail pointSequence 
+                  Seq.tail ps 
                   |> Seq.toList 
                   |> List.map (fun x -> LineSegment x) } 
-
+       
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> 
-            [{ startPoint = Seq.head pointSequence; 
-                    traceSegments = 
-                        Seq.tail pointSequence 
-                        |> Seq.toList 
-                        |> List.map (fun x -> LineSegment x) }] |> Traces
-
+            let pointLists =                 
+                match partitionInfinity pointList with
+                | f,[] -> [f]
+                | f,s -> [f;s]
+            let out = List.map (fun x -> createTrace x) pointLists
+            out |> Traces
+            
     let doExpressionOperation opData :ExpressionOperationResult = 
         
         let func, (expression_1 :Expression), expression_2 = opData

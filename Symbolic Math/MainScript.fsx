@@ -46,6 +46,16 @@ let partitionInfinity f =
 [for x in -150.0..0.1..150.0 -> 1.0/x]
 
 
+seq {
+    for x in 1..10 do
+        yield x
+        yield! seq { for i in 1..x -> i}} |> Seq.toList
+
+
+(Number(Real 1.))/(two)
+
+
+
 Number (Real 25.)**Number (Real 25.)
 
 5.0**0.5
