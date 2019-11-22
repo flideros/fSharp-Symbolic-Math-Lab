@@ -1204,15 +1204,15 @@ module GraphServices =
             valueOfX drawBounds.upperX, 
             valueOfY drawBounds.lowerY, 
             valueOfY drawBounds.upperY
-        
+    
         let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
-        
+    
         let x = 
             match ExpressionFunction.getSymbolsFrom expression with
             | [] -> Expression.Symbol (Constant Null)
             | [x] -> x
             | x::t -> x
-        
+    
         let makePoint xExpression yExpression = 
             let xValue =
                 match xExpression with
@@ -1231,52 +1231,55 @@ module GraphServices =
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
                 | _ -> Undefined
             Point(X xValue,Y yValue)
-        
+    
         let evaluate expression xValue = 
             ExpressionStructure.substitute (x, xValue) expression 
             |> ExpressionFunction.evaluateRealPowersOfExpression 
             |> ExpressionType.simplifyExpression
             |> makePoint xValue
+        
+        let points = seq { for x in xCoordinates do yield evaluate expression x } |> Seq.toList         
             
-        let pointList = seq { for x in xCoordinates do yield evaluate expression x } |> Seq.toList
-    
         let checkForUndefinedPoints = 
-            pointList |>
+            points |>
             Seq.exists (fun x -> 
                 match x with 
-                | Point(X x,Y y) when x = Undefined || y = Undefined-> true 
+                | Point(X x,Y y) when x = Undefined || y = Undefined -> true 
                 | _ -> false)  
-        
+    
         let partitionInfinity =
-            let rec loop acc = function
-                | (Point(X x,Y y))::pl when y <> (Real yMax) && y <> (Real yMin) -> loop ((Point(X x,Y y))::acc) pl
-                | [] -> acc, []
+            let rec loop acc lcc = function
+                | (Point(X x,Y y))::pl when y <> (Real yMax) && y <> (Real yMin) -> loop ((Point(X x,Y y))::acc) lcc pl
+                | [] -> acc::lcc //, []
                 | pl -> 
                     let infinityPoint = 
-                        match pl.[0],acc.[0] with
-                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMax && y1 < 0. -> Point(X x0,Y (Real yMin))
-                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMin && y1 < 0. -> Point(X x0,Y (Real yMin))
-                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMax && y1 > 0. -> Point(X x0,Y (Real yMax))
-                        | Point(X x0,Y (Real y0)),Point(X _x1,Y (Real y1)) when y0 = yMin && y1 > 0. -> Point(X x0,Y (Real yMax))                        
+                        match pl,acc with
+                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMax && y1 < 0. -> Point(X x0,Y (Real yMin))
+                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 < 0. -> Point(X x0,Y (Real yMin))
+                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMax && y1 > 0. -> Point(X x0,Y (Real yMax))
+                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 > 0. -> Point(X x0,Y (Real yMax))
+                        | [],acc -> acc.Head                        
                         | _ -> pl.Head
-                    (List.rev (infinityPoint::acc), pl)            
-            loop []
+                    let p =
+                          match pl.Tail with
+                          | Point(X x0,Y (Real y0))::_t when y0 < 0. -> Point(X x0,Y (Real yMin))
+                          | Point(X x0,Y (Real y0))::_t when y0 > 0.  -> Point(X x0,Y (Real yMax))
+                          | _ -> pl.Head
+                    loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
+            loop [] []
 
-        let createTrace ps = 
+        let createTrace ps =             
             { startPoint = Seq.head ps; 
               traceSegments = 
                   Seq.tail ps 
                   |> Seq.toList 
                   |> List.map (fun x -> LineSegment x) } 
-       
+   
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> 
-            let pointLists =                 
-                match partitionInfinity pointList with
-                | f,[] -> [f]
-                | f,s -> [f;s]
-            let out = List.map (fun x -> createTrace x) pointLists
+            let pointLists = List.filter (fun x -> x<>[]) (partitionInfinity points)           
+            let out = List.map (fun x -> createTrace x) pointLists 
             out |> Traces
             
     let doExpressionOperation opData :ExpressionOperationResult = 

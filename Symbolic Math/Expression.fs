@@ -660,8 +660,8 @@ module ExpressionFunction =
         let eComplexNumber (a,b) = ComplexNumber(a,b)
         let eSymbol (v:Expression) = v
         let eBinaryOp (a,op,b) = 
-            match op with
-            | ToThePowerOf -> a**b
+            match (a,op,b) with
+            | Number(Real a), ToThePowerOf, Number(Real b) -> Number(Real (a**b))            
             | _ -> BinaryOp(a,op,b)
         let eUnaryOp (op,a) = UnaryOp (op,a)
         let eNaryOp (op,aList) = NaryOp (op,aList)

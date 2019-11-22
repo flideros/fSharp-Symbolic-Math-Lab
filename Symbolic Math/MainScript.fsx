@@ -54,11 +54,14 @@ seq {
 
 (Number(Real 1.))/(two)
 
+let pointList = 
+    seq { for x in -150.0..0.10..150.0 do yield x**2.0 } |> Seq.toList |> List.filter (fun x -> x <> nan)
 
 
-Number (Real 25.)**Number (Real 25.)
 
-5.0**0.5
+ExpressionFunction.evaluateRealPowersOfExpression ((Number (Real 25.)*Number (Real 25.))**Number (Real 0.5))
+
+25.**0.5
 
 List.iter (printfn "%A") [for x in -150.0..0.1..150.0 -> 1.0/x]
 
