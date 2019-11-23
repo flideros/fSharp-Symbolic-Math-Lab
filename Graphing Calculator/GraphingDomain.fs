@@ -1198,21 +1198,17 @@ module GraphServices =
             | _ -> System.Double.NaN
         let valueOfX coordinate = match coordinate with X x -> getValueFrom x
         let valueOfY coordinate = match coordinate with Y y -> getValueFrom y
-
         let xMin, xMax, yMin, yMax = 
             valueOfX drawBounds.lowerX, 
             valueOfX drawBounds.upperX, 
             valueOfY drawBounds.lowerY, 
-            valueOfY drawBounds.upperY
-    
-        let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
-    
+            valueOfY drawBounds.upperY                 
         let x = 
             match ExpressionFunction.getSymbolsFrom expression with
             | [] -> Expression.Symbol (Constant Null)
             | [x] -> x
             | x::t -> x
-    
+        
         let makePoint xExpression yExpression = 
             let xValue =
                 match xExpression with
@@ -1224,30 +1220,34 @@ module GraphServices =
                 match yExpression with                
                 | Number n when n = PositiveInfinity -> Real yMax
                 | Number n when n = NegativeInfinity -> Real yMin
-                | Number (Real r) when r = infinity  -> Real yMax
-                | Number (Real r) when r = -infinity -> Real yMin
+                | Number (Real r) when System.Double.IsInfinity(r) -> Real yMax
+                | Number (Real r) when System.Double.IsNegativeInfinity(r) -> Real yMin
                 | Number n -> n
                 | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
                 | _ -> Undefined
             Point(X xValue,Y yValue)
-    
+        
         let evaluate expression xValue = 
             ExpressionStructure.substitute (x, xValue) expression 
+            |> ExpressionType.simplifyExpression
             |> ExpressionFunction.evaluateRealPowersOfExpression 
             |> ExpressionType.simplifyExpression
-            |> makePoint xValue
-        
-        let points = seq { for x in xCoordinates do yield evaluate expression x } |> Seq.toList         
             
+        let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
+        let yCoordinates = Seq.map (fun x -> evaluate expression x ) xCoordinates
+        let coordinatePairs = Seq.zip xCoordinates yCoordinates |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
+       
+        let points = seq { for (x,y) in coordinatePairs do yield makePoint x y }
+                    
         let checkForUndefinedPoints = 
             points |>
             Seq.exists (fun x -> 
                 match x with 
                 | Point(X x,Y y) when x = Undefined || y = Undefined -> true 
                 | _ -> false)  
-    
-        let partitionInfinity =
+        
+        let partitionInfinity = //this is hacky, but it works for now. I'll come back to it later
             let rec loop acc lcc = function
                 | (Point(X x,Y y))::pl when y <> (Real yMax) && y <> (Real yMin) -> loop ((Point(X x,Y y))::acc) lcc pl
                 | [] -> acc::lcc //, []
@@ -1257,7 +1257,7 @@ module GraphServices =
                         | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMax && y1 < 0. -> Point(X x0,Y (Real yMin))
                         | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 < 0. -> Point(X x0,Y (Real yMin))
                         | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMax && y1 > 0. -> Point(X x0,Y (Real yMax))
-                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 > 0. -> Point(X x0,Y (Real yMax))
+                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 > 0. -> Point(X x0,Y (Real yMax))                        
                         | [],acc -> acc.Head                        
                         | _ -> pl.Head
                     let p =
@@ -1268,20 +1268,20 @@ module GraphServices =
                     loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
             loop [] []
 
-        let createTrace ps =             
-            { startPoint = Seq.head ps; 
+        let createTrace ps =
+            { startPoint = Seq.head ps;
               traceSegments = 
                   Seq.tail ps 
                   |> Seq.toList 
-                  |> List.map (fun x -> LineSegment x) } 
-   
+                  |> List.map (fun x -> LineSegment x) }  
+       
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> 
-            let pointLists = List.filter (fun x -> x<>[]) (partitionInfinity points)           
+            let pointLists = List.filter (fun x -> x <> []) (partitionInfinity (Seq.toList points))           
             let out = List.map (fun x -> createTrace x) pointLists 
             out |> Traces
-            
+
     let doExpressionOperation opData :ExpressionOperationResult = 
         
         let func, (expression_1 :Expression), expression_2 = opData
