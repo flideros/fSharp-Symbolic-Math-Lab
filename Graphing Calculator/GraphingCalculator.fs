@@ -1704,6 +1704,9 @@ type GraphingCalculator() as graphingCalculator =
         | Graph -> handleGraphInput graphInput
 
     let x = (Math.Pure.Objects.Symbol.Variable "x") |> ExpressionInput.Symbol |> ExpressionInput
+    let sin = (Math.Pure.Objects.Function.Sin) |> ExpressionInput.Function |> ExpressionInput
+    let cos = (Math.Pure.Objects.Function.Cos) |> ExpressionInput.Function |> ExpressionInput
+    let tan = (Math.Pure.Objects.Function.Tan) |> ExpressionInput.Function |> ExpressionInput
 
     do  //add event handler to each button
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
@@ -1740,6 +1743,9 @@ type GraphingCalculator() as graphingCalculator =
         enter            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Push)))
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
         x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
+        sin_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> sin |> handleGraphInput ))
+        cos_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> cos |> handleGraphInput ))
+        tan_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> tan |> handleGraphInput ))
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
         closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))
