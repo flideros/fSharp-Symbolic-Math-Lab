@@ -101,7 +101,7 @@ module ExpressionType =
         | NaryOp(op,a) when isNumber a.[0] = false -> Number Number.One
         | _ -> Number Number.One
 
-//Comparison
+    //Comparison
     let rec compareExpressions u v =
         match u, v with
         | Number x, Number y -> Number.compare x y //O-1
@@ -157,7 +157,7 @@ module ExpressionType =
         | UnaryOp(op, x), Symbol v when x <> Symbol v -> compareExpressions (UnaryOp(op, x)) (UnaryOp(op, Symbol v)) //O-12.2        
         | _ -> -1 * (compareExpressions v u) //O-13
  
-// Simplification Operators
+    // Simplification Operators
     let rec simplifyPower x =
         let rec simplifyIntegerPower x =        
             match x with
@@ -384,6 +384,9 @@ module ExpressionType =
                         | _ -> a'
                     | _ -> a'
             | UnaryOp (Sin,a) when a = Number (Integer 0I) -> Number (Integer 0I)            
+            | UnaryOp (Sin,Number (Real r)) -> Number (Real (System.Math.Sin(r)))
+            | UnaryOp (Sin,Number _n) -> a'
+            | UnaryOp (Sin,a) -> (UnaryOp (Sin,simplify a)) |> simplify
             //Cosine
             | UnaryOp (Cos,NaryOp(Product,a)) when isNegativeNumber a.[0] -> simplify (UnaryOp (Cos,NaryOp(Product,(negate a.[0])::a.Tail)))
             | UnaryOp (Cos,NaryOp(Sum,(Number n)::(NaryOp(Product,a))::t)) when isNegativeNumber a.[0] -> (UnaryOp (Cos,NaryOp(Product,List.map negate ((Number n)::(NaryOp(Product,a))::t))))
@@ -446,7 +449,11 @@ module ExpressionType =
                             | false -> simplify (UnaryOp (Cos,NaryOp(Product,(Number (Rational{r with numerator = abs(r.numerator - ((r.Floor) * r.denominator) + r.denominator)}))::a.Tail)))
                         | _ -> a'
                     | _ -> a'            
-            | UnaryOp (Cos,a) when a = Number (Integer 0I) -> Number (Integer 1I)
+            | UnaryOp (Cos,a) when a = Number (Integer 0I) -> Number (Integer 1I)                        
+            | UnaryOp (Cos,Number (Real r)) -> Number (Real (System.Math.Cos(r)))
+            | UnaryOp (Cos,Number _n) -> a'
+            //Tangent
+            | UnaryOp (Tan,Number (Real r)) -> Number (Real (System.Math.Tan(r)))
             | _ -> a'
             //Trig Functions 
         simplify x
