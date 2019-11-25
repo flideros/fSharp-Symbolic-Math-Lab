@@ -1634,7 +1634,7 @@ type GraphingCalculator() as graphingCalculator =
                                         canvas.Children.Add(model) |> ignore
                                         canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
                 setActiveDisplay (PlotCanvas screen_Canvas)
-                setPendingOpText "graph" 
+                setPendingOpText "--->>> graph" 
                 // add grid if checked
                 match canvasGridLines_CheckBox.IsChecked.HasValue = true &&
                       canvasGridLines_CheckBox.IsChecked.Value = true with
@@ -1645,15 +1645,15 @@ type GraphingCalculator() as graphingCalculator =
                 | false -> ()
         | EvaluatedState ev ->
             do setActiveDisplay (Function function_Grid)
-               setPendingOpText (graphServices.getDisplayFromPendingFunction ev.pendingFunction)
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction ev.pendingFunction) + " --->>> Evaluated. What's next")
         | ParentheticalState p ->
             do setActiveDisplay (Function function_Grid)
-               setPendingOpText ((graphServices.getDisplayFromPendingFunction p.pendingFunction) + "paren")
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction p.pendingFunction) + " --->>> Open Parentheses")
         | ExpressionDigitAccumulatorState ed ->
-            do setPendingOpText (graphServices.getDisplayFromGraphState newState)
+            do setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
         | ExpressionDecimalAccumulatorState ed ->
             do setPendingOpText (graphServices.getDisplayFromGraphState newState)        
-        | _ -> setPendingOpText (graphServices.getDisplayFromGraphState newState)
+        | _ -> setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
         do  canvas.Children.Insert(0,gl) 

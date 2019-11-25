@@ -526,12 +526,14 @@ module GraphingImplementation =
                     |> ExpressionDigitAccumulatorState
             | Function f -> 
                 match f with
-                | Sin -> 
+                | Tan
+                | Sin 
+                | Cos as op->    
                     let nextOp = None//Some op
                     let newEvaluationState = 
                         getEvaluationState services 
                             { expression = expr;
-                              pendingFunction = Some (expr,Sin); 
+                              pendingFunction = Some (expr,op); 
                               digits = "0";
                               drawing2DBounds = bounds;
                               parenthetical = None
@@ -546,88 +548,20 @@ module GraphingImplementation =
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
                                   drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Sin),Some oldParentheticalState) |> Parenthetical
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState                            
                             | ParentheticalState _p -> 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
                                   drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Sin),Some oldParentheticalState) |> Parenthetical
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
                             | DrawErrorState _
                             | ExpressionErrorState _ -> newEvaluationState
-                    finalState
-                | Cos -> 
-                    let nextOp = None//Some op
-                    let newEvaluationState = 
-                        getEvaluationState services 
-                            { expression = expr;
-                              pendingFunction = Some (expr,Cos); 
-                              digits = "0";
-                              drawing2DBounds = bounds;
-                              parenthetical = None
-                            } nextOp 
-                    let oldParentheticalState = (services.getParentheticalFromCalculatorState (stateData |> EvaluatedState))
-                    let finalState =
-                        match stateData.pendingFunction = None with
-                        | true -> newEvaluationState
-                        | false -> 
-                            match newEvaluationState with                            
-                            | EvaluatedState _ev ->
-                                { evaluatedExpression = Expression.Zero
-                                  pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Cos),Some oldParentheticalState) |> Parenthetical
-                                } |> ParentheticalState                            
-                            | ParentheticalState _p -> 
-                                { evaluatedExpression = Expression.Zero
-                                  pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Cos),Some oldParentheticalState) |> Parenthetical
-                                } |> ParentheticalState
-                            | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
-                            | DrawState _
-                            | DrawErrorState _
-                            | ExpressionErrorState _ -> newEvaluationState
-                    finalState
-                | Tan -> 
-                    let nextOp = None//Some op
-                    let newEvaluationState = 
-                        getEvaluationState services 
-                            { expression = expr;
-                              pendingFunction = Some (expr,Tan); 
-                              digits = "0";
-                              drawing2DBounds = bounds;
-                              parenthetical = None
-                            } nextOp 
-                    let oldParentheticalState = (services.getParentheticalFromCalculatorState (stateData |> EvaluatedState))
-                    let finalState =
-                        match stateData.pendingFunction = None with
-                        | true -> newEvaluationState
-                        | false -> 
-                            match newEvaluationState with                            
-                            | EvaluatedState _ev ->
-                                { evaluatedExpression = Expression.Zero
-                                  pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Tan),Some oldParentheticalState) |> Parenthetical
-                                } |> ParentheticalState                            
-                            | ParentheticalState _p -> 
-                                { evaluatedExpression = Expression.Zero
-                                  pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Tan),Some oldParentheticalState) |> Parenthetical
-                                } |> ParentheticalState
-                            | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
-                            | DrawState _
-                            | DrawErrorState _
-                            | ExpressionErrorState _ -> newEvaluationState
-                    finalState
+                    finalState                    
                 | _ -> replacePendingFunction stateData (Some f)
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawing2DBounds)
@@ -858,12 +792,14 @@ module GraphingImplementation =
                     |> ExpressionDigitAccumulatorState
             | Function f -> 
                 match f with
-                | Sin -> 
+                | Tan
+                | Sin 
+                | Cos as op->    
                     let nextOp = None//Some op
                     let newEvaluationState = 
                         getEvaluationState services 
                             { expression = expr;
-                              pendingFunction = Some (expr,Sin); 
+                              pendingFunction = Some (expr,op); 
                               digits = "0";
                               drawing2DBounds = bounds;
                               parenthetical = None
@@ -878,13 +814,13 @@ module GraphingImplementation =
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
                                   drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Function.Sin),Some oldParentheticalState) |> Parenthetical
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState                            
                             | ParentheticalState _p -> 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
                                   drawing2DBounds = stateData.drawing2DBounds
-                                  parenthetical = (Expression.Zero,Some (Expression.Zero,Function.Sin),Some oldParentheticalState) |> Parenthetical
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
