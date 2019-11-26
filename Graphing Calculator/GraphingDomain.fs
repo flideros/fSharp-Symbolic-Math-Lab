@@ -1298,8 +1298,6 @@ module GraphServices =
                 match yExpression with                
                 | Number n when n = PositiveInfinity -> Real yMax
                 | Number n when n = NegativeInfinity -> Real yMin
-                | Number (Real r) when System.Double.IsInfinity(r) -> Real yMax
-                | Number (Real r) when System.Double.IsNegativeInfinity(r) -> Real yMin
                 | Number n -> n
                 | Expression.Symbol (Constant Pi) -> Real (System.Math.PI)
                 | Expression.Symbol (Constant E ) -> Real (System.Math.E )
@@ -1311,41 +1309,46 @@ module GraphServices =
             |> ExpressionType.simplifyExpression
             |> ExpressionFunction.evaluateRealPowersOfExpression 
             |> ExpressionType.simplifyExpression
-            
-        let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
-        let yCoordinates = Seq.map (fun x -> evaluate expression x ) xCoordinates
-        let coordinatePairs = Seq.zip xCoordinates yCoordinates |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
-       
-        let points = seq { for (x,y) in coordinatePairs do yield makePoint x y }
-                    
-        let checkForUndefinedPoints = 
-            points |>
-            Seq.exists (fun x -> 
-                match x with 
-                | Point(X x,Y y) when x = Undefined || y = Undefined -> true 
-                | _ -> false)  
-        
-        let partitionInfinity = //this is hacky, but it works for now. I'll come back to it later
+
+        let partitionInfinity = 
             let rec loop acc lcc = function
-                | (Point(X x,Y y))::pl when y <> (Real yMax) && y <> (Real yMin) -> loop ((Point(X x,Y y))::acc) lcc pl
+                | (Number(Real x), Number(Real y))::pl when y <> infinity && y <> -infinity -> loop ((Number(Real x),Number(Real y))::acc) lcc pl
                 | [] -> acc::lcc //, []
                 | pl -> 
                     let infinityPoint = 
                         match pl,acc with
-                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMax && y1 < 0. -> Point(X x0,Y (Real yMin))
-                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 < 0. -> Point(X x0,Y (Real yMin))
-                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMax && y1 > 0. -> Point(X x0,Y (Real yMax))
-                        | Point(X x0,Y (Real y0))::_plTail,Point(X _x1,Y (Real y1))::_accTail when y0 = yMin && y1 > 0. -> Point(X x0,Y (Real yMax))                        
-                        | [],acc -> acc.Head                        
-                        | _ -> pl.Head
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 =  infinity && y1 <= 0. -> (x0,Number(Real yMin))
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 <= 0. -> (x0,Number(Real yMin))
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 =  infinity && y1 >= 0. -> (x0,Number(Real yMax))
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 >= 0. -> (x0,Number(Real yMax))                     
+                        | [],acc -> (fst acc.Head, Number(Real 150.))                        
+                        | _      -> (fst pl.Head, Number(Real 150.))
                     let p =
-                          match pl.Tail with
-                          | Point(X x0,Y (Real y0))::_t when y0 < 0. -> Point(X x0,Y (Real yMin))
-                          | Point(X x0,Y (Real y0))::_t when y0 > 0.  -> Point(X x0,Y (Real yMax))
-                          | _ -> pl.Head
+                          match pl with
+                          | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 <= 0. -> (x0,Number(Real yMin))
+                          | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 > 0.  -> (x0,Number(Real yMax))
+                          | _ -> (fst pl.Head, Number(Real 150.))
                     loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
             loop [] []
+            
+        let xCoordinates = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
+        let yCoordinates = Seq.map (fun x -> evaluate expression x ) xCoordinates        
+        
+        let coordinatePairs = 
+            Seq.zip xCoordinates yCoordinates |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
+            |> Seq.toList
+            |> partitionInfinity
 
+        let points = List.map (fun pl -> seq { for (x,y) in pl do yield makePoint x y }) coordinatePairs 
+                    
+        let checkForUndefinedPoints = 
+            points 
+            |> Seq.concat
+            |> Seq.exists (fun x -> 
+                match x with 
+                | Point(X x,Y y) when x = Undefined || y = Undefined -> true 
+                | _ -> false)  
+        
         let createTrace ps =
             { startPoint = Seq.head ps;
               traceSegments = 
@@ -1356,7 +1359,7 @@ module GraphServices =
         match checkForUndefinedPoints with
         | true -> DrawError FailedToCreateTrace
         | false -> 
-            let pointLists = List.filter (fun x -> x <> []) (partitionInfinity (Seq.toList points))           
+            let pointLists = points          
             let out = List.map (fun x -> createTrace x) pointLists 
             out |> Traces
 
