@@ -1321,12 +1321,12 @@ module GraphServices =
                         | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 <= 0. -> (x0,Number(Real yMin))
                         | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 =  infinity && y1 >= 0. -> (x0,Number(Real yMax))
                         | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 >= 0. -> (x0,Number(Real yMax))                     
-                        | [],acc -> (fst acc.Head, Number(Real 150.))                        
-                        | _      -> (fst pl.Head, Number(Real 150.))
+                        | [],acc -> (fst acc.Head, Number(Real yMax))                        
+                        | _      -> (fst  pl.Head, Number(Real yMax))
                     let p =
                           match pl with
                           | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 <= 0. -> (x0,Number(Real yMin))
-                          | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 > 0.  -> (x0,Number(Real yMax))
+                          | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 >  0. -> (x0,Number(Real yMax))
                           | _ -> (fst pl.Head, Number(Real 150.))
                     loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
             loop [] []
@@ -1335,7 +1335,8 @@ module GraphServices =
         let yCoordinates = Seq.map (fun x -> evaluate expression x ) xCoordinates        
         
         let coordinatePairs = 
-            Seq.zip xCoordinates yCoordinates |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
+            Seq.zip xCoordinates yCoordinates 
+            |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
             |> Seq.toList
             |> partitionInfinity
 

@@ -21,41 +21,46 @@ open DataLab
 //Define app resources and load them to the main prograam.
 let resource = new Uri("app.xaml",System.UriKind.Relative)
 let mainProgram = Application.LoadComponent(resource) :?> Application
-(*
-// Create Types
+
+// Controls
 let browser = FrameBrowser(@"https://www.bing.com/")
 let browserBorder = Border()
 let dockPanel = DockPanelStyle()
 let button = ButtonStyle("Frank's Button")
 let notepad = new AppContainer()
+let dataLab = DataLab(RenderTransformOrigin = Point(0.,0.))
+let calculator = Calculator(OverridesDefaultStyle = true) 
+let graphingCalc = GraphingCalculator.GraphingCalculator()
 
+// Tab Control 
+let tabs = TabControl()
 
+let item1 = TabItem(Header = "Graphing Calculator")
+do  item1.Content <- graphingCalc
+let item2 = TabItem(Header = "SQL Pad")
+do  item2.Content <- dataLab
+let item3 = TabItem(Header = "Calculator")
+do  item3.Content <- calculator
 
-// Compose Types
+do  tabs.Items.Add(item1) |> ignore
+    tabs.Items.Add(item2) |> ignore
+    tabs.Items.Add(item3) |> ignore
+
+// Compose Controls
 browserBorder.Child <- browser
-
 dockPanel.Children.Add (button) |> ignore
 dockPanel.Children.Add (browserBorder) |> ignore
-
+// Initialize Components
 do notepad.ExeName <- "wordpad.exe"
    notepad.InitializeComponent()
 
-let dataLab = new DataLab(RenderTransformOrigin = Point(0.,0.))
-*)
-let calculator = new Calculator(OverridesDefaultStyle = true) 
-let graphingCalc = GraphingCalculator.GraphingCalculator()
-
+(**)
 // Make a window and add content
 let window = new Window(RenderTransformOrigin = Point(0.,0.))
 window.Title <- "Math is fun!" 
-window.Content <- graphingCalc//calculator//dataLab//notepad//grid//
-window.Width <- 380.//Double.NaN//440.//
-window.Height <- 620.//Double.NaN//640.//
-//window.MinWidth <- 440.0
-//window.MinHeight <- 640.0
-//window.MaxWidth <- 440.0
-//window.MaxHeight <- 640.0
-//window.SizeToContent <- SizeToContent.WidthAndHeight
+window.Content <- tabs//notepad//dataLab//graphingCalc//calculator//
+window.Width <- 380.
+window.Height <- 620.
 
 //----------{not needed unless a Xaml used for window}----------//
 // Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
