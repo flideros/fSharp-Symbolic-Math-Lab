@@ -452,8 +452,10 @@ module ExpressionType =
             | UnaryOp (Cos,a) when a = Number (Integer 0I) -> Number (Integer 1I)                        
             | UnaryOp (Cos,Number (Real r)) -> Number (Real (System.Math.Cos(r)))
             | UnaryOp (Cos,Number _n) -> a'
+            | UnaryOp (Cos,a) -> (UnaryOp (Cos,simplify a)) |> simplify
             //Tangent
             | UnaryOp (Tan,Number (Real r)) -> Number (Real (System.Math.Tan(r)))
+            | UnaryOp (Tan,a) -> (UnaryOp (Tan,simplify a)) |> simplify
             | _ -> a'
             //Trig Functions 
         simplify x

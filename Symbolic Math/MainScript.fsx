@@ -36,26 +36,47 @@ let y3 = y**three
 let y4 = y**four
 let y5 = y**five
 
-let partitionInfinity f =
-    let rec loop acc = function
-      | x::xs when x <> infinity -> loop (x::acc) xs
-      | [] -> acc,[]
-      | xs -> (List.rev (xs.Head::acc)), xs      
-    loop [] 
-
-[for x in -150.0..0.1..150.0 -> 1.0/x]
+let expression = cos(one/x**(Number(Real 1.0))) //(sin(x**two))**(Number(Real 0.5)) //
 
 
-seq {
-    for x in 1..10 do
-        yield x
-        yield! seq { for i in 1..x -> i}} |> Seq.toList
+let evaluate expression xValue = 
+    ExpressionStructure.substitute (x, xValue) expression      
+    |> ExpressionType.simplifyExpression
+    |> ExpressionFunction.evaluateRealPowersOfExpression
+    |> ExpressionType.simplifyExpression
+
+let xCoordinates = seq {for x in -150. .. 0.1.. 150. -> Number(Real x)}
+let yCoordinates = Seq.map (fun x -> evaluate expression x ) xCoordinates
+let coordinatePairs = Seq.zip xCoordinates yCoordinates |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
+       
+let partitionInfinity  = 
+    let rec loop acc lcc = function
+        | (Number(Real x),Number(Real y))::pl when y <> infinity && y <> -infinity -> loop ((Number(Real x),Number(Real y))::acc) lcc pl
+        | [] -> acc::lcc //, []
+        | pl -> 
+            let infinityPoint = 
+                match pl,acc with
+                | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = infinity && y1 <= 0. -> (x0,Number(Real -150.))
+                | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 <= 0. -> (x0,Number(Real -151.))
+                | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = infinity && y1 >= 0. -> (x0,Number(Real 152.))
+                | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 >= 0. -> (x0,Number(Real 153.))                     
+                | [],acc -> (fst acc.Head, Number(Real 154.))                        
+                | _ -> (fst pl.Head, Number(Real 155.))
+            let p =
+                  match pl with
+                  | (x0,Number(Real _y0))::(x1,Number(Real y1))::_t when y1 <= 0. -> (x0,Number(Real -156.))
+                  | (x0,Number(Real _y0))::(x1,Number(Real y1))::_t when y1 > 0.  -> (x0,Number(Real 157.))
+                  | _ -> (fst pl.Head, Number(Real 158.))
+            loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
+    loop [] []
 
 
-(Number(Real 1.))/(two)
+let cList = (Seq.toList coordinatePairs) |> partitionInfinity
 
-let pointList = 
-    seq { for x in -150.0..0.10..150.0 do yield x**2.0 } |> Seq.toList |> List.filter (fun x -> x <> nan)
+
+
+List.iter (fun x -> printf "%A \n" x) (cList.[0])
+
 
 
 
