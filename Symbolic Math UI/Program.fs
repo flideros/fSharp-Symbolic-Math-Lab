@@ -58,7 +58,7 @@ do notepad.ExeName <- "wordpad.exe"
 // Make a window and add content
 let window = new Window(RenderTransformOrigin = Point(0.,0.))
 window.Title <- "Math is fun!" 
-window.Content <- graphingCalc//tabs//notepad//dataLab//calculator//
+window.Content <- tabs//notepad//dataLab//graphingCalc//calculator//
 window.Width <- 380.
 window.Height <- 620.
 
