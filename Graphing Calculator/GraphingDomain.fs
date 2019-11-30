@@ -1000,7 +1000,7 @@ module GraphingImplementation =
            | GraphOptionRest -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,default2DBounds)
 
     let handleExpressionDecimalAccumulatorState services stateData input =
-        let bounds = services.getDrawing2DBoundsFromState (ExpressionDecimalAccumulatorState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (ExpressionDecimalAccumulatorState stateData
         
         let zero = Number (Integer 0I)  
         let newExpressionStateData =  
