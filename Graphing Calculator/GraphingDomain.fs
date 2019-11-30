@@ -115,6 +115,8 @@ module GraphingDomain =
         | Draw
         | OpenParentheses
         | CloseParentheses
+        | GraphOptionSave of Drawing2DBounds
+        | GraphOptionRest
 
     // States
     type CalculatorState =         
@@ -128,7 +130,7 @@ module GraphingDomain =
       
     type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
 
-    // Services used by the calculator itself
+    // Services
     type AccumulateSymbol = ExpressionStateData -> Symbol -> Expression //StateData
     type DoDrawOperation = DrawOp-> DrawOperationResult
     type DoExpressionOperation = Function * Expression * Expression -> ExpressionOperationResult
@@ -136,9 +138,9 @@ module GraphingDomain =
     type GetNumberFromAccumulator = ExpressionStateData -> NumberType
     type GetDisplayFromGraphState = CalculatorState -> string
     type GetErrorFromExpression = Expression -> Error
-    type GetDrawing2DBounds = CalculatorState -> Drawing2DBounds
+    type GetDrawing2DBoundsFromState = CalculatorState -> Drawing2DBounds
+    type SetDrawing2DBounds = CalculatorState * Drawing2DBounds -> CalculatorState
     type GetDisplayFromPendingFunction = PendingFunction option -> string
-    
     type GetExpressionFromParenthetical = Parenthetical option -> Expression
     type GetParentheticalFromExpression = Expression -> Parenthetical
     type GetParentheticalFromCalculatorState = CalculatorState -> Parenthetical
@@ -155,7 +157,8 @@ module GraphingDomain =
         getNumberFromAccumulator :GetNumberFromAccumulator
         getDisplayFromExpression :GetDisplayFromExpression
         getDisplayFromGraphState :GetDisplayFromGraphState
-        getDrawing2DBounds :GetDrawing2DBounds
+        getDrawing2DBoundsFromState :GetDrawing2DBoundsFromState
+        setDrawing2DBounds :SetDrawing2DBounds
         getDisplayFromPendingFunction :GetDisplayFromPendingFunction
         getExpressionFromParenthetical :GetExpressionFromParenthetical
         getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
@@ -166,6 +169,12 @@ module GraphingDomain =
 module GraphingImplementation =    
     open GraphingDomain
     open Utilities
+
+    let default2DBounds = 
+        { upperX = X (Math.Pure.Quantity.Real 150.); 
+          lowerX = X (Math.Pure.Quantity.Real -150.); 
+          upperY = Y (Math.Pure.Quantity.Real 150.); 
+          lowerY = Y (Math.Pure.Quantity.Real -150.) }
 
     let accumulateNonZeroDigit services digit accumulatorData =
         let digits = accumulatorData.digits
@@ -200,7 +209,7 @@ module GraphingImplementation =
         // helper to create a new EvaluatedState from a given displayExpression 
         // and the nextOp parameter
         let getNewState displayExpression =
-            let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState expressionStateData)
+            let bounds = services.getDrawing2DBoundsFromState (ExpressionDigitAccumulatorState expressionStateData)
             let newPendingFunc = 
                 nextFunc 
                 |> Option.map ( fun func -> displayExpression, func )
@@ -280,7 +289,7 @@ module GraphingImplementation =
         |> ParentheticalState
 
     let handleDrawState services stateData input = //Only the'Back' function implimented here.
-        let bounds = services.getDrawing2DBounds (DrawState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (DrawState stateData)
         let expr = stateData.traceExpression        
         let newEvaluatedStateData =  
                 {evaluatedExpression=expr;  
@@ -308,9 +317,11 @@ module GraphingImplementation =
         | Draw -> DrawState stateData
         | OpenParentheses -> DrawState stateData
         | CloseParentheses -> DrawState stateData
-        
+        | GraphOptionSave bounds -> services.setDrawing2DBounds (DrawState stateData,bounds)
+        | GraphOptionRest -> services.setDrawing2DBounds (DrawState stateData,default2DBounds)
+
     let handleEvaluatedState services stateData input =
-        let bounds = services.getDrawing2DBounds (EvaluatedState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (EvaluatedState stateData)
         let zero = Number (Integer 0I)
         let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
@@ -573,9 +584,11 @@ module GraphingImplementation =
               drawing2DBounds = stateData.drawing2DBounds } 
             |> ParentheticalState
         | CloseParentheses -> EvaluatedState stateData
+        | GraphOptionSave bounds -> services.setDrawing2DBounds (EvaluatedState stateData,bounds)
+        | GraphOptionRest -> services.setDrawing2DBounds (EvaluatedState stateData,default2DBounds)
 
     let handleParentheticalState services stateData input =
-        let bounds = services.getDrawing2DBounds (ParentheticalState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (ParentheticalState stateData)
         let zero = Number (Integer 0I)
         let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
@@ -802,7 +815,7 @@ module GraphingImplementation =
                               pendingFunction = Some (expr,op); 
                               digits = "0";
                               drawing2DBounds = bounds;
-                              parenthetical = None
+                              parenthetical = Some stateData.parenthetical
                             } nextOp 
                     let oldParentheticalState = (services.getParentheticalFromCalculatorState (stateData |> ParentheticalState))
                     let finalState =
@@ -839,9 +852,11 @@ module GraphingImplementation =
               drawing2DBounds = stateData.drawing2DBounds } 
             |> ParentheticalState
         | CloseParentheses -> services.closeParenthetical stateData
+        | GraphOptionSave bounds -> services.setDrawing2DBounds (ParentheticalState stateData,bounds)
+        | GraphOptionRest -> services.setDrawing2DBounds (ParentheticalState stateData,default2DBounds)
 
     let handleExpressionDigitAccumulatorState services stateData input =           
-           let bounds = services.getDrawing2DBounds (ExpressionDigitAccumulatorState stateData)           
+           let bounds = services.getDrawing2DBoundsFromState (ExpressionDigitAccumulatorState stateData)           
            let zero = Number (Integer 0I)  
            let newExpressionStateData =  
                    {expression = stateData.expression;  
@@ -981,9 +996,11 @@ module GraphingImplementation =
                         |> Some} 
                 |> ExpressionDigitAccumulatorState
            | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
+           | GraphOptionSave bounds -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,bounds)
+           | GraphOptionRest -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,default2DBounds)
 
     let handleExpressionDecimalAccumulatorState services stateData input =
-        let bounds = services.getDrawing2DBounds (ExpressionDecimalAccumulatorState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (ExpressionDecimalAccumulatorState stateData)
         
         let zero = Number (Integer 0I)  
         let newExpressionStateData =  
@@ -1122,9 +1139,11 @@ module GraphingImplementation =
                      |> Some} 
              |> ExpressionDigitAccumulatorState
         | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
+        | GraphOptionSave bounds -> services.setDrawing2DBounds (ExpressionDecimalAccumulatorState stateData,bounds)
+        | GraphOptionRest -> services.setDrawing2DBounds (ExpressionDecimalAccumulatorState stateData,default2DBounds)
 
     let handleDrawErrorState services stateData input =           
-        let bounds = services.getDrawing2DBounds (DrawErrorState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (DrawErrorState stateData)
         match input with
         | Stack _ -> DrawErrorState stateData
         | CalcInput op -> 
@@ -1148,9 +1167,11 @@ module GraphingImplementation =
         | Draw -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
+        | GraphOptionSave bounds -> DrawErrorState stateData
+        | GraphOptionRest -> DrawErrorState stateData
 
     let handleExpressionErrorState services stateData input =
-        let bounds = services.getDrawing2DBounds (ExpressionErrorState stateData)
+        let bounds = services.getDrawing2DBoundsFromState (ExpressionErrorState stateData)
         match input with
         | Stack _ -> DrawErrorState stateData
         | CalcInput op -> 
@@ -1174,6 +1195,8 @@ module GraphingImplementation =
         | Draw -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
+        | GraphOptionSave bounds -> DrawErrorState stateData
+        | GraphOptionRest -> DrawErrorState stateData
     
     let createEvaluate (services:GraphServices) : Evaluate = 
          // create some local functions with partially applied services
@@ -1252,8 +1275,8 @@ module GraphServices =
         match pendingFunction with
         | Some x -> x.ToString()
         | None -> ""
-    
-    let getDrawing2DBounds :GetDrawing2DBounds = 
+
+    let getDrawing2DBoundsFromState :GetDrawing2DBoundsFromState = 
         fun g -> 
             match g with 
             | EvaluatedState e -> e.drawing2DBounds
@@ -1261,12 +1284,19 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState e -> e.drawing2DBounds
             | ExpressionDigitAccumulatorState e -> e.drawing2DBounds
             | ParentheticalState p -> p.drawing2DBounds
-            | _ -> 
-                { upperX = X (Math.Pure.Quantity.Real 15.); 
-                  lowerX = X (Math.Pure.Quantity.Real -15.); 
-                  upperY = Y (Math.Pure.Quantity.Real 15.); 
-                  lowerY = Y (Math.Pure.Quantity.Real -15.) }
+            | _ -> GraphingImplementation.default2DBounds
    
+    let setDrawing2DBounds :SetDrawing2DBounds = 
+        fun g ->             
+            let state, bounds = g
+            match state with 
+            | EvaluatedState e -> {e with drawing2DBounds = bounds} |> EvaluatedState
+            | DrawState d -> {d with drawing2DBounds = bounds} |> DrawState
+            | ExpressionDecimalAccumulatorState e -> {e with drawing2DBounds = bounds} |> ExpressionDecimalAccumulatorState
+            | ExpressionDigitAccumulatorState e -> {e with drawing2DBounds = bounds} |> ExpressionDigitAccumulatorState
+            | ParentheticalState p -> {p with drawing2DBounds = bounds} |> ParentheticalState
+            | _ -> state
+    
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
         let getValueFrom numberType =
@@ -1531,7 +1561,8 @@ module GraphServices =
         getNumberFromAccumulator = getNumberFromAccumulator
         getDisplayFromExpression = getDisplayFromExpression
         getDisplayFromGraphState = getDisplayFromGraphState
-        getDrawing2DBounds = getDrawing2DBounds 
+        getDrawing2DBoundsFromState = getDrawing2DBoundsFromState
+        setDrawing2DBounds = setDrawing2DBounds
         getDisplayFromPendingFunction = getDisplayFromPendingFunction
         getExpressionFromParenthetical = getExpressionFromParenthetical
         getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
