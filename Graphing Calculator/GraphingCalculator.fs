@@ -73,11 +73,8 @@ type GraphingCalculator() as graphingCalculator =
             Math.Pure.Quantity.Number.Zero 
             |> Math.Pure.Structure.Number; 
           pendingFunction = None; 
-          drawing2DBounds = 
-            { upperX = X (Math.Pure.Quantity.Real 150.); 
-              lowerX = X (Math.Pure.Quantity.Real -150.); 
-              upperY = Y (Math.Pure.Quantity.Real 150.); 
-              lowerY = Y (Math.Pure.Quantity.Real -150.)}}
+          drawing2DBounds = GraphingImplementation.default2DBounds
+        }   
         |> EvaluatedState
     let mutable state = 
         { rpn = rpnDefault; 
@@ -1424,8 +1421,41 @@ type GraphingCalculator() as graphingCalculator =
             path
         let paths = List.map (fun m -> getPathGeometry m) models
         paths    
-    
-// ----- Setters
+    let getDraw2DBoundsFromOptions() =
+        let real = fun n -> Math.Pure.Quantity.NumberType.Real n
+        let uX = 
+            let n = System.Double.TryParse (option_xMax_TextBox.Text)
+            match n with
+            | true, d -> X (real d)
+            | false, _ -> X (real 150.0)
+        let uY = 
+            let n = System.Double.TryParse (option_yMax_TextBox.Text)
+            match n with
+            | true, d -> Y (real d)
+            | false, _ -> Y (real 150.0)
+        let lX = 
+            let n = System.Double.TryParse (option_xMin_TextBox.Text)
+            match n with
+            | true, d -> X (real d)
+            | false, _ -> X (real -150.0)
+        let lY = 
+            let n = System.Double.TryParse (option_yMin_TextBox.Text)
+            match n with
+            | true, d -> Y (real d)
+            | false, _ -> Y (real -150.0)
+        {upperX = uX; lowerX = lX; upperY = uY; lowerY = lY}
+
+// ----- Setters    
+    //
+    let setGraphOptionText (bounds:Drawing2DBounds) =
+        let getValueFromXCoordinate c = match c with | X (Math.Pure.Quantity.Real x) -> x.ToString() | _ -> ""
+        let getValueFromYCoordinate c = match c with | Y (Math.Pure.Quantity.Real y) -> y.ToString() | _ -> ""
+        do
+            option_xMin_TextBox.Text <- getValueFromXCoordinate bounds.lowerX
+            option_xMax_TextBox.Text <- getValueFromXCoordinate bounds.upperX
+            option_yMin_TextBox.Text <- getValueFromYCoordinate bounds.lowerY
+            option_yMax_TextBox.Text <- getValueFromYCoordinate bounds.upperY
+
     // a function that sets active display
     let setActiveDisplay display =
         do  List.iter (fun x -> 
@@ -1446,10 +1476,12 @@ type GraphingCalculator() as graphingCalculator =
         | View.PlotCanvas p ->
             p.Visibility <- Visibility.Visible
             canvas_DockPanel.Visibility <- Visibility.Visible
-        | View.Function p
+        | View.Function p -> 
+            setGraphOptionText (GraphServices.getDrawing2DBoundsFromState state.graph)
+            (p.Visibility <- Visibility.Visible)
         | View.Function2D p
         | View.Function3D p
-        | View.Option p
+        | View.Option p -> (p.Visibility <- Visibility.Visible)
         | View.Option2D p
         | View.Option3D p -> (p.Visibility <- Visibility.Visible)
         | View.Text t -> (t.Visibility <- Visibility.Visible)        
@@ -1749,6 +1781,8 @@ type GraphingCalculator() as graphingCalculator =
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
         closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))
+        option_Save_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDraw2DBoundsFromOptions()))))
+        option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionRest)))
 
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
