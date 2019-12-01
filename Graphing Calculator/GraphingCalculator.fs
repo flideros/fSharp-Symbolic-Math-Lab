@@ -1427,22 +1427,22 @@ type GraphingCalculator() as graphingCalculator =
             let n = System.Double.TryParse (option_xMax_TextBox.Text)
             match n with
             | true, d -> X (real d)
-            | false, _ -> X (real 150.0)
+            | false, _ -> GraphingImplementation.default2DBounds.upperX
         let uY = 
             let n = System.Double.TryParse (option_yMax_TextBox.Text)
             match n with
             | true, d -> Y (real d)
-            | false, _ -> Y (real 150.0)
+            | false, _ -> GraphingImplementation.default2DBounds.upperY
         let lX = 
             let n = System.Double.TryParse (option_xMin_TextBox.Text)
             match n with
             | true, d -> X (real d)
-            | false, _ -> X (real -150.0)
+            | false, _ -> GraphingImplementation.default2DBounds.lowerX
         let lY = 
             let n = System.Double.TryParse (option_yMin_TextBox.Text)
             match n with
             | true, d -> Y (real d)
-            | false, _ -> Y (real -150.0)
+            | false, _ -> GraphingImplementation.default2DBounds.lowerY
         {upperX = uX; lowerX = lX; upperY = uY; lowerY = lY}
 
 // ----- Setters    
@@ -1646,7 +1646,7 @@ type GraphingCalculator() as graphingCalculator =
         let newState = calculateGraph (input, state.graph)
         let expressionText = 
             match newState with
-            | DrawState d -> "Graph"
+            | DrawState _d -> "Graph"
             | EvaluatedState e -> graphServices.getDisplayFromExpression e.evaluatedExpression           
             | ParentheticalState p -> graphServices.getDisplayFromExpression p.evaluatedExpression
             | ExpressionDigitAccumulatorState e -> graphServices.getDisplayFromExpression e.expression          
@@ -1735,12 +1735,15 @@ type GraphingCalculator() as graphingCalculator =
         | Conventional -> handleConventionalInput input
         | Graph -> handleGraphInput graphInput
 
+    // create objects
     let x = (Math.Pure.Objects.Symbol.Variable "x") |> ExpressionInput.Symbol |> ExpressionInput
     let sin = (Math.Pure.Objects.Function.Sin) |> ExpressionInput.Function |> ExpressionInput
     let cos = (Math.Pure.Objects.Function.Cos) |> ExpressionInput.Function |> ExpressionInput
     let tan = (Math.Pure.Objects.Function.Tan) |> ExpressionInput.Function |> ExpressionInput
+    let pi = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.Pi) |> ExpressionInput.Symbol |> ExpressionInput
+    let e = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.E) |> ExpressionInput.Symbol |> ExpressionInput
 
-    do  //add event handler to each button
+    do  //add event handler to each button click
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
         two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two))) 
         three            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Three)))
@@ -1778,12 +1781,17 @@ type GraphingCalculator() as graphingCalculator =
         sin_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> sin |> handleGraphInput ))
         cos_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> cos |> handleGraphInput ))
         tan_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> tan |> handleGraphInput ))
+        pi_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> pi |> handleGraphInput ))
+        e_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> e |> handleGraphInput ))
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
         closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))
-        option_Save_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDraw2DBoundsFromOptions()))))
-        option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionRest)))
+        option_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDraw2DBoundsFromOptions()))))
+        option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
+        xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
+        xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
 
+        // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
         
