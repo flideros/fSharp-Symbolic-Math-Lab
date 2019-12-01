@@ -1122,8 +1122,7 @@ module GraphingImplementation =
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
             match op with
-            | MathOp m -> 
-                
+            | MathOp m ->                
                 match m with
                 | Add ->      getEvaluationState services stateData (Some Plus)                    
                 | Subtract -> getEvaluationState services stateData (Some Minus)                    
