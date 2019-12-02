@@ -398,7 +398,7 @@ module ExpressionType =
                 | false,true -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))
                 | false, false -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))]))
                 | true, false -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))
-            | UnaryOp (cos,NaryOp(Sum,(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && r.denominator = 2I ->  
+            | UnaryOp (Cos,NaryOp(Sum,(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && r.denominator = 2I ->  
                 match r.numerator > 0I, r.Floor%2I = 0I  with
                 | true,true -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))]))
                 | false,true -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))
@@ -499,6 +499,8 @@ module ExpressionStructure =
         | Number (Integer i) -> "Integer"
         | Number (Rational r) -> "Rational"
         | Number (Real r) -> "Real"
+        | BinaryOp(a,ToThePowerOf,Number(Real r)) -> "Real Power"
+        //| BinaryOp(a,ToThePowerOf,Number(Integer i)) -> "Real Power"
         | _ -> "Undefined"
         // etc.
     let numberOfOperands x = 
@@ -665,15 +667,23 @@ module ExpressionFunction =
         | _ -> u
 
     let evaluateRealPowersOfExpression (u:Expression) =
-        let eNumber (n:Expression) = n
+        let eNumber (n:Expression) = 
+            match n with
+            | Number (Integer i) -> Number (Real (float (i)))
+            | Number (Rational {numerator = n;denominator = d}) -> Number (Real ((float n)/(float d)))
+            | _ -> n
         let eComplexNumber (a,b) = ComplexNumber(a,b)
-        let eSymbol (v:Expression) = v
+        let eSymbol (v:Expression) = 
+            match v with
+            | Expression.Symbol (Constant Pi) -> Number (Real (System.Math.PI))
+            | Expression.Symbol (Constant E) -> Number (Real (System.Math.E))
+            | _ -> v
         let eBinaryOp (a,op,b) = 
             match (a,op,b) with
             | Number(Real a), ToThePowerOf, Number(Real b) -> Number(Real (a**b))            
             | _ -> BinaryOp(a,op,b)
-        let eUnaryOp (op,a) = UnaryOp (op,a)
-        let eNaryOp (op,aList) = NaryOp (op,aList)
+        let eUnaryOp (op,a) = ExpressionType.simplifyExpression (UnaryOp (op,a))
+        let eNaryOp (op,aList) = ExpressionType.simplifyExpression (NaryOp (op,aList))
         Cata.recurseExpression eNumber eComplexNumber eSymbol eBinaryOp eUnaryOp eNaryOp u
 
     let getSymbolsFrom (u:Expression) =
