@@ -1122,8 +1122,7 @@ module GraphingImplementation =
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
             match op with
-            | MathOp m -> 
-                
+            | MathOp m ->                
                 match m with
                 | Add ->      getEvaluationState services stateData (Some Plus)                    
                 | Subtract -> getEvaluationState services stateData (Some Minus)                    
@@ -1430,8 +1429,7 @@ module GraphServices =
             |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
             |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
             |> ExpressionStructure.substitute (Expression.Symbol (Variable "x"), xValue)            
-            |> ExpressionFunction.evaluateRealPowersOfExpression
-            
+            |> ExpressionFunction.evaluateRealPowersOfExpression           
             
         let partitionInfinity = 
             let rec loop acc lcc = function
