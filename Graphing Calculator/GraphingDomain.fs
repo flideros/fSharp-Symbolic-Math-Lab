@@ -1412,11 +1412,6 @@ module GraphServices =
             valueOfX drawBounds.upperX, 
             valueOfY drawBounds.lowerY, 
             valueOfY drawBounds.upperY                 
-        let x = 
-            match ExpressionFunction.getSymbolsFrom expression with
-            | [] -> Expression.Symbol (Constant Null)
-            | [x] -> x
-            | x::t -> x
         
         let makePoint xExpression yExpression = 
             let xValue =
@@ -1430,13 +1425,12 @@ module GraphServices =
             Point(X xValue,Y yValue)
         
         let evaluate expression xValue = 
-            ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) expression
-            |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))
-            |> ExpressionStructure.substitute (x, xValue) 
-            |> ExpressionType.simplifyExpression
-            |> ExpressionFunction.evaluateRealPowersOfExpression 
-            |> ExpressionType.simplifyExpression
-
+            expression
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
+            |> ExpressionStructure.substitute (Expression.Symbol (Variable "x"), xValue)            
+            |> ExpressionFunction.evaluateRealPowersOfExpression           
+            
         let partitionInfinity = 
             let rec loop acc lcc = function
                 | (Number(Real x), Number(Real y))::pl when y <> infinity && y <> -infinity -> loop ((Number(Real x),Number(Real y))::acc) lcc pl

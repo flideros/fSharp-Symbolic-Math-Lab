@@ -22,7 +22,7 @@ open Math.Pure.Structure.Factorization
 let a,b,c,d,e,f = Symbol (Variable "a"),Symbol (Variable "b"),Symbol (Variable "c"),Symbol (Variable "d"),Symbol (Variable "e"),Symbol (Variable "f")
 let t,w,x,y,z = Symbol (Variable "t"),Symbol (Variable "w"),Symbol (Variable "x"),Symbol (Variable "y"),Symbol (Variable "z")
 let zero,one,two,three,four,five,six,seven,eight,nine,ten = Number (Integer 0I),Number (Integer 1I),Number (Integer 2I),Number (Integer 3I),Number (Integer 4I),Number (Integer 5I),Number (Integer 6I),Number (Integer 7I),Number (Integer 8I),Number (Integer 9I),Number (Integer 10I)
-let pi,i = Symbol (Constant Pi),Symbol (Constant I)
+let pi,i = Symbol (Constant Pi),Symbol (Constant E)
 let sin(u) = UnaryOp(Sin,u)
 let cos(u) = UnaryOp(Cos,u)
 //let printEuc a = match a with | (a, b, c) -> sprintf "(%s, %s, %s)" (Print.expression a) (Print.expression b) (Print.expression c)
@@ -36,14 +36,34 @@ let y3 = y**three
 let y4 = y**four
 let y5 = y**five
 
-let expression = cos(one/x**(Number(Real 1.0))) //(sin(x**two))**(Number(Real 0.5)) //
+let expression = five/(sin(pi*((Number(Real 0.30))*x)**(Number(Real 2.0))))/i //(sin(x**two))**(Number(Real 0.5)) //
 
+let rec checkForRealPowersOfExpression exp =
+    let subExp = ExpressionStructure.subExpressions exp 
+    match (List.exists (fun x -> (ExpressionStructure.kind x) = "Real Power") subExp) with
+    | false -> exp
+    | true -> ExpressionFunction.evaluateRealPowersOfExpression exp |> checkForRealPowersOfExpression
+
+ExpressionStructure.subExpressions expression
+
+expression
+|> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
+|> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
+|> ExpressionStructure.substitute (x, (Number(Real 10.10))) 
+|> checkForRealPowersOfExpression
+
+|> ExpressionFunction.evaluateRealPowersOfExpression
+|> ExpressionFunction.evaluateRealPowersOfExpression
+|> ExpressionType.simplifyExpression
 
 let evaluate expression xValue = 
     ExpressionStructure.substitute (x, xValue) expression      
-    |> ExpressionType.simplifyExpression
     |> ExpressionFunction.evaluateRealPowersOfExpression
     |> ExpressionType.simplifyExpression
+    
+    |> ExpressionType.simplifyExpression
+
+evaluate expression (Number(Real 2.0))
 
 let xCoordinates = seq {for x in -150. .. 0.1.. 150. -> Number(Real x)}
 let yCoordinates = Seq.map (fun x -> evaluate expression x ) xCoordinates
