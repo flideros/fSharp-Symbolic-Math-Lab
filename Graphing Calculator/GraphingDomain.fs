@@ -950,14 +950,13 @@ module GraphingImplementation =
                    match newState with                            
                    | EvaluatedState ev -> 
                        ExpressionDigitAccumulatorState 
-                           { newExpressionStateData with                                          
+                           { newExpressionStateData with 
                                expression = ev.evaluatedExpression;
-                               parenthetical = None}
+                               parenthetical = services.setExpressionToParenthetical (ev.evaluatedExpression, stateData.parenthetical) |> Some}
                    | ParentheticalState p -> 
                        ExpressionDigitAccumulatorState 
-                           { newExpressionStateData with
-                               expression = p.evaluatedExpression;
-                               parenthetical = Some p.parenthetical}
+                           { newExpressionStateData with 
+                               expression = p.evaluatedExpression}
                    | ExpressionDigitAccumulatorState _ 
                    | ExpressionDecimalAccumulatorState _                             
                    | DrawState _
@@ -1055,14 +1054,13 @@ module GraphingImplementation =
                            |> Some;
                        } 
                        |> ExpressionDigitAccumulatorState
-                   | _ ->                    
-                       let nextOp = None//Some op
-                       let expr = (Expression.Symbol s)
+                   | _ ->                       
+                       let symbol = (Expression.Symbol s)
                        let newState = 
                            getEvaluationState services 
                                { newExpressionStateData with
-                                   pendingFunction = Some (expr,Times); 
-                                   digits = stateData.digits;} nextOp 
+                                   pendingFunction = Some (symbol,Times); 
+                                   digits = stateData.digits;} None                       
                        getFinalStateFrom newState
                | Function f -> getEvaluationState services stateData (Some f)
            | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
@@ -1104,25 +1102,24 @@ module GraphingImplementation =
             | false -> 
                 match newState with                            
                 | EvaluatedState ev -> 
-                    ExpressionDecimalAccumulatorState 
-                        { newExpressionStateData with                                          
-                                expression = ev.evaluatedExpression;
-                                parenthetical = None}
+                    ExpressionDigitAccumulatorState 
+                        { newExpressionStateData with 
+                            expression = ev.evaluatedExpression;
+                            parenthetical = services.setExpressionToParenthetical (ev.evaluatedExpression, stateData.parenthetical) |> Some}
                 | ParentheticalState p -> 
-                    ExpressionDecimalAccumulatorState 
-                        { newExpressionStateData with
-                                expression = p.evaluatedExpression;
-                                parenthetical = Some p.parenthetical}
+                    ExpressionDigitAccumulatorState 
+                        { newExpressionStateData with 
+                            expression = p.evaluatedExpression}
                 | ExpressionDigitAccumulatorState _ 
                 | ExpressionDecimalAccumulatorState _                             
                 | DrawState _
                 | DrawErrorState _
-                | ExpressionErrorState _ -> newState 
+                | ExpressionErrorState _ -> newState
         match input with
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
             match op with
-            | MathOp m ->                
+            | MathOp m ->                 
                 match m with
                 | Add ->      getEvaluationState services stateData (Some Plus)                    
                 | Subtract -> getEvaluationState services stateData (Some Minus)                    
@@ -1209,13 +1206,12 @@ module GraphingImplementation =
                     } 
                     |> ExpressionDigitAccumulatorState
                 | _ ->                    
-                    let nextOp = None//Some op
-                    let expr = (Expression.Symbol s)
+                    let symbol = (Expression.Symbol s)
                     let newState = 
                         getEvaluationState services 
                             { newExpressionStateData with
-                                pendingFunction = Some (expr,Times); 
-                                digits = stateData.digits;} nextOp 
+                                pendingFunction = Some (symbol,Times); 
+                                digits = stateData.digits;} None                       
                     getFinalStateFrom newState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
@@ -1429,7 +1425,7 @@ module GraphServices =
             |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
             |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
             |> ExpressionStructure.substitute (Expression.Symbol (Variable "x"), xValue)            
-            |> ExpressionFunction.evaluateRealPowersOfExpression           
+            |> ExpressionFunction.evaluateRealPowersOfExpression            
             
         let partitionInfinity = 
             let rec loop acc lcc = function
