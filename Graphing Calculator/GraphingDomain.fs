@@ -974,7 +974,11 @@ module GraphingImplementation =
                    | Divide ->   getEvaluationState services stateData (Some DividedBy)                    
                    | CalculatorMathOp.Inverse ->
                        let nextOp = None//Some op
-                       let expr = stateData.expression
+                       let expr = 
+                           match stateData.digits, stateData.parenthetical with
+                           | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                           | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                           | _, _ -> stateData.expression
                        let newState = 
                            getEvaluationState services 
                                { newExpressionStateData with
@@ -983,7 +987,11 @@ module GraphingImplementation =
                        getFinalStateFrom newState
                    | Percent ->
                        let nextOp = None//Some op
-                       let expr = stateData.expression
+                       let expr = 
+                           match stateData.digits, stateData.parenthetical with
+                           | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                           | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                           | _, _ -> stateData.expression
                        let newState = 
                            getEvaluationState services 
                                { newExpressionStateData with
@@ -992,7 +1000,11 @@ module GraphingImplementation =
                        getFinalStateFrom newState
                    | CalculatorMathOp.Root ->
                        let nextOp = None//Some op
-                       let expr = stateData.expression
+                       let expr = 
+                           match stateData.digits, stateData.parenthetical with
+                           | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                           | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                           | _, _ -> stateData.expression
                        let newState = 
                            getEvaluationState services 
                                { newExpressionStateData with
@@ -1001,7 +1013,11 @@ module GraphingImplementation =
                        getFinalStateFrom newState
                    | ChangeSign ->
                        let nextOp = None//Some op
-                       let expr = stateData.expression
+                       let expr = 
+                           match stateData.digits, stateData.parenthetical with
+                           | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                           | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                           | _, _ -> stateData.expression
                        let newState = 
                            getEvaluationState services 
                                { newExpressionStateData with
@@ -1075,7 +1091,11 @@ module GraphingImplementation =
            | GraphOptionReset -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,default2DBounds)
            | ExpressionSquared ->
                let nextOp = None//Some op
-               let expr = stateData.expression
+               let expr = 
+                   match stateData.digits, stateData.parenthetical with
+                   | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                   | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                   | _, _ -> stateData.expression
                let newState = 
                    getEvaluationState services 
                        { newExpressionStateData with
@@ -1127,7 +1147,11 @@ module GraphingImplementation =
                 | Divide ->   getEvaluationState services stateData (Some DividedBy)                    
                 | CalculatorMathOp.Inverse ->
                     let nextOp = None//Some op
-                    let expr = stateData.expression
+                    let expr = 
+                        match stateData.digits, stateData.parenthetical with
+                        | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                        | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                        | _, _ -> stateData.expression
                     let newState = 
                         getEvaluationState services 
                             { newExpressionStateData with
@@ -1136,7 +1160,11 @@ module GraphingImplementation =
                     getFinalStateFrom newState
                 | Percent ->
                     let nextOp = None//Some op
-                    let expr = stateData.expression
+                    let expr = 
+                        match stateData.digits, stateData.parenthetical with
+                        | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                        | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                        | _, _ -> stateData.expression
                     let newState = 
                         getEvaluationState services 
                             { newExpressionStateData with
@@ -1145,7 +1173,11 @@ module GraphingImplementation =
                     getFinalStateFrom newState
                 | CalculatorMathOp.Root ->
                     let nextOp = None//Some op
-                    let expr = stateData.expression
+                    let expr = 
+                        match stateData.digits, stateData.parenthetical with
+                        | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                        | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                        | _, _ -> stateData.expression
                     let newState = 
                         getEvaluationState services 
                             { newExpressionStateData with
@@ -1154,7 +1186,11 @@ module GraphingImplementation =
                     getFinalStateFrom newState
                 | ChangeSign ->
                     let nextOp = None//Some op
-                    let expr = stateData.expression
+                    let expr = 
+                        match stateData.digits, stateData.parenthetical with
+                        | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                        | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                        | _, _ -> stateData.expression
                     let newState = 
                         getEvaluationState services 
                             { newExpressionStateData with
@@ -1226,7 +1262,11 @@ module GraphingImplementation =
         | GraphOptionReset -> services.setDrawing2DBounds (ExpressionDecimalAccumulatorState stateData,default2DBounds)
         | ExpressionSquared ->
             let nextOp = None//Some op
-            let expr = stateData.expression
+            let expr = 
+                match stateData.digits, stateData.parenthetical with
+                | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
+                | _, Some (Parenthetical(e,_,_)) when e <> Expression.Zero -> e                
+                | _, _ -> stateData.expression
             let newState = 
                 getEvaluationState services 
                     { newExpressionStateData with

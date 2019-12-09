@@ -124,7 +124,7 @@ let _u = (Number(Integer 2I)**Number(Real 1.3)) |> ExpressionType.simplifyExpres
 let expressionVariables = Polynomial.Variables.ofExpression v
 let check = Polynomial.Check.isPolynomialSV v
 
-let evaluate expression = 
+let evaluate2 expression = 
     match check with
     | false -> Number Undefined
     | true -> ExpressionStructure.substitute (x, Number(Real 1.4)) expression |> ExpressionFunction.evaluateRealPowersOfExpression |> ExpressionType.simplifyExpression
