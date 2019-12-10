@@ -15,6 +15,7 @@ open Style
 open ConventionalDomain
 open RpnDomain
 open GraphingDomain
+open Graphing2DParametricDomain
 
 type View =
     | PlotCanvas of Grid
@@ -36,17 +37,19 @@ type ViewPoint =
 type InputMode = 
     | Conventional of Grid
     | RPN of Grid
-    | Graph of Grid
+    | Graph of Grid    
     
 type Mode =    
     | Conventional
     | RPN
     | Graph
+    | Graph2DParametric
 
 type State = 
     { rpn:RpnDomain.CalculatorState;
       conventional:ConventionalDomain.CalculatorState;
       graph:GraphingDomain.CalculatorState;
+      graph2DParametric:Graphing2DParametricDomain.CalculatorState;
       mode : Mode;
       model : Model 
       scale : (float*float) }
@@ -76,12 +79,21 @@ type GraphingCalculator() as graphingCalculator =
           drawing2DBounds = GraphingImplementation.default2DBounds
         }   
         |> EvaluatedState
+    let graph2DParametricDefault = 
+        let zero = 
+            Math.Pure.Quantity.Number.Zero 
+            |> Math.Pure.Structure.Number
+        ({ evaluatedExpression = zero; 
+           pendingFunction = None; 
+           drawing2DBounds = GraphingImplementation.default2DBounds},
+           graphDefault ) |> EvaluatedState2DParametric
     let mutable state = 
         { rpn = rpnDefault; 
           conventional = conventionalDefault; 
           mode = Conventional; 
           model = modelDefault; 
-          graph = graphDefault 
+          graph = graphDefault;
+          graph2DParametric = graph2DParametricDefault;
           scale = (1., 1.)}
 
 // ------Create Views---------        
@@ -307,7 +319,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function2D_xt_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 0)
+        let tb = FunctionTextBox(MaxLines = 10, TabIndex = 0, IsReadOnly = true)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function2D_ytLabel_TextBlock = 
@@ -315,7 +327,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function2D_yt_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 1)
+        let tb = FunctionTextBox(MaxLines = 10, TabIndex = 1, IsReadOnly = true)
         do  tb.SetValue(Grid.RowProperty,1)
             tb.SetValue(Grid.ColumnProperty,1)
         tb
@@ -1493,6 +1505,8 @@ type GraphingCalculator() as graphingCalculator =
             | RPN 
             | Conventional -> screen_Text_TextBox.Text <- text 
             | Graph -> function_y_TextBox.Text <- text
+            | Mode.Graph2DParametric -> // this is temporary. 
+                function2D_xt_TextBox.Text <- text
     // a function that sets the pending op text
     let setMemoText = 
         fun text -> memo.Text <- text
@@ -1512,6 +1526,7 @@ type GraphingCalculator() as graphingCalculator =
         | Mode.Conventional -> (memoryButton_Grid.Visibility <- Visibility.Visible)
         | Mode.RPN -> (rpnButton_Grid.Visibility <- Visibility.Visible)
         | Mode.Graph -> (graphButton_Grid.Visibility <- Visibility.Visible)
+        | Mode.Graph2DParametric -> (graphButton_Grid.Visibility <- Visibility.Visible)
     // a function that sets the input mode
     let setInputMode mode = 
         do state <- {state with mode = mode}

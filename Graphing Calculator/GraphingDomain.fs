@@ -168,6 +168,21 @@ module GraphingDomain =
         closeParenthetical :CloseParenthetical
         }
 
+module Graphing2DParametricDomain =
+    open GraphingDomain
+    
+    // States
+    type CalculatorState =         
+        | EvaluatedState2DParametric of EvaluatedStateData * GraphingDomain.CalculatorState
+        | DrawState2DParametric of DrawStateData * GraphingDomain.CalculatorState
+        | ParentheticalState2DParametric of ParentheticalStateData * GraphingDomain.CalculatorState
+        | ExpressionDigitAccumulatorState2DParametric of ExpressionStateData * GraphingDomain.CalculatorState
+        | ExpressionDecimalAccumulatorState2DParametric of ExpressionStateData * GraphingDomain.CalculatorState
+        | DrawErrorState2DParametric of ErrorStateData * GraphingDomain.CalculatorState
+        | ExpressionErrorState2DParametric of ErrorStateData * GraphingDomain.CalculatorState
+
+    type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
+
 module GraphingImplementation =    
     open GraphingDomain
     open Utilities
