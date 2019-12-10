@@ -956,7 +956,8 @@ module GraphingImplementation =
                    | ParentheticalState p -> 
                        ExpressionDigitAccumulatorState 
                            { newExpressionStateData with 
-                               expression = p.evaluatedExpression}
+                               expression = p.evaluatedExpression;
+                               parenthetical = services.setExpressionToParenthetical (p.evaluatedExpression, stateData.parenthetical) |> Some }
                    | ExpressionDigitAccumulatorState _ 
                    | ExpressionDecimalAccumulatorState _                             
                    | DrawState _
@@ -1090,7 +1091,7 @@ module GraphingImplementation =
            | GraphOptionSave bounds -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,bounds)
            | GraphOptionReset -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,default2DBounds)
            | ExpressionSquared ->
-               let nextOp = None//Some op
+               let nextOp = None
                let expr = 
                    match stateData.digits, stateData.parenthetical with
                    | s, _ when s.Length > 0 -> services.getNumberFromAccumulator (stateData) |> Expression.Number 
@@ -1098,7 +1099,7 @@ module GraphingImplementation =
                    | _, _ -> stateData.expression
                let newState = 
                    getEvaluationState services 
-                       { newExpressionStateData with
+                       { newExpressionStateData with                             
                              pendingFunction = Some (expr,ToThePowerOf); 
                              digits = "2";} nextOp 
                getFinalStateFrom newState
