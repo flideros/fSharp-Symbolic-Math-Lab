@@ -37,7 +37,8 @@ type ViewPoint =
 type InputMode = 
     | Conventional of Grid
     | RPN of Grid
-    | Graph of Grid    
+    | Graph of Grid  
+    | Graph2DParametric of Grid
     
 type Mode =    
     | Conventional
@@ -1554,6 +1555,7 @@ type GraphingCalculator() as graphingCalculator =
         | Graph2DParametric ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function2D function2D_Grid)
+            setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
             //setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
     // a function that sets the active model
     let setActivetModel model =        
@@ -1630,8 +1632,7 @@ type GraphingCalculator() as graphingCalculator =
     let calculate = CalculatorImplementation.createCalculate calculatorServices 
     let calculateRpn = RpnImplementation.createCalculate rpnServices
     let calculateGraph = GraphingImplementation.createEvaluate graphServices
-    let calculate2DParametric = Graphing2DParametricImplementation.createEvaluate 
-
+    
     //-------create event handlers----------
     let handleConventionalInput input =         
         let newState =  calculate(input,state.conventional)
@@ -1672,6 +1673,7 @@ type GraphingCalculator() as graphingCalculator =
             setPendingOpText ""
     let handleGraphInput input =
         let newState = calculateGraph (input, state.graph)
+        
         let expressionText = 
             match newState with
             | DrawState _d -> "Graph"
@@ -1681,11 +1683,21 @@ type GraphingCalculator() as graphingCalculator =
             | ExpressionDecimalAccumulatorState e -> graphServices.getDisplayFromExpression e.expression           
             | ExpressionErrorState e -> graphServices.getDisplayFromExpression e.lastExpression          
             | DrawErrorState d -> graphServices.getDisplayFromExpression d.lastExpression        
-        state <- { state with graph = newState }
+            // Parametric 2D
+            | DrawState2DParametric (_d,_s) -> "Graph"
+            | EvaluatedState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.evaluatedExpression           
+            | ParentheticalState2DParametric (p,_s) -> graphServices.getDisplayFromExpression p.evaluatedExpression
+            | ExpressionDigitAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
+            | ExpressionDecimalAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression           
+            | ExpressionErrorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.lastExpression          
+            | DrawErrorState2DParametric (d,_s) -> graphServices.getDisplayFromExpression d.lastExpression 
+
+        //state <- { state with graph = newState }
         setDisplayedText expressionText
         match newState with
         | DrawState d -> 
-            do  canvas.Children.Clear()
+            do  state <- { state with graph = newState }
+                canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
             let models = getActivetModel state    
             do  List.iter (fun (model : System.Windows.Shapes.Path) -> 
@@ -1704,16 +1716,57 @@ type GraphingCalculator() as graphingCalculator =
                         canvasGridLine_Slider.IsEnabled <- true
                 | false -> ()
         | EvaluatedState ev ->
-            do setActiveDisplay (Function function_Grid)
+            do state <- { state with graph = newState }
+               setActiveDisplay (Function function_Grid)
                setPendingOpText ((graphServices.getDisplayFromPendingFunction ev.pendingFunction) + " --->>> Evaluated. What's next")
         | ParentheticalState p ->
-            do setActiveDisplay (Function function_Grid)
+            do state <- { state with graph = newState }
+               setActiveDisplay (Function function_Grid)
                setPendingOpText ((graphServices.getDisplayFromPendingFunction p.pendingFunction) + " --->>> Open Parentheses")
-        | ExpressionDigitAccumulatorState ed ->
-            do setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
-        | ExpressionDecimalAccumulatorState ed ->
-            do setPendingOpText (graphServices.getDisplayFromGraphState newState)        
-        | _ -> setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
+        | ExpressionDigitAccumulatorState _ed ->
+            do state <- { state with graph = newState }
+               setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
+        | ExpressionDecimalAccumulatorState _ed ->
+            do state <- { state with graph = newState }
+               setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
+        // Parametric 2D
+        | DrawState2DParametric (d,_s) -> 
+            do state <- { state with graph2DParametric = newState }
+               canvas.Children.Clear()
+               setActivetModel (Trace d.trace)                    
+            let models = getActivetModel state    
+            do  List.iter (
+                    fun( model : System.Windows.Shapes.Path) -> 
+                         model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
+                         model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
+                         canvas.Children.Add(model) |> ignore
+                         canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
+            setActiveDisplay (PlotCanvas screen_Canvas)
+            setPendingOpText "--->>> graph" 
+            // add grid if checked
+            match canvasGridLines_CheckBox.IsChecked.HasValue = true &&
+                  canvasGridLines_CheckBox.IsChecked.Value = true with
+            | true -> 
+                let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
+                do  canvas.Children.Insert(0,gl) 
+                    canvasGridLine_Slider.IsEnabled <- true
+            | false -> ()
+        | EvaluatedState2DParametric (ev,_s) -> 
+            do state <- { state with graph2DParametric = newState }
+               setActiveDisplay (Function2D function2D_Grid)
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction ev.pendingFunction) + " --->>> Evaluated. What's next")
+        | ParentheticalState2DParametric (p,_s) ->
+            do state <- { state with graph2DParametric = newState }
+               setActiveDisplay (Function2D function2D_Grid)
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction p.pendingFunction) + " --->>> Open Parentheses")
+        | ExpressionDigitAccumulatorState2DParametric (e,_s) ->
+            do state <- { state with graph2DParametric = newState }
+               setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
+        | ExpressionDecimalAccumulatorState2DParametric (e,_s) ->
+            do state <- { state with graph2DParametric = newState }
+               setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")        
+        | _ -> do state <- { state with graph2DParametric = newState }
+                  setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
     
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
@@ -1735,12 +1788,16 @@ type GraphingCalculator() as graphingCalculator =
         | true -> 
             do function2D_yt_TextBox.MaxLines <- 1
                function2D_xt_TextBox.MaxLines <- 15
+               function2D_xt_TextBox.Text <- function2D_xt_TextBox.MaxLines.ToString()
+               function2D_yt_TextBox.Text <- function2D_yt_TextBox.MaxLines.ToString()
         | false -> ()
     let handleTextBoxYtPreviewMouseUp () =
         match function2D_yt_TextBox.MaxLines = 1 with
         | true -> 
             do function2D_xt_TextBox.MaxLines <- 1
                function2D_yt_TextBox.MaxLines <- 15
+               function2D_yt_TextBox.Text <- function2D_yt_TextBox.MaxLines.ToString()
+               function2D_xt_TextBox.Text <- function2D_xt_TextBox.MaxLines.ToString()
         | false -> ()
 
     // a function that sets active handler based on the active input mode display
