@@ -155,10 +155,7 @@ module GraphingDomain =
     type GetParentheticalFromCalculatorState = CalculatorState -> Parenthetical
     type SetExpressionToParenthetical = Expression * (Parenthetical option) -> Parenthetical
     type CloseParenthetical = ParentheticalStateData -> CalculatorState
-
-    // Graph 2d Parametric Services
-    type GetDisplayFromGraph2DParametricState = CalculatorState -> string
-
+        
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
         doExpressionOperation :DoExpressionOperation
@@ -176,7 +173,6 @@ module GraphingDomain =
         getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
         setExpressionToParenthetical :SetExpressionToParenthetical
         closeParenthetical :CloseParenthetical
-        getDisplayFromGraph2DParametricState :GetDisplayFromGraph2DParametricState
         }
  
 module GraphingImplementation =    
@@ -1610,6 +1606,23 @@ module GraphingImplementation =
          let handleExpressionDecimalAccumulatorState = handleExpressionDecimalAccumulatorState services
          let handleDrawErrorState = handleDrawErrorState services
          let handleExpressionErrorState = handleExpressionErrorState services
+         // helper to wrap graph state data into a 2DParametric state
+         let wrapStateData state newState = 
+            match newState with
+            | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
+            | DrawState s -> (s,state) |> DrawState2DParametric
+            | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
+            | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
+            | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
+            | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
+            | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
+            | EvaluatedState2DParametric _ 
+            | DrawState2DParametric _
+            | ParentheticalState2DParametric _
+            | ExpressionDigitAccumulatorState2DParametric _
+            | ExpressionDecimalAccumulatorState2DParametric _
+            | DrawErrorState2DParametric _
+            | ExpressionErrorState2DParametric _ -> newState
 
          fun (input,state) -> 
              match state with
@@ -1627,196 +1640,21 @@ module GraphingImplementation =
                  handleDrawErrorState stateData input
              | ExpressionErrorState stateData -> 
                  handleExpressionErrorState stateData input
-         (*   | EvaluatedState2DParametric ->
-             
-             | DrawState2DParametric ->
-             
-             | ParentheticalState2DParametric ->
-             
-             | ExpressionDigitAccumulatorState2DParametric ->
-             
-             | ExpressionDecimalAccumulatorState2DParametric ->
-             
-             | DrawErrorState2DParametric ->
-             
-             | ExpressionErrorState2DParametric ->
-            *)
-module Graphing2DParametricImplementation =    
-    open GraphingDomain
+             | EvaluatedState2DParametric (stateData,state) ->
+                 handleEvaluatedState stateData input |> wrapStateData state
+             | DrawState2DParametric (stateData,state) ->
+                handleDrawState stateData input |> wrapStateData state
+             | ParentheticalState2DParametric (stateData,state) ->
+                handleParentheticalState stateData input |> wrapStateData state
+             | ExpressionDigitAccumulatorState2DParametric (stateData,state) ->
+                handleExpressionDigitAccumulatorState stateData input |> wrapStateData state
+             | ExpressionDecimalAccumulatorState2DParametric (stateData,state) ->
+                handleExpressionDecimalAccumulatorState stateData input |> wrapStateData state
+             | DrawErrorState2DParametric (stateData,state) ->
+                handleDrawErrorState stateData input |> wrapStateData state
+             | ExpressionErrorState2DParametric (stateData,state) ->
+                handleExpressionErrorState stateData input |> wrapStateData state
 
-    let handleDrawState2DParametric services stateData2DParametric input = //Only the'Back' function implimented here.
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleDrawState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-
-    let handleEvaluatedState2DParametric services stateData2DParametric input =
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleEvaluatedState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-
-    let handleParentheticalState2DParametric services stateData2DParametric input =
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleParentheticalState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-
-    let handleExpressionDigitAccumulatorState2DParametric services stateData2DParametric input =           
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleExpressionDigitAccumulatorState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-
-    let handleExpressionDecimalAccumulatorState2DParametric services stateData2DParametric input =
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleExpressionDecimalAccumulatorState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-
-    let handleDrawErrorState2DParametric services stateData2DParametric input =           
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleDrawErrorState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-
-    let handleExpressionErrorState2DParametric services stateData2DParametric input =
-        let stateData, state = stateData2DParametric               
-        let newState = GraphingImplementation.handleExpressionErrorState services stateData input
-        match newState with
-        | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
-        | DrawState s -> (s,state) |> DrawState2DParametric
-        | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
-        | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
-        | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-        | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-        | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
-        | EvaluatedState2DParametric _ 
-        | DrawState2DParametric _
-        | ParentheticalState2DParametric _
-        | ExpressionDigitAccumulatorState2DParametric _
-        | ExpressionDecimalAccumulatorState2DParametric _
-        | DrawErrorState2DParametric _
-        | ExpressionErrorState2DParametric _ -> newState
-   
-    let createEvaluate (services:GraphServices) : Evaluate = 
-         // create some local functions with partially applied services
-         let handleDrawState2DParametric = handleDrawState2DParametric services
-         let handleEvaluatedState2DParametric = handleEvaluatedState2DParametric services
-         let handleParentheticalState2DParametric = handleParentheticalState2DParametric services
-         let handleExpressionDigitAccumulatorState2DParametric = handleExpressionDigitAccumulatorState2DParametric services
-         let handleExpressionDecimalAccumulatorState2DParametric = handleExpressionDecimalAccumulatorState2DParametric services
-         let handleDrawErrorState2DParametric = handleDrawErrorState2DParametric services
-         let handleExpressionErrorState2DParametric = handleExpressionErrorState2DParametric services
-
-         fun (input,state) -> 
-             match state with
-             | DrawState2DParametric (stateData,cs) -> 
-                 handleDrawState2DParametric (stateData,cs) input 
-             | EvaluatedState2DParametric (stateData,cs) -> 
-                 handleEvaluatedState2DParametric (stateData,cs) input 
-             | ParentheticalState2DParametric (stateData,cs) -> 
-                 handleParentheticalState2DParametric (stateData,cs) input
-             | ExpressionDigitAccumulatorState2DParametric (stateData,cs) -> 
-                 handleExpressionDigitAccumulatorState2DParametric (stateData,cs) input
-             | ExpressionDecimalAccumulatorState2DParametric (stateData,cs) -> 
-                 handleExpressionDecimalAccumulatorState2DParametric (stateData,cs) input
-             | DrawErrorState2DParametric (stateData,cs) -> 
-                 handleDrawErrorState2DParametric (stateData,cs) input
-             | ExpressionErrorState2DParametric (stateData,cs) -> 
-                 handleExpressionErrorState2DParametric (stateData,cs) input
-         (*  | EvaluatedState2DParametric ->
-         
-             | DrawState2DParametric ->
-         
-             | ParentheticalState2DParametric ->
-         
-             | ExpressionDigitAccumulatorState2DParametric ->
-         
-             | ExpressionDecimalAccumulatorState2DParametric ->
-         
-             | DrawErrorState2DParametric ->
-         
-             | ExpressionErrorState2DParametric ->
-         *)
 module GraphServices =
     open GraphingDomain
     //open Utilities
@@ -1888,52 +1726,7 @@ module GraphServices =
                     | Some expression -> func + " " + expression.ToString()
                     | None -> ""            
             | DrawErrorState2DParametric (de,_) -> "derror" + de.ToString()            
-            | ExpressionErrorState2DParametric (ee,_) -> "eerror" + ee.ToString()
-
-    let getDisplayFromGraph2DParametricState :GetDisplayFromGraph2DParametricState = 
-        fun g -> 
-            match g with 
-            | EvaluatedState e -> e.evaluatedExpression.ToString()
-            | ParentheticalState p -> p.evaluatedExpression.ToString()
-            | DrawState d -> d.trace.ToString()
-            | ExpressionDigitAccumulatorState d -> 
-                let func = 
-                    match d.pendingFunction with
-                    | None -> ""
-                    | Some f -> f.ToString()
-                match d.digits.Length = 0 with
-                | false -> func + " " + d.digits 
-                | true -> 
-                    match d.parenthetical with
-                    | Some expression -> func + " " + expression.ToString()
-                    | None -> ""
-            | ExpressionDecimalAccumulatorState d -> 
-                let func = 
-                    match d.pendingFunction with
-                    | None -> ""
-                    | Some f -> f.ToString()
-                match d.digits.Length = 0 with
-                | false -> func + " " + d.digits 
-                | true -> 
-                    match d.parenthetical with
-                    | Some expression -> func + " " + expression.ToString()
-                    | None -> ""
-            | DrawErrorState de -> "derror" + de.ToString()
-            | ExpressionErrorState ee -> "eerror" + ee.ToString()
-        (*  | EvaluatedState2DParametric ->
-        
-            | DrawState2DParametric ->
-        
-            | ParentheticalState2DParametric ->
-        
-            | ExpressionDigitAccumulatorState2DParametric ->
-        
-            | ExpressionDecimalAccumulatorState2DParametric ->
-        
-            | DrawErrorState2DParametric ->
-        
-            | ExpressionErrorState2DParametric ->
-        *)
+            | ExpressionErrorState2DParametric (ee,_) -> "eerror" + ee.ToString()    
     
     let getDisplayFromPendingFunction (pendingFunction : PendingFunction option) =
         match pendingFunction with
@@ -1947,23 +1740,14 @@ module GraphServices =
             | DrawState d -> d.drawing2DBounds
             | ExpressionDecimalAccumulatorState e -> e.drawing2DBounds
             | ExpressionDigitAccumulatorState e -> e.drawing2DBounds
-            | ParentheticalState p -> p.drawing2DBounds
+            | ParentheticalState p -> p.drawing2DBounds            
+            | EvaluatedState2DParametric (stateData,state) -> stateData.drawing2DBounds
+            | DrawState2DParametric (stateData,state) -> stateData.drawing2DBounds
+            | ParentheticalState2DParametric (stateData,state) -> stateData.drawing2DBounds
+            | ExpressionDigitAccumulatorState2DParametric (stateData,state) -> stateData.drawing2DBounds
+            | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> stateData.drawing2DBounds            
             | _ -> GraphingImplementation.default2DBounds
-        (*  | EvaluatedState2DParametric ->
-        
-            | DrawState2DParametric ->
-        
-            | ParentheticalState2DParametric ->
-        
-            | ExpressionDigitAccumulatorState2DParametric ->
-        
-            | ExpressionDecimalAccumulatorState2DParametric ->
-        
-            | DrawErrorState2DParametric ->
-        
-            | ExpressionErrorState2DParametric ->
-        *)
-   
+
     let setDrawing2DBounds :SetDrawing2DBounds = 
         fun g ->             
             let state, bounds = g
@@ -1972,22 +1756,13 @@ module GraphServices =
             | DrawState d -> {d with drawing2DBounds = bounds} |> DrawState
             | ExpressionDecimalAccumulatorState e -> {e with drawing2DBounds = bounds} |> ExpressionDecimalAccumulatorState
             | ExpressionDigitAccumulatorState e -> {e with drawing2DBounds = bounds} |> ExpressionDigitAccumulatorState
-            | ParentheticalState p -> {p with drawing2DBounds = bounds} |> ParentheticalState
+            | ParentheticalState p -> {p with drawing2DBounds = bounds} |> ParentheticalState            
+            | EvaluatedState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> EvaluatedState2DParametric 
+            | DrawState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> DrawState2DParametric
+            | ParentheticalState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ParentheticalState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ExpressionDigitAccumulatorState2DParametric
+            | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ExpressionDecimalAccumulatorState2DParametric            
             | _ -> state
-        (*  | EvaluatedState2DParametric ->
-        
-            | DrawState2DParametric ->
-        
-            | ParentheticalState2DParametric ->
-        
-            | ExpressionDigitAccumulatorState2DParametric ->
-        
-            | ExpressionDecimalAccumulatorState2DParametric ->
-        
-            | DrawErrorState2DParametric ->
-        
-            | ExpressionErrorState2DParametric ->
-        *)
     
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
@@ -2249,6 +2024,5 @@ module GraphServices =
         getExpressionFromParenthetical = getExpressionFromParenthetical
         getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
         setExpressionToParenthetical = setExpressionToParenthetical
-        closeParenthetical = closeParenthetical
-        getDisplayFromGraph2DParametricState = getDisplayFromGraph2DParametricState
+        closeParenthetical = closeParenthetical        
         }
