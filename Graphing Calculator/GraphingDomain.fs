@@ -65,7 +65,8 @@ module GraphingDomain =
     type DrawError = 
         | Error of Error
         | FailedToCreateTrace
-        | LazyCoder        
+        | LazyCoder  
+        | InputError
        
     type DrawOperationResult =  
         | Traces of Trace list
@@ -155,6 +156,7 @@ module GraphingDomain =
     type GetParentheticalFromCalculatorState = CalculatorState -> Parenthetical
     type SetExpressionToParenthetical = Expression * (Parenthetical option) -> Parenthetical
     type CloseParenthetical = ParentheticalStateData -> CalculatorState
+    type Toggle2DParametricState = CalculatorState -> CalculatorState
         
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
@@ -173,6 +175,7 @@ module GraphingDomain =
         getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
         setExpressionToParenthetical :SetExpressionToParenthetical
         closeParenthetical :CloseParenthetical
+        toggle2DParametricState :Toggle2DParametricState
         }
  
 module GraphingImplementation =    
@@ -1741,11 +1744,11 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState e -> e.drawing2DBounds
             | ExpressionDigitAccumulatorState e -> e.drawing2DBounds
             | ParentheticalState p -> p.drawing2DBounds            
-            | EvaluatedState2DParametric (stateData,state) -> stateData.drawing2DBounds
-            | DrawState2DParametric (stateData,state) -> stateData.drawing2DBounds
-            | ParentheticalState2DParametric (stateData,state) -> stateData.drawing2DBounds
-            | ExpressionDigitAccumulatorState2DParametric (stateData,state) -> stateData.drawing2DBounds
-            | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> stateData.drawing2DBounds            
+            | EvaluatedState2DParametric (stateData,_state) -> stateData.drawing2DBounds
+            | DrawState2DParametric (stateData,_state) -> stateData.drawing2DBounds
+            | ParentheticalState2DParametric (stateData,_state) -> stateData.drawing2DBounds
+            | ExpressionDigitAccumulatorState2DParametric (stateData,_tate) -> stateData.drawing2DBounds
+            | ExpressionDecimalAccumulatorState2DParametric (stateData,_state) -> stateData.drawing2DBounds            
             | _ -> GraphingImplementation.default2DBounds
 
     let setDrawing2DBounds :SetDrawing2DBounds = 
@@ -1973,6 +1976,14 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState es -> 
                 let lastParenthetical = (Expression.Zero, es.pendingFunction, es.parenthetical) |> Parenthetical |> Some
                 (Expression.Zero, es.pendingFunction, lastParenthetical ) |> Parenthetical
+            
+            | EvaluatedState2DParametric (ev,_s) -> (Expression.Zero, ev.pendingFunction, None) |> Parenthetical
+            | ParentheticalState2DParametric (p,_s) -> (Expression.Zero, p.pendingFunction, Some p.parenthetical) |> Parenthetical
+            | ExpressionDigitAccumulatorState2DParametric (es,_s)
+            | ExpressionDecimalAccumulatorState2DParametric (es,_s) -> 
+                let lastParenthetical = (Expression.Zero, es.pendingFunction, es.parenthetical) |> Parenthetical |> Some
+                (Expression.Zero, es.pendingFunction, lastParenthetical ) |> Parenthetical
+
             | _ -> (Expression.Zero, None, None) |> Parenthetical    
 
     let closeParenthetical :CloseParenthetical =
@@ -2000,13 +2011,42 @@ module GraphServices =
                       pendingFunction = parentheticalStateData.pendingFunction
                       drawing2DBounds = parentheticalStateData.drawing2DBounds }
                     |> EvaluatedState
-
             //
             | Parenthetical (_, None, Some (Parenthetical(_,Some (e,po),None))) -> parentheticalStateData |> ParentheticalState
             | Parenthetical (x, None, Some (Parenthetical(_x,None       ,None  ))) -> parentheticalStateData |> ParentheticalState
             | Parenthetical (x, None, Some (Parenthetical(_x,None       ,Some p))) -> parentheticalStateData |> ParentheticalState
             | Parenthetical (_, None, Some (Parenthetical(_,Some (e,po),Some p)))  -> parentheticalStateData |> ParentheticalState 
             | Parenthetical (x, None,        None  ) -> parentheticalStateData |> ParentheticalState  
+
+    let toggle2DParametricState :Toggle2DParametricState = 
+        fun calculatorState ->
+            match calculatorState with 
+            | EvaluatedState2DParametric (sd, EvaluatedState s) -> (s, EvaluatedState sd) |> EvaluatedState2DParametric
+            | EvaluatedState2DParametric (sd, ParentheticalState s) -> (s, EvaluatedState sd) |> ParentheticalState2DParametric
+            | EvaluatedState2DParametric (sd, DrawState s) -> (s, EvaluatedState sd) |> DrawState2DParametric
+            | EvaluatedState2DParametric (sd, ExpressionDigitAccumulatorState s) -> (s, EvaluatedState sd) |> ExpressionDigitAccumulatorState2DParametric
+            | EvaluatedState2DParametric (sd, ExpressionDecimalAccumulatorState s) -> (s, EvaluatedState sd) |> ExpressionDecimalAccumulatorState2DParametric
+            | ParentheticalState2DParametric (sd, EvaluatedState s) -> (s, ParentheticalState sd) |> EvaluatedState2DParametric
+            | ParentheticalState2DParametric (sd, ParentheticalState s) -> (s, ParentheticalState sd) |> ParentheticalState2DParametric
+            | ParentheticalState2DParametric (sd, DrawState s) -> (s, ParentheticalState sd) |> DrawState2DParametric
+            | ParentheticalState2DParametric (sd, ExpressionDigitAccumulatorState s) -> (s, ParentheticalState sd) |> ExpressionDigitAccumulatorState2DParametric
+            | ParentheticalState2DParametric (sd, ExpressionDecimalAccumulatorState s) -> (s, ParentheticalState sd) |> ExpressionDecimalAccumulatorState2DParametric
+            | DrawState2DParametric (sd, EvaluatedState s) -> (s, DrawState sd) |> EvaluatedState2DParametric
+            | DrawState2DParametric (sd, ParentheticalState s) -> (s, DrawState sd) |> ParentheticalState2DParametric
+            | DrawState2DParametric (sd, DrawState s) -> (s, DrawState sd) |> DrawState2DParametric
+            | DrawState2DParametric (sd, ExpressionDigitAccumulatorState s) -> (s, DrawState sd) |> ExpressionDigitAccumulatorState2DParametric
+            | DrawState2DParametric (sd, ExpressionDecimalAccumulatorState s) -> (s, DrawState sd) |> ExpressionDecimalAccumulatorState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (sd, EvaluatedState s) -> (s, ExpressionDigitAccumulatorState sd) |> EvaluatedState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (sd, ParentheticalState s) -> (s, ExpressionDigitAccumulatorState sd) |> ParentheticalState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (sd, DrawState s) -> (s, ExpressionDigitAccumulatorState sd) |> DrawState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (sd, ExpressionDigitAccumulatorState s) -> (s, ExpressionDigitAccumulatorState sd) |> ExpressionDigitAccumulatorState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (sd, ExpressionDecimalAccumulatorState s) -> (s, ExpressionDigitAccumulatorState sd) |> ExpressionDecimalAccumulatorState2DParametric          
+            | ExpressionDecimalAccumulatorState2DParametric (sd, EvaluatedState s) -> (s, ExpressionDecimalAccumulatorState sd) |> EvaluatedState2DParametric
+            | ExpressionDecimalAccumulatorState2DParametric (sd, ParentheticalState s) -> (s, ExpressionDecimalAccumulatorState sd) |> ParentheticalState2DParametric
+            | ExpressionDecimalAccumulatorState2DParametric (sd, DrawState s) -> (s, ExpressionDecimalAccumulatorState sd) |> DrawState2DParametric
+            | ExpressionDecimalAccumulatorState2DParametric (sd, ExpressionDigitAccumulatorState s) -> (s, ExpressionDecimalAccumulatorState sd) |> ExpressionDigitAccumulatorState2DParametric
+            | ExpressionDecimalAccumulatorState2DParametric (sd, ExpressionDecimalAccumulatorState s) -> (s, ExpressionDecimalAccumulatorState sd) |> ExpressionDecimalAccumulatorState2DParametric
+            | _ -> calculatorState
 
     let createGraphServices () = {
         doDrawOperation =  doDrawOperation (0.1)
@@ -2024,5 +2064,6 @@ module GraphServices =
         getExpressionFromParenthetical = getExpressionFromParenthetical
         getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
         setExpressionToParenthetical = setExpressionToParenthetical
-        closeParenthetical = closeParenthetical        
+        closeParenthetical = closeParenthetical 
+        toggle2DParametricState = toggle2DParametricState
         }

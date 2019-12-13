@@ -320,7 +320,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function2D_xt_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 0, IsReadOnly = true)
+        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 0, IsReadOnly = true)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function2D_ytLabel_TextBlock = 
@@ -328,7 +328,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function2D_yt_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 1, IsReadOnly = true)
+        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 1, IsReadOnly = true)
         do  tb.SetValue(Grid.RowProperty,1)
             tb.SetValue(Grid.ColumnProperty,1)
         tb
@@ -1505,17 +1505,19 @@ type GraphingCalculator() as graphingCalculator =
             | RPN 
             | Conventional -> screen_Text_TextBox.Text <- text 
             | Graph -> function_y_TextBox.Text <- text
-            | Graph2DParametric -> // this is temporary. 
+            | Graph2DParametric -> 
                 let x,y = function2D_xt_TextBox.MaxLines, function2D_yt_TextBox.MaxLines
-                match x = 1, y = 1 with
+                match x = 3, y = 3 with
                 | true,true -> 
                     do function2D_xt_TextBox.Text <- text
                        function2D_yt_TextBox.Text <- text
                 | true,false -> 
-                    do function2D_xt_TextBox.Text <- text
-                | false,true -> 
                     do function2D_yt_TextBox.Text <- text
-                | false,false -> ()
+                | false,true -> 
+                    do function2D_xt_TextBox.Text <- text
+                | false,false -> 
+                    do function2D_xt_TextBox.Text <- text
+                       function2D_yt_TextBox.Text <- text
     // a function that sets the pending op text
     let setMemoText = 
         fun text -> memo.Text <- text
@@ -1530,7 +1532,8 @@ type GraphingCalculator() as graphingCalculator =
             match x with
             | InputMode.Conventional c -> (c.Visibility <- Visibility.Collapsed)
             | InputMode.RPN r -> (r.Visibility <- Visibility.Collapsed)   
-            | InputMode.Graph g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
+            | InputMode.Graph g -> (g.Visibility <- Visibility.Collapsed)
+            | InputMode.Graph2DParametric g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
         match mode with
         | Conventional -> (memoryButton_Grid.Visibility <- Visibility.Visible)
         | RPN -> (rpnButton_Grid.Visibility <- Visibility.Visible)
@@ -1556,7 +1559,6 @@ type GraphingCalculator() as graphingCalculator =
             setActiveModeButtons mode
             setActiveDisplay (View.Function2D function2D_Grid)
             setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
-            //setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
@@ -1575,7 +1577,7 @@ type GraphingCalculator() as graphingCalculator =
                  item2.Icon <- None
 
          let header1_Item2 = MenuItem(Header = "Graph", Command = modeCommand (setInputMode), CommandParameter = Graph)
-         let header1_Item3 = MenuItem(Header = "Graph2D", Command = viewCommand (setActiveDisplay), CommandParameter = Function2D function2D_Grid)
+         let header1_Item3 = MenuItem(Header = "Graph2D", Command = modeCommand (setInputMode), CommandParameter = Graph2DParametric)
          let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplay), CommandParameter = Function3D function3D_Grid)
          
          let header1_Item5 = MenuItem(Header = "Plot Canvas", Command = viewCommand (setActiveDisplay), CommandParameter = PlotCanvas screen_Canvas)
@@ -1672,8 +1674,12 @@ type GraphingCalculator() as graphingCalculator =
             setDisplayedText (rpnServices.getDisplayFromStack newState) 
             setPendingOpText ""
     let handleGraphInput input =
-        let newState = calculateGraph (input, state.graph)
-        
+        let newState = 
+            match function_Grid.IsVisible, function2D_Grid.IsVisible with
+            | true, false -> calculateGraph (input, state.graph)
+            | false, true -> calculateGraph (input, state.graph2DParametric) 
+            | _,_ -> ExpressionErrorState {lastExpression = Math.Pure.Structure.Number (Math.Pure.Quantity.Number.Zero); error = InputError }
+
         let expressionText = 
             match newState with
             | DrawState _d -> "Graph"
@@ -1692,7 +1698,11 @@ type GraphingCalculator() as graphingCalculator =
             | ExpressionErrorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.lastExpression          
             | DrawErrorState2DParametric (d,_s) -> graphServices.getDisplayFromExpression d.lastExpression 
 
-        //state <- { state with graph = newState }
+        state <- match function_Grid.IsVisible, function2D_Grid.IsVisible with
+                 | true, false -> { state with graph = newState }
+                 | false, true -> { state with graph2DParametric = newState } 
+                 | _,_ -> state
+        
         setDisplayedText expressionText
         match newState with
         | DrawState d -> 
@@ -1783,21 +1793,21 @@ type GraphingCalculator() as graphingCalculator =
             canvas.Children.Insert(0,gl)
             setActiveDisplay (Function function_Grid)
             handleGraphInput Draw
-    let handleTextBoxXtPreviewMouseUp () =
-        match function2D_xt_TextBox.MaxLines = 1 with
-        | true -> 
-            do function2D_yt_TextBox.MaxLines <- 1
+    let handleTextBoxXtPreviewMouseDown () =
+        match function2D_xt_TextBox.MaxLines = 3 with
+        | true ->
+            do state <- {state with graph2DParametric = graphServices.toggle2DParametricState state.graph2DParametric}
+               function2D_yt_TextBox.MaxLines <- 3
                function2D_xt_TextBox.MaxLines <- 15
-               function2D_xt_TextBox.Text <- function2D_xt_TextBox.MaxLines.ToString()
-               function2D_yt_TextBox.Text <- function2D_yt_TextBox.MaxLines.ToString()
+               //calcButton_Grid.Focus() |> ignore
         | false -> ()
-    let handleTextBoxYtPreviewMouseUp () =
-        match function2D_yt_TextBox.MaxLines = 1 with
+    let handleTextBoxYtPreviewMouseDown () =
+        match function2D_yt_TextBox.MaxLines = 3 with
         | true -> 
-            do function2D_xt_TextBox.MaxLines <- 1
+            do state <- {state with graph2DParametric = graphServices.toggle2DParametricState state.graph2DParametric}
+               function2D_xt_TextBox.MaxLines <- 3
                function2D_yt_TextBox.MaxLines <- 15
-               function2D_yt_TextBox.Text <- function2D_yt_TextBox.MaxLines.ToString()
-               function2D_xt_TextBox.Text <- function2D_xt_TextBox.MaxLines.ToString()
+               //calcButton_Grid.Focus() |> ignore
         | false -> ()
 
     // a function that sets active handler based on the active input mode display
@@ -1896,5 +1906,5 @@ type GraphingCalculator() as graphingCalculator =
         
         canvasGridLine_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueOnValueChange ()))
 
-        function2D_yt_TextBox.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseUp ()))
-        function2D_xt_TextBox.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseUp ()))
+        function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
+        function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
