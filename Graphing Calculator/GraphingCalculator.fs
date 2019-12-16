@@ -1298,7 +1298,6 @@ type GraphingCalculator() as graphingCalculator =
             Seq.iter (fun x -> x) horozontalLines
             Seq.iter (fun y -> y) verticalLines
             context.Close()
-
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
