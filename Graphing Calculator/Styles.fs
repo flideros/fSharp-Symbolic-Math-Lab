@@ -28,11 +28,28 @@ module Style =
     let screenColor = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE"))
     let transparentBlack = SolidColorBrush(Color.FromArgb (byte "0x00",  byte "0x00", byte "0x00", byte "0x00"))
 
+    //Linear Gradient Brush
+    let linearGradientBrush_1 = 
+        let brush = LinearGradientBrush(StartPoint = Point (0.,0.), EndPoint = Point (0.03,0.9))
+        do
+            brush.GradientStops.Add(new GradientStop(Color = Color.FromArgb (byte "0xFF",  byte "0x80", byte "0x80", byte "0x80"), Offset = 0.))
+            brush.GradientStops.Add(new GradientStop(Color = Color.FromArgb (byte "0xFF",  byte "0xA0", byte "0xA0", byte "0xA0"), Offset = 1.))
+        brush
+    
+    let linearGradientBrush_2 = 
+        let brush = LinearGradientBrush(StartPoint = Point (0.,0.), EndPoint = Point (0.03,0.9))
+        do
+            brush.GradientStops.Add(new GradientStop(Color = Color.FromArgb (byte "0x60",  byte "0x80", byte "0x80", byte "0x80"), Offset = 0.))
+            brush.GradientStops.Add(new GradientStop(Color = Color.FromArgb (byte "0x60",  byte "0xA0", byte "0xA0", byte "0xA0"), Offset = 1.))
+        brush
+    
     //Radial Gradient Brush
     let radialGradientBrush = new RadialGradientBrush()
     do
         RadialGradientBrush().GradientStops.Add(new GradientStop(Color = Colors.Green, Offset = 0.))
         RadialGradientBrush().GradientStops.Add(new GradientStop(Color = Colors.Gray, Offset = 1.))
+
+
 
     //Button
     type CalcButton() as calcButton = 
@@ -57,7 +74,7 @@ module Style =
 
     type FuncButton() as funcButton = 
         inherit Button()
-     
+        
         do
             funcButton.Margin <- Thickness(left=5.,top=5.,right=0.,bottom=0.)
             funcButton.Height <- 25.
@@ -65,13 +82,13 @@ module Style =
             funcButton.BorderBrush <- black
             funcButton.FontSize <- 16.
             funcButton.Background <- 
-                let brush = LinearGradientBrush(StartPoint = Point (0.,0.), EndPoint = Point (0.03,0.9))
+                let brush = linearGradientBrush_1
                 do
                     brush.GradientStops.Add(new GradientStop(Color = Color.FromArgb (byte "0xFF",  byte "0x80", byte "0x80", byte "0x80"), Offset = 0.))
                     brush.GradientStops.Add(new GradientStop(Color = Color.FromArgb (byte "0xFF",  byte "0xA0", byte "0xA0", byte "0xA0"), Offset = 1.))
                 brush
-            funcButton.Foreground <- SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xE0", byte "0xE0", byte "0xE0"))
-
+            funcButton.Foreground <- SolidColorBrush(Colors.DarkBlue)
+            
     type basicCalcButton() as funcButton = 
         inherit Button()
      
@@ -93,7 +110,7 @@ module Style =
         inherit Button()
         do  button.FontSize <- 14.
             button.Margin <- Thickness(left = 5.,top = 5.,right = 5.,bottom = 0.)
-
+            
     //Text box
     type CalcTextBox() as textBox = 
         inherit TextBox()
