@@ -113,6 +113,7 @@ module GraphingDomain =
         | CalcInput of ConventionalDomain.CalculatorInput
         | Stack of RpnDomain.CalculatorInput
         | Draw
+        | Draw2DParametric
         | OpenParentheses
         | CloseParentheses
         | GraphOptionSave of Drawing2DBounds
@@ -135,14 +136,13 @@ module GraphingDomain =
         | ParentheticalState2DParametric of ParentheticalStateData * CalculatorState
         | ExpressionDigitAccumulatorState2DParametric of ExpressionStateData * CalculatorState
         | ExpressionDecimalAccumulatorState2DParametric of ExpressionStateData * CalculatorState
-        | DrawErrorState2DParametric of ErrorStateData * CalculatorState
-        | ExpressionErrorState2DParametric of ErrorStateData * CalculatorState
       
     type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
 
     // Graph Services
     type AccumulateSymbol = ExpressionStateData -> Symbol -> Expression //StateData
     type DoDrawOperation = DrawOp-> DrawOperationResult
+    type DoDraw2DParametricOperation = DrawOp * DrawOp -> DrawOperationResult
     type DoExpressionOperation = Function * Expression * Expression -> ExpressionOperationResult
     type GetDisplayFromExpression = Expression -> string
     type GetNumberFromAccumulator = ExpressionStateData -> NumberType
@@ -160,6 +160,7 @@ module GraphingDomain =
         
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
+        doDraw2DParametricOperation :DoDraw2DParametricOperation
         doExpressionOperation :DoExpressionOperation
         accumulateSymbol :AccumulateSymbol
         accumulateZero :AccumulateZero
@@ -276,6 +277,21 @@ module GraphingImplementation =
              error = x} 
             |> DrawErrorState 
 
+    let doDraw2DParametricOperation services stateData =        
+        match stateData with 
+        | EvaluatedState2DParametric (xT,EvaluatedState yT) ->
+            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
+            match result with
+            | Traces t -> 
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},EvaluatedState yT)            
+            | DrawError x ->  
+                {lastExpression = xT.evaluatedExpression; 
+                 error = x} 
+                |> DrawErrorState
+        | _ -> {lastExpression = Expression.Zero; error = FailedToCreateTrace} |> DrawErrorState
+
     let doExpressionOperation services stateData = services.doExpressionOperation stateData
         
     let replacePendingFunction (evaluatedStateData:EvaluatedStateData) nextFun =         
@@ -329,6 +345,7 @@ module GraphingImplementation =
         | Stack _input -> DrawState stateData
         | ExpressionInput _input -> DrawState stateData
         | Draw 
+        | Draw2DParametric -> DrawState stateData
         | OpenParentheses 
         | CloseParentheses         
         | ExpressionSquared
@@ -404,9 +421,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | Percent ->
                     let nextOp = None//Some op
@@ -458,9 +473,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | CalculatorMathOp.Root ->
                     let nextOp = None//Some op
@@ -512,9 +525,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | ChangeSign ->
                     let nextOp = None//Some op
@@ -567,9 +578,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | MemoryAdd 
                 | MemorySubtract -> EvaluatedState stateData         
@@ -676,14 +685,13 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newEvaluationState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newEvaluationState
                     finalState                    
                 | _ -> replacePendingFunction stateData (Some f)
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawing2DBounds)
-            |> doDrawOperation services 
+            |> doDrawOperation services         
+        | Draw2DParametric -> EvaluatedState stateData
         | OpenParentheses -> 
             { evaluatedExpression = Expression.Zero
               pendingFunction = None //stateData.pendingFunction
@@ -743,9 +751,7 @@ module GraphingImplementation =
                     | ExpressionErrorState _                             
                     | DrawState2DParametric _                            
                     | ExpressionDigitAccumulatorState2DParametric _
-                    | ExpressionDecimalAccumulatorState2DParametric _
-                    | DrawErrorState2DParametric _
-                    | ExpressionErrorState2DParametric _ -> newState
+                    | ExpressionDecimalAccumulatorState2DParametric _ -> newState
             finalState
         | ExpressionToThePowerOf -> replacePendingFunction stateData (Some ToThePowerOf)
 
@@ -819,9 +825,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | Percent ->
                     let nextOp = None//Some op
@@ -873,9 +877,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | CalculatorMathOp.Root ->
                     let nextOp = None//Some op
@@ -927,9 +929,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | ChangeSign ->
                     let nextOp = None//Some op
@@ -982,9 +982,7 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
                     finalState
                 | MemoryAdd 
                 | MemorySubtract -> stateData |> ParentheticalState         
@@ -1092,14 +1090,13 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _
-                            | DrawErrorState2DParametric _
-                            | ExpressionErrorState2DParametric _ -> newEvaluationState
+                            | ExpressionDecimalAccumulatorState2DParametric _ -> newEvaluationState
                     finalState
                 | _ -> replacePendingFunctionParenthetical stateData (Some f)
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawing2DBounds)
             |> doDrawOperation services 
+        | Draw2DParametric -> ParentheticalState stateData
         | OpenParentheses -> 
             { evaluatedExpression = Expression.Zero
               pendingFunction = None //stateData.pendingFunction
@@ -1159,9 +1156,7 @@ module GraphingImplementation =
                     | ExpressionErrorState _                             
                     | DrawState2DParametric _                            
                     | ExpressionDigitAccumulatorState2DParametric _
-                    | ExpressionDecimalAccumulatorState2DParametric _
-                    | DrawErrorState2DParametric _
-                    | ExpressionErrorState2DParametric _ -> newState
+                    | ExpressionDecimalAccumulatorState2DParametric _ -> newState
             finalState
         | ExpressionToThePowerOf -> replacePendingFunctionParenthetical stateData (Some ToThePowerOf)
 
@@ -1209,9 +1204,7 @@ module GraphingImplementation =
                    | ExpressionErrorState _                             
                    | DrawState2DParametric _                            
                    | ExpressionDigitAccumulatorState2DParametric _
-                   | ExpressionDecimalAccumulatorState2DParametric _
-                   | DrawErrorState2DParametric _
-                   | ExpressionErrorState2DParametric _ -> newState 
+                   | ExpressionDecimalAccumulatorState2DParametric _ -> newState 
            match input with
            | Stack _ -> ExpressionDigitAccumulatorState stateData
            | CalcInput op -> 
@@ -1330,6 +1323,7 @@ module GraphingImplementation =
                        getFinalStateFrom newState
                | Function f -> getEvaluationState services stateData (Some f)
            | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
+           | Draw2DParametric -> ExpressionDigitAccumulatorState stateData
            | OpenParentheses -> 
                 {stateData with 
                     parenthetical = 
@@ -1397,9 +1391,7 @@ module GraphingImplementation =
                 | ExpressionErrorState _                             
                 | DrawState2DParametric _                            
                 | ExpressionDigitAccumulatorState2DParametric _
-                | ExpressionDecimalAccumulatorState2DParametric _
-                | DrawErrorState2DParametric _
-                | ExpressionErrorState2DParametric _ -> newState 
+                | ExpressionDecimalAccumulatorState2DParametric _ -> newState 
         match input with
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
@@ -1516,6 +1508,7 @@ module GraphingImplementation =
                     getFinalStateFrom newState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
+        | Draw2DParametric -> ExpressionDecimalAccumulatorState stateData
         | OpenParentheses -> 
              {stateData with 
                  parenthetical = 
@@ -1563,6 +1556,7 @@ module GraphingImplementation =
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
+        | Draw2DParametric -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
         | GraphOptionSave bounds -> DrawErrorState stateData
@@ -1593,6 +1587,7 @@ module GraphingImplementation =
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
+        | Draw2DParametric -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
         | GraphOptionSave bounds -> DrawErrorState stateData
@@ -1617,18 +1612,16 @@ module GraphingImplementation =
             | ParentheticalState s -> (s,state) |> ParentheticalState2DParametric
             | ExpressionDigitAccumulatorState s -> (s,state) |> ExpressionDigitAccumulatorState2DParametric
             | ExpressionDecimalAccumulatorState s -> (s,state) |> ExpressionDecimalAccumulatorState2DParametric
-            | DrawErrorState s -> (s,state) |> DrawErrorState2DParametric
-            | ExpressionErrorState s -> (s,state) |> ExpressionErrorState2DParametric
+            | DrawErrorState _
+            | ExpressionErrorState _
             | EvaluatedState2DParametric _ 
             | DrawState2DParametric _
             | ParentheticalState2DParametric _
             | ExpressionDigitAccumulatorState2DParametric _
-            | ExpressionDecimalAccumulatorState2DParametric _
-            | DrawErrorState2DParametric _
-            | ExpressionErrorState2DParametric _ -> newState
+            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
 
-         fun (input,state) -> 
-             match state with
+         fun (input,calcState) -> 
+             match calcState with
              | DrawState stateData -> 
                  handleDrawState stateData input 
              | EvaluatedState stateData -> 
@@ -1642,9 +1635,11 @@ module GraphingImplementation =
              | DrawErrorState stateData -> 
                  handleDrawErrorState stateData input
              | ExpressionErrorState stateData -> 
-                 handleExpressionErrorState stateData input
+                 handleExpressionErrorState stateData input             
              | EvaluatedState2DParametric (stateData,state) ->
-                 handleEvaluatedState stateData input |> wrapStateData state
+                 match input  with
+                 | Draw2DParametric -> doDraw2DParametricOperation services calcState
+                 | _ -> handleEvaluatedState stateData input |> wrapStateData state                 
              | DrawState2DParametric (stateData,state) ->
                 handleDrawState stateData input |> wrapStateData state
              | ParentheticalState2DParametric (stateData,state) ->
@@ -1653,10 +1648,6 @@ module GraphingImplementation =
                 handleExpressionDigitAccumulatorState stateData input |> wrapStateData state
              | ExpressionDecimalAccumulatorState2DParametric (stateData,state) ->
                 handleExpressionDecimalAccumulatorState stateData input |> wrapStateData state
-             | DrawErrorState2DParametric (stateData,state) ->
-                handleDrawErrorState stateData input |> wrapStateData state
-             | ExpressionErrorState2DParametric (stateData,state) ->
-                handleExpressionErrorState stateData input |> wrapStateData state
 
 module GraphServices =
     open GraphingDomain
@@ -1728,9 +1719,7 @@ module GraphServices =
                     match d.parenthetical with
                     | Some expression -> func + " " + expression.ToString()
                     | None -> ""            
-            | DrawErrorState2DParametric (de,_) -> "derror" + de.ToString()            
-            | ExpressionErrorState2DParametric (ee,_) -> "eerror" + ee.ToString()    
-    
+
     let getDisplayFromPendingFunction (pendingFunction : PendingFunction option) =
         match pendingFunction with
         | Some x -> x.ToString()
@@ -1767,6 +1756,97 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ExpressionDecimalAccumulatorState2DParametric            
             | _ -> state
     
+    let doDraw2DParametricOperation resolution (drawOpXt:DrawOp, drawOpYt:DrawOp):DrawOperationResult = 
+        let expressionXt, drawBoundsX = drawOpXt
+        let expressionYt, drawBoundsY = drawOpYt
+        
+        let getValueFrom numberType =
+            match numberType with
+            | Real r -> r
+            | Integer i -> float i
+            | _ -> System.Double.NaN
+        let valueOfX coordinate = match coordinate with X x -> getValueFrom x
+        let valueOfY coordinate = match coordinate with Y y -> getValueFrom y
+        let xMin, xMax, yMin, yMax = 
+            valueOfX drawBoundsX.lowerX, 
+            valueOfX drawBoundsX.upperX, 
+            valueOfY drawBoundsY.lowerY, 
+            valueOfY drawBoundsY.upperY                 
+        
+        let makePoint xExpression yExpression = 
+            let xValue =
+                match xExpression with
+                | Number n -> n
+                | _ -> Undefined
+            let yValue =
+                match yExpression with 
+                | Number n -> n
+                | _ -> Undefined
+            Point(X xValue,Y yValue)
+        
+        let evaluate expression tValue = 
+            expression
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
+            |> ExpressionStructure.substitute (Expression.Symbol (Variable "t"), tValue)            
+            |> ExpressionFunction.evaluateRealPowersOfExpression            
+            
+        let partitionInfinity = 
+            let rec loop acc lcc = function
+                | (Number(Real x), Number(Real y))::pl when y <> infinity && y <> -infinity -> loop ((Number(Real x),Number(Real y))::acc) lcc pl
+                | [] -> acc::lcc //, []
+                | pl -> 
+                    let infinityPoint = 
+                        match pl,acc with
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 =  infinity && y1 <= 0. -> (x0,Number(Real yMin))
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 <= 0. -> (x0,Number(Real yMin))
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 =  infinity && y1 >= 0. -> (x0,Number(Real yMax))
+                        | (x0,Number(Real y0))::_plTail,(_x1,Number(Real y1))::_accTail when y0 = -infinity && y1 >= 0. -> (x0,Number(Real yMax))                     
+                        | [],acc -> (fst acc.Head, Number(Real yMax))                        
+                        | _      -> (fst  pl.Head, Number(Real yMax))
+                    let p =
+                          match pl with
+                          | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 <= 0. -> (x0,Number(Real yMin))
+                          | (x0,Number(Real _y0))::(_x1,Number(Real y1))::_t when y1 >  0. -> (x0,Number(Real yMax))
+                          | _ -> (fst pl.Head, Number(Real 150.))
+                    loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
+            loop [] []
+            
+        let t = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
+        let xCoordinates = Seq.map (fun x -> evaluate expressionXt x ) t
+        let yCoordinates = Seq.map (fun y -> evaluate expressionYt y ) t       
+        
+        let coordinatePairs = 
+            Seq.zip xCoordinates yCoordinates 
+            |> Seq.filter (fun (x,_y) -> match x with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
+            |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
+            |> Seq.toList
+            |> partitionInfinity
+
+        let points = List.map (fun pl -> seq { for (x,y) in pl do yield makePoint x y }) coordinatePairs 
+                    
+        let checkForUndefinedPoints = 
+            points 
+            |> Seq.concat
+            |> Seq.exists (fun x -> 
+                match x with 
+                | Point(X x,Y y) when x = Undefined || y = Undefined -> true 
+                | _ -> false)  
+        
+        let createTrace ps =
+            { startPoint = Seq.head ps;
+              traceSegments = 
+                  Seq.tail ps 
+                  |> Seq.toList 
+                  |> List.map (fun x -> LineSegment x) }  
+       
+        match checkForUndefinedPoints with
+        | true -> DrawError FailedToCreateTrace
+        | false -> 
+            let pointLists = points          
+            let out = List.map (fun x -> createTrace x) pointLists 
+            out |> Traces
+
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
         let getValueFrom numberType =
@@ -2050,6 +2130,7 @@ module GraphServices =
 
     let createGraphServices () = {
         doDrawOperation =  doDrawOperation (0.1)
+        doDraw2DParametricOperation =  doDraw2DParametricOperation (0.1)
         doExpressionOperation =  doExpressionOperation
         accumulateSymbol =  accumulateSymbol
         accumulateZero = accumulateZero (15)

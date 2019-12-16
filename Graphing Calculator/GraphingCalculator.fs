@@ -982,31 +982,31 @@ type GraphingCalculator() as graphingCalculator =
     let x_Button = 
         FuncButton(
             Content = "x",
-            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Margin = Thickness(left = 5., top = 5., right = 0., bottom = 5.),
             Height = Double.NaN
             )
     let t_Button = 
         FuncButton(
             Content = "t",
-            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Margin = Thickness(left = 5., top = 5., right = 0., bottom = 5.),
             Height = Double.NaN
             )
     let u_Button = 
         FuncButton(
             Content = "u",
-            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Margin = Thickness(left = 5., top = 5., right = 0., bottom = 5.),
             Height = Double.NaN
             )
     let v_Button = 
         FuncButton(
             Content = "v",
-            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Margin = Thickness(left = 5., top = 5., right = 0., bottom = 5.),
             Height = Double.NaN
             )
     let dx_Button = 
         FuncButton(
             Content = "dX",
-            Margin = Thickness(left = 7., top = 5., right = 2., bottom = 5.),
+            Margin = Thickness(left = 5., top = 5., right = 0., bottom = 5.),
             Height = Double.NaN
             )
     let funcButtons = 
@@ -1535,10 +1535,15 @@ type GraphingCalculator() as graphingCalculator =
             | InputMode.Graph g -> (g.Visibility <- Visibility.Collapsed)
             | InputMode.Graph2DParametric g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
         match mode with
-        | Conventional -> (memoryButton_Grid.Visibility <- Visibility.Visible)
-        | RPN -> (rpnButton_Grid.Visibility <- Visibility.Visible)
-        | Graph -> (graphButton_Grid.Visibility <- Visibility.Visible)
-        | Graph2DParametric -> (graphButton_Grid.Visibility <- Visibility.Visible)
+        | Conventional -> 
+            memoryButton_Grid.Visibility <- Visibility.Visible
+            memoryButton_Grid.IsHitTestVisible <- true 
+        | RPN -> 
+            rpnButton_Grid.Visibility <- Visibility.Visible
+        | Graph -> 
+            graphButton_Grid.IsHitTestVisible <- false
+        | Graph2DParametric -> 
+            graphButton_Grid.IsHitTestVisible <- false
     // a function that sets the input mode
     let setInputMode mode = 
         do state <- {state with mode = mode}
@@ -1547,18 +1552,50 @@ type GraphingCalculator() as graphingCalculator =
             setActiveModeButtons mode
             setActiveDisplay (View.Text screen_Text_TextBox)
             setDisplayedText "Conventional" 
+            x_Button.IsHitTestVisible <- false
+            t_Button.IsHitTestVisible <- false
+            u_Button.IsHitTestVisible <- false
+            v_Button.IsHitTestVisible <- false
+            x_Button.Background <- Style.linearGradientBrush_2
+            t_Button.Background <- Style.linearGradientBrush_2
+            u_Button.Background <- Style.linearGradientBrush_2
+            v_Button.Background <- Style.linearGradientBrush_2
         | RPN ->
             setActiveModeButtons mode
             setActiveDisplay (View.Text screen_Text_TextBox)
             setDisplayedText (RpnServices.getDisplayFromStack state.rpn)
+            x_Button.IsHitTestVisible <- false
+            t_Button.IsHitTestVisible <- false
+            u_Button.IsHitTestVisible <- false
+            v_Button.IsHitTestVisible <- false
+            x_Button.Background <- Style.linearGradientBrush_2
+            t_Button.Background <- Style.linearGradientBrush_2
+            u_Button.Background <- Style.linearGradientBrush_2
+            v_Button.Background <- Style.linearGradientBrush_2
         | Graph ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function function_Grid)
             setDisplayedText (GraphServices.getDisplayFromGraphState state.graph)
+            x_Button.IsHitTestVisible <- true
+            t_Button.IsHitTestVisible <- false
+            u_Button.IsHitTestVisible <- false
+            v_Button.IsHitTestVisible <- false
+            x_Button.Background <- Style.linearGradientBrush_1
+            t_Button.Background <- Style.linearGradientBrush_2
+            u_Button.Background <- Style.linearGradientBrush_2
+            v_Button.Background <- Style.linearGradientBrush_2
         | Graph2DParametric ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function2D function2D_Grid)
             setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
+            x_Button.IsHitTestVisible <- false
+            t_Button.IsHitTestVisible <- true
+            u_Button.IsHitTestVisible <- false
+            v_Button.IsHitTestVisible <- false
+            x_Button.Background <- Style.linearGradientBrush_2
+            t_Button.Background <- Style.linearGradientBrush_1
+            u_Button.Background <- Style.linearGradientBrush_2
+            v_Button.Background <- Style.linearGradientBrush_2
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
@@ -1675,10 +1712,10 @@ type GraphingCalculator() as graphingCalculator =
             setPendingOpText ""
     let handleGraphInput input =
         let newState = 
-            match function_Grid.IsVisible, function2D_Grid.IsVisible with
-            | true, false -> calculateGraph (input, state.graph)
-            | false, true -> calculateGraph (input, state.graph2DParametric) 
-            | _,_ -> ExpressionErrorState {lastExpression = Math.Pure.Structure.Number (Math.Pure.Quantity.Number.Zero); error = InputError }
+            match state.mode with
+            | Graph -> calculateGraph (input, state.graph)
+            | Graph2DParametric -> calculateGraph (input, state.graph2DParametric)             
+            | _ -> ExpressionErrorState {lastExpression = Math.Pure.Structure.Number (Math.Pure.Quantity.Number.Zero); error = InputError }
 
         let expressionText = 
             match newState with
@@ -1695,13 +1732,11 @@ type GraphingCalculator() as graphingCalculator =
             | ParentheticalState2DParametric (p,_s) -> graphServices.getDisplayFromExpression p.evaluatedExpression
             | ExpressionDigitAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
             | ExpressionDecimalAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression           
-            | ExpressionErrorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.lastExpression          
-            | DrawErrorState2DParametric (d,_s) -> graphServices.getDisplayFromExpression d.lastExpression 
-
-        state <- match function_Grid.IsVisible, function2D_Grid.IsVisible with
-                 | true, false -> { state with graph = newState }
-                 | false, true -> { state with graph2DParametric = newState } 
-                 | _,_ -> state
+            
+        state <- match state.mode with
+                 | Graph -> { state with graph = newState }
+                 | Graph2DParametric -> { state with graph2DParametric = newState } 
+                 | _ -> state
         
         setDisplayedText expressionText
         match newState with
@@ -1752,7 +1787,7 @@ type GraphingCalculator() as graphingCalculator =
                          canvas.Children.Add(model) |> ignore
                          canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
             setActiveDisplay (PlotCanvas screen_Canvas)
-            setPendingOpText "--->>> graph" 
+            setPendingOpText "--->>> graph 2D Parametric" 
             // add grid if checked
             match canvasGridLines_CheckBox.IsChecked.HasValue = true &&
                   canvasGridLines_CheckBox.IsChecked.Value = true with
@@ -1799,7 +1834,8 @@ type GraphingCalculator() as graphingCalculator =
             do state <- {state with graph2DParametric = graphServices.toggle2DParametricState state.graph2DParametric}
                function2D_yt_TextBox.MaxLines <- 3
                function2D_xt_TextBox.MaxLines <- 15
-               //calcButton_Grid.Focus() |> ignore
+               function2D_xt_TextBox.BorderThickness <- Thickness(3.)
+               function2D_yt_TextBox.BorderThickness <- Thickness(1.)
         | false -> ()
     let handleTextBoxYtPreviewMouseDown () =
         match function2D_yt_TextBox.MaxLines = 3 with
@@ -1807,7 +1843,8 @@ type GraphingCalculator() as graphingCalculator =
             do state <- {state with graph2DParametric = graphServices.toggle2DParametricState state.graph2DParametric}
                function2D_xt_TextBox.MaxLines <- 3
                function2D_yt_TextBox.MaxLines <- 15
-               //calcButton_Grid.Focus() |> ignore
+               function2D_xt_TextBox.BorderThickness <- Thickness(1.)
+               function2D_yt_TextBox.BorderThickness <- Thickness(3.)
         | false -> ()
 
     // a function that sets active handler based on the active input mode display
@@ -1846,11 +1883,13 @@ type GraphingCalculator() as graphingCalculator =
 
     // create objects
     let x = (Math.Pure.Objects.Symbol.Variable "x") |> ExpressionInput.Symbol |> ExpressionInput
+    let t = (Math.Pure.Objects.Symbol.Variable "t") |> ExpressionInput.Symbol |> ExpressionInput
     let sin = (Math.Pure.Objects.Function.Sin) |> ExpressionInput.Function |> ExpressionInput
     let cos = (Math.Pure.Objects.Function.Cos) |> ExpressionInput.Function |> ExpressionInput
     let tan = (Math.Pure.Objects.Function.Tan) |> ExpressionInput.Function |> ExpressionInput
     let pi = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.Pi) |> ExpressionInput.Symbol |> ExpressionInput
     let e = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.E) |> ExpressionInput.Symbol |> ExpressionInput
+    
 
     do  //add event handler to each button click
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
@@ -1887,6 +1926,7 @@ type GraphingCalculator() as graphingCalculator =
         enter            .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Push)))
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
         x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
+        t_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> t |> handleGraphInput ))
         sin_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> sin |> handleGraphInput ))
         cos_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> cos |> handleGraphInput ))
         tan_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> tan |> handleGraphInput ))
@@ -1899,6 +1939,7 @@ type GraphingCalculator() as graphingCalculator =
         option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
+        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw2DParametric)))
 
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
@@ -1908,3 +1949,4 @@ type GraphingCalculator() as graphingCalculator =
 
         function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
         function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
+        
