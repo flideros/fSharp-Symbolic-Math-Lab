@@ -1186,7 +1186,6 @@ type GraphingCalculator() as graphingCalculator =
         equals; root; changeSign; inverse; percent; back; clear; closeParentheses]
     let memoryButtons = [storeMemory; clearMemory; recallMemory; addToMemory; subtractFromMemoy]
     
-
     //-----RPN Buttons
     let drop =          CalcButton(Name = "dropButton", Content = "Drop")
     let duplicate =     CalcButton(Name = "duplicateButton", Content = "Dup")
@@ -1339,6 +1338,7 @@ type GraphingCalculator() as graphingCalculator =
         let orginPoint = System.Windows.Point(x,y)
         do  context.DrawEllipse(color,pen,orginPoint,1.,1.)
             context.Close()
+
 
         let bitmap = 
             RenderTargetBitmap(
