@@ -1186,7 +1186,6 @@ type GraphingCalculator() as graphingCalculator =
         equals; root; changeSign; inverse; percent; back; clear; closeParentheses]
     let memoryButtons = [storeMemory; clearMemory; recallMemory; addToMemory; subtractFromMemoy]
     
-
     //-----RPN Buttons
     let drop =          CalcButton(Name = "dropButton", Content = "Drop")
     let duplicate =     CalcButton(Name = "duplicateButton", Content = "Dup")
@@ -1298,6 +1297,7 @@ type GraphingCalculator() as graphingCalculator =
             Seq.iter (fun x -> x) horozontalLines
             Seq.iter (fun y -> y) verticalLines
             context.Close()
+
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
@@ -1315,12 +1315,12 @@ type GraphingCalculator() as graphingCalculator =
     //----- Orgin Point
     let resolution (r) = (canvasGridLine_Slider.Value * float(r))         
     let mapXToCanvas x =         
-        let w = floor(function_Grid.ActualWidth / 2.)
+        let w = floor(screen_Grid.ActualWidth / 2.)
         let bias = w % resolution xInterval
         let w' = w - bias 
         (x + w')
     let mapYToCanvas y =         
-        let h = ceil(function_Grid.ActualHeight / 2.)
+        let h = ceil(screen_Grid.ActualHeight / 2.)
         let bias = h % resolution yInterval
         let h' = h - bias
         -(y - h')
@@ -1338,6 +1338,7 @@ type GraphingCalculator() as graphingCalculator =
         let orginPoint = System.Windows.Point(x,y)
         do  context.DrawEllipse(color,pen,orginPoint,1.,1.)
             context.Close()
+
 
         let bitmap = 
             RenderTargetBitmap(
@@ -1726,7 +1727,7 @@ type GraphingCalculator() as graphingCalculator =
             | ExpressionErrorState e -> graphServices.getDisplayFromExpression e.lastExpression          
             | DrawErrorState d -> graphServices.getDisplayFromExpression d.lastExpression        
             // Parametric 2D
-            | DrawState2DParametric (_d,_s) -> "Graph"
+            | DrawState2DParametric (_d,_s) -> "Graph 2D Parametric"
             | EvaluatedState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.evaluatedExpression           
             | ParentheticalState2DParametric (p,_s) -> graphServices.getDisplayFromExpression p.evaluatedExpression
             | ExpressionDigitAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
@@ -1744,11 +1745,12 @@ type GraphingCalculator() as graphingCalculator =
                 canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
             let models = getActivetModel state    
-            do  List.iter (fun (model : System.Windows.Shapes.Path) -> 
-                                        model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
-                                        model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
-                                        canvas.Children.Add(model) |> ignore
-                                        canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
+            do  List.iter (
+                    fun (model : System.Windows.Shapes.Path) -> 
+                         model.RenderTransform <- ScaleTransform(scaleX = (fst state.scale), scaleY = (snd state.scale), centerX = mapXToCanvas 0., centerY = mapYToCanvas 0.)
+                         model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale) / 2.)
+                         canvas.Children.Add(model) |> ignore
+                         canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
                 setActiveDisplay (PlotCanvas screen_Canvas)
                 setPendingOpText "--->>> graph" 
                 // add grid if checked
@@ -1781,8 +1783,8 @@ type GraphingCalculator() as graphingCalculator =
             let models = getActivetModel state    
             do  List.iter (
                     fun( model : System.Windows.Shapes.Path) -> 
-                         model.RenderTransform <- ScaleTransform(scaleX= (fst state.scale), scaleY= (snd state.scale), centerX= mapXToCanvas 0., centerY= mapYToCanvas 0.)
-                         model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale)/2.)
+                         model.RenderTransform <- ScaleTransform(scaleX = (fst state.scale), scaleY = (snd state.scale), centerX = mapXToCanvas 0., centerY = mapYToCanvas 0.)
+                         model.StrokeThickness <- 2. / ((fst state.scale + snd state.scale) / 2.)
                          canvas.Children.Add(model) |> ignore
                          canvas.Children.Add(( placeOrginPoint (mapXToCanvas 0.) (mapYToCanvas 0.) )) |> ignore) models
             setActiveDisplay (PlotCanvas screen_Canvas)
@@ -1845,7 +1847,13 @@ type GraphingCalculator() as graphingCalculator =
                function2D_xt_TextBox.BorderThickness <- Thickness(1.)
                function2D_yt_TextBox.BorderThickness <- Thickness(3.)
         | false -> ()
-
+    let handleFunction2D_Graph_Button () =
+        match function2D_xt_TextBox.IsFocused with
+        | true -> 
+            handleGraphInput(Draw2DParametric)
+        | false -> 
+            do state <- {state with graph2DParametric = graphServices.toggle2DParametricState state.graph2DParametric}
+               handleGraphInput(Draw2DParametric)
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1938,7 +1946,7 @@ type GraphingCalculator() as graphingCalculator =
         option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
-        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw2DParametric)))
+        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2D_Graph_Button ()))
 
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
