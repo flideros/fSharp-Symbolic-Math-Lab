@@ -1896,6 +1896,20 @@ module GraphingImplementation =
         | ExpressionToThePowerOf
         | GraphOptionReset -> DrawErrorState stateData
     
+    let spiral_ExampleState =
+        let xT = NaryOp (Product,[UnaryOp (Sin,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
+        let yT = NaryOp (Product,[UnaryOp (Cos,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
+        let options = {defaultOptions with 
+                        upperT = T (Real 31.415926535897932384626433832795)
+                        lowerT = T (Real 0.0)}
+        ({ evaluatedExpression = xT
+           pendingFunction = None;
+           drawingOptions = options}, 
+           EvaluatedState 
+            { evaluatedExpression = yT
+              pendingFunction = None;
+              drawingOptions = options })        
+
     let createEvaluate (services:GraphServices) : Evaluate = 
          // create some local functions with partially applied services
          let handleDrawState = handleDrawState services
