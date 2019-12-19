@@ -16,7 +16,6 @@ open ConventionalDomain
 open RpnDomain
 open GraphingDomain
 
-
 type View =
     | PlotCanvas of Grid
     | Text of CalcTextBox
@@ -77,7 +76,7 @@ type GraphingCalculator() as graphingCalculator =
             Math.Pure.Quantity.Number.Zero 
             |> Math.Pure.Structure.Number; 
           pendingFunction = None; 
-          drawing2DBounds = GraphingImplementation.default2DBounds
+          drawingOptions = GraphingImplementation.defaultOptions
         }   
         |> EvaluatedState
     let graph2DParametricDefault = 
@@ -86,7 +85,7 @@ type GraphingCalculator() as graphingCalculator =
             |> Math.Pure.Structure.Number
         ({ evaluatedExpression = zero; 
            pendingFunction = None; 
-           drawing2DBounds = GraphingImplementation.default2DBounds},
+           drawingOptions = GraphingImplementation.defaultOptions},
            graphDefault ) |> EvaluatedState2DParametric
     let mutable state = 
         { rpn = rpnDefault; 
@@ -1434,40 +1433,77 @@ type GraphingCalculator() as graphingCalculator =
             path
         let paths = List.map (fun m -> getPathGeometry m) models
         paths    
-    let getDraw2DBoundsFromOptions() =
+    let getDrawOptions() =
         let real = fun n -> Math.Pure.Quantity.NumberType.Real n
         let uX = 
-            let n = System.Double.TryParse (option_xMax_TextBox.Text)
+            let n = 
+                match state.mode with
+                | Graph2DParametric -> System.Double.TryParse (option2D_xMax_TextBox.Text)
+                | _ -> System.Double.TryParse (option_xMax_TextBox.Text)
+                
             match n with
             | true, d -> X (real d)
-            | false, _ -> GraphingImplementation.default2DBounds.upperX
+            | false, _ -> GraphingImplementation.defaultOptions.upperX
         let uY = 
-            let n = System.Double.TryParse (option_yMax_TextBox.Text)
+            let n = 
+                match state.mode with
+                | Graph2DParametric -> System.Double.TryParse (option2D_yMax_TextBox.Text)
+                | _ -> System.Double.TryParse (option_yMax_TextBox.Text)
             match n with
             | true, d -> Y (real d)
-            | false, _ -> GraphingImplementation.default2DBounds.upperY
+            | false, _ -> GraphingImplementation.defaultOptions.upperY
         let lX = 
-            let n = System.Double.TryParse (option_xMin_TextBox.Text)
+            let n = 
+                match state.mode with
+                | Graph2DParametric -> System.Double.TryParse (option2D_xMin_TextBox.Text)
+                | _ -> System.Double.TryParse (option_xMin_TextBox.Text)
             match n with
             | true, d -> X (real d)
-            | false, _ -> GraphingImplementation.default2DBounds.lowerX
+            | false, _ -> GraphingImplementation.defaultOptions.lowerX
         let lY = 
-            let n = System.Double.TryParse (option_yMin_TextBox.Text)
+            let n = 
+                match state.mode with
+                | Graph2DParametric -> System.Double.TryParse (option2D_yMin_TextBox.Text)
+                | _ -> System.Double.TryParse (option_yMin_TextBox.Text)
             match n with
             | true, d -> Y (real d)
-            | false, _ -> GraphingImplementation.default2DBounds.lowerY
-        {upperX = uX; lowerX = lX; upperY = uY; lowerY = lY}
+            | false, _ -> GraphingImplementation.defaultOptions.lowerY        
+        let uT = 
+            let n = System.Double.TryParse (option2D_tMax_TextBox.Text)                
+            match n with
+            | true, d -> T (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.upperT
+        let lT = 
+            let n = System.Double.TryParse (option2D_tMin_TextBox.Text)
+            match n with
+            | true, d -> T (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.lowerT
+        let tStep = 
+            let n = System.Double.TryParse (option2D_tStep_TextBox.Text)
+            match n with
+            | true, d -> Tstep (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.Tstep        
+        {upperX = uX; lowerX = lX; upperY = uY; lowerY = lY; upperT = uT; lowerT = lT; Tstep = tStep}
 
 // ----- Setters    
     //
-    let setGraphOptionText (bounds:Drawing2DBounds) =
+    let setGraphOptionText (options:DrawingOptions) =
         let getValueFromXCoordinate c = match c with | X (Math.Pure.Quantity.Real x) -> x.ToString() | _ -> ""
         let getValueFromYCoordinate c = match c with | Y (Math.Pure.Quantity.Real y) -> y.ToString() | _ -> ""
+        let getValueFromT t = match t with | T (Math.Pure.Quantity.Real t) -> t.ToString() | _ -> ""
+        let getValueFromTstep ts = match ts with | Tstep (Math.Pure.Quantity.Real ts) -> ts.ToString() | _ -> ""        
         do
-            option_xMin_TextBox.Text <- getValueFromXCoordinate bounds.lowerX
-            option_xMax_TextBox.Text <- getValueFromXCoordinate bounds.upperX
-            option_yMin_TextBox.Text <- getValueFromYCoordinate bounds.lowerY
-            option_yMax_TextBox.Text <- getValueFromYCoordinate bounds.upperY
+            option_xMin_TextBox.Text <- getValueFromXCoordinate options.lowerX
+            option_xMax_TextBox.Text <- getValueFromXCoordinate options.upperX
+            option_yMin_TextBox.Text <- getValueFromYCoordinate options.lowerY
+            option_yMax_TextBox.Text <- getValueFromYCoordinate options.upperY
+            option2D_xMin_TextBox.Text <- getValueFromXCoordinate options.lowerX
+            option2D_xMax_TextBox.Text <- getValueFromXCoordinate options.upperX
+            option2D_yMin_TextBox.Text <- getValueFromYCoordinate options.lowerY
+            option2D_yMax_TextBox.Text <- getValueFromYCoordinate options.upperY
+            option2D_tMax_TextBox.Text <- getValueFromT options.upperT
+            option2D_tMin_TextBox.Text <- getValueFromT options.lowerT
+            option2D_tStep_TextBox.Text <- getValueFromTstep options.Tstep
     // a function that sets active display
     let setActiveDisplay display =
         do  List.iter (fun x -> 
@@ -1489,12 +1525,16 @@ type GraphingCalculator() as graphingCalculator =
             p.Visibility <- Visibility.Visible
             canvas_DockPanel.Visibility <- Visibility.Visible
         | View.Function p -> 
-            setGraphOptionText (GraphServices.getDrawing2DBoundsFromState state.graph)
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph)
             (p.Visibility <- Visibility.Visible)
-        | View.Function2D p
+        | View.Function2D p ->
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph2DParametric)
+            (p.Visibility <- Visibility.Visible)
         | View.Function3D p
-        | View.Option p -> (p.Visibility <- Visibility.Visible)
-        | View.Option2D p
+        | View.Option p
+        | View.Option2D p ->             
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph2DParametric)
+            (p.Visibility <- Visibility.Visible)
         | View.Option3D p -> (p.Visibility <- Visibility.Visible)
         | View.Text t -> (t.Visibility <- Visibility.Visible)        
     // a function that sets the displayed text
@@ -1662,6 +1702,8 @@ type GraphingCalculator() as graphingCalculator =
         calculator_Grid.Children.Add(calculator_Layout_Grid) |> ignore
         
         graphingCalculator.Content <- calculator_Grid
+
+        setInputMode state.mode
 
 //////////////////////////////////////////////
     //-------setup calculator logic----------
@@ -1848,12 +1890,8 @@ type GraphingCalculator() as graphingCalculator =
                function2D_yt_TextBox.BorderThickness <- Thickness(3.)
         | false -> ()
     let handleFunction2D_Graph_Button () =
-        match function2D_xt_TextBox.IsFocused with
-        | true -> 
-            handleGraphInput(Draw2DParametric)
-        | false -> 
-            do state <- {state with graph2DParametric = graphServices.toggle2DParametricState state.graph2DParametric}
-               handleGraphInput(Draw2DParametric)
+        do handleTextBoxXtPreviewMouseDown () 
+           handleGraphInput(Draw2DParametric)
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1942,8 +1980,10 @@ type GraphingCalculator() as graphingCalculator =
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
         closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))
-        option_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDraw2DBoundsFromOptions()))))
+        option_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
         option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
+        option2D_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
+        option2D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
         function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2D_Graph_Button ()))

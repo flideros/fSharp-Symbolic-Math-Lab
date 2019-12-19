@@ -13,13 +13,22 @@ module GraphingDomain =
     type X = X of NumberType
     type Y = Y of NumberType
     type Z = Z of NumberType
+    type T = T of NumberType
+    type Tstep = Tstep of NumberType
     type Size = {height:NumberType; width:NumberType}
     type SweepDirection =
             /// positive-angle direction
         | Clockwise
             /// negative-angle direction
         | CounterClockwise
-    type Drawing2DBounds = {upperX : X; lowerX : X; upperY : Y; lowerY : Y}
+    type DrawingOptions = 
+        { upperX : X; 
+          lowerX : X; 
+          upperY : Y; 
+          lowerY : Y;
+          upperT : T; 
+          lowerT : T;
+          Tstep  : Tstep }        
     
     // Geometry    
     type Point = 
@@ -59,7 +68,7 @@ module GraphingDomain =
     type Trace = {startPoint:Point; traceSegments:PathGeometry list}
     
     // Drawing
-    type DrawOp = Expression * Drawing2DBounds
+    type DrawOp = Expression * DrawingOptions
      
     // types to describe errors
     type DrawError = 
@@ -90,20 +99,20 @@ module GraphingDomain =
           pendingFunction : PendingFunction option;
           parenthetical : Parenthetical option;
           digits : ConventionalDomain.DigitAccumulator;
-          drawing2DBounds : Drawing2DBounds }
+          drawingOptions : DrawingOptions }
     type EvaluatedStateData =
         { evaluatedExpression : Expression
           pendingFunction : PendingFunction option;
-          drawing2DBounds : Drawing2DBounds}
+          drawingOptions : DrawingOptions}
     type ParentheticalStateData = 
         { evaluatedExpression : Expression
           parenthetical : Parenthetical;
           pendingFunction : PendingFunction option;
-          drawing2DBounds : Drawing2DBounds }
+          drawingOptions : DrawingOptions }
     type DrawStateData =  
         { traceExpression : Expression; 
           trace:Trace list; 
-          drawing2DBounds : Drawing2DBounds}    
+          drawingOptions : DrawingOptions}    
     type ErrorStateData = 
         { lastExpression : Expression; 
           error : DrawError }
@@ -116,7 +125,7 @@ module GraphingDomain =
         | Draw2DParametric
         | OpenParentheses
         | CloseParentheses
-        | GraphOptionSave of Drawing2DBounds
+        | GraphOptionSave of DrawingOptions
         | GraphOptionReset
         | ExpressionSquared
         | ExpressionToThePowerOf
@@ -148,8 +157,8 @@ module GraphingDomain =
     type GetNumberFromAccumulator = ExpressionStateData -> NumberType
     type GetDisplayFromGraphState = CalculatorState -> string
     type GetErrorFromExpression = Expression -> Error
-    type GetDrawing2DBoundsFromState = CalculatorState -> Drawing2DBounds
-    type SetDrawing2DBounds = CalculatorState * Drawing2DBounds -> CalculatorState
+    type GetDrawingOptionsFromState = CalculatorState -> DrawingOptions
+    type SetDrawingOptions = CalculatorState * DrawingOptions -> CalculatorState
     type GetDisplayFromPendingFunction = PendingFunction option -> string
     type GetExpressionFromParenthetical = Parenthetical option -> Expression
     type GetParentheticalFromExpression = Expression -> Parenthetical
@@ -169,8 +178,8 @@ module GraphingDomain =
         getNumberFromAccumulator :GetNumberFromAccumulator
         getDisplayFromExpression :GetDisplayFromExpression
         getDisplayFromGraphState :GetDisplayFromGraphState
-        getDrawing2DBoundsFromState :GetDrawing2DBoundsFromState
-        setDrawing2DBounds :SetDrawing2DBounds
+        getDrawingOptionsFromState :GetDrawingOptionsFromState
+        setDrawingOptions :SetDrawingOptions
         getDisplayFromPendingFunction :GetDisplayFromPendingFunction
         getExpressionFromParenthetical :GetExpressionFromParenthetical
         getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
@@ -183,11 +192,14 @@ module GraphingImplementation =
     open GraphingDomain
     open Utilities
 
-    let default2DBounds = 
+    let defaultOptions = 
         { upperX = X (Math.Pure.Quantity.Real 150.); 
           lowerX = X (Math.Pure.Quantity.Real -150.); 
           upperY = Y (Math.Pure.Quantity.Real 150.); 
-          lowerY = Y (Math.Pure.Quantity.Real -150.) }
+          lowerY = Y (Math.Pure.Quantity.Real -150.);
+          upperT = T (Math.Pure.Quantity.Real 150.); 
+          lowerT = T (Math.Pure.Quantity.Real -150.);
+          Tstep  = Tstep (Math.Pure.Quantity.Real 0.1) }
 
     let accumulateNonZeroDigit services digit accumulatorData =
         let digits = accumulatorData.digits
@@ -222,7 +234,7 @@ module GraphingImplementation =
         // helper to create a new EvaluatedState from a given displayExpression 
         // and the nextOp parameter
         let getNewState displayExpression =
-            let bounds = services.getDrawing2DBoundsFromState (ExpressionDigitAccumulatorState expressionStateData)
+            let options = services.getDrawingOptionsFromState (ExpressionDigitAccumulatorState expressionStateData)
             let newPendingFunc = 
                 nextFunc 
                 |> Option.map ( fun func -> displayExpression, func )
@@ -230,7 +242,7 @@ module GraphingImplementation =
             | true -> 
                 {evaluatedExpression = displayExpression; 
                  pendingFunction = newPendingFunc;
-                 drawing2DBounds = bounds }
+                 drawingOptions = options }
                 |> EvaluatedState
             | false ->
                 let newParenthetical = 
@@ -238,7 +250,7 @@ module GraphingImplementation =
                     | Parenthetical(_,po,p) -> Parenthetical(Expression.Zero,po,p)                
                 {evaluatedExpression = displayExpression; 
                  pendingFunction = newPendingFunc;
-                 drawing2DBounds = bounds; 
+                 drawingOptions = options; 
                  parenthetical = newParenthetical}
                 |> ParentheticalState
 
@@ -269,9 +281,9 @@ module GraphingImplementation =
     
     let doDrawOperation services drawOp =        
         let result = services.doDrawOperation drawOp 
-        let expression, bounds = drawOp
+        let expression, options = drawOp
         match result with
-        | Traces t -> DrawState {traceExpression = expression; trace = t; drawing2DBounds = bounds}
+        | Traces t -> DrawState {traceExpression = expression; trace = t; drawingOptions = options}
         | DrawError x ->  
             {lastExpression = expression; 
              error = x} 
@@ -280,300 +292,300 @@ module GraphingImplementation =
     let doDraw2DParametricOperation services stateData =        
         match stateData with 
         | EvaluatedState2DParametric (xT, EvaluatedState yT) ->
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         | EvaluatedState2DParametric (xT, ParentheticalState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         | EvaluatedState2DParametric (xT, ExpressionDigitAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         | EvaluatedState2DParametric (xT, ExpressionDecimalAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState        
         | EvaluatedState2DParametric (xT, DrawState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.traceExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.traceExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         
         | ParentheticalState2DParametric (xT, EvaluatedState yT) ->
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         | ParentheticalState2DParametric (xT, ParentheticalState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         | ParentheticalState2DParametric (xT, ExpressionDigitAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
         | ParentheticalState2DParametric (xT, ExpressionDecimalAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState        
         | ParentheticalState2DParametric (xT, DrawState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.evaluatedExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.traceExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.evaluatedExpression,xT.drawingOptions)
+            let drawOpYt = (yT.traceExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
                 |> DrawErrorState
 
         | ExpressionDigitAccumulatorState2DParametric (xT, EvaluatedState yT) ->
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
         | ExpressionDigitAccumulatorState2DParametric (xT, ParentheticalState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
         | ExpressionDigitAccumulatorState2DParametric (xT, ExpressionDigitAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
         | ExpressionDigitAccumulatorState2DParametric (xT, ExpressionDecimalAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState        
         | ExpressionDigitAccumulatorState2DParametric (xT, DrawState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.traceExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.traceExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
 
         | ExpressionDecimalAccumulatorState2DParametric (xT, EvaluatedState yT) ->
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
         | ExpressionDecimalAccumulatorState2DParametric (xT, ParentheticalState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
         | ExpressionDecimalAccumulatorState2DParametric (xT, ExpressionDigitAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
         | ExpressionDecimalAccumulatorState2DParametric (xT, ExpressionDecimalAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState        
         | ExpressionDecimalAccumulatorState2DParametric (xT, DrawState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.expression,xT.drawing2DBounds)
-            let drawOpYt = (yT.traceExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.expression,xT.drawingOptions)
+            let drawOpYt = (yT.traceExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
                 |> DrawErrorState
 
         | DrawState2DParametric (xT, EvaluatedState yT) ->
-            let drawOpXt = (xT.traceExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let drawOpXt = (xT.traceExpression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
                 |> DrawErrorState
         | DrawState2DParametric (xT, ParentheticalState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.traceExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.evaluatedExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.evaluatedExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.traceExpression,xT.drawingOptions)
+            let drawOpYt = (yT.evaluatedExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
                 |> DrawErrorState
         | DrawState2DParametric (xT, ExpressionDigitAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.traceExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.traceExpression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
                 |> DrawErrorState
         | DrawState2DParametric (xT, ExpressionDecimalAccumulatorState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.traceExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.expression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.expression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.traceExpression,xT.drawingOptions)
+            let drawOpYt = (yT.expression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
                 |> DrawErrorState        
         | DrawState2DParametric (xT, DrawState yT) ->
-            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawing2DBounds=yT.drawing2DBounds} |> EvaluatedState
-            let drawOpXt = (xT.traceExpression,xT.drawing2DBounds)
-            let drawOpYt = (yT.traceExpression,yT.drawing2DBounds)
+            let newEvaluatedStateYt = {evaluatedExpression=yT.traceExpression; pendingFunction = None; drawingOptions=yT.drawingOptions} |> EvaluatedState
+            let drawOpXt = (xT.traceExpression,xT.drawingOptions)
+            let drawOpYt = (yT.traceExpression,yT.drawingOptions)
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawing2DBounds = xT.drawing2DBounds},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
@@ -606,12 +618,12 @@ module GraphingImplementation =
         |> ParentheticalState
 
     let handleDrawState services stateData input = //Only the'Back' function implimented here.
-        let bounds = services.getDrawing2DBoundsFromState (DrawState stateData)
+        let options = services.getDrawingOptionsFromState (DrawState stateData)
         let expr = stateData.traceExpression        
         let newEvaluatedStateData =  
                 {evaluatedExpression=expr;  
                  pendingFunction=None;
-                 drawing2DBounds = bounds }
+                 drawingOptions = options }
         match input with         
         | CalcInput op -> 
             match op with
@@ -629,8 +641,8 @@ module GraphingImplementation =
                 newEvaluatedStateData
                 |> EvaluatedState 
             | Digit d -> DrawState stateData
-        | GraphOptionSave bounds -> services.setDrawing2DBounds (DrawState stateData,bounds)
-        | GraphOptionReset -> services.setDrawing2DBounds (DrawState stateData,default2DBounds)
+        | GraphOptionSave options -> services.setDrawingOptions (DrawState stateData,options)
+        | GraphOptionReset -> services.setDrawingOptions (DrawState stateData,defaultOptions)
         | Stack _input -> DrawState stateData
         | ExpressionInput _input -> DrawState stateData
         | Draw 
@@ -641,14 +653,14 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> DrawState stateData
 
     let handleEvaluatedState services stateData input =
-        let bounds = services.getDrawing2DBoundsFromState (EvaluatedState stateData)
+        let options = services.getDrawingOptionsFromState (EvaluatedState stateData)
         let zero = Number (Integer 0I)
         let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
                 {expression = expr;  
                  pendingFunction = stateData.pendingFunction;
                  digits = "";
-                 drawing2DBounds = bounds;
+                 drawingOptions = options;
                  parenthetical = None}
         match input with
         | Stack _ -> EvaluatedState stateData
@@ -667,7 +679,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Inverse); 
                               digits = "1";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None
                             } nextOp 
                     let finalState =
@@ -680,28 +692,28 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -719,7 +731,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Function.Quotient);
                               digits = "100";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None
                             } nextOp
                     let finalState =
@@ -731,7 +743,7 @@ module GraphingImplementation =
                                 { digits = ""; 
                                   pendingFunction = stateData.pendingFunction; 
                                   expression = ev.evaluatedExpression;
-                                  drawing2DBounds = bounds;
+                                  drawingOptions = options;
                                   parenthetical = None 
                                 } |> ExpressionDigitAccumulatorState 
                             | ParentheticalState p -> 
@@ -739,21 +751,21 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -771,7 +783,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Function.Root); 
                               digits = "0.5";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None 
                             } nextOp 
                     let finalState =
@@ -784,28 +796,28 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -823,7 +835,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Function.Times); 
                               digits = "-1";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None
                             } nextOp 
                     let finalState =
@@ -836,7 +848,7 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None 
                                     }
                             | ParentheticalState p -> 
@@ -844,21 +856,21 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -888,7 +900,7 @@ module GraphingImplementation =
             | Clear -> 
                 {evaluatedExpression = zero; 
                  pendingFunction=None;
-                 drawing2DBounds=stateData.drawing2DBounds}
+                 drawingOptions=stateData.drawingOptions}
                 |> EvaluatedState
             | MemoryRecall -> EvaluatedState stateData //not used
             | MemoryClear -> EvaluatedState stateData //not used
@@ -912,7 +924,7 @@ module GraphingImplementation =
                     { expression = expr;
                       pendingFunction = None; 
                       digits = "";
-                      drawing2DBounds = bounds;
+                      drawingOptions = options;
                       parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s),None)|> Some 
                     } 
                     |> ExpressionDigitAccumulatorState
@@ -921,7 +933,7 @@ module GraphingImplementation =
                      pendingFunction = Some pendingfunc;
                      digits = "";
                      parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s),None)|> Some;
-                     drawing2DBounds = stateData.drawing2DBounds}
+                     drawingOptions = stateData.drawingOptions}
                     |> ExpressionDigitAccumulatorState
             | Function f -> 
                 match f with
@@ -934,7 +946,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,op); 
                               digits = "0";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None
                             } nextOp 
                     let oldParentheticalState = (services.getParentheticalFromCalculatorState (stateData |> EvaluatedState))
@@ -946,25 +958,25 @@ module GraphingImplementation =
                             | EvaluatedState _ev ->
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState                            
                             | ParentheticalState _p -> 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | EvaluatedState2DParametric (ev,_) ->                                 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | ParentheticalState2DParametric (p,_) -> 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | ExpressionDigitAccumulatorState _ 
@@ -978,18 +990,18 @@ module GraphingImplementation =
                     finalState                    
                 | _ -> replacePendingFunction stateData (Some f)
         | Draw -> 
-            (stateData.evaluatedExpression,stateData.drawing2DBounds)
+            (stateData.evaluatedExpression,stateData.drawingOptions)
             |> doDrawOperation services         
         | Draw2DParametric -> EvaluatedState stateData
         | OpenParentheses -> 
             { evaluatedExpression = Expression.Zero
               pendingFunction = None //stateData.pendingFunction
               parenthetical = (services.getParentheticalFromCalculatorState (EvaluatedState stateData)) 
-              drawing2DBounds = stateData.drawing2DBounds } 
+              drawingOptions = stateData.drawingOptions } 
             |> ParentheticalState
         | CloseParentheses -> EvaluatedState stateData
-        | GraphOptionSave bounds -> services.setDrawing2DBounds (EvaluatedState stateData,bounds)
-        | GraphOptionReset -> services.setDrawing2DBounds (EvaluatedState stateData,default2DBounds)
+        | GraphOptionSave options -> services.setDrawingOptions (EvaluatedState stateData,options)
+        | GraphOptionReset -> services.setDrawingOptions (EvaluatedState stateData,defaultOptions)
         | ExpressionSquared ->
             let nextOp = None//Some op
             let newState = 
@@ -997,7 +1009,7 @@ module GraphingImplementation =
                     { expression = expr;
                       pendingFunction = Some (expr,ToThePowerOf); 
                       digits = "2";
-                      drawing2DBounds = bounds;
+                      drawingOptions = options;
                       parenthetical = None
                     } nextOp 
             let finalState =
@@ -1010,28 +1022,28 @@ module GraphingImplementation =
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=ev.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None}
                     | ParentheticalState p -> 
                         ExpressionDigitAccumulatorState 
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=p.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some p.parenthetical}
                     | EvaluatedState2DParametric (ev,_) -> 
                         ExpressionDigitAccumulatorState 
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=ev.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None}
                     | ParentheticalState2DParametric (p,_) -> 
                         ExpressionDigitAccumulatorState 
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=p.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some p.parenthetical}
                     | ExpressionDigitAccumulatorState _ 
                     | ExpressionDecimalAccumulatorState _                             
@@ -1045,14 +1057,14 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> replacePendingFunction stateData (Some ToThePowerOf)
 
     let handleParentheticalState services stateData input =
-        let bounds = services.getDrawing2DBoundsFromState (ParentheticalState stateData)
+        let options = services.getDrawingOptionsFromState (ParentheticalState stateData)
         let zero = Number (Integer 0I)
         let expr = stateData.evaluatedExpression        
         let newExpressionStateData =  
                 {expression = expr;  
                  pendingFunction = stateData.pendingFunction;
                  digits = "";
-                 drawing2DBounds = bounds;
+                 drawingOptions = options;
                  parenthetical = services.setExpressionToParenthetical (zero, Some stateData.parenthetical) |> Some  }
         match input with
         | Stack _ -> ParentheticalState stateData
@@ -1071,7 +1083,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Inverse); 
                               digits = "1";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some stateData.parenthetical
                             } nextOp 
                     let finalState =
@@ -1084,28 +1096,28 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -1123,7 +1135,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Function.Quotient);
                               digits = "100";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some stateData.parenthetical
                             } nextOp
                     let finalState =
@@ -1135,7 +1147,7 @@ module GraphingImplementation =
                                 { digits = ""; 
                                   pendingFunction = stateData.pendingFunction; 
                                   expression = ev.evaluatedExpression;
-                                  drawing2DBounds = bounds;
+                                  drawingOptions = options;
                                   parenthetical = None 
                                 } |> ExpressionDigitAccumulatorState 
                             | ParentheticalState p -> 
@@ -1143,21 +1155,21 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -1175,7 +1187,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Function.Root); 
                               digits = "0.5";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some stateData.parenthetical 
                             } nextOp 
                     let finalState =
@@ -1188,28 +1200,28 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState p -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -1227,7 +1239,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,Function.Times); 
                               digits = "-1";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some stateData.parenthetical
                             } nextOp 
                     let finalState =
@@ -1240,7 +1252,7 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None 
                                     }
                             | ParentheticalState p -> 
@@ -1248,21 +1260,21 @@ module GraphingImplementation =
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression = p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | EvaluatedState2DParametric (ev,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=ev.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = None}
                             | ParentheticalState2DParametric (p,_) -> 
                                 ExpressionDigitAccumulatorState 
                                     { digits = ""; 
                                       pendingFunction = stateData.pendingFunction; 
                                       expression=p.evaluatedExpression;
-                                      drawing2DBounds = bounds;
+                                      drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
@@ -1292,7 +1304,7 @@ module GraphingImplementation =
             | Clear -> 
                 {evaluatedExpression = zero; 
                  pendingFunction=None;
-                 drawing2DBounds=stateData.drawing2DBounds}
+                 drawingOptions=stateData.drawingOptions}
                 |> EvaluatedState
             | MemoryRecall -> ParentheticalState stateData //not used
             | MemoryClear -> ParentheticalState stateData //not used
@@ -1317,7 +1329,7 @@ module GraphingImplementation =
                     { expression = expr;
                       pendingFunction = None; 
                       digits = "";
-                      drawing2DBounds = bounds;
+                      drawingOptions = options;
                       parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s),Some stateData.parenthetical)|> Some
                     } 
                     |> ExpressionDigitAccumulatorState
@@ -1326,7 +1338,7 @@ module GraphingImplementation =
                      pendingFunction = Some pendingfunc;
                      digits = "";
                      parenthetical = services.setExpressionToParenthetical ((Expression.Symbol s),Some stateData.parenthetical) |> Some;
-                     drawing2DBounds = stateData.drawing2DBounds}
+                     drawingOptions = stateData.drawingOptions}
                     |> ExpressionDigitAccumulatorState
             | Function f -> 
                 match f with
@@ -1339,7 +1351,7 @@ module GraphingImplementation =
                             { expression = expr;
                               pendingFunction = Some (expr,op); 
                               digits = "0";
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some stateData.parenthetical
                             } nextOp 
                     let oldParentheticalState = (services.getParentheticalFromCalculatorState (stateData |> ParentheticalState))
@@ -1351,25 +1363,25 @@ module GraphingImplementation =
                             | EvaluatedState _ev ->
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState                            
                             | ParentheticalState _p -> 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | EvaluatedState2DParametric (ev,_) ->                                 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | ParentheticalState2DParametric (p,_) -> 
                                 { evaluatedExpression = Expression.Zero
                                   pendingFunction = None //stateData.pendingFunction
-                                  drawing2DBounds = stateData.drawing2DBounds
+                                  drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
                             | ExpressionDigitAccumulatorState _ 
@@ -1383,18 +1395,18 @@ module GraphingImplementation =
                     finalState
                 | _ -> replacePendingFunctionParenthetical stateData (Some f)
         | Draw -> 
-            (stateData.evaluatedExpression,stateData.drawing2DBounds)
+            (stateData.evaluatedExpression,stateData.drawingOptions)
             |> doDrawOperation services 
         | Draw2DParametric -> ParentheticalState stateData
         | OpenParentheses -> 
             { evaluatedExpression = Expression.Zero
               pendingFunction = None //stateData.pendingFunction
               parenthetical = (services.getParentheticalFromCalculatorState (ParentheticalState stateData)) 
-              drawing2DBounds = stateData.drawing2DBounds } 
+              drawingOptions = stateData.drawingOptions } 
             |> ParentheticalState
         | CloseParentheses -> services.closeParenthetical stateData
-        | GraphOptionSave bounds -> services.setDrawing2DBounds (ParentheticalState stateData,bounds)
-        | GraphOptionReset -> services.setDrawing2DBounds (ParentheticalState stateData,default2DBounds)
+        | GraphOptionSave options -> services.setDrawingOptions (ParentheticalState stateData,options)
+        | GraphOptionReset -> services.setDrawingOptions (ParentheticalState stateData,defaultOptions)
         | ExpressionSquared ->
             let nextOp = None//Some op
             let newState = 
@@ -1402,7 +1414,7 @@ module GraphingImplementation =
                     { expression = expr;
                       pendingFunction = Some (expr,ToThePowerOf); 
                       digits = "2";
-                      drawing2DBounds = bounds;
+                      drawingOptions = options;
                       parenthetical = None
                     } nextOp 
             let finalState =
@@ -1415,28 +1427,28 @@ module GraphingImplementation =
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=ev.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None}
                     | ParentheticalState p -> 
                         ExpressionDigitAccumulatorState 
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=p.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some p.parenthetical}
                     | EvaluatedState2DParametric (ev,_) -> 
                         ExpressionDigitAccumulatorState 
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=ev.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = None}
                     | ParentheticalState2DParametric (p,_) -> 
                         ExpressionDigitAccumulatorState 
                             { digits = ""; 
                               pendingFunction = stateData.pendingFunction; 
                               expression=p.evaluatedExpression;
-                              drawing2DBounds = bounds;
+                              drawingOptions = options;
                               parenthetical = Some p.parenthetical}
                     | ExpressionDigitAccumulatorState _ 
                     | ExpressionDecimalAccumulatorState _                             
@@ -1450,13 +1462,13 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> replacePendingFunctionParenthetical stateData (Some ToThePowerOf)
 
     let handleExpressionDigitAccumulatorState services stateData input =           
-           let bounds = services.getDrawing2DBoundsFromState (ExpressionDigitAccumulatorState stateData)           
+           let options = services.getDrawingOptionsFromState (ExpressionDigitAccumulatorState stateData)           
            let zero = Number (Integer 0I)  
            let newExpressionStateData =  
                    {expression = stateData.expression;  
                     pendingFunction = stateData.pendingFunction;
                     digits = "";
-                    drawing2DBounds = bounds;
+                    drawingOptions = options;
                     parenthetical = 
                         match stateData.parenthetical with 
                         | Some _ -> services.setExpressionToParenthetical (zero, stateData.parenthetical) |> Some;
@@ -1578,7 +1590,7 @@ module GraphingImplementation =
                | Clear -> 
                   {evaluatedExpression = zero; 
                    pendingFunction = None;
-                   drawing2DBounds = bounds } 
+                   drawingOptions = options } 
                   |> EvaluatedState
                | MemoryRecall -> ExpressionDigitAccumulatorState stateData //not used
                | MemoryClear -> ExpressionDigitAccumulatorState stateData //not used
@@ -1611,7 +1623,7 @@ module GraphingImplementation =
                                    digits = stateData.digits;} None                       
                        getFinalStateFrom newState
                | Function f -> getEvaluationState services stateData (Some f)
-           | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
+           | Draw -> doDrawOperation services (DrawOp (stateData.expression, options))
            | Draw2DParametric -> ExpressionDigitAccumulatorState stateData
            | OpenParentheses -> 
                 {stateData with 
@@ -1620,8 +1632,8 @@ module GraphingImplementation =
                         |> Some} 
                 |> ExpressionDigitAccumulatorState
            | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
-           | GraphOptionSave bounds -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,bounds)
-           | GraphOptionReset -> services.setDrawing2DBounds (ExpressionDigitAccumulatorState stateData,default2DBounds)
+           | GraphOptionSave options -> services.setDrawingOptions (ExpressionDigitAccumulatorState stateData,options)
+           | GraphOptionReset -> services.setDrawingOptions (ExpressionDigitAccumulatorState stateData,defaultOptions)
            | ExpressionSquared ->
                let nextOp = None
                let expr = 
@@ -1638,13 +1650,13 @@ module GraphingImplementation =
            | ExpressionToThePowerOf -> getEvaluationState services stateData (Some ToThePowerOf)
 
     let handleExpressionDecimalAccumulatorState services stateData input =
-        let bounds = services.getDrawing2DBoundsFromState (ExpressionDecimalAccumulatorState stateData)        
+        let options = services.getDrawingOptionsFromState (ExpressionDecimalAccumulatorState stateData)        
         let zero = Number (Integer 0I)  
         let newExpressionStateData =  
                 {expression = stateData.expression;  
                  pendingFunction = stateData.pendingFunction;
                  digits = "";
-                 drawing2DBounds = bounds;
+                 drawingOptions = options;
                  parenthetical = 
                      match stateData.parenthetical with 
                      | Some _ -> services.setExpressionToParenthetical (zero, stateData.parenthetical) |> Some;
@@ -1763,7 +1775,7 @@ module GraphingImplementation =
             | Clear -> 
                {evaluatedExpression = zero; 
                 pendingFunction = None;
-                drawing2DBounds = bounds } 
+                drawingOptions = options } 
                |> EvaluatedState
             | MemoryRecall -> ExpressionDecimalAccumulatorState stateData //not used
             | MemoryClear -> ExpressionDecimalAccumulatorState stateData //not used
@@ -1796,7 +1808,7 @@ module GraphingImplementation =
                                 digits = stateData.digits;} None                       
                     getFinalStateFrom newState
             | Function f -> getEvaluationState services stateData (Some f)
-        | Draw -> doDrawOperation services (DrawOp (stateData.expression, bounds))
+        | Draw -> doDrawOperation services (DrawOp (stateData.expression, options))
         | Draw2DParametric -> ExpressionDecimalAccumulatorState stateData
         | OpenParentheses -> 
              {stateData with 
@@ -1805,8 +1817,8 @@ module GraphingImplementation =
                      |> Some} 
              |> ExpressionDigitAccumulatorState
         | CloseParentheses -> stateData |> ExpressionDigitAccumulatorState
-        | GraphOptionSave bounds -> services.setDrawing2DBounds (ExpressionDecimalAccumulatorState stateData,bounds)
-        | GraphOptionReset -> services.setDrawing2DBounds (ExpressionDecimalAccumulatorState stateData,default2DBounds)
+        | GraphOptionSave options -> services.setDrawingOptions (ExpressionDecimalAccumulatorState stateData,options)
+        | GraphOptionReset -> services.setDrawingOptions (ExpressionDecimalAccumulatorState stateData,defaultOptions)
         | ExpressionSquared ->
             let nextOp = None//Some op
             let expr = 
@@ -1823,7 +1835,7 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> getEvaluationState services stateData (Some ToThePowerOf)
 
     let handleDrawErrorState services stateData input =           
-        let bounds = services.getDrawing2DBoundsFromState (DrawErrorState stateData)
+        let options = services.getDrawingOptionsFromState (DrawErrorState stateData)
         match input with
         | Stack _ -> DrawErrorState stateData
         | CalcInput op -> 
@@ -1841,20 +1853,20 @@ module GraphingImplementation =
             | Clear ->   
                 {evaluatedExpression = stateData.lastExpression;  
                 pendingFunction = None;
-                drawing2DBounds = bounds}
+                drawingOptions = options}
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
         | Draw2DParametric -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
-        | GraphOptionSave bounds -> DrawErrorState stateData
+        | GraphOptionSave options -> DrawErrorState stateData
         | ExpressionSquared
         | ExpressionToThePowerOf
         | GraphOptionReset -> DrawErrorState stateData
 
     let handleExpressionErrorState services stateData input =
-        let bounds = services.getDrawing2DBoundsFromState (ExpressionErrorState stateData)
+        let options = services.getDrawingOptionsFromState (ExpressionErrorState stateData)
         match input with
         | Stack _ -> DrawErrorState stateData
         | CalcInput op -> 
@@ -1872,14 +1884,14 @@ module GraphingImplementation =
             | Clear ->   
                 {evaluatedExpression = stateData.lastExpression;  
                 pendingFunction = None;
-                drawing2DBounds = bounds}
+                drawingOptions = options}
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
         | Draw2DParametric -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
-        | GraphOptionSave bounds -> DrawErrorState stateData
+        | GraphOptionSave _options -> DrawErrorState stateData
         | ExpressionSquared
         | ExpressionToThePowerOf
         | GraphOptionReset -> DrawErrorState stateData
@@ -2024,54 +2036,59 @@ module GraphServices =
         | Some x -> x.ToString()
         | None -> ""
 
-    let getDrawing2DBoundsFromState :GetDrawing2DBoundsFromState = 
+    let getDrawingOptionsFromState :GetDrawingOptionsFromState = 
         fun g -> 
             match g with 
-            | EvaluatedState e -> e.drawing2DBounds
-            | DrawState d -> d.drawing2DBounds
-            | ExpressionDecimalAccumulatorState e -> e.drawing2DBounds
-            | ExpressionDigitAccumulatorState e -> e.drawing2DBounds
-            | ParentheticalState p -> p.drawing2DBounds            
-            | EvaluatedState2DParametric (stateData,_state) -> stateData.drawing2DBounds
-            | DrawState2DParametric (stateData,_state) -> stateData.drawing2DBounds
-            | ParentheticalState2DParametric (stateData,_state) -> stateData.drawing2DBounds
-            | ExpressionDigitAccumulatorState2DParametric (stateData,_tate) -> stateData.drawing2DBounds
-            | ExpressionDecimalAccumulatorState2DParametric (stateData,_state) -> stateData.drawing2DBounds            
-            | _ -> GraphingImplementation.default2DBounds
+            | EvaluatedState e -> e.drawingOptions
+            | DrawState d -> d.drawingOptions
+            | ExpressionDecimalAccumulatorState e -> e.drawingOptions
+            | ExpressionDigitAccumulatorState e -> e.drawingOptions
+            | ParentheticalState p -> p.drawingOptions            
+            | EvaluatedState2DParametric (stateData,_state) -> stateData.drawingOptions
+            | DrawState2DParametric (stateData,_state) -> stateData.drawingOptions
+            | ParentheticalState2DParametric (stateData,_state) -> stateData.drawingOptions
+            | ExpressionDigitAccumulatorState2DParametric (stateData,_tate) -> stateData.drawingOptions
+            | ExpressionDecimalAccumulatorState2DParametric (stateData,_state) -> stateData.drawingOptions            
+            | _ -> GraphingImplementation.defaultOptions
 
-    let setDrawing2DBounds :SetDrawing2DBounds = 
+    let setDrawingOptions :SetDrawingOptions = 
         fun g ->             
-            let state, bounds = g
+            let state, options = g
             match state with 
-            | EvaluatedState e -> {e with drawing2DBounds = bounds} |> EvaluatedState
-            | DrawState d -> {d with drawing2DBounds = bounds} |> DrawState
-            | ExpressionDecimalAccumulatorState e -> {e with drawing2DBounds = bounds} |> ExpressionDecimalAccumulatorState
-            | ExpressionDigitAccumulatorState e -> {e with drawing2DBounds = bounds} |> ExpressionDigitAccumulatorState
-            | ParentheticalState p -> {p with drawing2DBounds = bounds} |> ParentheticalState            
-            | EvaluatedState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> EvaluatedState2DParametric 
-            | DrawState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> DrawState2DParametric
-            | ParentheticalState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ParentheticalState2DParametric
-            | ExpressionDigitAccumulatorState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ExpressionDigitAccumulatorState2DParametric
-            | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> ({stateData with drawing2DBounds = bounds},state) |> ExpressionDecimalAccumulatorState2DParametric            
+            | EvaluatedState e -> {e with drawingOptions = options} |> EvaluatedState
+            | DrawState d -> {d with drawingOptions = options} |> DrawState
+            | ExpressionDecimalAccumulatorState e -> {e with drawingOptions = options} |> ExpressionDecimalAccumulatorState
+            | ExpressionDigitAccumulatorState e -> {e with drawingOptions = options} |> ExpressionDigitAccumulatorState
+            | ParentheticalState p -> {p with drawingOptions = options} |> ParentheticalState            
+            | EvaluatedState2DParametric (stateData,state) -> ({stateData with drawingOptions = options},state) |> EvaluatedState2DParametric 
+            | DrawState2DParametric (stateData,state) -> ({stateData with drawingOptions = options},state) |> DrawState2DParametric
+            | ParentheticalState2DParametric (stateData,state) -> ({stateData with drawingOptions = options},state) |> ParentheticalState2DParametric
+            | ExpressionDigitAccumulatorState2DParametric (stateData,state) -> ({stateData with drawingOptions = options},state) |> ExpressionDigitAccumulatorState2DParametric
+            | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> ({stateData with drawingOptions = options},state) |> ExpressionDecimalAccumulatorState2DParametric            
             | _ -> state
     
-    let doDraw2DParametricOperation resolution (drawOpXt:DrawOp, drawOpYt:DrawOp):DrawOperationResult = 
-        let expressionXt, drawBoundsX = drawOpXt
-        let expressionYt, drawBoundsY = drawOpYt
+    let doDraw2DParametricOperation resolution (drawOpXt:DrawOp, drawOpYt:DrawOp):DrawOperationResult =         
+        let expressionXt, drawOptionsX = drawOpXt
+        let expressionYt, drawOptionsY = drawOpYt
         
         let getValueFrom numberType =
             match numberType with
             | Real r -> r
             | Integer i -> float i
             | _ -> System.Double.NaN
-        let valueOfX coordinate = match coordinate with X x -> getValueFrom x
+        let valueOfT coordinate = match coordinate with T t -> getValueFrom t
         let valueOfY coordinate = match coordinate with Y y -> getValueFrom y
-        let xMin, xMax, yMin, yMax = 
-            valueOfX drawBoundsX.lowerX, 
-            valueOfX drawBoundsX.upperX, 
-            valueOfY drawBoundsY.lowerY, 
-            valueOfY drawBoundsY.upperY                 
+        let valueOfX coordinate = match coordinate with X x -> getValueFrom x
+        let tMin, tMax, yMin, yMax, xMin, xMax = 
+            valueOfT drawOptionsX.lowerT, 
+            valueOfT drawOptionsX.upperT, 
+            valueOfY drawOptionsY.lowerY, 
+            valueOfY drawOptionsY.upperY, 
+            valueOfX drawOptionsX.lowerX, 
+            valueOfX drawOptionsX.upperX
         
+        let tStep = match drawOptionsX.Tstep with | Tstep (Real x) -> x | _ -> System.Double.NaN
+
         let makePoint xExpression yExpression = 
             let xValue =
                 match xExpression with
@@ -2090,7 +2107,7 @@ module GraphServices =
             |> ExpressionStructure.substitute (Expression.Symbol (Variable "t"), tValue)            
             |> ExpressionFunction.evaluateRealPowersOfExpression            
             
-        let partitionInfinity = 
+        let partitionInfinityY = 
             let rec loop acc lcc = function
                 | (Number(Real x), Number(Real y))::pl when y <> infinity && y <> -infinity -> loop ((Number(Real x),Number(Real y))::acc) lcc pl
                 | [] -> acc::lcc //, []
@@ -2110,18 +2127,42 @@ module GraphServices =
                           | _ -> (fst pl.Head, Number(Real 150.))
                     loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
             loop [] []
-            
-        let t = seq {for x in xMin .. resolution .. xMax -> Number(Real x)}
+
+        let partitionInfinityX inputList = 
+            let partition = 
+                let rec loop acc lcc = function
+                    | (Number(Real x), Number(Real y))::pl when x <> infinity && x <> -infinity -> loop ((Number(Real x),Number(Real y))::acc) lcc pl
+                    | [] -> acc::lcc //, []
+                    | pl -> 
+                        let infinityPoint = 
+                            match pl,acc with
+                            | (Number(Real x0),Number(Real y0))::_plTail,(Number(Real x1),Number(Real y1))::_accTail when x0 =  infinity && x1 <= 0. -> (Number(Real xMin),Number(Real y0))
+                            | (Number(Real x0),Number(Real y0))::_plTail,(Number(Real x1),Number(Real y1))::_accTail when x0 = -infinity && x1 <= 0. -> (Number(Real xMin),Number(Real y0))
+                            | (Number(Real x0),Number(Real y0))::_plTail,(Number(Real x1),Number(Real y1))::_accTail when x0 =  infinity && x1 >= 0. -> (Number(Real xMax),Number(Real y0))
+                            | (Number(Real x0),Number(Real y0))::_plTail,(Number(Real x1),Number(Real y1))::_accTail when x0 = -infinity && x1 >= 0. -> (Number(Real xMax),Number(Real y0))                    
+                            | [],acc -> (Number(Real xMax), snd acc.Head)                        
+                            | _      -> (Number(Real xMax), snd  pl.Head)
+                        let p =
+                              match pl with
+                              | (Number(Real x0),Number(Real y0))::(Number(Real x1),Number(Real y1))::_t when x1 <= 0. -> (Number(Real xMin),Number(Real  y0))
+                              | (Number(Real x0),Number(Real y0))::(Number(Real x1),Number(Real y1))::_t when x1 >  0. -> (Number(Real xMax),Number(Real  y0))
+                              | _ -> (Number(Real 150.), snd pl.Head)//pl.Head//
+                        loop [p] ((List.rev (infinityPoint::acc))::lcc) pl.Tail             
+                loop [] []
+            List.collect (fun x -> partition x) inputList
+
+        let t = seq {for x in tMin .. tStep .. tMax -> Number(Real x)}
         let xCoordinates = Seq.map (fun x -> evaluate expressionXt x ) t
-        let yCoordinates = Seq.map (fun y -> evaluate expressionYt y ) t       
+        let yCoordinates = Seq.map (fun y -> evaluate expressionYt y ) t
         
         let coordinatePairs = 
             Seq.zip xCoordinates yCoordinates 
             |> Seq.filter (fun (x,_y) -> match x with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
             |> Seq.filter (fun (_x,y) -> match y with | Number(Real r) when System.Double.IsNaN(r) = true -> false | _ -> true)
             |> Seq.toList
-            |> partitionInfinity
-
+            |> partitionInfinityY
+            |> partitionInfinityX
+        
         let points = List.map (fun pl -> seq { for (x,y) in pl do yield makePoint x y }) coordinatePairs 
                     
         let checkForUndefinedPoints = 
@@ -2388,7 +2429,7 @@ module GraphServices =
                 | ExpressionSuccess ex ->
                     { evaluatedExpression = ex
                       pendingFunction = parentheticalStateData.pendingFunction
-                      drawing2DBounds = parentheticalStateData.drawing2DBounds }
+                      drawingOptions = parentheticalStateData.drawingOptions }
                     |> EvaluatedState
             //
             | Parenthetical (_, None, Some (Parenthetical(_,Some (e,po),None))) -> parentheticalStateData |> ParentheticalState
@@ -2442,8 +2483,8 @@ module GraphServices =
         getNumberFromAccumulator = getNumberFromAccumulator
         getDisplayFromExpression = getDisplayFromExpression
         getDisplayFromGraphState = getDisplayFromGraphState
-        getDrawing2DBoundsFromState = getDrawing2DBoundsFromState
-        setDrawing2DBounds = setDrawing2DBounds
+        getDrawingOptionsFromState = getDrawingOptionsFromState
+        setDrawingOptions = setDrawingOptions
         getDisplayFromPendingFunction = getDisplayFromPendingFunction
         getExpressionFromParenthetical = getExpressionFromParenthetical
         getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
