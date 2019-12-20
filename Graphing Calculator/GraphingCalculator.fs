@@ -28,6 +28,7 @@ type View =
 
 type Model =
     | Trace of Trace list
+    | Model3D of Viewport3D
 
 type ViewPoint = 
     | Pt of System.Windows.Point
@@ -1399,7 +1400,7 @@ type GraphingCalculator() as graphingCalculator =
     
 //  ----- Getters       
     // a function that gets active model
-    let getActivetModel (s:State) = 
+    let getActive2DModel (s:State) = 
         let convertPoint = fun point ->            
             match point with
             | (Point(X (Math.Pure.Quantity.Real x),
@@ -1418,7 +1419,10 @@ type GraphingCalculator() as graphingCalculator =
                                             y |> applyScaleY |> mapYToCanvas),true )
             | _ -> System.Windows.Media.LineSegment( System.Windows.Point(0.,0.),true )        
         
-        let models = match s.model with | Trace t -> t
+        let models = 
+            match s.model with 
+            | Trace t -> t
+            | Model3D _ -> []
         
         let getPathGeometry model = 
             let segments = List.map (fun segment -> convertSegment segment) model.traceSegments
@@ -1786,7 +1790,7 @@ type GraphingCalculator() as graphingCalculator =
             do  state <- { state with graph = newState }
                 canvas.Children.Clear()
                 setActivetModel (Trace d.trace)                    
-            let models = getActivetModel state    
+            let models = getActive2DModel state    
             do  List.iter (
                     fun (model : System.Windows.Shapes.Path) -> 
                          model.RenderTransform <- ScaleTransform(scaleX = (fst state.scale), scaleY = (snd state.scale), centerX = mapXToCanvas 0., centerY = mapYToCanvas 0.)
@@ -1822,7 +1826,7 @@ type GraphingCalculator() as graphingCalculator =
             do state <- { state with graph2DParametric = newState }
                canvas.Children.Clear()
                setActivetModel (Trace d.trace)                    
-            let models = getActivetModel state    
+            let models = getActive2DModel state    
             do  List.iter (
                     fun( model : System.Windows.Shapes.Path) -> 
                          model.RenderTransform <- ScaleTransform(scaleX = (fst state.scale), scaleY = (snd state.scale), centerX = mapXToCanvas 0., centerY = mapYToCanvas 0.)
@@ -1987,6 +1991,8 @@ type GraphingCalculator() as graphingCalculator =
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
         function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2D_Graph_Button ()))
+        function2D_Spiral_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(SpiralExample)))
+        function2D_Ellipse_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(EllipseExample)))
 
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))

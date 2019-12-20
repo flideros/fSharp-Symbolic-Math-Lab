@@ -129,6 +129,8 @@ module GraphingDomain =
         | GraphOptionReset
         | ExpressionSquared
         | ExpressionToThePowerOf
+        | SpiralExample
+        | EllipseExample
 
     // States
     type CalculatorState =         
@@ -616,7 +618,35 @@ module GraphingImplementation =
         | None, Some func -> {evaluatedStateData with pendingFunction = Some (evaluatedStateData.evaluatedExpression,func)}
         | _ -> evaluatedStateData
         |> ParentheticalState
+    
+    let spiral_ExampleState =
+        let xT = NaryOp (Product,[UnaryOp (Sin,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
+        let yT = NaryOp (Product,[UnaryOp (Cos,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
+        let options = {defaultOptions with 
+                        upperT = T (Real 31.415926535897932384626433832795)
+                        lowerT = T (Real 0.0)}
+        ({ evaluatedExpression = xT
+           pendingFunction = None;
+           drawingOptions = options}, 
+           EvaluatedState 
+            { evaluatedExpression = yT
+              pendingFunction = None;
+              drawingOptions = options }) |> EvaluatedState2DParametric
 
+    let ellipse_ExampleState =
+        let xT = NaryOp (Product,[UnaryOp (Sin,Expression.Symbol (Variable "t")); Expression.Number (Real 20.0)])
+        let yT = NaryOp (Product,[UnaryOp (Cos,Expression.Symbol (Variable "t")); Expression.Number (Real 40.0)])
+        let options = {defaultOptions with 
+                        upperT = T (Real 31.415926535897932384626433832795)
+                        lowerT = T (Real 0.0)}
+        ({ evaluatedExpression = xT
+           pendingFunction = None;
+           drawingOptions = options}, 
+           EvaluatedState 
+            { evaluatedExpression = yT
+              pendingFunction = None;
+              drawingOptions = options }) |> EvaluatedState2DParametric       
+    
     let handleDrawState services stateData input = //Only the'Back' function implimented here.
         let options = services.getDrawingOptionsFromState (DrawState stateData)
         let expr = stateData.traceExpression        
@@ -651,6 +681,8 @@ module GraphingImplementation =
         | CloseParentheses         
         | ExpressionSquared
         | ExpressionToThePowerOf -> DrawState stateData
+        | SpiralExample -> spiral_ExampleState
+        | EllipseExample -> ellipse_ExampleState
 
     let handleEvaluatedState services stateData input =
         let options = services.getDrawingOptionsFromState (EvaluatedState stateData)
@@ -1055,7 +1087,9 @@ module GraphingImplementation =
                     | ExpressionDecimalAccumulatorState2DParametric _ -> newState
             finalState
         | ExpressionToThePowerOf -> replacePendingFunction stateData (Some ToThePowerOf)
-
+        | SpiralExample -> spiral_ExampleState
+        | EllipseExample -> ellipse_ExampleState
+        
     let handleParentheticalState services stateData input =
         let options = services.getDrawingOptionsFromState (ParentheticalState stateData)
         let zero = Number (Integer 0I)
@@ -1460,7 +1494,9 @@ module GraphingImplementation =
                     | ExpressionDecimalAccumulatorState2DParametric _ -> newState
             finalState
         | ExpressionToThePowerOf -> replacePendingFunctionParenthetical stateData (Some ToThePowerOf)
-
+        | SpiralExample -> spiral_ExampleState
+        | EllipseExample -> ellipse_ExampleState
+        
     let handleExpressionDigitAccumulatorState services stateData input =           
            let options = services.getDrawingOptionsFromState (ExpressionDigitAccumulatorState stateData)           
            let zero = Number (Integer 0I)  
@@ -1648,7 +1684,9 @@ module GraphingImplementation =
                              digits = "2";} nextOp 
                getFinalStateFrom newState
            | ExpressionToThePowerOf -> getEvaluationState services stateData (Some ToThePowerOf)
-
+           | SpiralExample -> spiral_ExampleState
+           | EllipseExample -> ellipse_ExampleState
+           
     let handleExpressionDecimalAccumulatorState services stateData input =
         let options = services.getDrawingOptionsFromState (ExpressionDecimalAccumulatorState stateData)        
         let zero = Number (Integer 0I)  
@@ -1833,7 +1871,9 @@ module GraphingImplementation =
                           digits = "2";} nextOp 
             getFinalStateFrom newState
         | ExpressionToThePowerOf -> getEvaluationState services stateData (Some ToThePowerOf)
-
+        | SpiralExample -> spiral_ExampleState
+        | EllipseExample -> ellipse_ExampleState
+        
     let handleDrawErrorState services stateData input =           
         let options = services.getDrawingOptionsFromState (DrawErrorState stateData)
         match input with
@@ -1864,7 +1904,9 @@ module GraphingImplementation =
         | ExpressionSquared
         | ExpressionToThePowerOf
         | GraphOptionReset -> DrawErrorState stateData
-
+        | SpiralExample -> spiral_ExampleState
+        | EllipseExample -> ellipse_ExampleState
+        
     let handleExpressionErrorState services stateData input =
         let options = services.getDrawingOptionsFromState (ExpressionErrorState stateData)
         match input with
@@ -1895,21 +1937,9 @@ module GraphingImplementation =
         | ExpressionSquared
         | ExpressionToThePowerOf
         | GraphOptionReset -> DrawErrorState stateData
-    
-    let spiral_ExampleState =
-        let xT = NaryOp (Product,[UnaryOp (Sin,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
-        let yT = NaryOp (Product,[UnaryOp (Cos,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
-        let options = {defaultOptions with 
-                        upperT = T (Real 31.415926535897932384626433832795)
-                        lowerT = T (Real 0.0)}
-        ({ evaluatedExpression = xT
-           pendingFunction = None;
-           drawingOptions = options}, 
-           EvaluatedState 
-            { evaluatedExpression = yT
-              pendingFunction = None;
-              drawingOptions = options })        
-
+        | SpiralExample -> spiral_ExampleState
+        | EllipseExample -> ellipse_ExampleState
+        
     let createEvaluate (services:GraphServices) : Evaluate = 
          // create some local functions with partially applied services
          let handleDrawState = handleDrawState services
@@ -2081,7 +2111,7 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState2DParametric (stateData,state) -> ({stateData with drawingOptions = options},state) |> ExpressionDecimalAccumulatorState2DParametric            
             | _ -> state
     
-    let doDraw2DParametricOperation resolution (drawOpXt:DrawOp, drawOpYt:DrawOp):DrawOperationResult =         
+    let doDraw2DParametricOperation (drawOpXt:DrawOp, drawOpYt:DrawOp):DrawOperationResult =         
         let expressionXt, drawOptionsX = drawOpXt
         let expressionYt, drawOptionsY = drawOpYt
         
@@ -2488,7 +2518,7 @@ module GraphServices =
 
     let createGraphServices () = {
         doDrawOperation =  doDrawOperation (0.1)
-        doDraw2DParametricOperation =  doDraw2DParametricOperation (0.1)
+        doDraw2DParametricOperation =  doDraw2DParametricOperation
         doExpressionOperation =  doExpressionOperation
         accumulateSymbol =  accumulateSymbol
         accumulateZero = accumulateZero (15)
