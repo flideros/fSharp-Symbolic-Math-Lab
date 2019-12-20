@@ -430,7 +430,7 @@ type GraphingCalculator() as graphingCalculator =
 
         grid
     let function3D_fxLabel_TextBlock = 
-        let tb = FunctionTextBlock(Text = "fx = ")
+        let tb = FunctionTextBlock(Text = "fx(u,v) = ")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function3D_fx_TextBox = 
@@ -438,7 +438,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function3D_fyLabel_TextBlock = 
-        let tb = FunctionTextBlock(Text = "fy = ")
+        let tb = FunctionTextBlock(Text = "fy(u,v) = ")
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function3D_fy_TextBox = 
@@ -447,7 +447,7 @@ type GraphingCalculator() as graphingCalculator =
             tb.SetValue(Grid.ColumnProperty,1)
         tb    
     let function3D_fzLabel_TextBlock = 
-        let tb = FunctionTextBlock(Text = "fz = ")
+        let tb = FunctionTextBlock(Text = "fz(u,v) = ")
         do tb.SetValue(Grid.RowProperty,2)
         tb
     let function3D_fz_TextBox = 
@@ -1893,9 +1893,17 @@ type GraphingCalculator() as graphingCalculator =
                function2D_xt_TextBox.BorderThickness <- Thickness(1.)
                function2D_yt_TextBox.BorderThickness <- Thickness(3.)
         | false -> ()
-    let handleFunction2D_Graph_Button () =
-        do handleTextBoxXtPreviewMouseDown () 
-           handleGraphInput(Draw2DParametric)
+    let handleFunction2DButtons (input) =        
+        match  input = Draw2DParametric  with 
+        | false -> 
+            handleTextBoxXtPreviewMouseDown () 
+            handleGraphInput(input)
+            handleTextBoxYtPreviewMouseDown ()
+            setDisplayedText (graphServices.getDisplayFromGraphState state.graph2DParametric)
+        | true -> 
+            handleTextBoxXtPreviewMouseDown () 
+            handleGraphInput(input)
+        
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1990,9 +1998,9 @@ type GraphingCalculator() as graphingCalculator =
         option2D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
-        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2D_Graph_Button ()))
-        function2D_Spiral_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(SpiralExample)))
-        function2D_Ellipse_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(EllipseExample)))
+        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons (Draw2DParametric)))
+        function2D_Spiral_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(SpiralExample)))
+        function2D_Ellipse_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(EllipseExample)))
 
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
