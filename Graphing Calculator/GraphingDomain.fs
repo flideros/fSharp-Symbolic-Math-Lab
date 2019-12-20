@@ -117,6 +117,8 @@ module GraphingDomain =
         { lastExpression : Expression; 
           error : DrawError }
 
+    type Dim3StateData = {x:CalculatorState;y:CalculatorState;z:CalculatorState}
+
     type CalculatorInput =
         | ExpressionInput of ExpressionInput
         | CalcInput of ConventionalDomain.CalculatorInput
@@ -147,6 +149,12 @@ module GraphingDomain =
         | ParentheticalState2DParametric of ParentheticalStateData * CalculatorState
         | ExpressionDigitAccumulatorState2DParametric of ExpressionStateData * CalculatorState
         | ExpressionDecimalAccumulatorState2DParametric of ExpressionStateData * CalculatorState
+        // 3D Parametric
+        | EvaluatedState3DParametric of EvaluatedStateData * Dim3StateData
+        | DrawState3DParametric of DrawStateData * Dim3StateData
+        | ParentheticalState3DParametric of ParentheticalStateData * Dim3StateData
+        | ExpressionDigitAccumulatorState3DParametric of ExpressionStateData * Dim3StateData
+        | ExpressionDecimalAccumulatorState3DParametric of ExpressionStateData * Dim3StateData
       
     type Evaluate = CalculatorInput * CalculatorState -> CalculatorState
 
@@ -747,6 +755,20 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}                            
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -754,7 +776,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _ 
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | Percent ->
                     let nextOp = None//Some op
