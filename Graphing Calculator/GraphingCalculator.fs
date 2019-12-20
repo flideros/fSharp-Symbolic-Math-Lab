@@ -1339,7 +1339,6 @@ type GraphingCalculator() as graphingCalculator =
         let orginPoint = System.Windows.Point(x,y)
         do  context.DrawEllipse(color,pen,orginPoint,1.,1.)
             context.Close()
-
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
