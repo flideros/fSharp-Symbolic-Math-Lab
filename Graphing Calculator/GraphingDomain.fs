@@ -117,7 +117,7 @@ module GraphingDomain =
         { lastExpression : Expression; 
           error : DrawError }
 
-    type Dim3StateData = {x:CalculatorState;y:CalculatorState;z:CalculatorState}
+    type Dim3StateData = {x:Expression;y:Expression;z:Expression}
 
     type CalculatorInput =
         | ExpressionInput of ExpressionInput
@@ -603,6 +603,9 @@ module GraphingImplementation =
         
         | _ -> {lastExpression = Expression.Zero; error = FailedToCreateTrace} |> DrawErrorState
 
+    let doDraw3DParametricOperation services (dim3StateData:Dim3StateData) = ()
+        //TODO
+
     let doExpressionOperation services stateData = services.doExpressionOperation stateData
         
     let replacePendingFunction (evaluatedStateData:EvaluatedStateData) nextFun =         
@@ -824,6 +827,20 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -831,7 +848,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | CalculatorMathOp.Root ->
                     let nextOp = None//Some op
@@ -876,14 +896,31 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
                             | DrawErrorState _
-                            | ExpressionErrorState _                             
-                            | DrawState2DParametric _                            
+                            | ExpressionErrorState _
+                            | DrawState2DParametric _
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | ChangeSign ->
                     let nextOp = None//Some op
@@ -929,14 +966,31 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
-                            | ExpressionDecimalAccumulatorState _                             
+                            | ExpressionDecimalAccumulatorState _
                             | DrawState _
                             | DrawErrorState _
-                            | ExpressionErrorState _                             
-                            | DrawState2DParametric _                            
+                            | ExpressionErrorState _
+                            | DrawState2DParametric _
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | MemoryAdd 
                 | MemorySubtract -> EvaluatedState stateData         
@@ -1036,6 +1090,18 @@ module GraphingImplementation =
                                   drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
+                            | EvaluatedState3DParametric (ev,_) ->                                 
+                                { evaluatedExpression = Expression.Zero
+                                  pendingFunction = None //stateData.pendingFunction
+                                  drawingOptions = stateData.drawingOptions
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
+                                } |> ParentheticalState
+                            | ParentheticalState3DParametric (p,_) -> 
+                                { evaluatedExpression = Expression.Zero
+                                  pendingFunction = None //stateData.pendingFunction
+                                  drawingOptions = stateData.drawingOptions
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
+                                } |> ParentheticalState
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -1043,7 +1109,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newEvaluationState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newEvaluationState
                     finalState                    
                 | _ -> replacePendingFunction stateData (Some f)
         | Draw -> 
@@ -1102,14 +1171,31 @@ module GraphingImplementation =
                               expression=p.evaluatedExpression;
                               drawingOptions = options;
                               parenthetical = Some p.parenthetical}
+                    | EvaluatedState3DParametric (ev,_) -> 
+                        ExpressionDigitAccumulatorState 
+                            { digits = ""; 
+                              pendingFunction = stateData.pendingFunction; 
+                              expression=ev.evaluatedExpression;
+                              drawingOptions = options;
+                              parenthetical = None}
+                    | ParentheticalState3DParametric (p,_) -> 
+                        ExpressionDigitAccumulatorState 
+                            { digits = ""; 
+                              pendingFunction = stateData.pendingFunction; 
+                              expression=p.evaluatedExpression;
+                              drawingOptions = options;
+                              parenthetical = Some p.parenthetical}
                     | ExpressionDigitAccumulatorState _ 
                     | ExpressionDecimalAccumulatorState _                             
                     | DrawState _
                     | DrawErrorState _
-                    | ExpressionErrorState _                             
-                    | DrawState2DParametric _                            
+                    | ExpressionErrorState _
+                    | DrawState2DParametric _
                     | ExpressionDigitAccumulatorState2DParametric _
-                    | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                    | ExpressionDecimalAccumulatorState2DParametric _ 
+                    | DrawState3DParametric _
+                    | ExpressionDigitAccumulatorState3DParametric _
+                    | ExpressionDecimalAccumulatorState3DParametric _ -> newState
             finalState
         | ExpressionToThePowerOf -> replacePendingFunction stateData (Some ToThePowerOf)
         | SpiralExample -> spiral_ExampleState
@@ -1178,6 +1264,20 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -1185,7 +1285,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | Percent ->
                     let nextOp = None//Some op
@@ -1230,6 +1333,20 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -1237,7 +1354,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | CalculatorMathOp.Root ->
                     let nextOp = None//Some op
@@ -1282,6 +1402,20 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -1289,7 +1423,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | ChangeSign ->
                     let nextOp = None//Some op
@@ -1335,6 +1472,20 @@ module GraphingImplementation =
                                       expression=p.evaluatedExpression;
                                       drawingOptions = options;
                                       parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -1342,7 +1493,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
                     finalState
                 | MemoryAdd 
                 | MemorySubtract -> stateData |> ParentheticalState         
@@ -1443,6 +1597,18 @@ module GraphingImplementation =
                                   drawingOptions = stateData.drawingOptions
                                   parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
                                 } |> ParentheticalState
+                            | EvaluatedState3DParametric (ev,_) ->                                 
+                                { evaluatedExpression = Expression.Zero
+                                  pendingFunction = None //stateData.pendingFunction
+                                  drawingOptions = stateData.drawingOptions
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
+                                } |> ParentheticalState
+                            | ParentheticalState3DParametric (p,_) -> 
+                                { evaluatedExpression = Expression.Zero
+                                  pendingFunction = None //stateData.pendingFunction
+                                  drawingOptions = stateData.drawingOptions
+                                  parenthetical = (Expression.Zero,Some (Expression.Zero,op),Some oldParentheticalState) |> Parenthetical
+                                } |> ParentheticalState
                             | ExpressionDigitAccumulatorState _ 
                             | ExpressionDecimalAccumulatorState _                             
                             | DrawState _
@@ -1450,7 +1616,10 @@ module GraphingImplementation =
                             | ExpressionErrorState _                             
                             | DrawState2DParametric _                            
                             | ExpressionDigitAccumulatorState2DParametric _
-                            | ExpressionDecimalAccumulatorState2DParametric _ -> newEvaluationState
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _                            
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newEvaluationState
                     finalState
                 | _ -> replacePendingFunctionParenthetical stateData (Some f)
         | Draw -> 
@@ -1509,14 +1678,31 @@ module GraphingImplementation =
                               expression=p.evaluatedExpression;
                               drawingOptions = options;
                               parenthetical = Some p.parenthetical}
+                    | EvaluatedState3DParametric (ev,_) -> 
+                        ExpressionDigitAccumulatorState 
+                            { digits = ""; 
+                              pendingFunction = stateData.pendingFunction; 
+                              expression=ev.evaluatedExpression;
+                              drawingOptions = options;
+                              parenthetical = None}
+                    | ParentheticalState3DParametric (p,_) -> 
+                        ExpressionDigitAccumulatorState 
+                            { digits = ""; 
+                              pendingFunction = stateData.pendingFunction; 
+                              expression=p.evaluatedExpression;
+                              drawingOptions = options;
+                              parenthetical = Some p.parenthetical}
                     | ExpressionDigitAccumulatorState _ 
                     | ExpressionDecimalAccumulatorState _                             
                     | DrawState _
                     | DrawErrorState _
-                    | ExpressionErrorState _                             
-                    | DrawState2DParametric _                            
+                    | ExpressionErrorState _
+                    | DrawState2DParametric _
                     | ExpressionDigitAccumulatorState2DParametric _
-                    | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+                    | ExpressionDecimalAccumulatorState2DParametric _ 
+                    | DrawState3DParametric _
+                    | ExpressionDigitAccumulatorState3DParametric _
+                    | ExpressionDecimalAccumulatorState3DParametric _ -> newState
             finalState
         | ExpressionToThePowerOf -> replacePendingFunctionParenthetical stateData (Some ToThePowerOf)
         | SpiralExample -> spiral_ExampleState
@@ -1559,6 +1745,16 @@ module GraphingImplementation =
                            { newExpressionStateData with 
                                expression = p.evaluatedExpression;
                                parenthetical = services.setExpressionToParenthetical (p.evaluatedExpression, stateData.parenthetical) |> Some }
+                   | EvaluatedState3DParametric (ev,_) -> 
+                       ExpressionDigitAccumulatorState 
+                           { newExpressionStateData with 
+                               expression = ev.evaluatedExpression;
+                               parenthetical = services.setExpressionToParenthetical (ev.evaluatedExpression, stateData.parenthetical) |> Some}
+                   | ParentheticalState3DParametric (p,_) -> 
+                       ExpressionDigitAccumulatorState 
+                           { newExpressionStateData with 
+                               expression = p.evaluatedExpression;
+                               parenthetical = services.setExpressionToParenthetical (p.evaluatedExpression, stateData.parenthetical) |> Some }
                    | ExpressionDigitAccumulatorState _ 
                    | ExpressionDecimalAccumulatorState _                             
                    | DrawState _
@@ -1566,7 +1762,10 @@ module GraphingImplementation =
                    | ExpressionErrorState _                             
                    | DrawState2DParametric _                            
                    | ExpressionDigitAccumulatorState2DParametric _
-                   | ExpressionDecimalAccumulatorState2DParametric _ -> newState 
+                   | ExpressionDecimalAccumulatorState2DParametric _ 
+                   | DrawState3DParametric _                            
+                   | ExpressionDigitAccumulatorState3DParametric _
+                   | ExpressionDecimalAccumulatorState3DParametric _ -> newState 
            match input with
            | Stack _ -> ExpressionDigitAccumulatorState stateData
            | CalcInput op -> 
@@ -1748,14 +1947,27 @@ module GraphingImplementation =
                         { newExpressionStateData with 
                             expression = p.evaluatedExpression;
                             parenthetical = services.setExpressionToParenthetical (p.evaluatedExpression, stateData.parenthetical) |> Some }
+                | EvaluatedState3DParametric (ev,_) -> 
+                    ExpressionDigitAccumulatorState 
+                        { newExpressionStateData with 
+                            expression = ev.evaluatedExpression;
+                            parenthetical = services.setExpressionToParenthetical (ev.evaluatedExpression, stateData.parenthetical) |> Some}
+                | ParentheticalState3DParametric (p,_) -> 
+                    ExpressionDigitAccumulatorState 
+                        { newExpressionStateData with 
+                            expression = p.evaluatedExpression;
+                            parenthetical = services.setExpressionToParenthetical (p.evaluatedExpression, stateData.parenthetical) |> Some }
                 | ExpressionDigitAccumulatorState _ 
                 | ExpressionDecimalAccumulatorState _                             
                 | DrawState _
                 | DrawErrorState _
-                | ExpressionErrorState _                             
-                | DrawState2DParametric _                            
+                | ExpressionErrorState _
+                | DrawState2DParametric _
                 | ExpressionDigitAccumulatorState2DParametric _
-                | ExpressionDecimalAccumulatorState2DParametric _ -> newState 
+                | ExpressionDecimalAccumulatorState2DParametric _ 
+                | DrawState3DParametric _
+                | ExpressionDigitAccumulatorState3DParametric _
+                | ExpressionDecimalAccumulatorState3DParametric _ -> newState 
         match input with
         | Stack _ -> ExpressionDecimalAccumulatorState stateData
         | CalcInput op -> 
@@ -1977,7 +2189,7 @@ module GraphingImplementation =
          let doDraw2DParametricOperation = doDraw2DParametricOperation services
 
          // helper to wrap graph state data into a 2DParametric state
-         let wrapStateData state newState = 
+         let wrapStateData2D state newState = 
             match newState with
             | EvaluatedState s -> (s,state) |> EvaluatedState2DParametric
             | DrawState s -> (s,state) |> DrawState2DParametric
@@ -1990,7 +2202,33 @@ module GraphingImplementation =
             | DrawState2DParametric _
             | ParentheticalState2DParametric _
             | ExpressionDigitAccumulatorState2DParametric _
-            | ExpressionDecimalAccumulatorState2DParametric _ -> newState
+            | ExpressionDecimalAccumulatorState2DParametric _ 
+            | EvaluatedState3DParametric _ 
+            | DrawState3DParametric _
+            | ParentheticalState3DParametric _
+            | ExpressionDigitAccumulatorState3DParametric _
+            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
+
+         // helper to wrap graph state data into a 3DParametric state
+         let wrapStateData3D dim3DStateData newState = 
+            match newState with
+            | EvaluatedState s -> (s,dim3DStateData) |> EvaluatedState3DParametric
+            | DrawState s -> (s,dim3DStateData) |> DrawState3DParametric
+            | ParentheticalState s -> (s,dim3DStateData) |> ParentheticalState3DParametric
+            | ExpressionDigitAccumulatorState s -> (s,dim3DStateData) |> ExpressionDigitAccumulatorState3DParametric
+            | ExpressionDecimalAccumulatorState s -> (s,dim3DStateData) |> ExpressionDecimalAccumulatorState3DParametric
+            | DrawErrorState _
+            | ExpressionErrorState _
+            | EvaluatedState2DParametric _ 
+            | DrawState2DParametric _
+            | ParentheticalState2DParametric _
+            | ExpressionDigitAccumulatorState2DParametric _
+            | ExpressionDecimalAccumulatorState2DParametric _ 
+            | EvaluatedState3DParametric _ 
+            | DrawState3DParametric _
+            | ParentheticalState3DParametric _
+            | ExpressionDigitAccumulatorState3DParametric _
+            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
 
          fun (input,calcState) -> 
              match calcState with
@@ -2011,23 +2249,43 @@ module GraphingImplementation =
              | EvaluatedState2DParametric (stateData,state) ->
                  match input  with
                  | Draw2DParametric -> doDraw2DParametricOperation calcState
-                 | _ -> handleEvaluatedState stateData input |> wrapStateData state                 
+                 | _ -> handleEvaluatedState stateData input |> wrapStateData2D state                 
              | DrawState2DParametric (stateData,state) ->
                 match input  with
                 | Draw2DParametric -> doDraw2DParametricOperation calcState
-                | _ -> handleDrawState stateData input |> wrapStateData state
+                | _ -> handleDrawState stateData input |> wrapStateData2D state
              | ParentheticalState2DParametric (stateData,state) ->
                 match input  with
                 | Draw2DParametric -> doDraw2DParametricOperation calcState
-                | _ -> handleParentheticalState stateData input |> wrapStateData state
+                | _ -> handleParentheticalState stateData input |> wrapStateData2D state
              | ExpressionDigitAccumulatorState2DParametric (stateData,state) ->
                 match input  with
                 | Draw2DParametric -> doDraw2DParametricOperation calcState
-                | _ -> handleExpressionDigitAccumulatorState stateData input |> wrapStateData state
+                | _ -> handleExpressionDigitAccumulatorState stateData input |> wrapStateData2D state
              | ExpressionDecimalAccumulatorState2DParametric (stateData,state) ->
                 match input  with
                 | Draw2DParametric -> doDraw2DParametricOperation calcState
-                | _ -> handleExpressionDecimalAccumulatorState stateData input |> wrapStateData state
+                | _ -> handleExpressionDecimalAccumulatorState stateData input |> wrapStateData2D state
+             | EvaluatedState3DParametric (stateData,state) ->
+                 match input  with
+                 //| Draw3DParametric -> doDraw3DParametricOperation calcState
+                 | _ -> handleEvaluatedState stateData input |> wrapStateData3D state                 
+             | DrawState3DParametric (stateData,state) ->
+                match input  with
+                //| Draw3DParametric -> doDraw3DParametricOperation calcState
+                | _ -> handleDrawState stateData input |> wrapStateData3D state
+             | ParentheticalState3DParametric (stateData,state) ->
+                match input  with
+                //| Draw3DParametric -> doDraw3DParametricOperation calcState
+                | _ -> handleParentheticalState stateData input |> wrapStateData3D state
+             | ExpressionDigitAccumulatorState3DParametric (stateData,state) ->
+                match input  with
+                //| Draw3DParametric -> doDraw3DParametricOperation calcState
+                | _ -> handleExpressionDigitAccumulatorState stateData input |> wrapStateData3D state
+             | ExpressionDecimalAccumulatorState3DParametric (stateData,state) ->
+                match input  with
+                //| Draw3DParametric -> doDraw3DParametricOperation calcState
+                | _ -> handleExpressionDecimalAccumulatorState stateData input |> wrapStateData3D state
 
 module GraphServices =
     open GraphingDomain
@@ -2089,6 +2347,31 @@ module GraphServices =
                     | Some expression -> func + " " + expression.ToString()
                     | None -> ""            
             | ExpressionDecimalAccumulatorState2DParametric (d,_) -> 
+                let func = 
+                    match d.pendingFunction with
+                    | None -> ""
+                    | Some f -> f.ToString()
+                match d.digits.Length = 0 with
+                | false -> func + " " + d.digits 
+                | true -> 
+                    match d.parenthetical with
+                    | Some expression -> func + " " + expression.ToString()
+                    | None -> ""            
+            | EvaluatedState3DParametric (e,_) -> e.evaluatedExpression.ToString()
+            | DrawState3DParametric (d,_) -> d.trace.ToString()
+            | ParentheticalState3DParametric (p,_) -> p.evaluatedExpression.ToString()
+            | ExpressionDigitAccumulatorState3DParametric (d,_) -> 
+                let func = 
+                    match d.pendingFunction with
+                    | None -> ""
+                    | Some f -> f.ToString()
+                match d.digits.Length = 0 with
+                | false -> func + " " + d.digits 
+                | true -> 
+                    match d.parenthetical with
+                    | Some expression -> func + " " + expression.ToString()
+                    | None -> ""            
+            | ExpressionDecimalAccumulatorState3DParametric (d,_) -> 
                 let func = 
                     match d.pendingFunction with
                     | None -> ""
@@ -2255,6 +2538,9 @@ module GraphServices =
             let pointLists = points          
             let out = List.map (fun x -> createTrace x) pointLists 
             out |> Traces
+
+    let doDraw3DParametricOperation = ()
+        //TODO
 
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
