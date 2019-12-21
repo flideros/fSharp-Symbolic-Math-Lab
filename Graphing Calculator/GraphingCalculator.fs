@@ -1339,7 +1339,6 @@ type GraphingCalculator() as graphingCalculator =
         let orginPoint = System.Windows.Point(x,y)
         do  context.DrawEllipse(color,pen,orginPoint,1.,1.)
             context.Close()
-
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
@@ -2010,4 +2009,3 @@ type GraphingCalculator() as graphingCalculator =
 
         function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
         function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
-        
