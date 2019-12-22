@@ -10,6 +10,7 @@ open System.Windows.Markup
 open System.Windows.Controls 
 open System.Reflection
 open System.Windows.Media.Imaging
+open System.Windows.Media.Media3D
 open Utilities
 open Style
 open ConventionalDomain
@@ -28,7 +29,7 @@ type View =
 
 type Model =
     | Trace of Trace list
-    | Model3D of Viewport3D
+    | Model3D of ModelVisual3D
 
 type ViewPoint = 
     | Pt of System.Windows.Point
@@ -519,7 +520,7 @@ type GraphingCalculator() as graphingCalculator =
 
         do  grid.Children.Add(function3D_SolidMesh_Button) |> ignore            
         grid
-    
+    (**)
     do  // Assemble the pieces
         function3D_Grid .Children.Add(function3D_fxLabel_TextBlock) |> ignore
         function3D_Grid .Children.Add(function3D_fx_TextBox) |> ignore
@@ -529,7 +530,132 @@ type GraphingCalculator() as graphingCalculator =
         function3D_Grid .Children.Add(function3D_fz_TextBox) |> ignore
         function3D_Grid .Children.Add(function3D_ShapeButton_Grid) |> ignore
         function3D_Grid .Children.Add(function3D_SolidMeshButton_Grid) |> ignore
-
+    
+    //-----3D Viewport        
+        // Declare scene objects.
+    let viewport3D = Viewport3D()       
+    let model3DGroup = Model3DGroup()
+    let model = GeometryModel3D() 
+    let modelVisual3D = ModelVisual3D()        
+    let perspective_Camera = 
+        // Defines the camera used to view the 3D object. In order to view the 3D object,
+        // the camera must be positioned and pointed such that the object is within view 
+        // of the camera.
+        let camera = PerspectiveCamera()
+            // Specify where in the 3D scene the camera is.
+        do  camera.Position <- new Point3D(0., 0., 2.)
+            // Specify the direction that the camera is pointing.
+            camera.LookDirection <- new Vector3D(0., 0., -1.)
+            // Define camera's horizontal field of view in degrees.
+            camera.FieldOfView <- 60.
+            //camera.FarPlaneDistance <- 20.
+        camera     
+    let testModel = // from Model3DCollection Class example
+            // Define the lights cast in the scene. Without light, the 3D object cannot 
+            // be seen. Note: to illuminate an object from additional directions, create 
+            // additional lights.
+        let light = DirectionalLight(Color = Colors.White, Direction = Vector3D(-0.61, -0.5, -0.61))
+            // The geometry specifes the shape of the 3D plane. In this sample, a flat sheet 
+            // is created.
+        let geometry = 
+            let meshGeometry = MeshGeometry3D()
+            // Create a collection of normal vectors for the MeshGeometry3D.
+            let normals = 
+                let normalCollection = Vector3DCollection()
+                do  normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                normalCollection
+            // Create a collection of vertex positions for the MeshGeometry3D. 
+            let positions = 
+                let positionCollection = Point3DCollection()
+                do  positionCollection.Add(new Point3D(-0.5, -0.5, 0.5))
+                    positionCollection.Add(new Point3D(0.5, -0.5, 0.5))
+                    positionCollection.Add(new Point3D(0.5, 0.5, 0.5))
+                    positionCollection.Add(new Point3D(0.5, 0.5, 0.5))
+                    positionCollection.Add(new Point3D(-0.5, 0.5, 0.5))
+                    positionCollection.Add(new Point3D(-0.5, -0.5, 0.5))
+                positionCollection
+            // Create a collection of texture coordinates for the MeshGeometry3D.
+            let textureCoordinates = 
+                let textureCoordinatesCollection = PointCollection()
+                do  textureCoordinatesCollection.Add(System.Windows.Point(0., 1.))
+                    textureCoordinatesCollection.Add(System.Windows.Point(0., 1.))
+                    textureCoordinatesCollection.Add(System.Windows.Point(0., 1.))
+                    textureCoordinatesCollection.Add(System.Windows.Point(0., 1.))
+                    textureCoordinatesCollection.Add(System.Windows.Point(0., 1.))
+                    textureCoordinatesCollection.Add(System.Windows.Point(0., 1.))
+                textureCoordinatesCollection
+            // Create a collection of triangle indices for the MeshGeometry3D.
+            let triangleIndices = 
+                let triangleIndicesCollection = Int32Collection()
+                do  triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(5)
+                triangleIndicesCollection
+            
+            do  meshGeometry.Normals <- normals
+                meshGeometry.Positions <- positions
+                meshGeometry.TextureCoordinates <- textureCoordinates
+                meshGeometry.TriangleIndices <- triangleIndices
+                
+            meshGeometry
+            // The material property of GeometryModel3D specifies the material applied to the 3D object.  
+            // In this sample the material applied to the 3D object is made up of two materials layered  
+            // on top of each other - a DiffuseMaterial (gradient brush) with an EmissiveMaterial 
+            // layered on top (blue SolidColorBrush). The EmmisiveMaterial alters the appearance of  
+            // the gradient toward blue
+        let material = 
+            let linearGradiantBrush = LinearGradientBrush()
+            do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
+                linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Yellow, 0.0))
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LimeGreen, 1.0))
+            // Define material that will use the gradient.
+            let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
+            // Add this gradient to a MaterialGroup.
+            let materialGroup = MaterialGroup()
+            do  materialGroup.Children.Add(diffuseMaterial)
+            // Define an Emissive Material with a blue brush.
+            let emissiveMaterial = 
+                let c = Color.FromScRgb(1.f,255.f,0.f,0.f)               
+                EmissiveMaterial(new SolidColorBrush(c))                
+            do  materialGroup.Children.Add(emissiveMaterial)         
+            materialGroup
+            // Apply a transform to the object. In this sample, a rotation transform is applied,  
+            // rendering the 3D object rotated.
+        let transform = 
+            let rotateTransform3D = RotateTransform3D()
+            let axisAngleRotation3d = AxisAngleRotation3D()
+            do  axisAngleRotation3d.Axis <- Vector3D(-10.,-30.,20.)
+                axisAngleRotation3d.Angle <- 30.
+                rotateTransform3D.Rotation <- axisAngleRotation3d
+            rotateTransform3D
+        
+        do  model.Geometry <- geometry
+            model.Material <- material
+            model.Transform <- transform
+            
+            model3DGroup.Children.Add(light)
+            model3DGroup.Children.Add(model)
+            modelVisual3D.Content <- model3DGroup
+        modelVisual3D
+    
+    do // Assemble the pieces
+       viewport3D.Camera <- perspective_Camera
+       viewport3D.Children.Add(testModel)
+       viewport3D.Height <- 1100.
+       viewport3D.Width <- 1100.
+       canvas.Children.Add(viewport3D) |> ignore //temporary for design 
+       
     //-----Function Options
     let option_Grid =     
         let grid = Grid(Visibility = Visibility.Collapsed)
@@ -1524,9 +1650,10 @@ type GraphingCalculator() as graphingCalculator =
                 t.Visibility <- Visibility.Collapsed
                 canvas_DockPanel.Visibility <- Visibility.Collapsed) viewList
         match display with
-        | View.PlotCanvas p ->
-            p.Visibility <- Visibility.Visible
+        | View.PlotCanvas p ->            
+            p.Visibility <- Visibility.Visible            
             canvas_DockPanel.Visibility <- Visibility.Visible
+            
         | View.Function p -> 
             setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph)
             (p.Visibility <- Visibility.Visible)
@@ -1777,6 +1904,12 @@ type GraphingCalculator() as graphingCalculator =
             | ParentheticalState2DParametric (p,_s) -> graphServices.getDisplayFromExpression p.evaluatedExpression
             | ExpressionDigitAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
             | ExpressionDecimalAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression           
+            // Parametric 3D
+            | DrawState3DParametric (_d,_s) -> "Graph 2D Parametric"
+            | EvaluatedState3DParametric (e,_s) -> graphServices.getDisplayFromExpression e.evaluatedExpression           
+            | ParentheticalState3DParametric (p,_s) -> graphServices.getDisplayFromExpression p.evaluatedExpression
+            | ExpressionDigitAccumulatorState3DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
+            | ExpressionDecimalAccumulatorState3DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression           
             
         state <- match state.mode with
                  | Graph -> { state with graph = newState }
@@ -1946,7 +2079,6 @@ type GraphingCalculator() as graphingCalculator =
     let pi = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.Pi) |> ExpressionInput.Symbol |> ExpressionInput
     let e = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.E) |> ExpressionInput.Symbol |> ExpressionInput
     
-
     do  //add event handler to each button click
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
         two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two))) 
