@@ -37,6 +37,8 @@ type Fraction =
     static member Zero = {numerator = 0I; denominator = 1I}
     static member zeroDefinition = Zero.definition
 
+
+
 [<StructuralEquality;NoComparison>]
 type NumberType =
     
