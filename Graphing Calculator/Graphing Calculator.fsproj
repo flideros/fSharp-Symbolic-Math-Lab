@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utilities.fs" />
-    <Compile Include="Controls.fs" />
+    <Compile Include="models.fs" />
     <Compile Include="Styles.fs" />
     <Compile Include="ConventionalInputDomain.fs" />
     <Compile Include="RpnInputDomain.fs" />
