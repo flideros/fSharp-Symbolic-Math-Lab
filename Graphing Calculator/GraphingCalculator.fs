@@ -1414,8 +1414,7 @@ type GraphingCalculator() as graphingCalculator =
             let (_xScale,yScale) = state.scale
             y * yScale 
     //----- 
-    
-        
+
 
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
