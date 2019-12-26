@@ -5,6 +5,7 @@ open System.Windows
 open System.Windows.Controls  
 open System.Windows.Media
 open System.Windows.Shapes  
+open System.Windows.Media.Animation
 open System.IO
 open System.Windows.Markup
 open System.Windows.Controls 
@@ -16,6 +17,7 @@ open Style
 open ConventionalDomain
 open RpnDomain
 open GraphingDomain
+open System.Windows.Input
 
 type View =
     | PlotCanvas of Grid
@@ -46,6 +48,7 @@ type Mode =
     | RPN
     | Graph
     | Graph2DParametric
+    | Graph3DParametric
 
 type State = 
     { rpn:RpnDomain.CalculatorState;
@@ -54,7 +57,8 @@ type State =
       graph2DParametric:GraphingDomain.CalculatorState;
       mode : Mode;
       model : Model 
-      scale : (float*float) }
+      scale : (float*float) 
+      quaternion : Quaternion}
 
 type GraphingCalculator() as graphingCalculator =
     inherit UserControl()
@@ -89,6 +93,8 @@ type GraphingCalculator() as graphingCalculator =
            pendingFunction = None; 
            drawingOptions = GraphingImplementation.defaultOptions},
            graphDefault ) |> EvaluatedState2DParametric
+    let scaleDefault = (1., 1.)
+    let quaternionDefault = Quaternion(0., 0., 1., 0.)
     let mutable state = 
         { rpn = rpnDefault; 
           conventional = conventionalDefault; 
@@ -96,7 +102,8 @@ type GraphingCalculator() as graphingCalculator =
           model = modelDefault; 
           graph = graphDefault;
           graph2DParametric = graph2DParametricDefault;
-          scale = (1., 1.)}
+          scale = scaleDefault;
+          quaternion = quaternionDefault}
 
 // ------Create Views---------        
     //-----Calculator--------//
@@ -534,15 +541,16 @@ type GraphingCalculator() as graphingCalculator =
     //-----3D Viewport
     let viewport3D = 
         let viewport = Viewport3D()
-        
         do  viewport.SetValue(Grid.ColumnProperty,2)
-            viewport.SetValue(Grid.RowProperty,2)
+            viewport.SetValue(Grid.RowProperty,2)  
+            viewport.Tag <- System.Windows.Point(0., 0.)
         viewport
     let model3DGroup = Model3DGroup()
     let modelVisual3D = ModelVisual3D()
+    let rotateTransform3D = RotateTransform3D()
+    //let rotation  = QuaternionRotation3D(state.quaternion)
     
     let light = DirectionalLight(Color = Colors.White, Direction = Vector3D(-1., -0.5, -1.))
-    let light2 = DirectionalLight(Color = Colors.White, Direction = Vector3D(3.,4.5, 5.))
     let perspective_Camera = 
         // Defines the camera used to view the 3D object. In order to view the 3D object,
         // the camera must be positioned and pointed such that the object is within view 
@@ -558,10 +566,10 @@ type GraphingCalculator() as graphingCalculator =
         camera
 
     do // Assemble the pieces
+       //rotateTransform3D.Rotation <- rotation      
        model3DGroup.Children.Add(light)
-       model3DGroup.Children.Add(light2)
        model3DGroup.Children.Add(Models.testModel)
-       model3DGroup.Children.Add(Models.testModel2)
+       model3DGroup.Children.Add(Models.testModel2)      
 
        modelVisual3D.Content <- model3DGroup
        
@@ -570,8 +578,8 @@ type GraphingCalculator() as graphingCalculator =
        viewport3D.ClipToBounds <- true
        viewport3D.VerticalAlignment <- VerticalAlignment.Center
        viewport3D.HorizontalAlignment <- HorizontalAlignment.Center
-       viewport3D.Height <- 300.
-       viewport3D .Width <- 300.
+       viewport3D.Height <- System.Windows.SystemParameters.WorkArea.Height
+       viewport3D .Width <- System.Windows.SystemParameters.WorkArea.Height
        
        screen_Canvas.Children.Add(viewport3D) |> ignore  
        
@@ -1405,6 +1413,9 @@ type GraphingCalculator() as graphingCalculator =
         fun y ->
             let (_xScale,yScale) = state.scale
             y * yScale 
+    //----- 
+    
+        
 
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
@@ -1565,14 +1576,16 @@ type GraphingCalculator() as graphingCalculator =
             | View.Option3D p -> 
                 p.Visibility <- Visibility.Collapsed
                 canvas_DockPanel.Visibility <- Visibility.Collapsed
+                viewport3D.Visibility <- Visibility.Collapsed
             | View.Text t -> 
                 t.Visibility <- Visibility.Collapsed
                 canvas_DockPanel.Visibility <- Visibility.Collapsed) viewList
         match display with
         | View.PlotCanvas p ->            
             p.Visibility <- Visibility.Visible            
-            canvas_DockPanel.Visibility <- Visibility.Visible
-            
+            match state.mode = Graph3DParametric with
+            | false -> canvas_DockPanel.Visibility <- Visibility.Visible
+            | true -> viewport3D.Visibility <- Visibility.Visible
         | View.Function p -> 
             setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph)
             (p.Visibility <- Visibility.Visible)
@@ -1582,7 +1595,7 @@ type GraphingCalculator() as graphingCalculator =
         | View.Function3D p
         | View.Option p
         | View.Option2D p ->             
-            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph2DParametric)
+            //TODO setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph3DParametric)
             (p.Visibility <- Visibility.Visible)
         | View.Option3D p -> (p.Visibility <- Visibility.Visible)
         | View.Text t -> (t.Visibility <- Visibility.Visible)        
@@ -1607,6 +1620,7 @@ type GraphingCalculator() as graphingCalculator =
                 | false,false -> 
                     do function2D_xt_TextBox.Text <- text
                        function2D_yt_TextBox.Text <- text
+            | Graph3DParametric -> () //TODO
     // a function that sets the pending op text
     let setMemoText = 
         fun text -> memo.Text <- text
@@ -1632,6 +1646,8 @@ type GraphingCalculator() as graphingCalculator =
         | Graph -> 
             graphButton_Grid.IsHitTestVisible <- false
         | Graph2DParametric -> 
+            graphButton_Grid.IsHitTestVisible <- false
+        | Graph3DParametric -> 
             graphButton_Grid.IsHitTestVisible <- false
     // a function that sets the input mode
     let setInputMode mode = 
@@ -1685,12 +1701,26 @@ type GraphingCalculator() as graphingCalculator =
             t_Button.Background <- Style.linearGradientBrush_1
             u_Button.Background <- Style.linearGradientBrush_2
             v_Button.Background <- Style.linearGradientBrush_2
+        | Graph3DParametric ->
+            setActiveModeButtons mode
+            setActiveDisplay (View.Function3D function3D_Grid)
+            setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
+            x_Button.IsHitTestVisible <- false
+            t_Button.IsHitTestVisible <- false
+            u_Button.IsHitTestVisible <- true
+            v_Button.IsHitTestVisible <- true
+            x_Button.Background <- Style.linearGradientBrush_2
+            t_Button.Background <- Style.linearGradientBrush_2
+            u_Button.Background <- Style.linearGradientBrush_1
+            v_Button.Background <- Style.linearGradientBrush_1
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
     // a function that sets the model scale
     let setModelScale x y = do state <- {state with scale = (x,y)}
-
+    // a function that sets the model rotation
+    let setQuaternion quaternion = do state <- {state with quaternion = quaternion}
+    
 //-----Create Menu
     let menu = // 
          let header1 = MenuItem(Header = "Mode")
@@ -1704,7 +1734,7 @@ type GraphingCalculator() as graphingCalculator =
 
          let header1_Item2 = MenuItem(Header = "Graph", Command = modeCommand (setInputMode), CommandParameter = Graph)
          let header1_Item3 = MenuItem(Header = "Graph2D", Command = modeCommand (setInputMode), CommandParameter = Graph2DParametric)
-         let header1_Item4 = MenuItem(Header = "Graph3D", Command = viewCommand (setActiveDisplay), CommandParameter = Function3D function3D_Grid)
+         let header1_Item4 = MenuItem(Header = "Graph3D", Command = modeCommand (setInputMode), CommandParameter = Graph3DParametric)
          
          let header1_Item5 = MenuItem(Header = "Plot Canvas", Command = viewCommand (setActiveDisplay), CommandParameter = PlotCanvas screen_Canvas)
          
@@ -1764,6 +1794,7 @@ type GraphingCalculator() as graphingCalculator =
     let calculateGraph = GraphingImplementation.createEvaluate graphServices
     
     //-------create event handlers----------
+        // Input
     let handleConventionalInput input =         
         let newState =  calculate(input,state.conventional)
         state <- { state with conventional = newState}
@@ -1910,7 +1941,7 @@ type GraphingCalculator() as graphingCalculator =
                setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")        
         | _ -> do state <- { state with graph2DParametric = newState }
                   setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
-    
+        // Gridlines
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
         do  canvas.Children.Insert(0,gl) 
@@ -1918,6 +1949,7 @@ type GraphingCalculator() as graphingCalculator =
     let handleGridLinesOnUnCheck () =
         removeGridLines ()
         canvasGridLine_Slider.IsEnabled <- false
+        // Scale 
     let handleSliderValueOnValueChange () =
         removeGridLines ()
         let xScale, yScale = (canvasGridLine_Slider.Value,canvasGridLine_Slider.Value)
@@ -1926,6 +1958,7 @@ type GraphingCalculator() as graphingCalculator =
             canvas.Children.Insert(0,gl)
             setActiveDisplay (Function function_Grid)
             handleGraphInput Draw
+        // 2D Parametric
     let handleTextBoxXtPreviewMouseDown () =
         match function2D_xt_TextBox.MaxLines = 3 with
         | true ->
@@ -1954,7 +1987,58 @@ type GraphingCalculator() as graphingCalculator =
         | true -> 
             handleTextBoxXtPreviewMouseDown () 
             handleGraphInput(input)
-        
+        // 3D Rotation
+    let handleViewport3DMouseMove (e :Input.MouseEventArgs) =                                 
+        match viewport3D.IsMouseCaptured with
+        | true -> 
+            let delay = 
+                let timer = new System.Timers.Timer()
+                do  timer.Interval <- 2.
+                    timer.AutoReset <- false
+                    timer.Start()
+            let point = e.MouseDevice.GetPosition(viewport3D) 
+            let delta = ((viewport3D.Tag :?> System.Windows.Point) - point) / 2.
+            let mouse = Vector3D(delta.X, -delta.Y, 0.)
+            let axis = Vector3D.CrossProduct(mouse, Vector3D(0., 0., 1.))                               
+            match axis.Length < 0.000001 with 
+            | true -> 
+                do  setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
+                    delay                    
+                    immediate.Text <- state.quaternion.ToString()  + "check5"//axis.ToString()//mouse.ToString()
+            | false -> 
+                let rotationDelta = Quaternion(axis, axis.Length)
+                let newQ = rotationDelta * state.quaternion 
+                do  setQuaternion (newQ)  
+                    delay
+                    model3DGroup.Transform <- rotateTransform3D
+                    immediate.Text <- state.quaternion.ToString()  + "check6"//axis.ToString()//viewport3D.Tag.ToString() //
+
+        | false -> ()
+    let handleViewport3DMouseLeftButtonDown (e :Input.MouseButtonEventArgs) = 
+        let point = e.MouseDevice.GetPosition(viewport3D)        
+        do  viewport3D.Tag <- point
+            immediate.Text <- viewport3D.Tag.ToString() + "check3"
+    let handleViewport3DMouseLeftButtonUp (e :Input.MouseButtonEventArgs) = 
+        let point = e.MouseDevice.GetPosition(viewport3D)        
+        let delta = ((viewport3D.Tag :?> System.Windows.Point) - point) / 2.
+        let mouse = Vector3D(delta.X, -delta.Y, 0.)
+        let axis = Vector3D.CrossProduct(mouse, Vector3D(0., 0., 1.))
+                           
+        match axis.Length < 0.00001 with 
+        | true ->             
+            do  setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
+                viewport3D.ReleaseMouseCapture()
+                immediate.Text <- viewport3D.Tag.ToString() + "check4" //state.quaternion.ToString()//mouse.ToString()
+        | false -> 
+            let rotationDelta = Quaternion(axis, axis.Length)
+            let newQ = rotationDelta * state.quaternion 
+            do  setQuaternion (newQ)                    
+                rotateTransform3D.Rotation <- QuaternionRotation3D(newQ)
+                model3DGroup.Transform <- rotateTransform3D
+                viewport3D.ReleaseMouseCapture()
+                viewport3D.Tag <- System.Windows.Point(0., 0.)
+                immediate.Text <- viewport3D.Tag.ToString() + "check1" //model3DGroup.Transform.Value .ToString() //
+
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -1987,7 +2071,8 @@ type GraphingCalculator() as graphingCalculator =
         | RPN -> handleRpnInput rpnInput
         | Conventional -> handleConventionalInput input
         | Graph -> handleGraphInput graphInput
-        | Graph2DParametric -> handleGraphInput graphInput (**)
+        | Graph2DParametric -> handleGraphInput graphInput 
+        | Graph3DParametric -> handleGraphInput graphInput (**)
 
     // create objects
     let x = (Math.Pure.Objects.Symbol.Variable "x") |> ExpressionInput.Symbol |> ExpressionInput
@@ -2060,3 +2145,7 @@ type GraphingCalculator() as graphingCalculator =
 
         function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
         function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
+
+        viewport3D.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3DMouseLeftButtonDown (e)))
+        viewport3D.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3DMouseLeftButtonUp (e)))
+        viewport3D.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleViewport3DMouseMove (e)))
