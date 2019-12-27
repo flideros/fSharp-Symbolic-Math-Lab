@@ -296,4 +296,114 @@ module Models =
         
         model
 
+    let testModel4 = 
 
+        let geometry = 
+            let meshGeometry = MeshGeometry3D()
+            // Create a collection of normal vectors for the MeshGeometry3D.
+            let normals = 
+                let normalCollection = Vector3DCollection()
+                do  normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+
+                normalCollection
+            // Create a collection of vertex positions for the MeshGeometry3D. 
+            let positions = 
+                let positionCollection = Point3DCollection()
+                    //Front
+                do  positionCollection.Add(new Point3D(-0.05,-0.05, 1.0))
+                    positionCollection.Add(new Point3D( 0.05,-0.05, 1.0))
+                    positionCollection.Add(new Point3D( 0.05, 0.05, 1.0))
+                    positionCollection.Add(new Point3D(-0.05, 0.05, 1.0))
+                    //Back
+                    positionCollection.Add(new Point3D(-0.05,-0.05, -1.0))
+                    positionCollection.Add(new Point3D( 0.05,-0.05, -1.0))
+                    positionCollection.Add(new Point3D( 0.05, 0.05, -1.0))
+                    positionCollection.Add(new Point3D(-0.05, 0.05, -1.0))
+                positionCollection
+           
+            // Create a collection of triangle indices for the MeshGeometry3D.
+            let triangleIndices = 
+                let triangleIndicesCollection = Int32Collection()
+                    //front
+                do  triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(0)
+                    //
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(7)
+                    triangleIndicesCollection.Add(6)
+                    //
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(2)
+                    //
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(7)
+                    //
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(5)
+                    //
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(7)
+                    triangleIndicesCollection.Add(4)
+                    //
+                
+                triangleIndicesCollection
+
+            do  meshGeometry.Normals <- normals
+                meshGeometry.Positions <- positions
+                meshGeometry.TriangleIndices <- triangleIndices
+    
+            meshGeometry            
+        let material = 
+            let linearGradiantBrush = LinearGradientBrush()
+            do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
+                linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.YellowGreen, 0.0))
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
+                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Chocolate, 1.0))
+            // Define material that will use the gradient.
+            let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
+            // Add this gradient to a MaterialGroup.
+            let materialGroup = MaterialGroup()
+            do  materialGroup.Children.Add(diffuseMaterial)
+            // Define an Emissive Material with a blue brush.
+            let emissiveMaterial = 
+                let c = Colors.Chocolate              
+                EmissiveMaterial(new SolidColorBrush(c))                
+            do  materialGroup.Children.Add(emissiveMaterial)         
+            materialGroup
+            // Apply a transform to the object. In this sample, a rotation transform is applied,  
+            // rendering the 3D object rotated.        
+        let model = GeometryModel3D(geometry,material)
+        
+        model
