@@ -567,7 +567,7 @@ type GraphingCalculator() as graphingCalculator =
     do // Assemble the pieces            
        model3DGroup.Children.Add(light)
        //model3DGroup.Children.Add(Models.testModel2)
-       model3DGroup.Children.Add(Models.testModel3)      
+       model3DGroup.Children.Add(Models.testModel4)      
 
        modelVisual3D.Content <- model3DGroup
        
@@ -1985,7 +1985,7 @@ type GraphingCalculator() as graphingCalculator =
             handleTextBoxXtPreviewMouseDown () 
             handleGraphInput(input)
         // 3D Rotation and Zoom
-    let handleViewport3DMouseMove (e :Input.MouseEventArgs) =                                 
+    let handleViewport3D_MouseMove (e :Input.MouseEventArgs) =                                 
         match e.LeftButton = MouseButtonState.Pressed with
         | true ->             
             let point = e.MouseDevice.GetPosition(viewport3D) 
@@ -2004,11 +2004,11 @@ type GraphingCalculator() as graphingCalculator =
                     model3DGroup.Transform <- rotateTransform3D
                     immediate.Text <- state.quaternion.ToString()  + " check6"
         | false ->  immediate.Text <- state.quaternion.ToString()  + " check 99" 
-    let handleViewport3DMouseLeftButtonDown (e :Input.MouseButtonEventArgs) = 
+    let handleViewport3D_MouseLeftButtonDown (e :Input.MouseButtonEventArgs) = 
         let point = e.MouseDevice.GetPosition(viewport3D)        
         do  viewport3D.Tag <- point
             immediate.Text <- viewport3D.Tag.ToString() + " check3"
-    let handleViewport3DMouseLeftButtonUp (e :Input.MouseButtonEventArgs) = 
+    let handleViewport3D_MouseLeftButtonUp (e :Input.MouseButtonEventArgs) = 
         let point = e.MouseDevice.GetPosition(viewport3D)        
         let delta = ((viewport3D.Tag :?> System.Windows.Point) - point) / 2.
         let mouse = Vector3D(delta.X, -delta.Y, 0.)
@@ -2027,10 +2027,19 @@ type GraphingCalculator() as graphingCalculator =
                 viewport3D.ReleaseMouseCapture()
                 viewport3D.Tag <- System.Windows.Point(0., 0.)
                 immediate.Text <- viewport3D.Tag.ToString() + " check1" 
-    let handleViewport3DMouseWheel  (e :Input.MouseWheelEventArgs) =
-        do  perspective_Camera.Position <- new Point3D( perspective_Camera.Position.X,
-                                                        perspective_Camera.Position.Y,
-                                                        perspective_Camera.Position.Z - (float e.Delta/250.))
+    let handleViewport3D_MouseWheel (e :Input.MouseWheelEventArgs) =
+        let z = perspective_Camera.Position.Z - (float e.Delta/250.)
+        match z < 1. with
+        | false ->
+            do  perspective_Camera.Position <- new Point3D( perspective_Camera.Position.X,
+                                                            perspective_Camera.Position.Y,
+                                                            perspective_Camera.Position.Z - (float e.Delta/250.))
+        | true -> ()
+    let handleViewport3D_MouseRightButtonDown () = 
+        do  perspective_Camera.Position <- new Point3D( perspective_Camera.Position.X, perspective_Camera.Position.Y, 10.)
+            setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
+            rotateTransform3D.Rotation <- QuaternionRotation3D(state.quaternion)
+            model3DGroup.Transform <- rotateTransform3D
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
@@ -2138,8 +2147,8 @@ type GraphingCalculator() as graphingCalculator =
 
         function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
         function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
-
-        viewport3D.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3DMouseLeftButtonDown (e)))
-        viewport3D.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3DMouseLeftButtonUp (e)))
-        viewport3D.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleViewport3DMouseMove (e)))
-        viewport3D.PreviewMouseWheel.AddHandler(Input.MouseWheelEventHandler(fun _ e -> handleViewport3DMouseWheel (e)))
+        viewport3D.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseLeftButtonDown (e)))
+        viewport3D.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseLeftButtonUp (e)))
+        viewport3D.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleViewport3D_MouseMove (e)))
+        viewport3D.PreviewMouseWheel.AddHandler(Input.MouseWheelEventHandler(fun _ e -> handleViewport3D_MouseWheel (e)))
+        viewport3D.PreviewMouseRightButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseRightButtonDown ()))
