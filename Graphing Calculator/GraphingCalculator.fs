@@ -548,7 +548,6 @@ type GraphingCalculator() as graphingCalculator =
     let model3DGroup = Model3DGroup()
     let modelVisual3D = ModelVisual3D()
     let rotateTransform3D = RotateTransform3D()
-    //let rotation  = QuaternionRotation3D(state.quaternion)
     
     let light = DirectionalLight(Color = Colors.White, Direction = Vector3D(-1., -0.5, -1.))
     let perspective_Camera = 
@@ -557,29 +556,28 @@ type GraphingCalculator() as graphingCalculator =
         // of the camera.
         let camera = PerspectiveCamera()
             // Specify where in the 3D scene the camera is.
-        do  camera.Position <- new Point3D(0., 0., 3.)
+        do  camera.Position <- new Point3D(0., 0., 20.)
             // Specify the direction that the camera is pointing.
-            camera.LookDirection <- new Vector3D(0., 0., -1.)
+            camera.LookDirection <- new Vector3D(0., 0., -10.)
             // Define camera's horizontal field of view in degrees.
             camera.FieldOfView <- 60.
             //camera.FarPlaneDistance <- 20.
         camera
 
-    do // Assemble the pieces
-       //rotateTransform3D.Rotation <- rotation      
+    do // Assemble the pieces            
        model3DGroup.Children.Add(light)
-       model3DGroup.Children.Add(Models.testModel)
-       model3DGroup.Children.Add(Models.testModel2)      
+       //model3DGroup.Children.Add(Models.testModel2)
+       model3DGroup.Children.Add(Models.testModel3)      
 
        modelVisual3D.Content <- model3DGroup
        
        viewport3D.Camera <- perspective_Camera
        viewport3D.Children.Add(modelVisual3D)
-       viewport3D.ClipToBounds <- true
+       viewport3D.ClipToBounds <- false
        viewport3D.VerticalAlignment <- VerticalAlignment.Center
        viewport3D.HorizontalAlignment <- HorizontalAlignment.Center
-       viewport3D.Height <- System.Windows.SystemParameters.WorkArea.Height
-       viewport3D .Width <- System.Windows.SystemParameters.WorkArea.Height
+       viewport3D.Height <- System.Windows.SystemParameters.WorkArea.Height//400.//
+       viewport3D .Width <- System.Windows.SystemParameters.WorkArea.Height//400.//
        
        screen_Canvas.Children.Add(viewport3D) |> ignore  
        
@@ -1986,57 +1984,53 @@ type GraphingCalculator() as graphingCalculator =
         | true -> 
             handleTextBoxXtPreviewMouseDown () 
             handleGraphInput(input)
-        // 3D Rotation
+        // 3D Rotation and Zoom
     let handleViewport3DMouseMove (e :Input.MouseEventArgs) =                                 
-        match viewport3D.IsMouseCaptured with
-        | true -> 
-            let delay = 
-                let timer = new System.Timers.Timer()
-                do  timer.Interval <- 2.
-                    timer.AutoReset <- false
-                    timer.Start()
+        match e.LeftButton = MouseButtonState.Pressed with
+        | true ->             
             let point = e.MouseDevice.GetPosition(viewport3D) 
             let delta = ((viewport3D.Tag :?> System.Windows.Point) - point) / 2.
             let mouse = Vector3D(delta.X, -delta.Y, 0.)
-            let axis = Vector3D.CrossProduct(mouse, Vector3D(0., 0., 1.))                               
+            let axis = Vector3D.CrossProduct(mouse, Vector3D(0., 0., 1.))            
             match axis.Length < 0.000001 with 
             | true -> 
                 do  setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
-                    delay                    
-                    immediate.Text <- state.quaternion.ToString()  + "check5"//axis.ToString()//mouse.ToString()
+                    immediate.Text <- state.quaternion.ToString()  + " check5"
             | false -> 
-                let rotationDelta = Quaternion(axis, axis.Length)
+                let rotationDelta = Quaternion(axis, axis.Length/perspective_Camera.Position.Z) // divide by Camera.Position.Z to slow down rotation
                 let newQ = rotationDelta * state.quaternion 
-                do  setQuaternion (newQ)  
-                    delay
+                do  setQuaternion (newQ)
+                    rotateTransform3D.Rotation <- QuaternionRotation3D(newQ)
                     model3DGroup.Transform <- rotateTransform3D
-                    immediate.Text <- state.quaternion.ToString()  + "check6"//axis.ToString()//viewport3D.Tag.ToString() //
-
-        | false -> ()
+                    immediate.Text <- state.quaternion.ToString()  + " check6"
+        | false ->  immediate.Text <- state.quaternion.ToString()  + " check 99" 
     let handleViewport3DMouseLeftButtonDown (e :Input.MouseButtonEventArgs) = 
         let point = e.MouseDevice.GetPosition(viewport3D)        
         do  viewport3D.Tag <- point
-            immediate.Text <- viewport3D.Tag.ToString() + "check3"
+            immediate.Text <- viewport3D.Tag.ToString() + " check3"
     let handleViewport3DMouseLeftButtonUp (e :Input.MouseButtonEventArgs) = 
         let point = e.MouseDevice.GetPosition(viewport3D)        
         let delta = ((viewport3D.Tag :?> System.Windows.Point) - point) / 2.
         let mouse = Vector3D(delta.X, -delta.Y, 0.)
-        let axis = Vector3D.CrossProduct(mouse, Vector3D(0., 0., 1.))
-                           
+        let axis = Vector3D.CrossProduct(mouse, Vector3D(0., 0., 1.))                           
         match axis.Length < 0.00001 with 
         | true ->             
             do  setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
                 viewport3D.ReleaseMouseCapture()
-                immediate.Text <- viewport3D.Tag.ToString() + "check4" //state.quaternion.ToString()//mouse.ToString()
+                immediate.Text <- viewport3D.Tag.ToString() + " check4" 
         | false -> 
-            let rotationDelta = Quaternion(axis, axis.Length)
+            let rotationDelta = Quaternion(axis, axis.Length/perspective_Camera.Position.Z) // divide by Camera.Position.Z to slow down rotation
             let newQ = rotationDelta * state.quaternion 
             do  setQuaternion (newQ)                    
                 rotateTransform3D.Rotation <- QuaternionRotation3D(newQ)
                 model3DGroup.Transform <- rotateTransform3D
                 viewport3D.ReleaseMouseCapture()
                 viewport3D.Tag <- System.Windows.Point(0., 0.)
-                immediate.Text <- viewport3D.Tag.ToString() + "check1" //model3DGroup.Transform.Value .ToString() //
+                immediate.Text <- viewport3D.Tag.ToString() + " check1" 
+    let handleViewport3DMouseWheel  (e :Input.MouseWheelEventArgs) =
+        do  perspective_Camera.Position <- new Point3D( perspective_Camera.Position.X,
+                                                        perspective_Camera.Position.Y,
+                                                        perspective_Camera.Position.Z - (float e.Delta/250.))
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
@@ -2148,3 +2142,4 @@ type GraphingCalculator() as graphingCalculator =
         viewport3D.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3DMouseLeftButtonDown (e)))
         viewport3D.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3DMouseLeftButtonUp (e)))
         viewport3D.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleViewport3DMouseMove (e)))
+        viewport3D.PreviewMouseWheel.AddHandler(Input.MouseWheelEventHandler(fun _ e -> handleViewport3DMouseWheel (e)))
