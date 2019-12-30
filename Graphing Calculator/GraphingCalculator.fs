@@ -556,19 +556,19 @@ type GraphingCalculator() as graphingCalculator =
         // of the camera.
         let camera = PerspectiveCamera()
             // Specify where in the 3D scene the camera is.
-        do  camera.Position <- new Point3D(0., 0., 20.)
+        do  camera.Position <- new Point3D(0., 0., 1.)
             // Specify the direction that the camera is pointing.
             camera.LookDirection <- new Vector3D(0., 0., -10.)
             // Define camera's horizontal field of view in degrees.
             camera.FieldOfView <- 60.
             //camera.FarPlaneDistance <- 20.
         camera
-
+    
     do // Assemble the pieces            
        model3DGroup.Children.Add(light)
-       //model3DGroup.Children.Add(Models.testModel2)
-       model3DGroup.Children.Add(Models.testModel4)      
-
+       model3DGroup.Children.Add(Models.makeBox()) 
+       model3DGroup.Children.Add(Models.model5)
+            
        modelVisual3D.Content <- model3DGroup
        
        viewport3D.Camera <- perspective_Camera
@@ -2147,6 +2147,7 @@ type GraphingCalculator() as graphingCalculator =
 
         function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
         function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
+
         viewport3D.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseLeftButtonDown (e)))
         viewport3D.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseLeftButtonUp (e)))
         viewport3D.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleViewport3D_MouseMove (e)))
