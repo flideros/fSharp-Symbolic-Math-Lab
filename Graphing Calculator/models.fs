@@ -326,7 +326,6 @@ module Models =
         *)        
         model
     let makeBox () = 
-
         let geometry = 
             let meshGeometry = MeshGeometry3D()
             // Create a collection of normal vectors for the MeshGeometry3D.

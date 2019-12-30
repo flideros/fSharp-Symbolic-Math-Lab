@@ -569,7 +569,6 @@ type GraphingCalculator() as graphingCalculator =
        model3DGroup.Children.Add(Models.makeBox()) 
        model3DGroup.Children.Add(Models.model5)
             
-
        modelVisual3D.Content <- model3DGroup
        
        viewport3D.Camera <- perspective_Camera
