@@ -347,15 +347,15 @@ module Models =
             let positions = 
                 let positionCollection = Point3DCollection()
                     //Front
-                do  positionCollection.Add(new Point3D(-0.05,-0.05, 0.05))
-                    positionCollection.Add(new Point3D( 0.05,-0.05, 0.05))
-                    positionCollection.Add(new Point3D( 0.05, 0.05, 0.05))
-                    positionCollection.Add(new Point3D(-0.05, 0.05, 0.05))
+                do  positionCollection.Add(new Point3D(-0.05,-0.05, 0.1))
+                    positionCollection.Add(new Point3D( 0.05,-0.05, 0.1))
+                    positionCollection.Add(new Point3D( 0.05, 0.05, 0.1))
+                    positionCollection.Add(new Point3D(-0.05, 0.05, 0.1))
                     //Back
-                    positionCollection.Add(new Point3D(-0.05,-0.05, -0.05))
-                    positionCollection.Add(new Point3D( 0.05,-0.05, -0.05))
-                    positionCollection.Add(new Point3D( 0.05, 0.05, -0.05))
-                    positionCollection.Add(new Point3D(-0.05, 0.05, -0.05))
+                    positionCollection.Add(new Point3D(-0.05,-0.05, -0.00))
+                    positionCollection.Add(new Point3D( 0.05,-0.05, -0.00))
+                    positionCollection.Add(new Point3D( 0.05, 0.05, -0.00))
+                    positionCollection.Add(new Point3D(-0.05, 0.05, -0.00))
                 positionCollection
            
             // Create a collection of triangle indices for the MeshGeometry3D.
@@ -441,13 +441,51 @@ module Models =
         *)        
         model
 
-    let model5 = 
-        let model = makeBox ()
-        let rotation = QuaternionRotation3D((Quaternion(new Vector3D(0.,0.,0.1), 45.)))
-        let rotateTransform3D = RotateTransform3D(rotation)//,Point3D(0.,0.,0.1))
-        let translation = TranslateTransform3D(Vector3D(0.,0.,0.1))
+    
+    
+    let transformModel (model :GeometryModel3D) (v1 :Vector3D)  (point :Point3D) = 
+        let v2 = 
+            let v = Vector3D(point.X,point.Y,point.Z)
+            do  v.Normalize()
+            v
+        
         let transforms = Transform3DGroup()
-        do  transforms.Children.Add(rotateTransform3D )
+        let translation = TranslateTransform3D(Vector3D(point.X,point.Y,point.Z))
+        let axis = Vector3D.CrossProduct (v2, v1)
+        let angle = System.Math.Acos (Vector3D.DotProduct(v1, v2) / ((v1.LengthSquared * v2.LengthSquared)**0.5))
+        let quaternion = 
+            let q = (Quaternion(axis, angle))
+            do q.Normalize()
+            q
+        let rotation = QuaternionRotation3D(quaternion) |> RotateTransform3D
+        do  transforms.Children.Add(rotation)
             transforms.Children.Add(translation)
             model.Transform <- transforms
         model
+
+    let coil = 
+        
+        let x(t) = sin(t)
+        let y(t) = cos(t)
+        let z(t) = -t 
+
+        let points0 = seq{for t in 0.0..0.1..25.0 -> Point3D(x(t), y(t), z(t))}
+        let points1 = seq{for t in 0.1..0.1..25.1 -> Point3D(x(t), y(t), z(t))}
+        let points = List.zip (Seq.toList points0) (Seq.toList points1)
+        let normals = 
+            seq{for p0, p1 in points 
+                -> let vector = Vector3D( p1.X, p1.Y, p1.Z) - Vector3D( p0.X, p0.Y, p0.Z)
+                   do vector.Normalize()
+                   vector}
+
+        let normals = Seq.toList normals
+        
+        let pointsAndNormals = List.zip (Seq.toList points0) normals
+        let models = seq{for p,n in pointsAndNormals -> 
+                            let model = makeBox ()
+                            transformModel model n p}
+        let model3DGroup = Model3DGroup()
+        
+        do Seq.iter (fun m -> model3DGroup.Children.Add(m)) models
+
+        model3DGroup
