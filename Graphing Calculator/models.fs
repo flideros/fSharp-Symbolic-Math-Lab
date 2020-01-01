@@ -470,7 +470,6 @@ module Models =
         let x(t) = sin(t)
         let y(t) = cos(t)
         let z(t) = -t 
-
         let points0 = seq{for t in 0.0..0.1..25.0 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
         let points1 = seq{for t in 0.1..0.1..25.1 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
         let points = List.zip points0 points1
