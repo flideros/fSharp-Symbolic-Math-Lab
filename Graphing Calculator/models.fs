@@ -444,15 +444,16 @@ module Models =
     
     
     let transformModel (model :GeometryModel3D) (v1 :Vector3D)  (point :Point3D) = 
-        let v2 = 
-            let v = Vector3D(point.X,point.Y,point.Z)
+        let v2 =             
+            let v = Vector3D(0.,0.,1.)
             do  v.Normalize()
             v
         
         let transforms = Transform3DGroup()
         let translation = TranslateTransform3D(Vector3D(point.X,point.Y,point.Z))
-        let axis = Vector3D.CrossProduct (v2, v1)
-        let angle = System.Math.Acos (Vector3D.DotProduct(v1, v2) / ((v1.LengthSquared * v2.LengthSquared)**0.5))
+        
+        let axis = Vector3D.CrossProduct (v1, v2)        
+        let angle = axis.Length * (180./System.Math.PI)
         let quaternion = 
             let q = (Quaternion(axis, angle))
             do q.Normalize()
@@ -463,24 +464,25 @@ module Models =
             model.Transform <- transforms
         model
 
+
     let coil = 
         
         let x(t) = sin(t)
         let y(t) = cos(t)
         let z(t) = -t 
 
-        let points0 = seq{for t in 0.0..0.1..25.0 -> Point3D(x(t), y(t), z(t))}
-        let points1 = seq{for t in 0.1..0.1..25.1 -> Point3D(x(t), y(t), z(t))}
-        let points = List.zip (Seq.toList points0) (Seq.toList points1)
+        let points0 = seq{for t in 0.0..0.1..25.0 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
+        let points1 = seq{for t in 0.1..0.1..25.1 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
+        let points = List.zip points0 points1
+
         let normals = 
             seq{for p0, p1 in points 
                 -> let vector = Vector3D( p1.X, p1.Y, p1.Z) - Vector3D( p0.X, p0.Y, p0.Z)
                    do vector.Normalize()
-                   vector}
-
-        let normals = Seq.toList normals
+                   vector} |> Seq.toList 
         
-        let pointsAndNormals = List.zip (Seq.toList points0) normals
+        let pointsAndNormals = List.zip points0 normals      
+        
         let models = seq{for p,n in pointsAndNormals -> 
                             let model = makeBox ()
                             transformModel model n p}

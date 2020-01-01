@@ -558,7 +558,7 @@ type GraphingCalculator() as graphingCalculator =
             // Specify where in the 3D scene the camera is.
         do  camera.Position <- new Point3D(0., 0., 1.)
             // Specify the direction that the camera is pointing.
-            camera.LookDirection <- new Vector3D(-10., -10., -200.)
+            camera.LookDirection <- new Vector3D(0., 0., -200.)
             // Define camera's horizontal field of view in degrees.
             camera.FieldOfView <- 60.
             //camera.FarPlaneDistance <- 20.
