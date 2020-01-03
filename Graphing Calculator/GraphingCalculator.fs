@@ -527,6 +527,20 @@ type GraphingCalculator() as graphingCalculator =
 
         do  grid.Children.Add(function3D_SolidMesh_Button) |> ignore            
         grid
+    
+    let tRadio = 
+        RadioButton(
+            FontSize = 15.,
+            Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+            GroupName = "Select Parameter", 
+            Content = "t")        
+    let uvRadio = 
+        RadioButton(
+            FontSize = 15.,
+            Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+            GroupName = "Select Parameter", 
+            Content = "u,v",
+            IsChecked = Nullable true )
     let function3D_SelectParameter_RadioButtons = 
         let radioGroup = 
             StackPanel(
@@ -534,26 +548,12 @@ type GraphingCalculator() as graphingCalculator =
                 Orientation = Orientation.Horizontal)
         let selectParameter_TextBox = 
             let tb = FunctionTextBlock(Text = "SELECT PARAMETER")
-            tb    
-        let tRadio = 
-            RadioButton(
-                FontSize = 15.,
-                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
-                GroupName = "Select Parameter", 
-                Content = "t")        
-        let uvRadio = 
-            RadioButton(
-                FontSize = 15.,
-                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
-                GroupName = "Select Parameter", 
-                Content = "u,v")
-        
+            tb            
         do  radioGroup.Children.Add(selectParameter_TextBox) |> ignore
             radioGroup.Children.Add(tRadio) |> ignore
             radioGroup.Children.Add(uvRadio) |> ignore
             radioGroup.SetValue(Grid.RowProperty,3)
             radioGroup.SetValue(Grid.ColumnSpanProperty,2)
-
         radioGroup
     (**)
     do  // Assemble the pieces
@@ -1734,13 +1734,29 @@ type GraphingCalculator() as graphingCalculator =
             setActiveDisplay (View.Function3D function3D_Grid)
             setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
             x_Button.IsHitTestVisible <- false
-            t_Button.IsHitTestVisible <- false
-            u_Button.IsHitTestVisible <- true
-            v_Button.IsHitTestVisible <- true
-            x_Button.Background <- Style.linearGradientBrush_2
-            t_Button.Background <- Style.linearGradientBrush_2
-            u_Button.Background <- Style.linearGradientBrush_1
-            v_Button.Background <- Style.linearGradientBrush_1
+            match tRadio.IsChecked.Value with
+            | false -> 
+                do  t_Button.IsHitTestVisible <- false
+                    u_Button.IsHitTestVisible <- true
+                    v_Button.IsHitTestVisible <- true
+                    x_Button.Background <- Style.linearGradientBrush_2
+                    t_Button.Background <- Style.linearGradientBrush_2
+                    u_Button.Background <- Style.linearGradientBrush_1
+                    v_Button.Background <- Style.linearGradientBrush_1
+                    function3D_fxLabel_TextBlock.Text <- "fx(u,v) = "
+                    function3D_fyLabel_TextBlock.Text <- "fy(u,v) = "
+                    function3D_fzLabel_TextBlock.Text <- "fz(u,v) = "
+            | true -> 
+                do  t_Button.IsHitTestVisible <- true
+                    u_Button.IsHitTestVisible <- false
+                    v_Button.IsHitTestVisible <- false
+                    x_Button.Background <- Style.linearGradientBrush_2
+                    t_Button.Background <- Style.linearGradientBrush_1
+                    u_Button.Background <- Style.linearGradientBrush_2
+                    v_Button.Background <- Style.linearGradientBrush_2
+                    function3D_fxLabel_TextBlock.Text <- "fx(t) = "
+                    function3D_fyLabel_TextBlock.Text <- "fy(t) = "
+                    function3D_fzLabel_TextBlock.Text <- "fz(t) = "
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
