@@ -519,7 +519,7 @@ module Models =
                meshGeometry.Positions.Add(p3)
                ) points2
                
-           let model3D = GeometryModel3D(meshGeometry ,material)
+           let model3D = GeometryModel3D(meshGeometry, material)
 
            model3D
 
