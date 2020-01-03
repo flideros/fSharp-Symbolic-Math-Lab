@@ -235,7 +235,6 @@ module Models =
         materialGroup
 
     let makeBar () = 
-
         let geometry = 
             let meshGeometry = MeshGeometry3D()
             // Create a collection of normal vectors for the MeshGeometry3D.
@@ -312,45 +311,16 @@ module Models =
                     triangleIndicesCollection.Add(3)
                     triangleIndicesCollection.Add(7)
                     triangleIndicesCollection.Add(4)
-                    //
-                
+                    
                 triangleIndicesCollection
 
             do  meshGeometry.Normals <- normals
                 meshGeometry.Positions <- positions
-                meshGeometry.TriangleIndices <- triangleIndices
-    
-            meshGeometry            
-        let material = 
-            let linearGradiantBrush = LinearGradientBrush()
-            do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
-                linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.YellowGreen, 0.0))
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Chocolate, 1.0))
-            // Define material that will use the gradient.
-            let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
-            // Add this gradient to a MaterialGroup.
-            let materialGroup = MaterialGroup()
-            do  materialGroup.Children.Add(diffuseMaterial)
-            // Define an Emissive Material with a blue brush.
-            let emissiveMaterial = 
-                let c = Colors.Chocolate              
-                EmissiveMaterial(new SolidColorBrush(c))                
-            do  materialGroup.Children.Add(emissiveMaterial)         
-            materialGroup
-            // Apply a transform to the object. In this sample, a rotation transform is applied,  
-            // rendering the 3D object rotated.        
-        let model = GeometryModel3D(geometry,material)
-        (*
-        let transformation = RotateTransform3D()        
-        do  transformation.Rotation <- QuaternionRotation3D((Quaternion(new Vector3D(-200., -30., 1.), 22.)))
-            model.Transform <- transformation
-        *)        
+                meshGeometry.TriangleIndices <- triangleIndices    
+            meshGeometry         
+        let model = GeometryModel3D(geometry,material)               
         model
     let makeBox () = 
-
         let geometry = 
             let meshGeometry = MeshGeometry3D()
             // Create a collection of normal vectors for the MeshGeometry3D.
@@ -436,33 +406,7 @@ module Models =
                 meshGeometry.TriangleIndices <- triangleIndices
     
             meshGeometry            
-        let material = 
-            let linearGradiantBrush = LinearGradientBrush()
-            do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
-                linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.YellowGreen, 0.0))
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
-                linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Chocolate, 1.0))
-            // Define material that will use the gradient.
-            let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
-            // Add this gradient to a MaterialGroup.
-            let materialGroup = MaterialGroup()
-            do  materialGroup.Children.Add(diffuseMaterial)
-            // Define an Emissive Material with a blue brush.
-            let emissiveMaterial = 
-                let c = Colors.Chocolate              
-                EmissiveMaterial(new SolidColorBrush(c))                
-            do  materialGroup.Children.Add(emissiveMaterial)         
-            materialGroup
-            // Apply a transform to the object. In this sample, a rotation transform is applied,  
-            // rendering the 3D object rotated.        
-        let model = GeometryModel3D(geometry,material)
-        (*
-        let transformation = RotateTransform3D()        
-        do  transformation.Rotation <- QuaternionRotation3D((Quaternion(new Vector3D(-200., -30., 1.), 22.)))
-            model.Transform <- transformation
-        *)        
+        let model = GeometryModel3D(geometry,material)             
         model
     
     let transformModel (model :GeometryModel3D) (v1 :Vector3D)  (point :Point3D) = 
@@ -491,25 +435,21 @@ module Models =
         let x(t) = sin(t)
         let y(t) = cos(t)
         let z(t) = -t 
-        let points0 = seq{for t in 0.0..0.01..25.0 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
-        let points1 = seq{for t in 0.01..0.01..25.01 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
-        let points = List.zip points0 points1
+        let points0 = seq{for t in 0.0..0.01..25.0 -> Point3D(x(t), y(t), z(t))} 
+        let points1 = seq{for t in 0.01..0.01..25.01 -> Point3D(x(t), y(t), z(t))} 
+        let points = Seq.zip points0 points1
 
         let normals = 
             seq{for p0, p1 in points 
                 -> let vector = Vector3D( p1.X, p1.Y, p1.Z) - Vector3D( p0.X, p0.Y, p0.Z)
                    do vector.Normalize()
-                   vector} |> Seq.toList 
-        
-        let pointsAndNormals = List.zip points0 normals      
-        
+                   vector}        
+        let pointsAndNormals = Seq.zip points0 normals        
         let models = seq{for p,n in pointsAndNormals -> 
                             let model = makeBox ()
                             transformModel model n p}
-        let model3DGroup = Model3DGroup()
-        
+        let model3DGroup = Model3DGroup()        
         do Seq.iter (fun m -> model3DGroup.Children.Add(m)) models
-
         model3DGroup
 
     let surface = 

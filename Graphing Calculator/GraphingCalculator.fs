@@ -494,7 +494,7 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.RowDefinitions.Add(row1)
             grid.RowDefinitions.Add(row2)
             
-            grid.SetValue(Grid.RowProperty,3)
+            grid.SetValue(Grid.RowProperty,4)
             grid.SetValue(Grid.ColumnSpanProperty,2)
 
         do  grid.Children.Add(function3D_Sphere_Button) |> ignore
@@ -522,11 +522,39 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.RowDefinitions.Add(row1)
             grid.RowDefinitions.Add(row2)
             
-            grid.SetValue(Grid.RowProperty,4)
+            grid.SetValue(Grid.RowProperty,3)
             grid.SetValue(Grid.ColumnSpanProperty,2)
 
         do  grid.Children.Add(function3D_SolidMesh_Button) |> ignore            
         grid
+    let function3D_SelectParameter_RadioButtons = 
+        let radioGroup = 
+            StackPanel(
+                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+                Orientation = Orientation.Horizontal)
+        let selectParameter_TextBox = 
+            let tb = FunctionTextBlock(Text = "SELECT PARAMETER")
+            tb    
+        let tRadio = 
+            RadioButton(
+                FontSize = 15.,
+                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+                GroupName = "Select Parameter", 
+                Content = "t")        
+        let uvRadio = 
+            RadioButton(
+                FontSize = 15.,
+                Margin = Thickness(left = 5., top = 5., right = 5., bottom = 0.),
+                GroupName = "Select Parameter", 
+                Content = "u,v")
+        
+        do  radioGroup.Children.Add(selectParameter_TextBox) |> ignore
+            radioGroup.Children.Add(tRadio) |> ignore
+            radioGroup.Children.Add(uvRadio) |> ignore
+            radioGroup.SetValue(Grid.RowProperty,3)
+            radioGroup.SetValue(Grid.ColumnSpanProperty,2)
+
+        radioGroup
     (**)
     do  // Assemble the pieces
         function3D_Grid .Children.Add(function3D_fxLabel_TextBlock) |> ignore
@@ -537,6 +565,7 @@ type GraphingCalculator() as graphingCalculator =
         function3D_Grid .Children.Add(function3D_fz_TextBox) |> ignore
         function3D_Grid .Children.Add(function3D_ShapeButton_Grid) |> ignore
         function3D_Grid .Children.Add(function3D_SolidMeshButton_Grid) |> ignore
+        function3D_Grid .Children.Add(function3D_SelectParameter_RadioButtons) |> ignore
     
     //-----3D Viewport
     let viewport3D = 
@@ -568,7 +597,7 @@ type GraphingCalculator() as graphingCalculator =
     do // Assemble the pieces            
        model3DGroup.Children.Add(light)
        model3DGroup.Children.Add(light2)       
-       model3DGroup.Children.Add(Models.surface)
+       //model3DGroup.Children.Add(Models.surface)
             
 
        modelVisual3D.Content <- model3DGroup
