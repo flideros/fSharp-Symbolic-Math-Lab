@@ -1,4 +1,8 @@
-﻿namespace GraphingCalculator
+﻿// This module is not part of the Graphing Calculator implementation.
+// I'm using this code to develop the algorithms for the implementation.
+// But, I'm going to leave this module in the project for it's value
+// as code examples and prototyping area.
+namespace GraphingCalculator
 module Models =
 
     open System
@@ -13,7 +17,7 @@ module Models =
     open System.Windows.Media.Imaging
     open System.Windows.Media.Media3D
     open Utilities
-
+    
     let testModel = 
             // from Model3DCollection Class example
             // Define the lights cast in the scene. Without light, the 3D object cannot 
@@ -210,6 +214,26 @@ module Models =
         
         model
     
+    let material = 
+        let linearGradiantBrush = LinearGradientBrush()
+        do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
+            linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Yellow, 0.0))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LimeGreen, 1.0))
+        // Define material that will use the gradient.
+        let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
+        // Add this gradient to a MaterialGroup.
+        let materialGroup = MaterialGroup()
+        do  materialGroup.Children.Add(diffuseMaterial)
+        // Define an Emissive Material with a blue brush.
+        let emissiveMaterial = 
+            let c = Color.FromScRgb(1.f,255.f,0.f,0.f)               
+            EmissiveMaterial(new SolidColorBrush(c))                
+        do  materialGroup.Children.Add(emissiveMaterial)
+        materialGroup
+
     let makeBar () = 
 
         let geometry = 
@@ -440,8 +464,6 @@ module Models =
             model.Transform <- transformation
         *)        
         model
-
-    
     
     let transformModel (model :GeometryModel3D) (v1 :Vector3D)  (point :Point3D) = 
         let v2 =             
@@ -464,14 +486,13 @@ module Models =
             model.Transform <- transforms
         model
 
-
-    let coil = 
+    let helix = 
         
         let x(t) = sin(t)
         let y(t) = cos(t)
         let z(t) = -t 
-        let points0 = seq{for t in 0.0..0.1..25.0 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
-        let points1 = seq{for t in 0.1..0.1..25.1 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
+        let points0 = seq{for t in 0.0..0.01..25.0 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
+        let points1 = seq{for t in 0.01..0.01..25.01 -> Point3D(x(t), y(t), z(t))} |> Seq.toList
         let points = List.zip points0 points1
 
         let normals = 
@@ -490,3 +511,75 @@ module Models =
         do Seq.iter (fun m -> model3DGroup.Children.Add(m)) models
 
         model3DGroup
+
+    let surface = 
+           
+           // Surface example
+           (*let x(u,v) = u
+           let y(u,v) = v
+           let z(u,v) = sin(u**2. + v**2.)*)
+           
+           // Torus example
+           (*let x(u,v) = sin(v)
+           let y(u,v) = (2.+cos(v))*sin(u)
+           let z(u,v) = (2.+cos(v))*cos(u)*)
+           
+           // Sphere example
+           let x(u,v) = cos(u)*sin(v)
+           let y(_u,v) = -cos(v)
+           let z(u,v) = sin(-u)*sin(v)
+
+           let resolution  = 0.05 * System.Math.PI
+           let uLowerLimit = 0.0
+           let uUpperLimit = 2.*System.Math.PI
+           let vLowerLimit = 0.0
+           let vUpperLimit = 2.*System.Math.PI
+
+
+           let points0 = 
+               seq{for u in uLowerLimit..resolution..uUpperLimit do 
+                     for v in vLowerLimit..resolution..vUpperLimit -> Point3D(x(u, v), y(u, v), z(u, v))}
+           let points1 = 
+               seq{for u in uLowerLimit..resolution..uUpperLimit do 
+                     for v in vLowerLimit..resolution..vUpperLimit -> Point3D(x(u, v + resolution), y(u, v + resolution), z(u, v + resolution))}
+           let points2 = 
+               seq{for u in uLowerLimit..resolution..uUpperLimit do 
+                     for v in vLowerLimit..resolution..vUpperLimit -> Point3D(x(u + resolution, v + resolution), y(u + resolution, v + resolution), z(u + resolution, v + resolution))}
+           let points3 = 
+               seq{for u in uLowerLimit..resolution..uUpperLimit do 
+                     for v in vLowerLimit..resolution..vUpperLimit -> Point3D(x(u + resolution, v), y(u + resolution, v), z(u + resolution, v))}
+           
+           
+           let points1 = Seq.zip3 points0 points1 points2
+           let points2 = Seq.zip3 points2 points3 points0  
+           
+           let meshGeometry = MeshGeometry3D() 
+           
+           do  Seq.iter (fun n -> 
+               let p1,p2,p3 = n 
+               // Front
+               meshGeometry.Positions.Add(p3)
+               meshGeometry.Positions.Add(p2)
+               meshGeometry.Positions.Add(p1)               
+               // back
+               meshGeometry.Positions.Add(p1)
+               meshGeometry.Positions.Add(p2)
+               meshGeometry.Positions.Add(p3) 
+               ) points1
+
+           do  Seq.iter (fun n -> 
+               let p1,p2,p3 = n 
+               // Front
+               meshGeometry.Positions.Add(p3)
+               meshGeometry.Positions.Add(p2)
+               meshGeometry.Positions.Add(p1)               
+               // Back
+               meshGeometry.Positions.Add(p1)
+               meshGeometry.Positions.Add(p2)
+               meshGeometry.Positions.Add(p3)
+               ) points2
+               
+           let model3D = GeometryModel3D(meshGeometry ,material)
+
+           model3D
+
