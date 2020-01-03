@@ -550,24 +550,25 @@ type GraphingCalculator() as graphingCalculator =
     let rotateTransform3D = RotateTransform3D()
     
     let light = DirectionalLight(Color = Colors.White, Direction = Vector3D(-1., -0.5, -1.))
+    let light2 = DirectionalLight(Color = Colors.White, Direction = Vector3D(1., 0.5, 1.))
     let perspective_Camera = 
         // Defines the camera used to view the 3D object. In order to view the 3D object,
         // the camera must be positioned and pointed such that the object is within view 
         // of the camera.
         let camera = PerspectiveCamera()
-            // Specify where in the 3D scene the camera is.
+                // Specify where in the 3D scene the camera is.
         do  camera.Position <- new Point3D(0., 0., 1.)
-            // Specify the direction that the camera is pointing.
-            camera.LookDirection <- new Vector3D(0., 0., -200.)
-            // Define camera's horizontal field of view in degrees.
-            camera.FieldOfView <- 60.
-            //camera.FarPlaneDistance <- 20.
+                // Specify the direction that the camera is pointing.
+            camera.LookDirection <- new Vector3D(0., 0., -0.5)
+                // Define camera's horizontal field of view in degrees.
+            camera.FieldOfView <- 80.
+                //camera.FarPlaneDistance <- 20.
         camera
     
     do // Assemble the pieces            
        model3DGroup.Children.Add(light)
-       //model3DGroup.Children.Add(Models.makeBox()) 
-       model3DGroup.Children.Add(Models.coil)
+       model3DGroup.Children.Add(light2)       
+       model3DGroup.Children.Add(Models.surface)
             
 
        modelVisual3D.Content <- model3DGroup
