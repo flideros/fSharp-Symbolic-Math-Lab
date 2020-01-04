@@ -442,7 +442,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function3D_fx_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 0)
+        let tb = FunctionTextBox(MaxLines = 10, TabIndex = 0)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function3D_fyLabel_TextBlock = 
@@ -450,7 +450,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function3D_fy_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 1)
+        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 1)
         do  tb.SetValue(Grid.RowProperty,1)
             tb.SetValue(Grid.ColumnProperty,1)
         tb    
@@ -459,7 +459,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,2)
         tb
     let function3D_fz_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 1, TabIndex = 2)
+        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 2)
         do  tb.SetValue(Grid.RowProperty,2)
             tb.SetValue(Grid.ColumnProperty,1)
         tb    
@@ -475,6 +475,10 @@ type GraphingCalculator() as graphingCalculator =
         let b = FunctionButton(Content="Torus", TabIndex = 3)
         do b.SetValue(Grid.ColumnProperty,3)
         b
+    let function3D_Helix_Button = 
+        let b = FunctionButton(Content="Helix", TabIndex = 4)
+        do b.SetValue(Grid.ColumnProperty,5)
+        b
     let function3D_ShapeButton_Grid =
         let grid = Grid() 
         
@@ -482,11 +486,13 @@ type GraphingCalculator() as graphingCalculator =
         let column2 = ColumnDefinition(Width = GridLength.Auto)
         let column3 = ColumnDefinition(Width = GridLength.Auto)
         let column4 = ColumnDefinition(Width = GridLength.Auto)
+        let column5 = ColumnDefinition(Width = GridLength.Auto)
         
         do  grid.ColumnDefinitions.Add(column1)
             grid.ColumnDefinitions.Add(column2)
             grid.ColumnDefinitions.Add(column3)
             grid.ColumnDefinitions.Add(column4)
+            grid.ColumnDefinitions.Add(column5)
 
         let row1 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
         let row2 = RowDefinition(Height = GridLength.Auto)
@@ -500,10 +506,11 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(function3D_Sphere_Button) |> ignore
             grid.Children.Add(function3D_Cone_Button) |> ignore
             grid.Children.Add(function3D_Torus_Button) |> ignore
+            grid.Children.Add(function3D_Helix_Button) |> ignore
         grid    
     let function3D_SolidMesh_Button = 
         let b = FunctionButton(Content="Solid Mesh", TabIndex = 3)
-        do b.SetValue(Grid.ColumnProperty,1)
+        do b.SetValue(Grid.ColumnProperty,5)
         b
     let function3D_SolidMeshButton_Grid =
         let grid = Grid() 
@@ -597,7 +604,7 @@ type GraphingCalculator() as graphingCalculator =
     do // Assemble the pieces            
        model3DGroup.Children.Add(light)
        model3DGroup.Children.Add(light2)       
-       //model3DGroup.Children.Add(Models.surface)
+       //model3DGroup.Children.Add(Models.helix)
             
 
        modelVisual3D.Content <- model3DGroup
@@ -882,7 +889,10 @@ type GraphingCalculator() as graphingCalculator =
         let row5 = RowDefinition(Height = GridLength.Auto)
         let row6 = RowDefinition(Height = GridLength.Auto)        
         let row7 = RowDefinition(Height = GridLength.Auto)
-        let row8 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
+        let row8 = RowDefinition(Height = GridLength.Auto)
+        let row9 = RowDefinition(Height = GridLength.Auto)
+        let row10 = RowDefinition(Height = GridLength.Auto)
+        let row11 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
             
         do  grid.RowDefinitions.Add(row1)
             grid.RowDefinitions.Add(row2)
@@ -891,7 +901,10 @@ type GraphingCalculator() as graphingCalculator =
             grid.RowDefinitions.Add(row5)
             grid.RowDefinitions.Add(row6)
             grid.RowDefinitions.Add(row7)
-            grid.RowDefinitions.Add(row8)            
+            grid.RowDefinitions.Add(row8)
+            grid.RowDefinitions.Add(row9)
+            grid.RowDefinitions.Add(row10)
+            grid.RowDefinitions.Add(row11)            
         grid
     let option3D_uMinLabel_TextBlock = 
         let tb = FunctionTextBlock(Text = "u Min = ")
@@ -913,12 +926,12 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,1)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
-    let option3D_uGridLabel_TextBlock = 
-        let tb = FunctionTextBlock(Text = "u Grid = ")
+    let option3D_uStepLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "u Step = ")
         do tb.SetValue(Grid.RowProperty,2)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
-    let option3D_uGrid_TextBox = 
+    let option3D_uStep_TextBox = 
         let tb = FunctionTextBox(MaxLines = 1)
         do tb.SetValue(Grid.RowProperty,2)
         do tb.SetValue(Grid.ColumnProperty,1)
@@ -943,12 +956,12 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,4)
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
-    let option3D_vGridLabel_TextBlock = 
-        let tb = FunctionTextBlock(Text = "v Grid = ")
+    let option3D_vStepLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "v Step = ")
         do tb.SetValue(Grid.RowProperty,5)
         do tb.SetValue(Grid.ColumnProperty,0)
         tb
-    let option3D_vGrid_TextBox = 
+    let option3D_vStep_TextBox = 
         let tb = FunctionTextBox(MaxLines = 1)
         do tb.SetValue(Grid.RowProperty,5)
         do tb.SetValue(Grid.ColumnProperty,1)
@@ -960,7 +973,7 @@ type GraphingCalculator() as graphingCalculator =
         b
     let option3D_Button_Grid =
         let grid = Grid() 
-        do  grid.SetValue(Grid.RowProperty,6)
+        do  grid.SetValue(Grid.RowProperty,11)
 
         let column1 = ColumnDefinition(Width = GridLength.Auto)
         let column2 = ColumnDefinition(Width = GridLength.Auto)
@@ -979,20 +992,58 @@ type GraphingCalculator() as graphingCalculator =
         do  grid.Children.Add(option3D_Save_Button) |> ignore
             grid.Children.Add(option3D_Reset_Button) |> ignore
         grid
-    
+    let option3D_tMinLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "t Min = ")
+        do tb.SetValue(Grid.RowProperty,7)
+        do tb.SetValue(Grid.ColumnProperty,0)
+        tb
+    let option3D_tMin_TextBox = 
+        let tb = FunctionTextBox(MaxLines = 1)
+        do tb.SetValue(Grid.RowProperty,7)
+        do tb.SetValue(Grid.ColumnProperty,1)
+        tb
+    let option3D_tMaxLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "t Max = ")
+        do tb.SetValue(Grid.RowProperty,8)
+        do tb.SetValue(Grid.ColumnProperty,0)
+        tb
+    let option3D_tMax_TextBox = 
+        let tb = FunctionTextBox(MaxLines = 1)
+        do tb.SetValue(Grid.RowProperty,8)
+        do tb.SetValue(Grid.ColumnProperty,1)
+        tb 
+    let option3D_tStepLabel_TextBlock = 
+        let tb = FunctionTextBlock(Text = "t Step = ")
+        do tb.SetValue(Grid.RowProperty,9)
+        do tb.SetValue(Grid.ColumnProperty,0)
+        tb
+    let option3D_tStep_TextBox = 
+        let tb = FunctionTextBox(MaxLines = 1)
+        do tb.SetValue(Grid.RowProperty,9)
+        do tb.SetValue(Grid.ColumnProperty,1)
+        tb 
+
+
+
     do  // Assemble the pieces
         option3D_Grid .Children.Add(option3D_uMinLabel_TextBlock) |> ignore
         option3D_Grid .Children.Add(option3D_uMin_TextBox) |> ignore
         option3D_Grid .Children.Add(option3D_uMaxLabel_TextBlock) |> ignore
         option3D_Grid .Children.Add(option3D_uMax_TextBox) |> ignore
-        option3D_Grid .Children.Add(option3D_uGridLabel_TextBlock) |> ignore
-        option3D_Grid .Children.Add(option3D_uGrid_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_uStepLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_uStep_TextBox) |> ignore
         option3D_Grid .Children.Add(option3D_vMinLabel_TextBlock) |> ignore
         option3D_Grid .Children.Add(option3D_vMin_TextBox) |> ignore
         option3D_Grid .Children.Add(option3D_vMaxLabel_TextBlock) |> ignore
         option3D_Grid .Children.Add(option3D_vMax_TextBox) |> ignore        
-        option3D_Grid .Children.Add(option3D_vGridLabel_TextBlock) |> ignore
-        option3D_Grid .Children.Add(option3D_vGrid_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_vStepLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_vStep_TextBox) |> ignore        
+        option3D_Grid .Children.Add(option3D_tMinLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_tMin_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_tMaxLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_tMax_TextBox) |> ignore
+        option3D_Grid .Children.Add(option3D_tStepLabel_TextBlock) |> ignore
+        option3D_Grid .Children.Add(option3D_tStep_TextBox) |> ignore                
         option3D_Grid .Children.Add(option3D_Button_Grid) |> ignore
 
     //-----Immediate Text Box
@@ -1569,16 +1620,62 @@ type GraphingCalculator() as graphingCalculator =
             let n = System.Double.TryParse (option2D_tStep_TextBox.Text)
             match n with
             | true, d -> Tstep (real d)
-            | false, _ -> GraphingImplementation.defaultOptions.Tstep        
-        {upperX = uX; lowerX = lX; upperY = uY; lowerY = lY; upperT = uT; lowerT = lT; Tstep = tStep}
+            | false, _ -> GraphingImplementation.defaultOptions.Tstep
+        let uU = 
+            let n = System.Double.TryParse (option3D_uMax_TextBox.Text)
+            match n with
+            | true, d -> U (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.upperU       
+        let lU = 
+            let n = System.Double.TryParse (option3D_uMin_TextBox.Text)
+            match n with
+            | true, d -> U (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.lowerU
+        let uStep = 
+            let n = System.Double.TryParse (option3D_uStep_TextBox.Text)
+            match n with
+            | true, d -> Ustep (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.uStep
+        let uV = 
+            let n = System.Double.TryParse (option3D_vMax_TextBox.Text)
+            match n with
+            | true, d -> V (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.upperV
+        let lV = 
+            let n = System.Double.TryParse (option3D_vMin_TextBox.Text)
+            match n with
+            | true, d -> V (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.lowerV
+        let vStep = 
+            let n = System.Double.TryParse (option3D_vStep_TextBox.Text)
+            match n with
+            | true, d -> Vstep (real d)
+            | false, _ -> GraphingImplementation.defaultOptions.vStep        
+        { upperX = uX; 
+          lowerX = lX; 
+          upperY = uY; 
+          lowerY = lY; 
+          upperT = uT; 
+          lowerT = lT; 
+          Tstep  = tStep
+          upperU = uU; 
+          lowerU = lU; 
+          uStep  = uStep
+          upperV = uV; 
+          lowerV = lV; 
+          vStep  = vStep }
 
 // ----- Setters    
-    //
+    // a function that sets the options text
     let setGraphOptionText (options:DrawingOptions) =
         let getValueFromXCoordinate c = match c with | X (Math.Pure.Quantity.Real x) -> x.ToString() | _ -> ""
         let getValueFromYCoordinate c = match c with | Y (Math.Pure.Quantity.Real y) -> y.ToString() | _ -> ""
         let getValueFromT t = match t with | T (Math.Pure.Quantity.Real t) -> t.ToString() | _ -> ""
         let getValueFromTstep ts = match ts with | Tstep (Math.Pure.Quantity.Real ts) -> ts.ToString() | _ -> ""        
+        let getValueFromU u = match u with | U (Math.Pure.Quantity.Real u) -> u.ToString() | _ -> ""
+        let getValueFromUstep us = match us with | Ustep (Math.Pure.Quantity.Real us) -> us.ToString() | _ -> ""
+        let getValueFromV v = match v with | V (Math.Pure.Quantity.Real v) -> v.ToString() | _ -> ""
+        let getValueFromVstep vs = match vs with | Vstep (Math.Pure.Quantity.Real vs) -> vs.ToString() | _ -> ""
         do
             option_xMin_TextBox.Text <- getValueFromXCoordinate options.lowerX
             option_xMax_TextBox.Text <- getValueFromXCoordinate options.upperX
@@ -1591,6 +1688,15 @@ type GraphingCalculator() as graphingCalculator =
             option2D_tMax_TextBox.Text <- getValueFromT options.upperT
             option2D_tMin_TextBox.Text <- getValueFromT options.lowerT
             option2D_tStep_TextBox.Text <- getValueFromTstep options.Tstep
+            option3D_tMax_TextBox.Text <- getValueFromT options.upperT
+            option3D_tMin_TextBox.Text <- getValueFromT options.lowerT
+            option3D_tStep_TextBox.Text <- getValueFromTstep options.Tstep
+            option3D_uMax_TextBox.Text <- getValueFromU options.upperU
+            option3D_uMin_TextBox.Text <- getValueFromU options.lowerU
+            option3D_uStep_TextBox.Text <- getValueFromUstep options.uStep
+            option3D_vMax_TextBox.Text <- getValueFromV options.upperV
+            option3D_vMin_TextBox.Text <- getValueFromV options.lowerV
+            option3D_vStep_TextBox.Text <- getValueFromVstep options.vStep
     // a function that sets active display
     let setActiveDisplay display =
         do  List.iter (fun x -> 
@@ -1622,10 +1728,10 @@ type GraphingCalculator() as graphingCalculator =
             (p.Visibility <- Visibility.Visible)
         | View.Function3D p
         | View.Option p
-        | View.Option2D p ->             
-            //TODO setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph3DParametric)
+        | View.Option2D p 
+        | View.Option3D p -> 
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph2DParametric)
             (p.Visibility <- Visibility.Visible)
-        | View.Option3D p -> (p.Visibility <- Visibility.Visible)
         | View.Text t -> (t.Visibility <- Visibility.Visible)        
     // a function that sets the displayed text
     let setDisplayedText =         
@@ -1648,7 +1754,13 @@ type GraphingCalculator() as graphingCalculator =
                 | false,false -> 
                     do function2D_xt_TextBox.Text <- text
                        function2D_yt_TextBox.Text <- text
-            | Graph3DParametric -> () //TODO
+            | Graph3DParametric -> 
+                let x,y,z = function3D_fx_TextBox.MaxLines, function3D_fy_TextBox.MaxLines, function3D_fz_TextBox.MaxLines 
+                match x, y, z with
+                | x, y, z when x > 3 && y = 3 && z = 3 -> do function3D_fx_TextBox.Text <- text
+                | x, y, z when x = 3 && y > 3 && z = 3 -> do function3D_fy_TextBox.Text <- text
+                | x, y, z when x = 3 && y = 3 && z > 3 -> do function3D_fz_TextBox.Text <- text
+                | _ -> ()
     // a function that sets the pending op text
     let setMemoText = 
         fun text -> memo.Text <- text
@@ -1746,6 +1858,7 @@ type GraphingCalculator() as graphingCalculator =
                     function3D_fxLabel_TextBlock.Text <- "fx(u,v) = "
                     function3D_fyLabel_TextBlock.Text <- "fy(u,v) = "
                     function3D_fzLabel_TextBlock.Text <- "fz(u,v) = "
+                    function3D_SolidMesh_Button.Content <- "Build Surface"
             | true -> 
                 do  t_Button.IsHitTestVisible <- true
                     u_Button.IsHitTestVisible <- false
@@ -1757,6 +1870,7 @@ type GraphingCalculator() as graphingCalculator =
                     function3D_fxLabel_TextBlock.Text <- "fx(t) = "
                     function3D_fyLabel_TextBlock.Text <- "fy(t) = "
                     function3D_fzLabel_TextBlock.Text <- "fz(t) = "
+                    function3D_SolidMesh_Button.Content <- "Build Curve"
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}
@@ -2087,6 +2201,9 @@ type GraphingCalculator() as graphingCalculator =
             setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
             rotateTransform3D.Rotation <- QuaternionRotation3D(state.quaternion)
             model3DGroup.Transform <- rotateTransform3D
+    //  3D Parametric
+    let handleParameterRadioButtons_Checked () =         
+        setInputMode Graph3DParametric
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
@@ -2200,3 +2317,6 @@ type GraphingCalculator() as graphingCalculator =
         viewport3D.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleViewport3D_MouseMove (e)))
         viewport3D.PreviewMouseWheel.AddHandler(Input.MouseWheelEventHandler(fun _ e -> handleViewport3D_MouseWheel (e)))
         viewport3D.PreviewMouseRightButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseRightButtonDown ()))
+
+        tRadio.Checked.AddHandler(RoutedEventHandler(fun _ _ -> handleParameterRadioButtons_Checked()))
+        uvRadio.Checked.AddHandler(RoutedEventHandler(fun _ _ -> handleParameterRadioButtons_Checked()))

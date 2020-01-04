@@ -14,7 +14,11 @@ module GraphingDomain =
     type Y = Y of NumberType
     type Z = Z of NumberType
     type T = T of NumberType
+    type U = U of NumberType
+    type V = V of NumberType
     type Tstep = Tstep of NumberType
+    type Ustep = Ustep of NumberType
+    type Vstep = Vstep of NumberType
     type Size = {height:NumberType; width:NumberType}
     type SweepDirection =
             /// positive-angle direction
@@ -28,11 +32,17 @@ module GraphingDomain =
           lowerY : Y;
           upperT : T; 
           lowerT : T;
-          Tstep  : Tstep }        
+          Tstep  : Tstep;
+          upperU : U; 
+          lowerU : U; 
+          upperV : V; 
+          lowerV : V;
+          uStep  : Ustep;
+          vStep  : Vstep}        
     
     // Geometry    
     type Point = 
-        | Point of X * Y  //-> System.Windows.Point //{x:Coordinate; y:Coordinate}
+        | Point of X * Y 
         | Point3D of X * Y * Z
 
     type ArcSegment =
@@ -67,10 +77,9 @@ module GraphingDomain =
 
     type Trace = {startPoint:Point; traceSegments:PathGeometry list}
     
-    // Drawing
-    type DrawOp = Expression * DrawingOptions
+    
      
-    // types to describe errors
+    // types to describe results
     type DrawError = 
         | Error of Error
         | FailedToCreateTrace
@@ -118,7 +127,11 @@ module GraphingDomain =
           error : DrawError }
 
     type Dim3StateData = {x:Expression;y:Expression;z:Expression}
-
+    
+    // Drawing
+    type DrawOp = Expression * DrawingOptions
+    type DrawOp3D = Dim3StateData * DrawingOptions
+    
     type CalculatorInput =
         | ExpressionInput of ExpressionInput
         | CalcInput of ConventionalDomain.CalculatorInput
@@ -162,6 +175,7 @@ module GraphingDomain =
     type AccumulateSymbol = ExpressionStateData -> Symbol -> Expression //StateData
     type DoDrawOperation = DrawOp-> DrawOperationResult
     type DoDraw2DParametricOperation = DrawOp * DrawOp -> DrawOperationResult
+    type DoDraw3DParametricOperation = DrawOp3D -> DrawOperationResult
     type DoExpressionOperation = Function * Expression * Expression -> ExpressionOperationResult
     type GetDisplayFromExpression = Expression -> string
     type GetNumberFromAccumulator = ExpressionStateData -> NumberType
@@ -176,6 +190,7 @@ module GraphingDomain =
     type SetExpressionToParenthetical = Expression * (Parenthetical option) -> Parenthetical
     type CloseParenthetical = ParentheticalStateData -> CalculatorState
     type Toggle2DParametricState = CalculatorState -> CalculatorState
+
         
     type GraphServices = {        
         doDrawOperation :DoDrawOperation
@@ -209,7 +224,13 @@ module GraphingImplementation =
           lowerY = Y (Math.Pure.Quantity.Real -150.);
           upperT = T (Math.Pure.Quantity.Real 150.); 
           lowerT = T (Math.Pure.Quantity.Real -150.);
-          Tstep  = Tstep (Math.Pure.Quantity.Real 0.1) }
+          Tstep  = Tstep (Math.Pure.Quantity.Real 0.1) 
+          upperU = U (Math.Pure.Quantity.Real (2.0 * System.Math.PI));
+          lowerU = U (Math.Pure.Quantity.Real 0.);
+          upperV = V (Math.Pure.Quantity.Real (2.0 * System.Math.PI));
+          lowerV = V (Math.Pure.Quantity.Real 0.);
+          uStep  = Ustep (Math.Pure.Quantity.Real (0.1*System.Math.PI)) ;
+          vStep  = Vstep (Math.Pure.Quantity.Real (0.1*System.Math.PI)) }
 
     let accumulateNonZeroDigit services digit accumulatorData =
         let digits = accumulatorData.digits
@@ -2538,9 +2559,17 @@ module GraphServices =
             let pointLists = points          
             let out = List.map (fun x -> createTrace x) pointLists 
             out |> Traces
-
-    let doDraw3DParametricOperation = ()
-        //TODO
+    (*
+    let doDraw3DParametricOperation (drawOp3D :DrawOp3D) :DrawOperationResult  = 
+        let expressions,options = drawOp3D
+        let symbols =
+            let xParameter = ExpressionStructure.variables expressions.x
+            let yParameter = ExpressionStructure.variables expressions.y 
+            let zParameter = ExpressionStructure.variables expressions.z 
+            List.concat [xParameter;yParameter;xParameter]
+        let isCurve = List.contains (Symbol.Variable "t") symbols 
+        
+*)
 
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
