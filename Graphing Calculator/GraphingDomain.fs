@@ -43,8 +43,7 @@ module GraphingDomain =
     // Geometry    
     type Point = 
         | Point of X * Y 
-        | Point3D of X * Y * Z
-
+        | Point3D of X * Y * Z    
     type ArcSegment =
         { Point : Point
           Size : Size
@@ -77,6 +76,8 @@ module GraphingDomain =
 
     type Trace = {startPoint:Point; traceSegments:PathGeometry list}
     
+    type MeshGroup = System.Windows.Media.Media3D.Model3DGroup
+    type Mesh = System.Windows.Media.Media3D.GeometryModel3D
     
      
     // types to describe results
@@ -85,9 +86,12 @@ module GraphingDomain =
         | FailedToCreateTrace
         | LazyCoder  
         | InputError
+        | UnexpectedModelType
        
     type DrawOperationResult =  
         | Traces of Trace list
+        | MeshGroup of MeshGroup
+        | Mesh of Mesh
         | DrawError of DrawError
 
     type ExpressionOperationResult =  
@@ -116,12 +120,13 @@ module GraphingDomain =
     type ParentheticalStateData = 
         { evaluatedExpression : Expression
           parenthetical : Parenthetical;
-          pendingFunction : PendingFunction option;
+          pendingFunction : PendingFunction Option;
           drawingOptions : DrawingOptions }
     type DrawStateData =  
         { traceExpression : Expression; 
-          trace:Trace list; 
-          drawingOptions : DrawingOptions}    
+          trace:Trace list; // this doesn't need to be an option, just return [] when in 3D Mode
+          drawingOptions : DrawingOptions;
+          mesh : Mesh Option}    
     type ErrorStateData = 
         { lastExpression : Expression; 
           error : DrawError }
@@ -313,8 +318,12 @@ module GraphingImplementation =
     let doDrawOperation services drawOp =        
         let result = services.doDrawOperation drawOp 
         let expression, options = drawOp
-        match result with
-        | Traces t -> DrawState {traceExpression = expression; trace = t; drawingOptions = options}
+        match result with        
+        | Traces t -> DrawState {traceExpression = expression; trace = t; drawingOptions = options; mesh = None}
+        | Mesh m -> 
+            {lastExpression = expression; 
+             error = UnexpectedModelType} 
+            |> DrawErrorState
         | DrawError x ->  
             {lastExpression = expression; 
              error = x} 
@@ -328,7 +337,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},EvaluatedState yT)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -340,7 +353,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -352,7 +369,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -364,7 +385,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -376,7 +401,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -388,7 +417,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},EvaluatedState yT)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -400,7 +433,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -412,7 +449,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -424,7 +465,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -436,7 +481,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.evaluatedExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.evaluatedExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.evaluatedExpression; 
                  error = x} 
@@ -448,7 +497,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},EvaluatedState yT)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -460,7 +513,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -472,7 +529,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -484,7 +545,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -496,7 +561,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -508,7 +577,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},EvaluatedState yT)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -520,7 +593,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -532,7 +609,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -544,7 +625,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -556,7 +641,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.expression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.expression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.expression; 
                  error = x} 
@@ -568,7 +657,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},EvaluatedState yT)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},EvaluatedState yT)            
+            | Mesh m -> 
+                {lastExpression = xT.traceExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
@@ -580,7 +673,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.traceExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
@@ -592,7 +689,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.traceExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
@@ -604,7 +705,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.traceExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
@@ -616,7 +721,11 @@ module GraphingImplementation =
             let result = services.doDraw2DParametricOperation (drawOpXt, drawOpYt)            
             match result with
             | Traces t -> 
-                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions},newEvaluatedStateYt)            
+                DrawState2DParametric ({traceExpression = xT.traceExpression; trace = t; drawingOptions = xT.drawingOptions; mesh = None},newEvaluatedStateYt)            
+            | Mesh m -> 
+                {lastExpression = xT.traceExpression; 
+                 error = UnexpectedModelType} 
+                |> DrawErrorState
             | DrawError x ->  
                 {lastExpression = xT.traceExpression; 
                  error = x} 
@@ -655,7 +764,7 @@ module GraphingImplementation =
         let xT = NaryOp (Product,[UnaryOp (Sin,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
         let yT = NaryOp (Product,[UnaryOp (Cos,Expression.Symbol (Variable "t")); Expression.Symbol (Variable "t")])
         let options = {defaultOptions with 
-                        upperT = T (Real 31.415926535897932384626433832795)
+                        upperT = T (Real (10.*System.Math.PI))
                         lowerT = T (Real 0.0)}
         ({ evaluatedExpression = xT
            pendingFunction = None;
@@ -2424,6 +2533,12 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState2DParametric (stateData,_state) -> stateData.drawingOptions            
             | _ -> GraphingImplementation.defaultOptions
 
+    let getValueFrom numberType =
+        match numberType with
+        | Real r -> r
+        | Integer i -> float i
+        | _ -> System.Double.NaN
+
     let setDrawingOptions :SetDrawingOptions = 
         fun g ->             
             let state, options = g
@@ -2444,11 +2559,6 @@ module GraphServices =
         let expressionXt, drawOptionsX = drawOpXt
         let expressionYt, drawOptionsY = drawOpYt
         
-        let getValueFrom numberType =
-            match numberType with
-            | Real r -> r
-            | Integer i -> float i
-            | _ -> System.Double.NaN
         let valueOfT coordinate = match coordinate with T t -> getValueFrom t
         let valueOfY coordinate = match coordinate with Y y -> getValueFrom y
         let valueOfX coordinate = match coordinate with X x -> getValueFrom x
@@ -2559,18 +2669,105 @@ module GraphServices =
             let pointLists = points          
             let out = List.map (fun x -> createTrace x) pointLists 
             out |> Traces
-    (*
+    
     let doDraw3DParametricOperation (drawOp3D :DrawOp3D) :DrawOperationResult  = 
-        let expressions,options = drawOp3D
+        let expressions,options = drawOp3D 
         let symbols =
             let xParameter = ExpressionStructure.variables expressions.x
             let yParameter = ExpressionStructure.variables expressions.y 
             let zParameter = ExpressionStructure.variables expressions.z 
-            List.concat [xParameter;yParameter;xParameter]
-        let isCurve = List.contains (Symbol.Variable "t") symbols 
+            List.concat [xParameter;yParameter;zParameter]
+        let hasT = symbols |> List.contains (Symbol.Variable "t")  
+        let hasU = symbols |> List.contains (Symbol.Variable "u")
+        let hasV = symbols |> List.contains (Symbol.Variable "v") 
         
-*)
+        let valueOfT coordinate = match coordinate with T t -> getValueFrom t
+        let valueOfU coordinate = match coordinate with U u -> getValueFrom u
+        let valueOfV coordinate = match coordinate with V v -> getValueFrom v
+        let valueOfX coordinate = match coordinate with X x -> getValueFrom x
+        let valueOfY coordinate = match coordinate with Y y -> getValueFrom y
+        let valueOfZ coordinate = match coordinate with Z z -> getValueFrom z
+        let tMin, tMax, uMin, uMax, vMin, vMax = 
+            valueOfT options.lowerT, 
+            valueOfT options.upperT, 
+            valueOfU options.lowerU, 
+            valueOfU options.upperU, 
+            valueOfV options.lowerV, 
+            valueOfV options.upperV
+        
+        let tStep = match options.Tstep with | Tstep (Real x) -> x | _ -> System.Double.NaN
+        
+        let makePoint xExpression yExpression zExpression = 
+            let xValue =
+                match xExpression with
+                | Number n -> n
+                | _ -> Undefined
+            let yValue =
+                match yExpression with 
+                | Number n -> n
+                | _ -> Undefined
+            let zValue =
+                match zExpression with 
+                | Number n -> n
+                | _ -> Undefined
+            Point3D(X xValue,Y yValue,Z zValue)
+        let getVectorfrom point =
+                match point with
+                | Point (x,y) -> System.Windows.Media.Media3D.Vector3D(valueOfX x, valueOfY y,0.)
+                | Point3D (x,y,z) -> System.Windows.Media.Media3D.Vector3D(valueOfX x, valueOfY y, valueOfZ z)
+        let transformModel (model :System.Windows.Media.Media3D.GeometryModel3D) (v1 :System.Windows.Media.Media3D.Vector3D)  (p :Point) =             
+            let v2 =             
+                let v = System.Windows.Media.Media3D.Vector3D(0.,0.,1.)
+                do  v.Normalize()
+                v
+            
+            let transforms = System.Windows.Media.Media3D.Transform3DGroup()
+            let translation = System.Windows.Media.Media3D.TranslateTransform3D(getVectorfrom p)
+            
+            let axis = System.Windows.Media.Media3D.Vector3D.CrossProduct (v1, v2)        
+            let angle = axis.Length * (180./System.Math.PI)
+            let quaternion = 
+                let q = (System.Windows.Media.Media3D.Quaternion(axis, angle))
+                do q.Normalize()
+                q
+            let rotation = System.Windows.Media.Media3D.QuaternionRotation3D(quaternion) |> System.Windows.Media.Media3D.RotateTransform3D
+            do  transforms.Children.Add(rotation)
+                transforms.Children.Add(translation)
+                model.Transform <- transforms
+            model
 
+        let evaluate expression value = 
+            expression
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
+            |> ExpressionStructure.substitute (Expression.Symbol (Variable "t"), value)
+            |> ExpressionStructure.substitute (Expression.Symbol (Variable "u"), value)
+            |> ExpressionStructure.substitute (Expression.Symbol (Variable "v"), value)
+            |> ExpressionFunction.evaluateRealPowersOfExpression
+        
+        match hasT, hasU, hasV with
+        | true, false, false ->
+            let x(t) = evaluate expressions.x (Number(Real t))
+            let y(t) = evaluate expressions.y (Number(Real t))
+            let z(t) = evaluate expressions.z (Number(Real t)) 
+            
+            let points0 = seq{for t in tMin..tStep..tMax -> makePoint (x (t)) (y(t)) (z(t))}
+            let points1 = seq{for t in (tMin + tStep)..tStep..(tMax + tStep) -> makePoint (x (t)) (y(t)) (z(t))}
+            let points = Seq.zip points0 points1
+            let normals = 
+                seq{for p0, p1 in points 
+                    -> let vector = (getVectorfrom p1) - (getVectorfrom p0)
+                       do vector.Normalize()
+                       vector}        
+            let pointsAndNormals = Seq.zip points0 normals        
+            let models = seq{for p,n in pointsAndNormals -> 
+                                let pixel = Pixel.Box ()
+                                transformModel pixel n p}
+            let model3DGroup = System.Windows.Media.Media3D.Model3DGroup()        
+            do Seq.iter (fun m -> model3DGroup.Children.Add(m)) models
+            model3DGroup |> MeshGroup        
+        | _ -> DrawError FailedToCreateTrace
+(**)
     let doDrawOperation resolution (drawOp:DrawOp):DrawOperationResult = 
         let expression, drawBounds = drawOp
         let getValueFrom numberType =

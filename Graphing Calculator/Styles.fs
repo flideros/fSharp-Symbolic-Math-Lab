@@ -20,6 +20,27 @@ open Utilities
 
 module Style = 
     
+    //Materials
+    let genericMaterial = 
+        let linearGradiantBrush = LinearGradientBrush()
+        do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
+            linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Yellow, 0.0))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LimeGreen, 1.0))
+        // Define material that will use the gradient.
+        let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
+        // Add this gradient to a MaterialGroup.
+        let materialGroup = MaterialGroup()
+        do  materialGroup.Children.Add(diffuseMaterial)
+        // Define an Emissive Material with a blue brush.
+        let emissiveMaterial = 
+            let c = Color.FromScRgb(1.f,255.f,0.f,0.f)               
+            EmissiveMaterial(new SolidColorBrush(c))                
+        do  materialGroup.Children.Add(emissiveMaterial)
+        materialGroup
+    
     //Images
     let checkedBox = Image(Source = new BitmapImage(new Uri((__SOURCE_DIRECTORY__ + "/5091-512.png"), UriKind.RelativeOrAbsolute)),Width=20., Height=20. )
     
@@ -48,8 +69,6 @@ module Style =
     do
         RadialGradientBrush().GradientStops.Add(new GradientStop(Color = Colors.Green, Offset = 0.))
         RadialGradientBrush().GradientStops.Add(new GradientStop(Color = Colors.Gray, Offset = 1.))
-
-
 
     //Button
     type CalcButton() as calcButton = 
@@ -129,5 +148,93 @@ module Style =
         do  textBox.FontSize <- 14.
             textBox.Margin <- Thickness(left = 5.,top = 5.,right = 5., bottom = 5.)
 
-    
+module Pixel =
 
+    let Box () = 
+        let geometry = 
+            let meshGeometry = MeshGeometry3D()
+            // Create a collection of normal vectors for the MeshGeometry3D.
+            let normals = 
+                let normalCollection = Vector3DCollection()
+                do  normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                    normalCollection.Add(Vector3D(0., 0., 1.))
+                
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+                    normalCollection.Add(Vector3D(0., 0., -1.))
+
+                normalCollection
+            // Create a collection of vertex positions for the MeshGeometry3D. 
+            let positions = 
+                let positionCollection = Point3DCollection()
+                    //Front
+                do  positionCollection.Add(new Point3D(-0.05,-0.05, 0.1))
+                    positionCollection.Add(new Point3D( 0.05,-0.05, 0.1))
+                    positionCollection.Add(new Point3D( 0.05, 0.05, 0.1))
+                    positionCollection.Add(new Point3D(-0.05, 0.05, 0.1))
+                    //Back
+                    positionCollection.Add(new Point3D(-0.05,-0.05, -0.00))
+                    positionCollection.Add(new Point3D( 0.05,-0.05, -0.00))
+                    positionCollection.Add(new Point3D( 0.05, 0.05, -0.00))
+                    positionCollection.Add(new Point3D(-0.05, 0.05, -0.00))
+                positionCollection
+       
+            // Create a collection of triangle indices for the MeshGeometry3D.
+            let triangleIndices = 
+                let triangleIndicesCollection = Int32Collection()
+                    //front
+                do  triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(0)
+                    //
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(7)
+                    triangleIndicesCollection.Add(6)
+                    //
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(2)
+                    //
+                    triangleIndicesCollection.Add(2)
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(6)
+                    triangleIndicesCollection.Add(7)
+                    //
+                    triangleIndicesCollection.Add(5)
+                    triangleIndicesCollection.Add(1)
+                    triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(5)
+                    //
+                    triangleIndicesCollection.Add(4)
+                    triangleIndicesCollection.Add(0)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(3)
+                    triangleIndicesCollection.Add(7)
+                    triangleIndicesCollection.Add(4)
+                    //
+            
+                triangleIndicesCollection
+
+            do  meshGeometry.Normals <- normals
+                meshGeometry.Positions <- positions
+                meshGeometry.TriangleIndices <- triangleIndices
+
+            meshGeometry            
+        let model = GeometryModel3D(geometry,Style.genericMaterial)             
+        model

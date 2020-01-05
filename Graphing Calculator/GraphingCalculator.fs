@@ -534,7 +534,6 @@ type GraphingCalculator() as graphingCalculator =
 
         do  grid.Children.Add(function3D_SolidMesh_Button) |> ignore            
         grid
-    
     let tRadio = 
         RadioButton(
             FontSize = 15.,
