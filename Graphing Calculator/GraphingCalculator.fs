@@ -442,7 +442,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let function3D_fx_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 10, TabIndex = 0)
+        let tb = FunctionTextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
         do tb.SetValue(Grid.ColumnProperty,1)
         tb
     let function3D_fyLabel_TextBlock = 
@@ -450,7 +450,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,1)
         tb
     let function3D_fy_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 1)
+        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 1, IsReadOnly = true)
         do  tb.SetValue(Grid.RowProperty,1)
             tb.SetValue(Grid.ColumnProperty,1)
         tb    
@@ -459,7 +459,7 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.RowProperty,2)
         tb
     let function3D_fz_TextBox = 
-        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 2)
+        let tb = FunctionTextBox(MaxLines = 3, TabIndex = 2, IsReadOnly = true)
         do  tb.SetValue(Grid.RowProperty,2)
             tb.SetValue(Grid.ColumnProperty,1)
         tb    
@@ -2204,6 +2204,40 @@ type GraphingCalculator() as graphingCalculator =
     let handleParameterRadioButtons_Checked () =         
         setInputMode Graph3DParametric
 
+    let handleTextBoxFxPreviewMouseDown () =
+        match function3D_fx_TextBox.MaxLines = 3 with
+        | true ->
+            do //state <- {state with graph3DParametric = graphServices.TODO state.graph3DParametric}
+               function3D_fx_TextBox.MaxLines <- 15
+               function3D_fy_TextBox.MaxLines <- 3
+               function3D_fz_TextBox.MaxLines <- 3               
+               function3D_fx_TextBox.BorderThickness <- Thickness(3.)
+               function3D_fy_TextBox.BorderThickness <- Thickness(1.)
+               function3D_fz_TextBox.BorderThickness <- Thickness(1.)
+        | false -> ()
+    let handleTextBoxFyPreviewMouseDown () =
+        match function3D_fy_TextBox.MaxLines = 3 with
+        | true -> 
+            do //state <- {state with graph3DParametric = graphServices.TODO state.graph3DParametric}
+               function3D_fx_TextBox.MaxLines <- 3
+               function3D_fy_TextBox.MaxLines <- 15
+               function3D_fz_TextBox.MaxLines <- 3               
+               function3D_fx_TextBox.BorderThickness <- Thickness(1.)
+               function3D_fy_TextBox.BorderThickness <- Thickness(3.)
+               function3D_fz_TextBox.BorderThickness <- Thickness(1.)
+        | false -> ()
+    let handleTextBoxFzPreviewMouseDown () =
+        match function3D_fz_TextBox.MaxLines = 3 with
+        | true -> 
+            do //state <- {state with graph3DParametric = graphServices.TODO state.graph3DParametric}
+               function3D_fx_TextBox.MaxLines <- 3
+               function3D_fy_TextBox.MaxLines <- 3
+               function3D_fz_TextBox.MaxLines <- 15
+               function3D_fx_TextBox.BorderThickness <- Thickness(1.)
+               function3D_fy_TextBox.BorderThickness <- Thickness(1.)
+               function3D_fz_TextBox.BorderThickness <- Thickness(3.)
+        | false -> ()
+
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
         let rpnInput = 
@@ -2310,6 +2344,10 @@ type GraphingCalculator() as graphingCalculator =
 
         function2D_yt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxYtPreviewMouseDown ()))
         function2D_xt_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxXtPreviewMouseDown ()))
+
+        function3D_fx_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxFxPreviewMouseDown ()))
+        function3D_fy_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxFyPreviewMouseDown ()))
+        function3D_fz_TextBox.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleTextBoxFzPreviewMouseDown ()))        
 
         viewport3D.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseLeftButtonDown (e)))
         viewport3D.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleViewport3D_MouseLeftButtonUp (e)))
