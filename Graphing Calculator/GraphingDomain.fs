@@ -81,7 +81,6 @@ module GraphingDomain =
         | Mesh of System.Windows.Media.Media3D.GeometryModel3D
         | MeshGroup of System.Windows.Media.Media3D.Model3DGroup
     
-     
     // types to describe results
     type DrawError = 
         | Error of Error
@@ -150,6 +149,7 @@ module GraphingDomain =
         | Stack of RpnDomain.CalculatorInput
         | Draw
         | Draw2DParametric
+        | Draw3DParametric
         | OpenParentheses
         | CloseParentheses
         | GraphOptionSave of DrawingOptions
@@ -194,12 +194,14 @@ module GraphingDomain =
     type GetDisplayFromGraphState = CalculatorState -> string
     type GetErrorFromExpression = Expression -> Error
     type GetDrawingOptionsFromState = CalculatorState -> DrawingOptions
+    type GetDim3DStateDataFromState = CalculatorState -> Dim3StateData
     type SetDrawingOptions = CalculatorState * DrawingOptions -> CalculatorState
     type GetDisplayFromPendingFunction = PendingFunction option -> string
     type GetExpressionFromParenthetical = Parenthetical option -> Expression
     type GetParentheticalFromExpression = Expression -> Parenthetical
     type GetParentheticalFromCalculatorState = CalculatorState -> Parenthetical
     type SetExpressionToParenthetical = Expression * (Parenthetical option) -> Parenthetical
+    type SetActivate3DStateExpression = CalculatorState * ActiveExpression -> CalculatorState
     type CloseParenthetical = ParentheticalStateData -> CalculatorState
     type Toggle2DParametricState = CalculatorState -> CalculatorState
 
@@ -217,11 +219,13 @@ module GraphingDomain =
         getDisplayFromExpression :GetDisplayFromExpression
         getDisplayFromGraphState :GetDisplayFromGraphState
         getDrawingOptionsFromState :GetDrawingOptionsFromState
+        getDim3DStateDataFromState :GetDim3DStateDataFromState
         setDrawingOptions :SetDrawingOptions
         getDisplayFromPendingFunction :GetDisplayFromPendingFunction
         getExpressionFromParenthetical :GetExpressionFromParenthetical
         getParentheticalFromCalculatorState :GetParentheticalFromCalculatorState
         setExpressionToParenthetical :SetExpressionToParenthetical
+        setActivate3DStateExpression :SetActivate3DStateExpression
         closeParenthetical :CloseParenthetical
         toggle2DParametricState :Toggle2DParametricState
         }
@@ -322,7 +326,7 @@ module GraphingImplementation =
                     |> ExpressionErrorState
             return newState
             } |> ifNone computeStateWithNoPendingOp 
-    
+        
     let doDrawOperation services drawOp =        
         let result = services.doDrawOperation drawOp 
         let expression, options = drawOp
@@ -868,7 +872,8 @@ module GraphingImplementation =
         | Stack _input -> DrawState stateData
         | ExpressionInput _input -> DrawState stateData
         | Draw 
-        | Draw2DParametric -> DrawState stateData
+        | Draw2DParametric
+        | Draw3DParametric -> DrawState stateData
         | OpenParentheses 
         | CloseParentheses         
         | ExpressionSquared
@@ -1299,7 +1304,8 @@ module GraphingImplementation =
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawingOptions)
             |> doDrawOperation services         
-        | Draw2DParametric -> EvaluatedState stateData
+        | Draw2DParametric
+        | Draw3DParametric -> EvaluatedState stateData
         | OpenParentheses -> 
             { evaluatedExpression = Expression.Zero
               pendingFunction = None //stateData.pendingFunction
@@ -1806,7 +1812,8 @@ module GraphingImplementation =
         | Draw -> 
             (stateData.evaluatedExpression,stateData.drawingOptions)
             |> doDrawOperation services 
-        | Draw2DParametric -> ParentheticalState stateData
+        | Draw2DParametric
+        | Draw3DParametric -> ParentheticalState stateData
         | OpenParentheses -> 
             { evaluatedExpression = Expression.Zero
               pendingFunction = None //stateData.pendingFunction
@@ -2065,7 +2072,8 @@ module GraphingImplementation =
                        getFinalStateFrom newState
                | Function f -> getEvaluationState services stateData (Some f)
            | Draw -> doDrawOperation services (DrawOp (stateData.expression, options))
-           | Draw2DParametric -> ExpressionDigitAccumulatorState stateData
+           | Draw2DParametric
+           | Draw3DParametric -> ExpressionDigitAccumulatorState stateData
            | OpenParentheses -> 
                 {stateData with 
                     parenthetical = 
@@ -2265,7 +2273,8 @@ module GraphingImplementation =
                     getFinalStateFrom newState
             | Function f -> getEvaluationState services stateData (Some f)
         | Draw -> doDrawOperation services (DrawOp (stateData.expression, options))
-        | Draw2DParametric -> ExpressionDecimalAccumulatorState stateData
+        | Draw2DParametric
+        | Draw3DParametric -> ExpressionDecimalAccumulatorState stateData
         | OpenParentheses -> 
              {stateData with 
                  parenthetical = 
@@ -2315,7 +2324,8 @@ module GraphingImplementation =
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
-        | Draw2DParametric -> DrawErrorState stateData
+        | Draw2DParametric
+        | Draw3DParametric -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
         | GraphOptionSave options -> DrawErrorState stateData
@@ -2348,7 +2358,8 @@ module GraphingImplementation =
                 |> EvaluatedState
         | ExpressionInput i -> DrawErrorState stateData
         | Draw -> DrawErrorState stateData
-        | Draw2DParametric -> DrawErrorState stateData
+        | Draw2DParametric
+        | Draw3DParametric -> DrawErrorState stateData
         | OpenParentheses -> DrawErrorState stateData
         | CloseParentheses -> DrawErrorState stateData
         | GraphOptionSave _options -> DrawErrorState stateData
@@ -2368,7 +2379,7 @@ module GraphingImplementation =
          let handleDrawErrorState = handleDrawErrorState services
          let handleExpressionErrorState = handleExpressionErrorState services
          let doDraw2DParametricOperation = doDraw2DParametricOperation services
-
+         let doDraw3DParametricOperation = doDraw3DParametricOperation services
          // helper to wrap graph state data into a 2DParametric state
          let wrapStateData2D state newState = 
             match newState with
@@ -2449,7 +2460,7 @@ module GraphingImplementation =
                 | _ -> handleExpressionDecimalAccumulatorState stateData input |> wrapStateData2D state
              | EvaluatedState3DParametric (stateData,state) ->
                  match input  with
-                 //| Draw3DParametric -> doDraw3DParametricOperation calcState
+                 | Draw3DParametric -> doDraw3DParametricOperation calcState
                  | _ -> handleEvaluatedState stateData input |> wrapStateData3D state                 
              | DrawState3DParametric (stateData,state) ->
                 match input  with
@@ -2562,7 +2573,31 @@ module GraphServices =
                 | true -> 
                     match d.parenthetical with
                     | Some expression -> func + " " + expression.ToString()
-                    | None -> ""            
+                    | None -> ""
+
+    let getDim3DStateDataFromState :GetDim3DStateDataFromState = 
+        let zero = 
+            Math.Pure.Quantity.Number.Zero 
+            |> Math.Pure.Structure.Number
+        fun g -> 
+            match g with 
+            | EvaluatedState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ParentheticalState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | DrawState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ExpressionDigitAccumulatorState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ExpressionDecimalAccumulatorState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | DrawErrorState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ExpressionErrorState _ -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | EvaluatedState2DParametric (_,_) -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | DrawState2DParametric (_,_) -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ParentheticalState2DParametric (_p,_) -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ExpressionDigitAccumulatorState2DParametric (_,_) -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | ExpressionDecimalAccumulatorState2DParametric (_,_) -> {x=zero;y=zero;z=zero;activeExpression=X_}
+            | EvaluatedState3DParametric (_,d3) -> d3
+            | DrawState3DParametric (_d,d3) -> d3
+            | ParentheticalState3DParametric (_,d3) -> d3
+            | ExpressionDigitAccumulatorState3DParametric (_,d3) -> d3
+            | ExpressionDecimalAccumulatorState3DParametric (_,d3) -> d3
 
     let getDisplayFromPendingFunction (pendingFunction : PendingFunction option) =
         match pendingFunction with
@@ -3155,6 +3190,26 @@ module GraphServices =
             | ExpressionDecimalAccumulatorState2DParametric (sd, ExpressionDecimalAccumulatorState s) -> (s, ExpressionDecimalAccumulatorState sd) |> ExpressionDecimalAccumulatorState2DParametric
             | _ -> calculatorState
 
+    let setActivate3DStateExpression :SetActivate3DStateExpression = 
+        fun (calcState, activeExpression) -> 
+            let update d3 exp =
+                match d3.activeExpression with
+                | X_ -> {d3 with x = exp}
+                | Y_ -> {d3 with y = exp}
+                | Z_ -> {d3 with z = exp}
+            match calcState with 
+            | EvaluatedState3DParametric (sd, d3) ->
+                match activeExpression = d3.activeExpression with
+                | true -> EvaluatedState3DParametric (sd, (update d3 sd.evaluatedExpression))
+                | false -> 
+                    let newD3 = {d3 with activeExpression = activeExpression}
+                    let newSD = match newD3.activeExpression with
+                                | X_ -> {sd with evaluatedExpression = newD3.x}
+                                | Y_ -> {sd with evaluatedExpression = newD3.y}
+                                | Z_ -> {sd with evaluatedExpression = newD3.z}
+                    EvaluatedState3DParametric (newSD, (update newD3 sd.evaluatedExpression))            
+            | _ -> calcState
+    
     let createGraphServices () = {
         doDrawOperation =  doDrawOperation (0.1)
         doDraw2DParametricOperation =  doDraw2DParametricOperation
@@ -3172,7 +3227,9 @@ module GraphServices =
         getDisplayFromPendingFunction = getDisplayFromPendingFunction
         getExpressionFromParenthetical = getExpressionFromParenthetical
         getParentheticalFromCalculatorState = getParentheticalFromCalculatorState
+        getDim3DStateDataFromState = getDim3DStateDataFromState
         setExpressionToParenthetical = setExpressionToParenthetical
+        setActivate3DStateExpression = setActivate3DStateExpression
         closeParenthetical = closeParenthetical 
         toggle2DParametricState = toggle2DParametricState
         }

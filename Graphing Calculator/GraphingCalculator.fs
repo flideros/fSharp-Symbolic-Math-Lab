@@ -31,7 +31,7 @@ type View =
 
 type Model =
     | Trace of Trace list
-    | Model3D of ModelVisual3D
+    | Model3D of Mesh
 
 type ViewPoint = 
     | Pt of System.Windows.Point
@@ -42,6 +42,7 @@ type InputMode =
     | RPN of Grid
     | Graph of Grid  
     | Graph2DParametric of Grid
+    | Graph3DParametric of Grid
     
 type Mode =    
     | Conventional
@@ -55,6 +56,7 @@ type State =
       conventional:ConventionalDomain.CalculatorState;
       graph:GraphingDomain.CalculatorState;
       graph2DParametric:GraphingDomain.CalculatorState;
+      graph3DParametric:GraphingDomain.CalculatorState;
       mode : Mode;
       model : Model 
       scale : (float*float) 
@@ -93,6 +95,17 @@ type GraphingCalculator() as graphingCalculator =
            pendingFunction = None; 
            drawingOptions = GraphingImplementation.defaultOptions},
            graphDefault ) |> EvaluatedState2DParametric
+    let graph3DParametricDefault = 
+        let zero = 
+            Math.Pure.Quantity.Number.Zero 
+            |> Math.Pure.Structure.Number
+        ({ evaluatedExpression = zero; 
+           pendingFunction = None; 
+           drawingOptions = GraphingImplementation.defaultOptions},
+           {x=zero;
+            y=zero;
+            z=zero;
+            activeExpression=X_} ) |> EvaluatedState3DParametric
     let scaleDefault = (1., 1.)
     let quaternionDefault = Quaternion(0., 0., 1., 0.)
     let mutable state = 
@@ -102,6 +115,7 @@ type GraphingCalculator() as graphingCalculator =
           model = modelDefault; 
           graph = graphDefault;
           graph2DParametric = graph2DParametricDefault;
+          graph3DParametric = graph3DParametricDefault;
           scale = scaleDefault;
           quaternion = quaternionDefault}
 
@@ -601,10 +615,7 @@ type GraphingCalculator() as graphingCalculator =
         camera
     
     do // Assemble the pieces            
-       model3DGroup.Children.Add(light)
-       model3DGroup.Children.Add(light2)       
-       //model3DGroup.Children.Add(Models.helix)
-            
+       //model3DGroup.Children.Add(Models.helix)            
 
        modelVisual3D.Content <- model3DGroup
        
@@ -1569,7 +1580,7 @@ type GraphingCalculator() as graphingCalculator =
                 path.Data <- pg   
             path
         let paths = List.map (fun m -> getPathGeometry m) models
-        paths    
+        paths        
     let getDrawOptions() =
         let real = fun n -> Math.Pure.Quantity.NumberType.Real n
         let uX = 
@@ -1725,7 +1736,9 @@ type GraphingCalculator() as graphingCalculator =
         | View.Function2D p ->
             setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph2DParametric)
             (p.Visibility <- Visibility.Visible)
-        | View.Function3D p
+        | View.Function3D p ->
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph3DParametric)
+            (p.Visibility <- Visibility.Visible)
         | View.Option p
         | View.Option2D p 
         | View.Option3D p -> 
@@ -1753,13 +1766,22 @@ type GraphingCalculator() as graphingCalculator =
                 | false,false -> 
                     do function2D_xt_TextBox.Text <- text
                        function2D_yt_TextBox.Text <- text
-            | Graph3DParametric -> 
-                let x,y,z = function3D_fx_TextBox.MaxLines, function3D_fy_TextBox.MaxLines, function3D_fz_TextBox.MaxLines 
-                match x, y, z with
-                | x, y, z when x > 3 && y = 3 && z = 3 -> do function3D_fx_TextBox.Text <- text
-                | x, y, z when x = 3 && y > 3 && z = 3 -> do function3D_fy_TextBox.Text <- text
-                | x, y, z when x = 3 && y = 3 && z > 3 -> do function3D_fz_TextBox.Text <- text
-                | _ -> ()
+            | Graph3DParametric ->                 
+                let xText, yText, zText =
+                    function3D_fx_TextBox.Text,
+                    function3D_fy_TextBox.Text,
+                    function3D_fz_TextBox.Text
+                let dim3DData = GraphServices.getDim3DStateDataFromState state.graph3DParametric 
+                match xText = "" ||  yText = "" || zText = "" with
+                | true -> 
+                    do function3D_fx_TextBox.Text <- dim3DData.x.ToString()
+                       function3D_fy_TextBox.Text <- dim3DData.y.ToString()
+                       function3D_fz_TextBox.Text <- dim3DData.x.ToString()
+                | false ->               
+                    match dim3DData.activeExpression with
+                    | X_ -> do function3D_fx_TextBox.Text <- text
+                    | Y_ -> do function3D_fy_TextBox.Text <- text
+                    | Z_ -> do function3D_fz_TextBox.Text <- text
     // a function that sets the pending op text
     let setMemoText = 
         fun text -> memo.Text <- text
@@ -1775,7 +1797,9 @@ type GraphingCalculator() as graphingCalculator =
             | InputMode.Conventional c -> (c.Visibility <- Visibility.Collapsed)
             | InputMode.RPN r -> (r.Visibility <- Visibility.Collapsed)   
             | InputMode.Graph g -> (g.Visibility <- Visibility.Collapsed)
-            | InputMode.Graph2DParametric g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
+            | InputMode.Graph2DParametric g -> (g.Visibility <- Visibility.Collapsed)
+            | InputMode.Graph3DParametric g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
+
         match mode with
         | Conventional -> 
             memoryButton_Grid.Visibility <- Visibility.Visible
@@ -1843,7 +1867,7 @@ type GraphingCalculator() as graphingCalculator =
         | Graph3DParametric ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function3D function3D_Grid)
-            setDisplayedText (GraphServices.getDisplayFromGraphState state.graph2DParametric)
+            setDisplayedText (GraphServices.getDisplayFromGraphState state.graph3DParametric)
             x_Button.IsHitTestVisible <- false
             match tRadio.IsChecked.Value with
             | false -> 
@@ -1993,7 +2017,8 @@ type GraphingCalculator() as graphingCalculator =
         let newState = 
             match state.mode with
             | Graph -> calculateGraph (input, state.graph)
-            | Graph2DParametric -> calculateGraph (input, state.graph2DParametric)             
+            | Graph2DParametric -> calculateGraph (input, state.graph2DParametric)
+            | Graph3DParametric -> calculateGraph (input, state.graph3DParametric)
             | _ -> ExpressionErrorState {lastExpression = Math.Pure.Structure.Number (Math.Pure.Quantity.Number.Zero); error = InputError }
 
         let expressionText = 
@@ -2012,7 +2037,7 @@ type GraphingCalculator() as graphingCalculator =
             | ExpressionDigitAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
             | ExpressionDecimalAccumulatorState2DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression           
             // Parametric 3D
-            | DrawState3DParametric (_d,_s) -> "Graph 2D Parametric"
+            | DrawState3DParametric (_d,_s) -> "Graph 3D Parametric"
             | EvaluatedState3DParametric (e,_s) -> graphServices.getDisplayFromExpression e.evaluatedExpression           
             | ParentheticalState3DParametric (p,_s) -> graphServices.getDisplayFromExpression p.evaluatedExpression
             | ExpressionDigitAccumulatorState3DParametric (e,_s) -> graphServices.getDisplayFromExpression e.expression          
@@ -2021,9 +2046,11 @@ type GraphingCalculator() as graphingCalculator =
         state <- match state.mode with
                  | Graph -> { state with graph = newState }
                  | Graph2DParametric -> { state with graph2DParametric = newState } 
+                 | Graph3DParametric -> { state with graph3DParametric = newState}
                  | _ -> state
         
         setDisplayedText expressionText
+        
         match newState with
         | DrawState d -> 
             do  state <- { state with graph = newState }
@@ -2095,9 +2122,45 @@ type GraphingCalculator() as graphingCalculator =
                setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
         | ExpressionDecimalAccumulatorState2DParametric (e,_s) ->
             do state <- { state with graph2DParametric = newState }
+               setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")         
+        // Parametric 3D
+        | DrawState3DParametric (sd,_d3) ->             
+            match sd.mesh with
+            | None -> ()
+            | Some m -> 
+                do state <- { state with graph3DParametric = newState }
+                   model3DGroup.Children.Clear()
+                   model3DGroup.Children.Add(light)
+                   model3DGroup.Children.Add(light2)
+                   setActivetModel (Model3D m)   
+                match state.model with
+                | Trace _ -> ()
+                | Model3D (Mesh.Mesh m) -> 
+                   do
+                   model3DGroup.Children.Add(m)
+                   setActiveDisplay (PlotCanvas screen_Canvas)
+                   setPendingOpText "--->>> graph 3D Parametric" 
+                | Model3D (Mesh.MeshGroup m) -> 
+                    do
+                    model3DGroup.Children.Add(m)
+                    setActiveDisplay (PlotCanvas screen_Canvas)
+                    setPendingOpText "--->>> graph 3D Parametric"         
+        | EvaluatedState3DParametric (sd,d3) -> 
+            let newState = graphServices.setActivate3DStateExpression (newState,d3.activeExpression)
+            do state <- { state with graph3DParametric = newState }
+               setActiveDisplay (Function3D function3D_Grid)
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction sd.pendingFunction) + " --->>> Evaluated. What's next")
+        | ParentheticalState3DParametric (sd,_d3) ->
+            do state <- { state with graph3DParametric = newState }
+               setActiveDisplay (Function3D function3D_Grid)
+               setPendingOpText ((graphServices.getDisplayFromPendingFunction sd.pendingFunction) + " --->>> Open Parentheses")
+        | ExpressionDigitAccumulatorState3DParametric (_sd,_d3) ->
+            do state <- { state with graph3DParametric = newState }
+               setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")
+        | ExpressionDecimalAccumulatorState3DParametric (_sd,_d3) ->
+            do state <- { state with graph3DParametric = newState }
                setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")        
-        | _ -> do state <- { state with graph2DParametric = newState }
-                  setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
+        | _ -> setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
         // Gridlines
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
@@ -2203,11 +2266,10 @@ type GraphingCalculator() as graphingCalculator =
     //  3D Parametric
     let handleParameterRadioButtons_Checked () =         
         setInputMode Graph3DParametric
-
     let handleTextBoxFxPreviewMouseDown () =
         match function3D_fx_TextBox.MaxLines = 3 with
         | true ->
-            do //state <- {state with graph3DParametric = graphServices.TODO state.graph3DParametric}
+            do state <- {state with graph3DParametric = graphServices.setActivate3DStateExpression (state.graph3DParametric,X_)}
                function3D_fx_TextBox.MaxLines <- 15
                function3D_fy_TextBox.MaxLines <- 3
                function3D_fz_TextBox.MaxLines <- 3               
@@ -2218,7 +2280,7 @@ type GraphingCalculator() as graphingCalculator =
     let handleTextBoxFyPreviewMouseDown () =
         match function3D_fy_TextBox.MaxLines = 3 with
         | true -> 
-            do //state <- {state with graph3DParametric = graphServices.TODO state.graph3DParametric}
+            do state <- {state with graph3DParametric = graphServices.setActivate3DStateExpression (state.graph3DParametric,Y_)}
                function3D_fx_TextBox.MaxLines <- 3
                function3D_fy_TextBox.MaxLines <- 15
                function3D_fz_TextBox.MaxLines <- 3               
@@ -2229,7 +2291,7 @@ type GraphingCalculator() as graphingCalculator =
     let handleTextBoxFzPreviewMouseDown () =
         match function3D_fz_TextBox.MaxLines = 3 with
         | true -> 
-            do //state <- {state with graph3DParametric = graphServices.TODO state.graph3DParametric}
+            do state <- {state with graph3DParametric = graphServices.setActivate3DStateExpression (state.graph3DParametric,Z_)}
                function3D_fx_TextBox.MaxLines <- 3
                function3D_fy_TextBox.MaxLines <- 3
                function3D_fz_TextBox.MaxLines <- 15
@@ -2237,6 +2299,12 @@ type GraphingCalculator() as graphingCalculator =
                function3D_fy_TextBox.BorderThickness <- Thickness(1.)
                function3D_fz_TextBox.BorderThickness <- Thickness(3.)
         | false -> ()
+    let handleFunction3DButtons (input) =        
+        match  input = Draw3DParametric  with 
+        | false ->             
+            handleGraphInput(input)
+            setDisplayedText (graphServices.getDisplayFromGraphState state.graph3DParametric)
+        | true ->  handleGraphInput(input)
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
@@ -2332,10 +2400,10 @@ type GraphingCalculator() as graphingCalculator =
         option2D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
-        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons (Draw2DParametric)))
+        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(Draw2DParametric)))
         function2D_Spiral_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(SpiralExample)))
         function2D_Ellipse_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(EllipseExample)))
-
+        function3D_SolidMesh_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(Draw3DParametric)))
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))
