@@ -1033,8 +1033,6 @@ type GraphingCalculator() as graphingCalculator =
         do tb.SetValue(Grid.ColumnProperty,1)
         tb 
 
-
-
     do  // Assemble the pieces
         option3D_Grid .Children.Add(option3D_uMinLabel_TextBlock) |> ignore
         option3D_Grid .Children.Add(option3D_uMin_TextBox) |> ignore
@@ -1503,9 +1501,7 @@ type GraphingCalculator() as graphingCalculator =
         fun y ->
             let (_xScale,yScale) = state.scale
             y * yScale 
-    //----- 
-
-
+    
 // ------Create Command Functions------
     //-----Implementation of ICommand for views
     let viewCommand ( exec : (View -> unit) )=
@@ -1930,7 +1926,7 @@ type GraphingCalculator() as graphingCalculator =
 //-----Create Menu
     let menu = // 
          let header1 = MenuItem(Header = "Mode")
-         let header1_Item1 = MenuItem(Header = "Calculator")//, Command = viewCommand (setActiveDisplay), CommandParameter = Text screen_Text_TextBox)
+         let header1_Item1 = MenuItem(Header = "Calculator")
          let header1_Item1_1 = MenuItem(Header = "RPN Stack", Command = modeCommand (setInputMode), CommandParameter = RPN)
          let header1_Item1_2 = MenuItem(Header = "Conventional", Command = modeCommand (setInputMode), CommandParameter = Conventional, Icon = checkedBox)
          
@@ -2367,6 +2363,10 @@ type GraphingCalculator() as graphingCalculator =
         | true ->  
             handleTextBoxFxPreviewMouseDown ()
             handleGraphInput(input)
+            handleGraphInput(GraphingDomain.CalculatorInput.CalcInput Back)
+            handleGraphInput(input)
+            handleViewport3D_MouseRightButtonDown ()
+            
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  

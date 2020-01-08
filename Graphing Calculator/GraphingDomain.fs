@@ -781,7 +781,7 @@ module GraphingImplementation =
                  error = x} 
                 |> DrawErrorState
         | DrawState3DParametric (sd, d3d) -> 
-            let drawOp = (d3d,services.getDrawingOptionsFromState ( DrawState sd))
+            let drawOp = (d3d,services.getDrawingOptionsFromState stateData)
             let result = services.doDraw3DParametricOperation drawOp 
             match result with
             | Mesh m -> DrawState3DParametric ({traceExpression = sd.traceExpression; trace = []; drawingOptions = sd.drawingOptions; mesh = Some m},d3d)
@@ -905,14 +905,13 @@ module GraphingImplementation =
                         uStep = Ustep (Real (0.05 * System.Math.PI))
                         upperV = V (Real (System.Math.PI))
                         lowerV = V (Real (-System.Math.PI))
-                        vStep = Vstep (Real (0.05 * System.Math.PI))}
-        
+                        vStep = Vstep (Real (0.05 * System.Math.PI))}        
         ({ evaluatedExpression = xUV
            pendingFunction = None;
            drawingOptions = options}, 
            {x = xUV; y = yUV; z = zUV;activeExpression = X_}) |> EvaluatedState3DParametric
 
-    let handleDrawState services stateData input = //Only the'Back' function implimented here.
+    let handleDrawState services stateData input = //Only the'Back' function implemented here.
         let options = services.getDrawingOptionsFromState (DrawState stateData)
         let expr = stateData.traceExpression        
         let newEvaluatedStateData =  
