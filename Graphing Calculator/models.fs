@@ -431,7 +431,6 @@ module Models =
         model
 
     let helix = 
-        
         let x(t) = sin(t)
         let y(t) = cos(t)
         let z(t) = -t 
@@ -469,7 +468,7 @@ module Models =
            let y(_u,v) = -cos(v)
            let z(u,v) = sin(-u)*sin(v)
 
-           let resolution  = 0.05 * System.Math.PI
+           let resolution  = 0.1 * System.Math.PI
            let uLowerLimit = 0.0
            let uUpperLimit = 2.*System.Math.PI
            let vLowerLimit = 0.0

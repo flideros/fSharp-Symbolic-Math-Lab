@@ -1,7 +1,7 @@
 //#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r "System.Xml.Linq.dll"
-#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\Symbolic Math\bin\Debug\Symbolic_Math.dll"
-#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
+#r @"D:\MyFolders\Desktop\SymbolicMath\Symbolic Math\bin\Debug\Symbolic_Math.dll"
+//#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r "System.Xml.Linq.dll"
 open FSharp.Data
 open OpenMath
@@ -36,7 +36,7 @@ let y3 = y**three
 let y4 = y**four
 let y5 = y**five
 
-let expression = five/(sin(pi*((Number(Real 0.30))*x)**(Number(Real 2.0))))/i //(sin(x**two))**(Number(Real 0.5)) //
+let expression = five/(sin(pi*((Number(Real 0.30))*b)**(Number(Real 2.0))))/i //(sin(x**two))**(Number(Real 0.5)) //
 
 let rec checkForRealPowersOfExpression exp =
     let subExp = ExpressionStructure.subExpressions exp 

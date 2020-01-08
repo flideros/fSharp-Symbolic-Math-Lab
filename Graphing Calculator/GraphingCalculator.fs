@@ -615,7 +615,7 @@ type GraphingCalculator() as graphingCalculator =
         camera
     
     do // Assemble the pieces            
-       //model3DGroup.Children.Add(Models.helix)            
+       //model3DGroup.Children.Add(Models.surface)            
 
        modelVisual3D.Content <- model3DGroup
        
@@ -1617,20 +1617,41 @@ type GraphingCalculator() as graphingCalculator =
             | true, d -> Y (real d)
             | false, _ -> GraphingImplementation.defaultOptions.lowerY        
         let uT = 
-            let n = System.Double.TryParse (option2D_tMax_TextBox.Text)                
-            match n with
-            | true, d -> T (real d)
-            | false, _ -> GraphingImplementation.defaultOptions.upperT
+            match option2D_Grid.IsVisible || function2D_Grid.IsVisible with 
+            | true -> 
+                let n = System.Double.TryParse (option2D_tMax_TextBox.Text)                
+                match n with
+                | true, d -> T (real d)
+                | false, _ -> GraphingImplementation.defaultOptions.upperT
+            | false -> 
+                let n = System.Double.TryParse (option3D_tMax_TextBox.Text)
+                match n with
+                | true, d -> T (real d)
+                | false, _ -> GraphingImplementation.defaultOptions.upperT
         let lT = 
-            let n = System.Double.TryParse (option2D_tMin_TextBox.Text)
-            match n with
-            | true, d -> T (real d)
-            | false, _ -> GraphingImplementation.defaultOptions.lowerT
+            match option2D_Grid.IsVisible || function2D_Grid.IsVisible with 
+            | true -> 
+                let n = System.Double.TryParse (option2D_tMin_TextBox.Text)                
+                match n with
+                | true, d -> T (real d)
+                | false, _ -> GraphingImplementation.defaultOptions.lowerT
+            | false -> 
+                let n = System.Double.TryParse (option3D_tMin_TextBox.Text)
+                match n with
+                | true, d -> T (real d)
+                | false, _ -> GraphingImplementation.defaultOptions.lowerT
         let tStep = 
-            let n = System.Double.TryParse (option2D_tStep_TextBox.Text)
-            match n with
-            | true, d -> Tstep (real d)
-            | false, _ -> GraphingImplementation.defaultOptions.Tstep
+            match option2D_Grid.IsVisible || function2D_Grid.IsVisible with 
+            | true -> 
+                let n = System.Double.TryParse (option2D_tStep_TextBox.Text)                
+                match n with
+                | true, d -> Tstep (real d)
+                | false, _ -> GraphingImplementation.defaultOptions.Tstep
+            | false -> 
+                let n = System.Double.TryParse (option3D_tStep_TextBox.Text)
+                match n with
+                | true, d -> Tstep (real d)
+                | false, _ -> GraphingImplementation.defaultOptions.Tstep
         let uU = 
             let n = System.Double.TryParse (option3D_uMax_TextBox.Text)
             match n with
@@ -1739,10 +1760,14 @@ type GraphingCalculator() as graphingCalculator =
         | View.Function3D p ->
             setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph3DParametric)
             (p.Visibility <- Visibility.Visible)
-        | View.Option p
-        | View.Option2D p 
-        | View.Option3D p -> 
+        | View.Option p ->
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph)
+            (p.Visibility <- Visibility.Visible)
+        | View.Option2D p ->
             setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph2DParametric)
+            (p.Visibility <- Visibility.Visible)
+        | View.Option3D p -> 
+            setGraphOptionText (GraphServices.getDrawingOptionsFromState state.graph3DParametric)
             (p.Visibility <- Visibility.Visible)
         | View.Text t -> (t.Visibility <- Visibility.Visible)        
     // a function that sets the displayed text
@@ -2131,20 +2156,20 @@ type GraphingCalculator() as graphingCalculator =
                 do state <- { state with graph3DParametric = newState }
                    model3DGroup.Children.Clear()
                    model3DGroup.Children.Add(light)
-                   model3DGroup.Children.Add(light2)
+                   //model3DGroup.Children.Add(light2)
                    setActivetModel (Model3D m)   
                 match state.model with
                 | Trace _ -> ()
-                | Model3D (Mesh.Mesh m) -> 
+                | Model3D (Surface m) -> 
                    do
                    model3DGroup.Children.Add(m)
                    setActiveDisplay (PlotCanvas screen_Canvas)
-                   setPendingOpText "--->>> graph 3D Parametric" 
-                | Model3D (Mesh.MeshGroup m) -> 
+                   setPendingOpText "--->>> graph 3D Parametric surface" 
+                | Model3D (Curve m) -> 
                     do
                     model3DGroup.Children.Add(m)
                     setActiveDisplay (PlotCanvas screen_Canvas)
-                    setPendingOpText "--->>> graph 3D Parametric"         
+                    setPendingOpText "--->>> graph 3D Parametric curve"         
         | EvaluatedState3DParametric (sd,d3) -> 
             let newState = graphServices.setActivate3DStateExpression (newState,d3.activeExpression)
             do state <- { state with graph3DParametric = newState }
@@ -2301,10 +2326,47 @@ type GraphingCalculator() as graphingCalculator =
         | false -> ()
     let handleFunction3DButtons (input) =        
         match  input = Draw3DParametric  with 
-        | false ->             
+        | false ->            
+            handleTextBoxFxPreviewMouseDown ()
             handleGraphInput(input)
+            handleTextBoxFyPreviewMouseDown ()
             setDisplayedText (graphServices.getDisplayFromGraphState state.graph3DParametric)
-        | true ->  handleGraphInput(input)
+            handleTextBoxFzPreviewMouseDown ()
+            setDisplayedText (graphServices.getDisplayFromGraphState state.graph3DParametric)            
+            handleGraphInput(input)
+            match input with 
+            | HelixExample -> 
+                match tRadio.IsChecked.Value with
+                | true -> ()
+                | false -> 
+                    do tRadio.IsChecked <- Nullable true
+                       uvRadio.IsChecked <- Nullable false
+                       handleParameterRadioButtons_Checked ()
+            | SphereExample -> 
+                match tRadio.IsChecked.Value with
+                | true -> 
+                    do tRadio.IsChecked <- Nullable false
+                    uvRadio.IsChecked <- Nullable true
+                    handleParameterRadioButtons_Checked ()
+                | false -> ()
+            | ConeExample -> 
+                match tRadio.IsChecked.Value with
+                | true -> 
+                    do tRadio.IsChecked <- Nullable false
+                    uvRadio.IsChecked <- Nullable true
+                    handleParameterRadioButtons_Checked ()
+                | false -> ()
+            | TorusExample -> 
+                match tRadio.IsChecked.Value with
+                | true -> 
+                    do tRadio.IsChecked <- Nullable false
+                    uvRadio.IsChecked <- Nullable true
+                    handleParameterRadioButtons_Checked ()
+                | false -> ()(**)
+            | _ -> ()
+        | true ->  
+            handleTextBoxFxPreviewMouseDown ()
+            handleGraphInput(input)
 
     // a function that sets active handler based on the active input mode display
     let handleInput input =  
@@ -2344,6 +2406,8 @@ type GraphingCalculator() as graphingCalculator =
     // create objects
     let x = (Math.Pure.Objects.Symbol.Variable "x") |> ExpressionInput.Symbol |> ExpressionInput
     let t = (Math.Pure.Objects.Symbol.Variable "t") |> ExpressionInput.Symbol |> ExpressionInput
+    let u = (Math.Pure.Objects.Symbol.Variable "u") |> ExpressionInput.Symbol |> ExpressionInput
+    let v = (Math.Pure.Objects.Symbol.Variable "v") |> ExpressionInput.Symbol |> ExpressionInput
     let sin = (Math.Pure.Objects.Function.Sin) |> ExpressionInput.Function |> ExpressionInput
     let cos = (Math.Pure.Objects.Function.Cos) |> ExpressionInput.Function |> ExpressionInput
     let tan = (Math.Pure.Objects.Function.Tan) |> ExpressionInput.Function |> ExpressionInput
@@ -2386,6 +2450,8 @@ type GraphingCalculator() as graphingCalculator =
         duplicate        .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleStackOperation (Duplicate)))
         x_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> x |> handleGraphInput ))        
         t_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> t |> handleGraphInput ))
+        u_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> u |> handleGraphInput ))
+        v_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> v |> handleGraphInput ))
         sin_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> sin |> handleGraphInput ))
         cos_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> cos |> handleGraphInput ))
         tan_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> tan |> handleGraphInput ))
@@ -2398,12 +2464,19 @@ type GraphingCalculator() as graphingCalculator =
         option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         option2D_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
         option2D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
+        option3D_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
+        option3D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
         xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
         function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(Draw2DParametric)))
         function2D_Spiral_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(SpiralExample)))
         function2D_Ellipse_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(EllipseExample)))
         function3D_SolidMesh_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(Draw3DParametric)))
+        function3D_Helix_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(HelixExample)))
+        function3D_Sphere_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(SphereExample)))
+        function3D_Cone_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(ConeExample)))
+        function3D_Torus_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(TorusExample)))
+
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
         canvasGridLines_CheckBox.Unchecked.AddHandler(RoutedEventHandler(fun _ _ -> handleGridLinesOnUnCheck()))

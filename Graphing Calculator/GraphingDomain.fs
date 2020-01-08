@@ -78,8 +78,8 @@ module GraphingDomain =
     
     //type MeshGroup = 
     type Mesh = 
-        | Mesh of System.Windows.Media.Media3D.GeometryModel3D
-        | MeshGroup of System.Windows.Media.Media3D.Model3DGroup
+        | Surface of System.Windows.Media.Media3D.GeometryModel3D
+        | Curve of System.Windows.Media.Media3D.Model3DGroup
     
     // types to describe results
     type DrawError = 
@@ -158,6 +158,10 @@ module GraphingDomain =
         | ExpressionToThePowerOf
         | SpiralExample
         | EllipseExample
+        | HelixExample
+        | SphereExample
+        | ConeExample
+        | TorusExample
 
     // States
     type CalculatorState =         
@@ -239,8 +243,8 @@ module GraphingImplementation =
           lowerX = X (Math.Pure.Quantity.Real -150.); 
           upperY = Y (Math.Pure.Quantity.Real 150.); 
           lowerY = Y (Math.Pure.Quantity.Real -150.);
-          upperT = T (Math.Pure.Quantity.Real 150.); 
-          lowerT = T (Math.Pure.Quantity.Real -150.);
+          upperT = T (Math.Pure.Quantity.Real 10.); 
+          lowerT = T (Math.Pure.Quantity.Real -10.);
           Tstep  = Tstep (Math.Pure.Quantity.Real 0.1) 
           upperU = U (Math.Pure.Quantity.Real (2.0 * System.Math.PI));
           lowerU = U (Math.Pure.Quantity.Real 0.);
@@ -725,7 +729,7 @@ module GraphingImplementation =
     let doDraw3DParametricOperation services stateData = 
         match stateData with
         | EvaluatedState3DParametric (sd, d3d) ->
-            let drawOp = (d3d,services.getDrawingOptionsFromState ( EvaluatedState sd))
+            let drawOp = (d3d,services.getDrawingOptionsFromState stateData)
             let result = services.doDraw3DParametricOperation drawOp 
             match result with
             | Mesh m -> DrawState3DParametric ({traceExpression = sd.evaluatedExpression; trace = []; drawingOptions = sd.drawingOptions; mesh = Some m},d3d)
@@ -843,6 +847,71 @@ module GraphingImplementation =
               pendingFunction = None;
               drawingOptions = options }) |> EvaluatedState2DParametric       
     
+    let helix_ExampleState =
+        let xT = UnaryOp (Sin,Expression.Symbol (Variable "t"))
+        let yT = UnaryOp (Cos,Expression.Symbol (Variable "t"))
+        let zT = NaryOp (Product,[Number(Real -1.0);Expression.Symbol (Variable "t")])
+        let options = {defaultOptions with 
+                        upperT = T (Real 25.0)
+                        lowerT = T (Real 0.0)
+                        Tstep = Tstep (Real 0.1)}
+        
+        ({ evaluatedExpression = xT
+           pendingFunction = None;
+           drawingOptions = options}, 
+           {x = xT; y = yT; z = zT;activeExpression = X_}) |> EvaluatedState3DParametric
+
+    let sphere_ExampleState =
+        let xUV = (UnaryOp (Cos,Expression.Symbol (Variable "u"))) * (UnaryOp (Sin,Expression.Symbol (Variable "v")))
+        let yUV = (UnaryOp (Cos,Expression.Symbol (Variable "v"))) * Number (Real -1.)
+        let zUV = (UnaryOp (Sin,Expression.Symbol (Variable "u") * Number (Real -1.))) * (UnaryOp (Sin,Expression.Symbol (Variable "v")))
+        let options = {defaultOptions with 
+                        upperU = U (Real (2.0 * System.Math.PI))
+                        lowerU = U (Real 0.0)
+                        uStep = Ustep (Real (0.05 * System.Math.PI))
+                        upperV = V (Real (2.0 * System.Math.PI))
+                        lowerV = V (Real 0.0)
+                        vStep = Vstep (Real (0.05 * System.Math.PI))}
+        
+        ({ evaluatedExpression = xUV
+           pendingFunction = None;
+           drawingOptions = options}, 
+           {x = xUV; y = yUV; z = zUV;activeExpression = X_}) |> EvaluatedState3DParametric
+
+    let torus_ExampleState =
+        let xUV = (UnaryOp (Sin,Expression.Symbol (Variable "v")))
+        let yUV = (Number (Real 2.) + UnaryOp (Cos,Expression.Symbol (Variable "v"))) * (UnaryOp (Sin,Expression.Symbol (Variable "u")))
+        let zUV = (Number (Real 2.) + UnaryOp (Cos,Expression.Symbol (Variable "v"))) * (UnaryOp (Cos,Expression.Symbol (Variable "u")))
+        let options = {defaultOptions with 
+                        upperU = U (Real (2.0 * System.Math.PI))
+                        lowerU = U (Real 0.0)
+                        uStep = Ustep (Real (0.05 * System.Math.PI))
+                        upperV = V (Real (2.0 * System.Math.PI))
+                        lowerV = V (Real 0.0)
+                        vStep = Vstep (Real (0.05 * System.Math.PI))}
+        
+        ({ evaluatedExpression = xUV
+           pendingFunction = None;
+           drawingOptions = options}, 
+           {x = xUV; y = yUV; z = zUV;activeExpression = X_}) |> EvaluatedState3DParametric
+
+    let cone_ExampleState =
+        let xUV = Number (Real 0.6) * (Number (Real 1.5) - Expression.Symbol (Variable "v")) * (UnaryOp (Cos,Expression.Symbol (Variable "u"))) 
+        let yUV = Expression.Symbol (Variable "v")
+        let zUV = Number (Real 0.6) * (Number (Real 1.5) - Expression.Symbol (Variable "v")) * (UnaryOp (Sin,Expression.Symbol (Variable "u")* (Number (Real -1.))))
+        let options = {defaultOptions with 
+                        upperU = U (Real (System.Math.PI))
+                        lowerU = U (Real (-System.Math.PI))
+                        uStep = Ustep (Real (0.05 * System.Math.PI))
+                        upperV = V (Real (System.Math.PI))
+                        lowerV = V (Real (-System.Math.PI))
+                        vStep = Vstep (Real (0.05 * System.Math.PI))}
+        
+        ({ evaluatedExpression = xUV
+           pendingFunction = None;
+           drawingOptions = options}, 
+           {x = xUV; y = yUV; z = zUV;activeExpression = X_}) |> EvaluatedState3DParametric
+
     let handleDrawState services stateData input = //Only the'Back' function implimented here.
         let options = services.getDrawingOptionsFromState (DrawState stateData)
         let expr = stateData.traceExpression        
@@ -880,6 +949,10 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> DrawState stateData
         | SpiralExample -> spiral_ExampleState
         | EllipseExample -> ellipse_ExampleState
+        | HelixExample -> helix_ExampleState
+        | SphereExample -> sphere_ExampleState
+        | ConeExample -> cone_ExampleState
+        | TorusExample -> torus_ExampleState
 
     let handleEvaluatedState services stateData input =
         let options = services.getDrawingOptionsFromState (EvaluatedState stateData)
@@ -1387,6 +1460,10 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> replacePendingFunction stateData (Some ToThePowerOf)
         | SpiralExample -> spiral_ExampleState
         | EllipseExample -> ellipse_ExampleState
+        | HelixExample -> helix_ExampleState
+        | SphereExample -> sphere_ExampleState
+        | ConeExample -> cone_ExampleState
+        | TorusExample -> torus_ExampleState
         
     let handleParentheticalState services stateData input =
         let options = services.getDrawingOptionsFromState (ParentheticalState stateData)
@@ -1895,6 +1972,10 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> replacePendingFunctionParenthetical stateData (Some ToThePowerOf)
         | SpiralExample -> spiral_ExampleState
         | EllipseExample -> ellipse_ExampleState
+        | HelixExample -> helix_ExampleState
+        | SphereExample -> sphere_ExampleState
+        | ConeExample -> cone_ExampleState
+        | TorusExample -> torus_ExampleState
         
     let handleExpressionDigitAccumulatorState services stateData input =           
            let options = services.getDrawingOptionsFromState (ExpressionDigitAccumulatorState stateData)           
@@ -2099,6 +2180,10 @@ module GraphingImplementation =
            | ExpressionToThePowerOf -> getEvaluationState services stateData (Some ToThePowerOf)
            | SpiralExample -> spiral_ExampleState
            | EllipseExample -> ellipse_ExampleState
+           | HelixExample -> helix_ExampleState
+           | SphereExample -> sphere_ExampleState
+           | ConeExample -> cone_ExampleState
+           | TorusExample -> torus_ExampleState
            
     let handleExpressionDecimalAccumulatorState services stateData input =
         let options = services.getDrawingOptionsFromState (ExpressionDecimalAccumulatorState stateData)        
@@ -2300,6 +2385,10 @@ module GraphingImplementation =
         | ExpressionToThePowerOf -> getEvaluationState services stateData (Some ToThePowerOf)
         | SpiralExample -> spiral_ExampleState
         | EllipseExample -> ellipse_ExampleState
+        | HelixExample -> helix_ExampleState
+        | SphereExample -> sphere_ExampleState
+        | ConeExample -> cone_ExampleState
+        | TorusExample -> torus_ExampleState
         
     let handleDrawErrorState services stateData input =           
         let options = services.getDrawingOptionsFromState (DrawErrorState stateData)
@@ -2334,6 +2423,10 @@ module GraphingImplementation =
         | GraphOptionReset -> DrawErrorState stateData
         | SpiralExample -> spiral_ExampleState
         | EllipseExample -> ellipse_ExampleState
+        | HelixExample -> helix_ExampleState
+        | SphereExample -> sphere_ExampleState
+        | ConeExample -> cone_ExampleState
+        | TorusExample -> torus_ExampleState
         
     let handleExpressionErrorState services stateData input =
         let options = services.getDrawingOptionsFromState (ExpressionErrorState stateData)
@@ -2368,6 +2461,10 @@ module GraphingImplementation =
         | GraphOptionReset -> DrawErrorState stateData
         | SpiralExample -> spiral_ExampleState
         | EllipseExample -> ellipse_ExampleState
+        | HelixExample -> helix_ExampleState
+        | SphereExample -> sphere_ExampleState
+        | ConeExample -> cone_ExampleState
+        | TorusExample -> torus_ExampleState
         
     let createEvaluate (services:GraphServices) : Evaluate = 
          // create some local functions with partially applied services
@@ -2550,7 +2647,7 @@ module GraphServices =
                     | Some expression -> func + " " + expression.ToString()
                     | None -> ""            
             | EvaluatedState3DParametric (e,_) -> e.evaluatedExpression.ToString()
-            | DrawState3DParametric (d,_) -> d.trace.ToString()
+            | DrawState3DParametric (d,_) -> d.mesh.Value.ToString()
             | ParentheticalState3DParametric (p,_) -> p.evaluatedExpression.ToString()
             | ExpressionDigitAccumulatorState3DParametric (d,_) -> 
                 let func = 
@@ -2908,32 +3005,51 @@ module GraphServices =
             let transforms = System.Windows.Media.Media3D.Transform3DGroup()
             let translation = System.Windows.Media.Media3D.TranslateTransform3D(getVectorfrom p)
             
-            let axis = System.Windows.Media.Media3D.Vector3D.CrossProduct (v1, v2)        
+            let axis = 
+                let dot =  System.Windows.Media.Media3D.Vector3D.DotProduct (v1, v2)
+                match dot < 0. with
+                | true -> System.Windows.Media.Media3D.Vector3D.CrossProduct (v1, v2)        
+                | false -> System.Windows.Media.Media3D.Vector3D.CrossProduct (v2, v1)
+
             let angle = axis.Length * (180./System.Math.PI)
+            
             let quaternion = 
+
                 let q = (System.Windows.Media.Media3D.Quaternion(axis, angle))
                 do q.Normalize()
                 q
+            
             let rotation = System.Windows.Media.Media3D.QuaternionRotation3D(quaternion) |> System.Windows.Media.Media3D.RotateTransform3D
             do  transforms.Children.Add(rotation)
                 transforms.Children.Add(translation)
                 model.Transform <- transforms
             model
 
-        let evaluate expression value = 
+        let evaluateT expression value = 
             expression
             |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
             |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
-            |> ExpressionStructure.substitute (Expression.Symbol (Variable "t"), value)
+            |> ExpressionStructure.substitute (Expression.Symbol (Variable "t"), value)            
+            |> ExpressionFunction.evaluateRealPowersOfExpression
+
+        let evaluateU expression value = 
+            expression
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
             |> ExpressionStructure.substitute (Expression.Symbol (Variable "u"), value)
+
+        let evaluateV expression value = 
+            expression
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant Pi), Number (Real (System.Math.PI))) 
+            |> ExpressionStructure.substitute (Expression.Symbol (Constant E), Number (Real (System.Math.E)))            
             |> ExpressionStructure.substitute (Expression.Symbol (Variable "v"), value)
             |> ExpressionFunction.evaluateRealPowersOfExpression
         
         match hasT, hasU, hasV with
         | true, false, false ->
-            let x(t) = evaluate expressions.x (Number(Real t))
-            let y(t) = evaluate expressions.y (Number(Real t))
-            let z(t) = evaluate expressions.z (Number(Real t))            
+            let x(t) = evaluateT expressions.x (Number(Real t))
+            let y(t) = evaluateT expressions.y (Number(Real t))
+            let z(t) = evaluateT expressions.z (Number(Real t))            
             let points0 = seq{for t in tMin..tStep..tMax -> makePoint (x (t)) (y(t)) (z(t))}
             let points1 = seq{for t in (tMin + tStep)..tStep..(tMax + tStep) -> makePoint (x (t)) (y(t)) (z(t))}
             let points = Seq.zip points0 points1
@@ -2948,11 +3064,17 @@ module GraphServices =
                                 transformModel pixel n p}
             let model3DGroup = System.Windows.Media.Media3D.Model3DGroup()        
             do Seq.iter (fun m -> model3DGroup.Children.Add(m)) models
-            MeshGroup model3DGroup |> Mesh
-        | false, true, true -> 
-            let x(u,v) = evaluate (evaluate expressions.x (Number(Real u))) (Number(Real v))  
-            let y(u,v) = evaluate (evaluate expressions.y (Number(Real u))) (Number(Real v))
-            let z(u,v) = evaluate (evaluate expressions.z (Number(Real u))) (Number(Real v))
+            Curve model3DGroup |> Mesh
+        | false, _, _ -> 
+            let x(u,v) = 
+                let v' = evaluateU expressions.x (Number(Real u))
+                evaluateV v' (Number(Real v))  
+            let y(u,v) = 
+                let v' = evaluateU expressions.y (Number(Real u))
+                evaluateV v' (Number(Real v))  
+            let z(u,v) = 
+                let v' = evaluateU expressions.z (Number(Real u))
+                evaluateV v' (Number(Real v))  
             let points0 = 
                 seq{for u in uMin..uStep..uMax do 
                       for v in vMin..vStep..vMax -> makePoint (x(u, v)) (y(u, v)) (z(u, v))}
@@ -2978,6 +3100,7 @@ module GraphServices =
                 meshGeometry.Positions.Add(getPoint3Dfrom p1)
                 meshGeometry.Positions.Add(getPoint3Dfrom p2)
                 meshGeometry.Positions.Add(getPoint3Dfrom p3) ) points_1                
+                
                 Seq.iter (fun n -> 
                 let p1,p2,p3 = n 
                 // Front
@@ -2988,8 +3111,9 @@ module GraphServices =
                 meshGeometry.Positions.Add(getPoint3Dfrom p1)
                 meshGeometry.Positions.Add(getPoint3Dfrom p2)
                 meshGeometry.Positions.Add(getPoint3Dfrom p3)) points_2                                
+            
             let model3D = System.Windows.Media.Media3D.GeometryModel3D(meshGeometry, Style.genericMaterial)
-            (Mesh.Mesh model3D) |> Mesh 
+            Surface model3D |> Mesh 
         | _ -> DrawError ParameterError
 (**)
     let doExpressionOperation opData :ExpressionOperationResult = 
