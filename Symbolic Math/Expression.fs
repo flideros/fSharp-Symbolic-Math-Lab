@@ -289,6 +289,137 @@ module ExpressionType =
             | _ -> NaryOp(Sum,x') 
         | _ -> Number Undefined
 
+    // Simplification Operators -- Reals
+    let rec simplifyRealPower x =
+        let rec simplifyIntegerPower x =        
+            match x with
+            | BinaryOp(Number base',ToThePowerOf,Number(Integer i)) when base' <> Number.Zero -> Number (base'**(Integer i)) //SINTPOW-1
+            | BinaryOp(base',ToThePowerOf,Number(Integer i)) when base' <> Number Number.Zero && i = 0I -> Number (Integer 1I) //SINTPOW-2
+            | BinaryOp(base',ToThePowerOf,Number(Integer i)) when base' <> Number Number.Zero && i = 1I-> base' //SINTPOW-3
+            | BinaryOp((BinaryOp(base',ToThePowerOf,power')),ToThePowerOf,Number(Integer i)) -> //SINTPOW-4
+                 let p =  simplifyRealProduct (NaryOp(Product,[power'; Number(Integer i)])) 
+                 match p with 
+                 | Number (Integer ii) -> simplifyIntegerPower (BinaryOp(base',ToThePowerOf,p))
+                 | _ -> (BinaryOp(base',ToThePowerOf,p)) 
+            | BinaryOp((NaryOp(Product,eList)),ToThePowerOf,Number(Integer i)) -> //SINTPOW-5
+                let eList' = List.map (fun x -> simplifyIntegerPower (BinaryOp(x,ToThePowerOf,Number(Integer i)))) eList
+                simplifyRealProduct (NaryOp(Product,eList'))
+            | _ -> x //SINTPOW-6        
+        match x with
+        | BinaryOp(base',ToThePowerOf,power') when base' = Number Undefined || power' = Number Undefined -> Number Undefined //SPOW-1
+        | BinaryOp(base',ToThePowerOf,Number n) when base' = Number Number.Zero  && n.isNegative = false -> Number Number.Zero //SPOW-2
+        | BinaryOp(base',ToThePowerOf,Number n) when base' = Number (Real 0.0) && n.isNegative = false -> Number Number.Zero //SPOW-2
+        | BinaryOp(base',ToThePowerOf,_) when base' = Number Number.Zero || base' = Number (Real 0.0) -> Number Undefined //SPOW-2
+        | BinaryOp(base',ToThePowerOf,_) when base' = Number Number.One || base' = Number (Real 1.0) -> Number Number.One //SPOW-3
+        | BinaryOp(_,ToThePowerOf,Number (Integer n)) -> simplifyIntegerPower x //SPOW-4        
+        | _ -> x //SPOW-5        
+ 
+    and simplifyRealProduct p =      
+        let rec simplifyProductRec p =
+            match p with
+            | [BinaryOp(Number (Integer i1),ToThePowerOf,Number n1);BinaryOp(Number (Integer i2),ToThePowerOf,Number n2)] 
+                when n1=n2 -> [BinaryOp(Number (Integer (i1*i2)),ToThePowerOf,Number n1)]// TEST POWER OF INTEGERS
+            | [NaryOp(Product, x); NaryOp(Product, y)] -> mergeProducts x y //SPRDREC-2.1
+            | [NaryOp(Product, x); a] -> mergeProducts x [a] //SPRDREC-2.2
+            | [a; NaryOp(Product, x)] -> mergeProducts [a] x //SPRDREC-2.3
+            | [a; b] ->
+                match a, b with            
+                | Number a, Number b -> //SPRDREC-1
+                    let n = Number (a * b)
+                    match n with
+                    | Number x when x = Number.One || a = Real 1.0 -> [] //SPRDREC-1.1
+                    | _ -> [n] //SPRDREC-1.1
+                | Number a, b when a = Number.One || a = Real 1.0  -> [b] //SPRDREC-1.2.a
+                | a, Number b when b = Number.One || b = Real 1.0 -> [a] //SPRDREC-1.2.b
+                | a, b when Base b = Base a -> //SPRDREC-1.3
+                    let s = simplifyRealSum (NaryOp(Sum,[Exponent a; Exponent b]))
+                    let p = simplifyRealPower (BinaryOp(Base a, ToThePowerOf, s))
+                    match p with
+                    | Number n when n = Number.One || n = Real 1.0 -> [] //SPRDREC-1.3
+                    | _ -> [p] //SPRDREC-1.3
+                | a, b when compareExpressions a b = 1 -> [b; a] //SPRDREC-1.4
+                | _ -> [a; b] //SPRDREC-1.5
+            | l when List.length l > 2 -> //SPRDREC-3
+                let w = simplifyProductRec l.Tail
+                match l.Head with
+                | NaryOp(Product, x) -> mergeProducts x w //SPRDREC-3.1
+                | _ -> mergeProducts [l.Head] w //SPRDREC-3.2
+            | _ -> p        
+        and mergeProducts a b = 
+            let sort = List.sortWith (fun x -> compareExpressions x)
+            let a' = sort a
+            let b' = sort b
+            match a', b' with
+            | x, [] -> x //MPRD-1
+            | [], y -> y //MPRD-2
+            | x, y -> //MPRD-3
+                let h = simplifyProductRec [x.Head; y.Head]
+                match h with
+                | [] -> mergeProducts x.Tail y.Tail //MPRD-3.1
+                | [h'] -> h'::(mergeProducts x.Tail y.Tail) //MPRD-3.2
+                | [a; b] when compareExpressions x.Head y.Head = -1 -> x.Head::(mergeProducts x.Tail y) //MPRD-3.3
+                | _ -> y.Head::(mergeProducts x y.Tail) //MPRD-3.4
+        match p with
+        | NaryOp(Product,x) when List.exists (fun elem -> elem = Number Undefined) x || x.IsEmpty -> Number Undefined //SPRD-1
+        | NaryOp(Product,x) when List.exists (fun elem -> elem = Number Number.Zero || elem = Number (Real 0.0)) x -> Number Number.Zero //SPRD-2
+        | NaryOp(Product,x) when List.length x = 1 -> x.[0] //SPRD-3
+        | NaryOp(Product,x) -> //SPRD-4
+            let x' : Expression list = simplifyProductRec x
+            match x' with
+            | [] -> Number Number.One //SPRD-4.3
+            | [x1] -> x1 //SPRD-4.1
+            | _ -> NaryOp(Product,x') //SPRD-4.2
+        | _ -> Number Undefined
+    
+    and simplifyRealSum p = 
+        let rec simplifySumRec s =
+            match s with
+            | [NaryOp(Sum, x); NaryOp(Sum, y)] -> mergeSums x y |> simplifySumRec
+            | [NaryOp(Sum, x); a] -> mergeSums x [a] |> simplifySumRec
+            | [a; NaryOp(Sum, x)] -> mergeSums [a] x |> simplifySumRec
+            | [a'; b'] ->
+                match a', b' with            
+                | Number a, Number b -> 
+                    let n = Number (a + b)
+                    match n with
+                    | Number x when x = Number.Zero || x = Real 0.0 -> [] 
+                    | _ -> [n] 
+                | Number a, b when a = Number.Zero || a = Real 0.0 -> [b] 
+                | a, Number b when b = Number.Zero || b = Real 0.0 -> [a] 
+                | a, b when Term a = Term b -> [(simplifyRealProduct (NaryOp(Product,[(simplifyRealSum (NaryOp(Sum, [(Const a); (Const b)]))); Term a])))]
+                | a, b when compareExpressions a b = 1 -> [b; a] 
+                | _ -> [a'; b'] 
+            | l when List.length l > 2 -> 
+                let w = simplifySumRec l.Tail
+                match l.Head with
+                | NaryOp(Sum, x) -> mergeSums x w 
+                | _ -> mergeSums [l.Head] w 
+            | _ -> s
+        and mergeSums a b = 
+            let sort = List.sortWith (fun x -> compareExpressions x)
+            let a' = sort a
+            let b' = sort b
+            match a', b' with
+            | x, [] -> x //MPRD-1
+            | [], y -> y //MPRD-2
+            | x, y -> //MPRD-3
+                let h = simplifySumRec [x.Head; y.Head]
+                match h with
+                | [] -> mergeSums x.Tail y.Tail //MPRD-3.1
+                | [h'] -> h'::(mergeSums x.Tail y.Tail) //MPRD-3.2
+                | [a; b] when compareExpressions x.Head y.Head = -1 -> x.Head::(mergeSums x.Tail y) //MPRD-3.3
+                | _ -> y.Head::(mergeSums x y.Tail) //MPRD-3.4
+        match p with
+        | NaryOp(Sum,x) when List.exists (fun elem -> elem = Number Undefined) x || x.IsEmpty -> Number Undefined     
+        | NaryOp(Sum,x) when List.length x = 1 -> x.[0] 
+        | NaryOp(Sum,x) ->
+            let x' : Expression list = simplifySumRec x
+            match x' with
+            | []-> Number Number.Zero 
+            | [x1] -> x1 
+            | _ -> NaryOp(Sum,x') 
+        | _ -> Number Undefined
+
     //Simplify function form quotient (use inline operator '/' for simplfication of all other expressions)
     let simplifyQuotient u =
         match u with 
@@ -321,6 +452,157 @@ module ExpressionType =
             | NaryOp(Sum,a) -> simplifySum (NaryOp(Sum,(List.map simplify a)))            
             | NaryOp(Product,a) -> simplifyProduct (NaryOp(Product,(List.map simplify a)))
             | BinaryOp(a,ToThePowerOf,b) -> simplifyPower (BinaryOp(simplify a,ToThePowerOf,simplify b))
+            | UnaryOp(Factorial,a) -> simplifyFactorial (simplify a)
+            //Trig Functions            
+            //Sine
+            | UnaryOp (Sin,NaryOp(Product,a)) when isNegativeNumber a.[0] -> simplify (NaryOp(Product,[Number (Integer -1I);UnaryOp (Sin,NaryOp(Product,(negate a.[0])::a.Tail))]))
+            | UnaryOp (Sin,NaryOp(Sum,(Number n)::(NaryOp(Product,a))::t)) when isNegativeNumber a.[0] -> (NaryOp(Product,[Number (Integer -1I);UnaryOp (Sin,NaryOp(Sum,List.map negate ((Number n)::(NaryOp(Product,a))::t)))]))
+            | UnaryOp (Sin,NaryOp(Sum,xh::Symbol s::xt)) when s = Constant Pi-> simplify (NaryOp(Product,[Number (Integer -1I);UnaryOp (Sin,NaryOp(Sum,(xh::xt)))]))
+            | UnaryOp (Sin,NaryOp(Sum,Symbol s::xn::xt)) when s = Constant Pi-> simplify (NaryOp(Product,[Number (Integer -1I);UnaryOp (Sin,NaryOp(Sum,(xn::xt)))]))            
+            | UnaryOp (Sin,NaryOp(Sum,xh::(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xt)) when pi = Constant Pi && r.denominator = 2I -> 
+                match r.numerator > 0I, r.Floor%2I = 0I with
+                | true, true -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xh::xt))))
+                | false, true -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xh::xt))))]))
+                | false, false -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xh::xt))))
+                | true, false -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xh::xt))))]))
+            | UnaryOp (Sin,NaryOp(Sum,(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && r.denominator = 2I ->
+                match r.numerator > 0I, r.Floor%2I = 0I with
+                | true, true -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xn::xt))))
+                | false, true -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xn::xt))))]))
+                | false, false -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xn::xt))))
+                | true, false -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xn::xt))))]))
+            | UnaryOp (Sin,NaryOp(Sum,xh::(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xt)) when pi = Constant Pi && r.denominator = 3I -> 
+                match (r.numerator-(r.numerator - (r.Floor*r.denominator)))%2I=0I, abs (r.numerator - (r.Floor*r.denominator)) with
+                | true, n when n = 1I -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,(negate xh)::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(List.map negate xt)))))
+                | true, n when n = 2I -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xh::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::xt))))
+                | false, n when n = 1I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,(negate xh)::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(List.map negate xt)))))]))
+                | false, n when n = 2I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xh::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::xt))))]))
+                | _ -> a'
+            | UnaryOp (Sin,NaryOp(Sum,(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && r.denominator = 3I ->
+                match (r.numerator-(r.numerator - (r.Floor*r.denominator)))%2I=0I, abs (r.numerator - (r.Floor*r.denominator))  with
+                | true, n when n = 1I -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(negate xn)::(List.map negate xt)))))
+                | true, n when n = 2I -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::xn::xt))))
+                | false, n when n = 1I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(negate xn)::(List.map negate xt)))))]))
+                | false, n when n = 2I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::xn::Symbol pi::t))::xt))))]))
+                | _ -> a'            
+            | UnaryOp (Sin,NaryOp(Sum,xh::(NaryOp(Product,Number (Integer n)::Symbol pi::t))::xt)) when pi = Constant Pi && n%2I = 0I -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))
+            | UnaryOp (Sin,NaryOp(Sum,(NaryOp(Product,Number(Integer n)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && n%2I = 0I -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))
+            | UnaryOp (Sin,NaryOp(Sum,xh::(NaryOp(Product,Number (Integer n)::Symbol pi::t))::xt)) when pi = Constant Pi && n%2I <> 0I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))]))
+            | UnaryOp (Sin,NaryOp(Sum,(NaryOp(Product,Number(Integer n)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && n%2I <> 0I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))]))
+            | UnaryOp (Sin,NaryOp(Product,a)) when isNumber a.[0] && a.[1] = Symbol(Constant Pi) && a.Length = 2 -> 
+                    match simplify a.[0] with
+                    | Number (Integer i) -> Number (Integer 0I)
+                    | Number (Rational r) -> 
+                        match r.numerator, r.denominator with
+                        | n, d when d = 6I ->
+                            match r.Floor%2I = 0I with 
+                            | true ->  Number (Rational {numerator = 1I; denominator = 2I})
+                            | false -> Number (Rational {numerator = -1I; denominator = 2I})
+                        | n, d when d = 3I && (n/3I)%2I = 0I -> NaryOp(Product,[Number (Rational {numerator = 1I;denominator = 2I;});BinaryOp(Number (Integer 3I),ToThePowerOf,Number (Rational {numerator = 1I;denominator = 2I;}))])
+                        | n, d when d = 3I && (n/3I)%2I <> 0I -> NaryOp(Product,[Number (Rational {numerator = -1I;denominator = 2I;});BinaryOp(Number (Integer 3I),ToThePowerOf,Number (Rational {numerator = 1I;denominator = 2I;}))])
+                        | n, d when d = 4I && (n/4I)%2I = 0I -> BinaryOp(Number (Integer 2I),ToThePowerOf,Number (Rational {numerator = -1I;denominator = 2I;}))
+                        | n, d when d = 4I && (n/4I)%2I <> 0I -> NaryOp(Product,[Number (Integer -1I);BinaryOp(Number (Integer 2I),ToThePowerOf,Number (Rational {numerator = -1I;denominator = 2I;}))])
+                        | n, d when d = 2I && n%4I = 1I -> Number (Integer 1I)
+                        | n, d when d = 2I && n%4I = 3I -> Number (Integer -1I)
+                        | n, d when r.compareTo {numerator = 1I; denominator = 2I} = -1 -> a'
+                        | n, d when r.compareTo {numerator = 1I; denominator = 1I} = -1 -> simplify (UnaryOp (Sin,NaryOp(Product,(Number (Rational{r with numerator = (r.denominator - r.numerator)}))::a.Tail)))
+                        | n, d when r.compareTo {numerator = 3I; denominator = 2I} = -1 -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,NaryOp(Product,(Number (Rational{r with numerator = (abs(r.denominator - r.numerator))}))::a.Tail)))]))
+                        | n, d when r.compareTo {numerator = 2I; denominator = 1I} = -1 -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,NaryOp(Product,(Number (Rational{r with numerator = (abs(2I*r.denominator - r.numerator))}))::a.Tail)))]))
+                        | n, d when r.compareTo {numerator = 2I; denominator = 1I} = 1 -> 
+                            match r.Floor%2I = 0I with 
+                            | true -> simplify (UnaryOp (Sin,NaryOp(Product,(Number (Rational{r with numerator = (r.numerator - ((r.Floor)*r.denominator))}))::a.Tail)))
+                            | false -> simplify (UnaryOp (Sin,NaryOp(Product,(Number (Rational{r with numerator = abs(r.numerator - ((r.Floor)*r.denominator) + r.denominator)}))::a.Tail)))
+                        | _ -> a'
+                    | _ -> a'
+            | UnaryOp (Sin,a) when a = Number (Integer 0I) -> Number (Integer 0I)            
+            | UnaryOp (Sin,Number (Real r)) -> Number (Real (System.Math.Sin(r)))
+            | UnaryOp (Sin,Number _n) -> a'
+            | UnaryOp (Sin,a) -> (UnaryOp (Sin,simplify a)) |> simplify
+            //Cosine
+            | UnaryOp (Cos,NaryOp(Product,a)) when isNegativeNumber a.[0] -> simplify (UnaryOp (Cos,NaryOp(Product,(negate a.[0])::a.Tail)))
+            | UnaryOp (Cos,NaryOp(Sum,(Number n)::(NaryOp(Product,a))::t)) when isNegativeNumber a.[0] -> (UnaryOp (Cos,NaryOp(Product,List.map negate ((Number n)::(NaryOp(Product,a))::t))))
+            | UnaryOp (Cos,NaryOp(Sum,xh::Symbol s::xt)) when s = Constant Pi-> simplify (NaryOp(Product,[Number (Integer -1I);UnaryOp (Cos,NaryOp(Sum,(xh::xt)))]))
+            | UnaryOp (Cos,NaryOp(Sum,Symbol s::xn::xt)) when s = Constant Pi-> simplify (NaryOp(Product,[Number (Integer -1I);UnaryOp (Cos,NaryOp(Sum,(xn::xt)))]))            
+            | UnaryOp (Cos,NaryOp(Sum,xh::(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xt)) when pi = Constant Pi && r.denominator = 2I -> 
+                match r.numerator > 0I, r.Floor%2I = 0I  with
+                | true,true -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))]))
+                | false,true -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))
+                | false, false -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))]))
+                | true, false -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xh::xt))))
+            | UnaryOp (Cos,NaryOp(Sum,(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && r.denominator = 2I ->  
+                match r.numerator > 0I, r.Floor%2I = 0I  with
+                | true,true -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))]))
+                | false,true -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))
+                | false, false -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))]))
+                | true, false -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xn::xt))))
+            | UnaryOp (Cos,NaryOp(Sum,xh::(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xt)) when pi = Constant Pi && r.denominator = 3I -> 
+                match (r.numerator-(r.numerator - (r.Floor*r.denominator)))%2I=0I, abs (r.numerator - (r.Floor*r.denominator)) with
+                | true, n when n = 1I -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,(negate xh)::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(List.map negate xt)))))
+                | true, n when n = 2I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,xh::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::xt))))]))
+                | false, n when n = 1I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,(negate xh)::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(List.map negate xt)))))]))
+                | false, n when n = 2I -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,xh::(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::xt))))
+                | _ -> a'
+            | UnaryOp (Cos,NaryOp(Sum,(NaryOp(Product,Number (Rational r)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && r.denominator = 3I ->
+                match (r.numerator-(r.numerator - (r.Floor*r.denominator)))%2I=0I, abs (r.numerator - (r.Floor*r.denominator))  with
+                | true, n when n = 1I -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(negate xn)::(List.map negate xt)))))
+                | true, n when n = 2I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::xn::Symbol pi::t))::xt))))]))
+                | false, n when n = 1I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Sin,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::(negate xn)::(List.map negate xt)))))]))
+                | false, n when n = 2I -> simplify (UnaryOp (Sin,simplify (NaryOp(Sum,(NaryOp(Product,Number (Rational {numerator = 1I; denominator = 6I})::Symbol pi::t))::xn::xt))))
+                | _ -> a'
+            | UnaryOp (Cos,NaryOp(Sum,xh::(NaryOp(Product,Number (Integer n)::Symbol pi::t))::xt)) when pi = Constant Pi && n%2I = 0I -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xh::xt))))
+            | UnaryOp (Cos,NaryOp(Sum,(NaryOp(Product,Number (Integer n)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && n%2I = 0I -> simplify (UnaryOp (Cos,simplify (NaryOp(Sum,xn::xt))))
+            | UnaryOp (Cos,NaryOp(Sum,xh::(NaryOp(Product,Number (Integer n)::Symbol pi::t))::xt)) when pi = Constant Pi && n%2I <> 0I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xh::xt))))]))
+            | UnaryOp (Cos,NaryOp(Sum,(NaryOp(Product,Number (Integer n)::Symbol pi::t))::xn::xt)) when pi = Constant Pi && n%2I <> 0I -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,simplify (NaryOp(Sum,xn::xt))))]))
+            | UnaryOp (Cos,NaryOp(Product,a)) when isNumber a.[0] && a.[1] = Symbol(Constant Pi) && a.Length = 2 -> 
+                    match simplify a.[0] with
+                    | Number (Integer i) -> 
+                        match i%2I = 0I with
+                        | true -> Number (Integer 1I)
+                        | false -> Number (Integer -1I)
+                    | Number (Rational r) -> 
+                        match r.numerator, r.denominator with
+                        | n, d when d = 3I -> 
+                            match (r.Floor + (n-d*r.Floor%2I))%2I = 0I with 
+                                | true ->  Number (Rational {numerator = -1I; denominator = 2I})
+                                | false -> Number (Rational {numerator = 1I; denominator = 2I})
+                        | n, d when d = 2I -> Number (Integer 0I)
+                        | n, d when d = 6I && ({numerator = n;denominator = 4I}.Floor)%2I = 0I -> NaryOp(Product,[Number (Rational {numerator = 1I;denominator = 2I});BinaryOp(Number (Integer 3I),ToThePowerOf,Number (Rational {numerator = 1I;denominator = 2I;}))])
+                        | n, d when d = 6I && ({numerator = n;denominator = 4I}.Floor)%2I <> 0I -> NaryOp(Product,[Number (Rational {numerator = -1I;denominator = 2I});BinaryOp(Number (Integer 3I),ToThePowerOf,Number (Rational {numerator = 1I;denominator = 2I;}))])
+                        | n, d when d = 4I && ({numerator = n;denominator = 3I}.Floor)%2I = 0I -> BinaryOp(Number (Integer 2I),ToThePowerOf,Number (Rational {numerator = -1I;denominator = 2I;}))
+                        | n, d when d = 4I && ({numerator = n;denominator = 3I}.Floor)%2I = 0I -> NaryOp(Product,[Number (Integer -1I);BinaryOp(Number (Integer 2I),ToThePowerOf,Number (Rational {numerator = -1I;denominator = 2I;}))])                        
+                        | n, d when r.compareTo {numerator = 1I; denominator = 2I} = -1 -> a'
+                        | n, d when r.compareTo {numerator = 1I; denominator = 1I} = -1 -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,NaryOp(Product,(Number (Rational{r with numerator = (r.denominator - r.numerator)}))::a.Tail)))]))
+                        | n, d when r.compareTo {numerator = 3I; denominator = 2I} = -1 -> simplify (NaryOp(Product,[Number (Integer -1I); (UnaryOp (Cos,NaryOp(Product,(Number (Rational{r with numerator = (abs(r.denominator - r.numerator))}))::a.Tail)))]))
+                        | n, d when r.compareTo {numerator = 2I; denominator = 1I} = -1 -> simplify (UnaryOp (Cos,NaryOp(Product,(Number (Rational{r with numerator = (abs(2I*r.denominator - r.numerator))}))::a.Tail)))
+                        | n, d when r.compareTo {numerator = 2I; denominator = 1I} = 1 -> 
+                            match r.Floor%2I = 0I with 
+                            | true -> simplify (UnaryOp (Cos,NaryOp(Product,(Number (Rational{r with numerator = (r.numerator - ((r.Floor) * r.denominator))}))::a.Tail)))
+                            | false -> simplify (UnaryOp (Cos,NaryOp(Product,(Number (Rational{r with numerator = abs(r.numerator - ((r.Floor) * r.denominator) + r.denominator)}))::a.Tail)))
+                        | _ -> a'
+                    | _ -> a'            
+            | UnaryOp (Cos,a) when a = Number (Integer 0I) -> Number (Integer 1I)                        
+            | UnaryOp (Cos,Number (Real r)) -> Number (Real (System.Math.Cos(r)))
+            | UnaryOp (Cos,Number _n) -> a'
+            | UnaryOp (Cos,a) -> (UnaryOp (Cos,simplify a)) |> simplify
+            //Tangent
+            | UnaryOp (Tan,Number (Real r)) -> Number (Real (System.Math.Tan(r)))
+            | UnaryOp (Tan,a) -> (UnaryOp (Tan,simplify a)) |> simplify
+            | _ -> a'
+            //Trig Functions 
+        simplify x
+
+    let simplifyRealExpression x = 
+        let rec simplify a' =
+            match a' with 
+            | Number (Rational r) when r.denominator = 1I -> Number (Integer r.numerator)
+            | Number (Rational r) ->
+                let gcd = System.Numerics.BigInteger.GreatestCommonDivisor (r.numerator, r.denominator)
+                match gcd with
+                | n when n = 1I -> Number (Rational r)
+                | _ -> simplify (Number (Rational {numerator = r.numerator/gcd; denominator = r.denominator/gcd}))
+            | NaryOp(Sum,a) -> simplifyRealSum (NaryOp(Sum,(List.map simplify a)))            
+            | NaryOp(Product,a) -> simplifyRealProduct (NaryOp(Product,(List.map simplify a)))
+            | BinaryOp(a,ToThePowerOf,b) -> simplifyRealPower (BinaryOp(simplify a,ToThePowerOf,simplify b))
             | UnaryOp(Factorial,a) -> simplifyFactorial (simplify a)
             //Trig Functions            
             //Sine

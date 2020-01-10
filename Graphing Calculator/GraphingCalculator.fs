@@ -2413,6 +2413,7 @@ type GraphingCalculator() as graphingCalculator =
     let tan = (Math.Pure.Objects.Function.Tan) |> ExpressionInput.Function |> ExpressionInput
     let pi = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.Pi) |> ExpressionInput.Symbol |> ExpressionInput
     let e = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.E) |> ExpressionInput.Symbol |> ExpressionInput
+    let dX = (Math.Pure.Objects.Function.Derivative) |> ExpressionInput.Function |> ExpressionInput
     
     do  //add event handler to each button click
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
@@ -2457,6 +2458,7 @@ type GraphingCalculator() as graphingCalculator =
         tan_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> tan |> handleGraphInput ))
         pi_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> pi |> handleGraphInput ))
         e_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> e |> handleGraphInput ))
+        dx_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> dX |> handleGraphInput ))
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
         closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))

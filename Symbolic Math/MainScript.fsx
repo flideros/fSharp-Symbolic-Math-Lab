@@ -36,7 +36,9 @@ let y3 = y**three
 let y4 = y**four
 let y5 = y**five
 
-let expression = five/(sin(pi*((Number(Real 0.30))*b)**(Number(Real 2.0))))/i //(sin(x**two))**(Number(Real 0.5)) //
+let expression = five/(sin(pi*((Number(Real 0.30))*x)**(Number(Real 2.0))))/i //(sin(x**two))**(Number(Real 0.5)) //
+
+Math.Pure.Change.Calculus.Differential.derivativeOf (x2+five) x
 
 let rec checkForRealPowersOfExpression exp =
     let subExp = ExpressionStructure.subExpressions exp 

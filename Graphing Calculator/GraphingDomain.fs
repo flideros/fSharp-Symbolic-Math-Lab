@@ -279,8 +279,8 @@ module GraphingImplementation =
         // check expressionStateData for parenthetical
         let returnEvaluatedState =
             match expressionStateData.parenthetical with
-            | None 
-            | Some (Parenthetical(_,None,None)) -> true
+            | None -> true
+            | Some (Parenthetical(_a,None,None)) -> true
             | _ -> false         
         
         // helper to create a new EvaluatedState from a given displayExpression 
@@ -1306,6 +1306,77 @@ module GraphingImplementation =
                     |> ExpressionDigitAccumulatorState
             | Function f -> 
                 match f with
+                | Derivative ->
+                    let nextOp = None//Some op
+                    let newState = 
+                        getEvaluationState services 
+                            { expression = expr;
+                              pendingFunction = Some (expr,Derivative); 
+                              digits = "";
+                              drawingOptions = options;
+                              parenthetical =                                 
+                                Some (Parenthetical(Expression.Symbol (Variable "x"),None,None))
+                            } nextOp 
+                    let finalState =
+                        match stateData.pendingFunction = None with
+                        | true -> newState
+                        | false -> 
+                            match newState with                            
+                            | EvaluatedState ev -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None 
+                                    }
+                            | ParentheticalState p -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression = p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
+                            | EvaluatedState2DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState2DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
+                            | ExpressionDigitAccumulatorState _ 
+                            | ExpressionDecimalAccumulatorState _
+                            | DrawState _
+                            | DrawErrorState _
+                            | ExpressionErrorState _
+                            | DrawState2DParametric _
+                            | ExpressionDigitAccumulatorState2DParametric _
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
+                    finalState
                 | Tan
                 | Sin 
                 | Cos as op->    
@@ -1818,6 +1889,77 @@ module GraphingImplementation =
                     |> ExpressionDigitAccumulatorState
             | Function f -> 
                 match f with
+                | Derivative ->
+                    let nextOp = None//Some op
+                    let newState = 
+                        getEvaluationState services 
+                            { expression = expr;
+                              pendingFunction = Some (expr,Derivative); 
+                              digits = "";
+                              drawingOptions = options;
+                              parenthetical =                                 
+                                Some (Parenthetical(Expression.Symbol (Variable "x"),None,None))
+                            } nextOp 
+                    let finalState =
+                        match stateData.pendingFunction = None with
+                        | true -> newState
+                        | false -> 
+                            match newState with                            
+                            | EvaluatedState ev -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None 
+                                    }
+                            | ParentheticalState p -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression = p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
+                            | EvaluatedState2DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState2DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
+                            | EvaluatedState3DParametric (ev,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=ev.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = None}
+                            | ParentheticalState3DParametric (p,_) -> 
+                                ExpressionDigitAccumulatorState 
+                                    { digits = ""; 
+                                      pendingFunction = stateData.pendingFunction; 
+                                      expression=p.evaluatedExpression;
+                                      drawingOptions = options;
+                                      parenthetical = Some p.parenthetical}
+                            | ExpressionDigitAccumulatorState _ 
+                            | ExpressionDecimalAccumulatorState _
+                            | DrawState _
+                            | DrawErrorState _
+                            | ExpressionErrorState _
+                            | DrawState2DParametric _
+                            | ExpressionDigitAccumulatorState2DParametric _
+                            | ExpressionDecimalAccumulatorState2DParametric _ 
+                            | DrawState3DParametric _
+                            | ExpressionDigitAccumulatorState3DParametric _
+                            | ExpressionDecimalAccumulatorState3DParametric _ -> newState
+                    finalState
                 | Tan
                 | Sin 
                 | Cos as op->    
@@ -2150,7 +2292,22 @@ module GraphingImplementation =
                                    pendingFunction = Some (symbol,Times); 
                                    digits = stateData.digits;} None                       
                        getFinalStateFrom newState
-               | Function f -> getEvaluationState services stateData (Some f)
+               | Function f -> //getEvaluationState services stateData (Some f)
+                   match stateData.digits with
+                   | "" -> 
+                       let expression = services.getExpressionFromParenthetical stateData.parenthetical
+                       getEvaluationState services 
+                           { newExpressionStateData with
+                               pendingFunction = Some (expression,f); 
+                               digits = stateData.digits;} None 
+                   | _acc ->                       
+                       let expression = Number (services.getNumberFromAccumulator stateData)
+                       getEvaluationState services 
+                           { newExpressionStateData with
+                               pendingFunction = Some (expression,f); 
+                               digits = stateData.digits;} None
+
+
            | Draw -> doDrawOperation services (DrawOp (stateData.expression, options))
            | Draw2DParametric
            | Draw3DParametric -> ExpressionDigitAccumulatorState stateData
@@ -3146,7 +3303,8 @@ module GraphServices =
             match expression_1 <> Expression.Zero && expression_2 <> Expression.Zero with
             | true -> UnaryOp(Tan,expression_1) |> checkResult 
             | false -> UnaryOp(Tan,expression_2) |> checkResult
-        | _ ->            expression_1 |> checkResult
+        | Derivative -> Math.Pure.Change.Calculus.Differential.derivativeOf expression_1 expression_2 |> checkResult             
+        | _ -> expression_1 |> checkResult
 
     let accumulateSymbol (expressionStateData :ExpressionStateData) input = 
         let expression = 
@@ -3242,6 +3400,13 @@ module GraphServices =
             | ParentheticalState2DParametric (p,_s) -> (Expression.Zero, p.pendingFunction, Some p.parenthetical) |> Parenthetical
             | ExpressionDigitAccumulatorState2DParametric (es,_s)
             | ExpressionDecimalAccumulatorState2DParametric (es,_s) -> 
+                let lastParenthetical = (Expression.Zero, es.pendingFunction, es.parenthetical) |> Parenthetical |> Some
+                (Expression.Zero, es.pendingFunction, lastParenthetical ) |> Parenthetical
+
+            | EvaluatedState3DParametric (ev,_s) -> (Expression.Zero, ev.pendingFunction, None) |> Parenthetical
+            | ParentheticalState3DParametric (p,_s) -> (Expression.Zero, p.pendingFunction, Some p.parenthetical) |> Parenthetical
+            | ExpressionDigitAccumulatorState3DParametric (es,_s)
+            | ExpressionDecimalAccumulatorState3DParametric (es,_s) -> 
                 let lastParenthetical = (Expression.Zero, es.pendingFunction, es.parenthetical) |> Parenthetical |> Some
                 (Expression.Zero, es.pendingFunction, lastParenthetical ) |> Parenthetical
 
