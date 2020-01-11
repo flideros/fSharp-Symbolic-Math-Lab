@@ -3303,7 +3303,7 @@ module GraphServices =
             match expression_1 <> Expression.Zero && expression_2 <> Expression.Zero with
             | true -> UnaryOp(Tan,expression_1) |> checkResult 
             | false -> UnaryOp(Tan,expression_2) |> checkResult
-        | Derivative -> Math.Pure.Change.Calculus.Differential.derivativeOf expression_1 expression_2 |> checkResult             
+        | Derivative -> Math.Pure.Change.Calculus.Differential.derivativeOf expression_1 expression_2 |> ExpressionType.simplifyRealExpression |> checkResult             
         | _ -> expression_1 |> checkResult
 
     let accumulateSymbol (expressionStateData :ExpressionStateData) input = 

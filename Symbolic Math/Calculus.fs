@@ -10,25 +10,27 @@ module Calculus =
 
     module Differential = 
 
-        let rec derivativeOf u x = 
+        let rec derivativeOf u' x = 
+            let u = u' |> ExpressionType.simplifyRealExpression
             match u = x with
             | true -> Number (Integer 1I) //DERIV-1
             | false -> 
                 match u with
                 | BinaryOp(v,ToThePowerOf,w) -> //DERIV-2 Functional Power Rule
-                     w * (v**(w - Number (Integer 1I))) * (derivativeOf v x |> ExpressionType.simplifyRealExpression) + (derivativeOf w x |> ExpressionType.simplifyRealExpression) * (v**w) * UnaryOp(Ln,v) //|> ExpressionType.simplifyRealExpression
+                     w * (v**(w - Number (Integer 1I))) * (derivativeOf v x ) + (derivativeOf w x ) * (v**w) * UnaryOp(Ln,v) //|> ExpressionType.simplifyRealExpression
                 | NaryOp(Sum,uList) -> //DERIV-3 Sum Rule
                     let v = operand u 1
                     let w = (u - v) |> ExpressionType.simplifyRealExpression
-                    (derivativeOf v x |> ExpressionType.simplifyRealExpression) + (derivativeOf w x |> ExpressionType.simplifyRealExpression) //|> ExpressionType.simplifyRealExpression
-                | NaryOp(Product,uList) as a when RationalExpression.denominator a <> Number (Integer 1I) -> // The quotient rule
-                    let v = RationalExpression.numerator u
-                    let w = RationalExpression.denominator u
-                    ((derivativeOf v x) * w - v * (derivativeOf w x |> ExpressionType.simplifyRealExpression))/(w**(Number(Integer 2I)))
+                    (derivativeOf v x ) + (derivativeOf w x ) 
                 | NaryOp(Product,uList) -> //DERIV-4 The product rule
                     let v = operand u 1
                     let w = (u / v) |> ExpressionType.simplifyRealExpression
-                    (derivativeOf v x |> ExpressionType.simplifyRealExpression) * w + v * (derivativeOf w x |> ExpressionType.simplifyRealExpression) //|> ExpressionType.simplifyRealExpression
+                    (derivativeOf v x ) * w + v * (derivativeOf w x ) 
+                | NaryOp(Product,uList) as a when RationalExpression.denominator a <> Number (Integer 1I) || RationalExpression.denominator a <> Number (Real 1.0)-> // The quotient rule
+                    let v = RationalExpression.numerator u
+                    let w = RationalExpression.denominator u
+                    ((derivativeOf v x) * w - v * (derivativeOf w x ))/(w**(Number(Integer 2I))) |> ExpressionType.simplifyRealExpression
+                
                 | BinaryOp(f,Derivative,x) -> 
                     match f with 
                     | UnaryOp(Sin,v) -> UnaryOp(Cos,v) //DERIV-5
@@ -40,12 +42,12 @@ module Calculus =
                     | UnaryOp(ArcSin,v) -> Number(Integer 1I)/((Number(Integer 1I) - x**Number(Integer 2I))**(Number(Integer 1I)/Number(Integer 2I)))
                     | UnaryOp(ArcCos,v) -> -Number(Integer 1I)/((Number(Integer 1I) - x**Number(Integer 2I))**(Number(Integer 1I)/Number(Integer 2I)))
                     | UnaryOp(ArcTan,v) -> Number(Integer 1I)/(Number(Integer 1I) - x**Number(Integer 2I))                    
-                    | UnaryOp(ArcSec,v) -> Number(Integer 1I)/((Math.Pure.Structure.ExpressionFunction.abs x)*((-Number(Integer 1I) + x**Number(Integer 2I))**(Number(Integer 1I)/Number(Integer 2I))))
-                    | UnaryOp(ArcCsc,v) -> -Number(Integer 1I)/((Math.Pure.Structure.ExpressionFunction.abs x)*((-Number(Integer 1I) + x**Number(Integer 2I))**(Number(Integer 1I)/Number(Integer 2I))))
+                    | UnaryOp(ArcSec,v) -> Number(Integer 1I)/((Math.Pure.Structure.ExpressionFunction.abs x) * ((-Number(Integer 1I) + x**Number(Integer 2I))**(Number(Integer 1I)/Number(Integer 2I))))
+                    | UnaryOp(ArcCsc,v) -> -Number(Integer 1I)/((Math.Pure.Structure.ExpressionFunction.abs x) * ((-Number(Integer 1I) + x**Number(Integer 2I))**(Number(Integer 1I)/Number(Integer 2I))))
                     | UnaryOp(ArcCot,v) -> Number(Integer 1I)/(Number(Integer 1I) - x**Number(Integer 2I))   
                     | _ -> BinaryOp(f,Derivative,x) //DERIV-7                 
                 | v when freeOf v x -> Number (Integer 0I) //DERIV-6                                
-                | UnaryOp(op,g) as f -> (derivativeOf (BinaryOp(f,Derivative,x)) x |> ExpressionType.simplifyRealExpression)*(derivativeOf g x |> ExpressionType.simplifyRealExpression) //chain rule
+                | UnaryOp(op,g) as f -> (derivativeOf (BinaryOp(f,Derivative,x)) x ) * (derivativeOf g x ) //chain rule
                 | _ -> BinaryOp(u,Derivative,x) //DERIV-7
                    
     module Integral =

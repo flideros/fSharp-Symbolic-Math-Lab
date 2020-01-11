@@ -1820,7 +1820,6 @@ type GraphingCalculator() as graphingCalculator =
             | InputMode.Graph g -> (g.Visibility <- Visibility.Collapsed)
             | InputMode.Graph2DParametric g -> (g.Visibility <- Visibility.Collapsed)
             | InputMode.Graph3DParametric g -> (g.Visibility <- Visibility.Collapsed)) modeButtonList
-
         match mode with
         | Conventional -> 
             memoryButton_Grid.Visibility <- Visibility.Visible
@@ -1845,10 +1844,12 @@ type GraphingCalculator() as graphingCalculator =
             t_Button.IsHitTestVisible <- false
             u_Button.IsHitTestVisible <- false
             v_Button.IsHitTestVisible <- false
+            dx_Button.IsHitTestVisible <- false
             x_Button.Background <- Style.linearGradientBrush_2
             t_Button.Background <- Style.linearGradientBrush_2
             u_Button.Background <- Style.linearGradientBrush_2
             v_Button.Background <- Style.linearGradientBrush_2
+            dx_Button.Background <- Style.linearGradientBrush_2
         | RPN ->
             setActiveModeButtons mode
             setActiveDisplay (View.Text screen_Text_TextBox)
@@ -1857,10 +1858,12 @@ type GraphingCalculator() as graphingCalculator =
             t_Button.IsHitTestVisible <- false
             u_Button.IsHitTestVisible <- false
             v_Button.IsHitTestVisible <- false
+            dx_Button.IsHitTestVisible <- false
             x_Button.Background <- Style.linearGradientBrush_2
             t_Button.Background <- Style.linearGradientBrush_2
             u_Button.Background <- Style.linearGradientBrush_2
             v_Button.Background <- Style.linearGradientBrush_2
+            dx_Button.Background <- Style.linearGradientBrush_2
         | Graph ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function function_Grid)
@@ -1869,10 +1872,12 @@ type GraphingCalculator() as graphingCalculator =
             t_Button.IsHitTestVisible <- false
             u_Button.IsHitTestVisible <- false
             v_Button.IsHitTestVisible <- false
+            dx_Button.IsHitTestVisible <- true
             x_Button.Background <- Style.linearGradientBrush_1
             t_Button.Background <- Style.linearGradientBrush_2
             u_Button.Background <- Style.linearGradientBrush_2
             v_Button.Background <- Style.linearGradientBrush_2
+            dx_Button.Background <- Style.linearGradientBrush_1
         | Graph2DParametric ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function2D function2D_Grid)
@@ -1881,10 +1886,12 @@ type GraphingCalculator() as graphingCalculator =
             t_Button.IsHitTestVisible <- true
             u_Button.IsHitTestVisible <- false
             v_Button.IsHitTestVisible <- false
+            dx_Button.IsHitTestVisible <- false
             x_Button.Background <- Style.linearGradientBrush_2
             t_Button.Background <- Style.linearGradientBrush_1
             u_Button.Background <- Style.linearGradientBrush_2
             v_Button.Background <- Style.linearGradientBrush_2
+            dx_Button.Background <- Style.linearGradientBrush_2
         | Graph3DParametric ->
             setActiveModeButtons mode
             setActiveDisplay (View.Function3D function3D_Grid)
@@ -1895,6 +1902,7 @@ type GraphingCalculator() as graphingCalculator =
                 do  t_Button.IsHitTestVisible <- false
                     u_Button.IsHitTestVisible <- true
                     v_Button.IsHitTestVisible <- true
+                    dx_Button.IsHitTestVisible <- false
                     x_Button.Background <- Style.linearGradientBrush_2
                     t_Button.Background <- Style.linearGradientBrush_2
                     u_Button.Background <- Style.linearGradientBrush_1
@@ -1903,10 +1911,12 @@ type GraphingCalculator() as graphingCalculator =
                     function3D_fyLabel_TextBlock.Text <- "fy(u,v) = "
                     function3D_fzLabel_TextBlock.Text <- "fz(u,v) = "
                     function3D_SolidMesh_Button.Content <- "Build Surface"
+                    dx_Button.Background <- Style.linearGradientBrush_2
             | true -> 
                 do  t_Button.IsHitTestVisible <- true
                     u_Button.IsHitTestVisible <- false
                     v_Button.IsHitTestVisible <- false
+                    dx_Button.IsHitTestVisible <- false
                     x_Button.Background <- Style.linearGradientBrush_2
                     t_Button.Background <- Style.linearGradientBrush_1
                     u_Button.Background <- Style.linearGradientBrush_2
@@ -1915,6 +1925,7 @@ type GraphingCalculator() as graphingCalculator =
                     function3D_fyLabel_TextBlock.Text <- "fy(t) = "
                     function3D_fzLabel_TextBlock.Text <- "fz(t) = "
                     function3D_SolidMesh_Button.Content <- "Build Curve"
+                    dx_Button.Background <- Style.linearGradientBrush_2
     // a function that sets the active model
     let setActivetModel model =        
         do state <- {state with model = model}

@@ -307,8 +307,7 @@ module ExpressionType =
             | _ -> x //SINTPOW-6        
         match x with
         | BinaryOp(base',ToThePowerOf,power') when base' = Number Undefined || power' = Number Undefined -> Number Undefined //SPOW-1
-        | BinaryOp(base',ToThePowerOf,Number n) when base' = Number Number.Zero  && n.isNegative = false -> Number Number.Zero //SPOW-2
-        | BinaryOp(base',ToThePowerOf,Number n) when base' = Number (Real 0.0) && n.isNegative = false -> Number Number.Zero //SPOW-2
+        | BinaryOp(base',ToThePowerOf,Number n) when (base' = Number Number.Zero || base' = Number (Real 0.0)) && n.isNegative = false -> Number Number.Zero //SPOW-2
         | BinaryOp(base',ToThePowerOf,_) when base' = Number Number.Zero || base' = Number (Real 0.0) -> Number Undefined //SPOW-2
         | BinaryOp(base',ToThePowerOf,_) when base' = Number Number.One || base' = Number (Real 1.0) -> Number Number.One //SPOW-3
         | BinaryOp(_,ToThePowerOf,Number (Integer n)) -> simplifyIntegerPower x //SPOW-4        
@@ -317,8 +316,8 @@ module ExpressionType =
     and simplifyRealProduct p =      
         let rec simplifyProductRec p =
             match p with
-            | [BinaryOp(Number (Integer i1),ToThePowerOf,Number n1);BinaryOp(Number (Integer i2),ToThePowerOf,Number n2)] 
-                when n1=n2 -> [BinaryOp(Number (Integer (i1*i2)),ToThePowerOf,Number n1)]// TEST POWER OF INTEGERS
+            | [BinaryOp(Number (i1),ToThePowerOf,Number n1);BinaryOp(Number (i2),ToThePowerOf,Number n2)] 
+                when n1=n2 -> [BinaryOp(Number ((i1*i2)),ToThePowerOf,Number n1)]// TEST POWER OF INTEGERS
             | [NaryOp(Product, x); NaryOp(Product, y)] -> mergeProducts x y //SPRDREC-2.1
             | [NaryOp(Product, x); a] -> mergeProducts x [a] //SPRDREC-2.2
             | [a; NaryOp(Product, x)] -> mergeProducts [a] x //SPRDREC-2.3
@@ -327,7 +326,7 @@ module ExpressionType =
                 | Number a, Number b -> //SPRDREC-1
                     let n = Number (a * b)
                     match n with
-                    | Number x when x = Number.One || a = Real 1.0 -> [] //SPRDREC-1.1
+                    | Number x when x = Number.One || x = Real 1.0 -> [] //SPRDREC-1.1
                     | _ -> [n] //SPRDREC-1.1
                 | Number a, b when a = Number.One || a = Real 1.0  -> [b] //SPRDREC-1.2.a
                 | a, Number b when b = Number.One || b = Real 1.0 -> [a] //SPRDREC-1.2.b
@@ -339,7 +338,7 @@ module ExpressionType =
                     | _ -> [p] //SPRDREC-1.3
                 | a, b when compareExpressions a b = 1 -> [b; a] //SPRDREC-1.4
                 | _ -> [a; b] //SPRDREC-1.5
-            | l when List.length l > 2 -> //SPRDREC-3
+            | l when l.Length > 2 -> //SPRDREC-3
                 let w = simplifyProductRec l.Tail
                 match l.Head with
                 | NaryOp(Product, x) -> mergeProducts x w //SPRDREC-3.1
@@ -389,7 +388,7 @@ module ExpressionType =
                 | a, b when Term a = Term b -> [(simplifyRealProduct (NaryOp(Product,[(simplifyRealSum (NaryOp(Sum, [(Const a); (Const b)]))); Term a])))]
                 | a, b when compareExpressions a b = 1 -> [b; a] 
                 | _ -> [a'; b'] 
-            | l when List.length l > 2 -> 
+            | l when l.Length > 2 -> 
                 let w = simplifySumRec l.Tail
                 match l.Head with
                 | NaryOp(Sum, x) -> mergeSums x w 
@@ -411,7 +410,7 @@ module ExpressionType =
                 | _ -> y.Head::(mergeSums x y.Tail) //MPRD-3.4
         match p with
         | NaryOp(Sum,x) when List.exists (fun elem -> elem = Number Undefined) x || x.IsEmpty -> Number Undefined     
-        | NaryOp(Sum,x) when List.length x = 1 -> x.[0] 
+        | NaryOp(Sum,x) when x.Length = 1 -> x.[0] 
         | NaryOp(Sum,x) ->
             let x' : Expression list = simplifySumRec x
             match x' with
@@ -939,9 +938,8 @@ module ExpressionFunction =
         | Number n -> Number (Number.abs n)
         | NaryOp(Product,xList) -> NaryOp(Product,(List.map (fun x -> abs x) xList))
         | BinaryOp(a,ToThePowerOf,Number(Integer i)) -> (abs a)**Number(Integer i)
-        | ComplexNumber(a,b) -> ((a**Number(Integer 2I))+(b**Number(Integer 2I)))**(Number(Integer 1I)/Number(Integer 2I))        
+        | ComplexNumber(a,b) -> ((a**Number(Integer 2I)) + (b**Number(Integer 2I)))**(Number(Integer 1I)/Number(Integer 2I))        
         | _ -> UnaryOp(Abs,x)
-        
 
     let floor u =
         match u with
