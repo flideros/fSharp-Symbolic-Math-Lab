@@ -3271,7 +3271,7 @@ module GraphServices =
             let model3D = System.Windows.Media.Media3D.GeometryModel3D(meshGeometry, Style.genericMaterial)
             Surface model3D |> Mesh 
         | _ -> DrawError ParameterError
-(**)
+
     let doExpressionOperation opData :ExpressionOperationResult = 
         
         let func, expression_1, expression_2 = opData
@@ -3291,7 +3291,7 @@ module GraphServices =
         | Inverse ->      expression_2 / expression_1 |> checkResult
         | ToThePowerOf -> expression_1** expression_2 |> checkResult
         | Root ->         expression_1** expression_2 |> checkResult
-        | Sin -> 
+        | Sin ->             
             match expression_1 <> Expression.Zero && expression_2 <> Expression.Zero with
             | true -> UnaryOp(Sin,expression_1) |> checkResult 
             | false -> UnaryOp(Sin,expression_2) |> checkResult

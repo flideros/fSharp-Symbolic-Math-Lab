@@ -5,14 +5,15 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>362f9170-4df5-41fe-851b-f5d800de2c44</ProjectGuid>
+    <ProjectGuid>36d2be06-a4c4-449e-aabf-921975ee0fc2</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Data_Base_Lab</RootNamespace>
-    <AssemblyName>Data_Base_Lab</AssemblyName>
+    <RootNamespace>ControLibrary</RootNamespace>
+    <AssemblyName>ControLibrary</AssemblyName>
     <UseStandardResourceNames>true</UseStandardResourceNames>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Name>Database Lab</Name>
+    <WarningsAsErrors>3239;$(WarningsAsErrors)</WarningsAsErrors>
+    <Name>ControLibrary</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,9 +44,12 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utilities.fs" />
-    <Compile Include="Data.fs" />
+    <Compile Include="ColorPicker.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
+    <None Include="ColorSwatch1.png" />
+    <None Include="ColorSwatch2.png" />
+    <None Include="ColorSwatch3.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -56,7 +60,6 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.ValueTuple">

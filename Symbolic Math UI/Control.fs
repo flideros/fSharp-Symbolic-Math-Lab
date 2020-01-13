@@ -12,8 +12,6 @@ open System.IO
 open System.Windows.Markup
 open System.Reflection
 open System.Windows.Media.Imaging
-open Microsoft.Toolkit.Wpf.UI.Controls
-//open Microsoft.Toolkit.Win32.UI.Controls
 open System.Runtime.InteropServices
 open System.Diagnostics
 open System.Windows.Interop
@@ -28,21 +26,6 @@ type FrameBrowser(page:String) as this =
      inherit Frame()     
      do
         this.Source <- Uri(page)
-
-///--- This control uses the Microsoft Edge rendering engine (EdgeHTML) to embed a view that 
-///--- renders richly formatted HTML5 content from a remote web server, dynamically generated 
-///--- code, or content files.
-///--- https://docs.microsoft.com/en-us/windows/communitytoolkit/controls/wpf-winforms/webview
-
-type WebViewBrowser(page:String) as this =
-     inherit Frame()    
-     let webViewer = new WebView()
-     do
-        webViewer.Source <- Uri(page)
-        this.Content <- webViewer
-
-//\--- Browser Controls -------------------------------------------------------------------/\
-
 
 //\/--- Volume Control --------------------------------------------------------------------\/
 
@@ -95,7 +78,7 @@ type ColorVolume (color:SharedValue<Color>) as this =
 
 
 //\/--- Win32 AppContainer ---------------------------------------------------------------\/
-
+(*
 module External =
 
     [<DllImport("user32.dll", EntryPoint="GetWindowThreadProcessId",  SetLastError=true,
@@ -213,15 +196,5 @@ type AppContainer() as this =
 
     interface IDisposable with 
         member this.Dispose() = this.Dispose()
-
+*)
 //\--- Win32 AppContainer ----------------------------------------------------------------------/\
-
-
-//\/--- TrackBall ---------------------------------------------------------------\/
-//type Trackball() as this =
-    
-
-
-
-
-//\ --- TrackBall -----------------------------------------------------------------/\

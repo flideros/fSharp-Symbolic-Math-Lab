@@ -26,8 +26,8 @@ module Style =
         do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
             linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
             linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Yellow, 0.0))
-            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Red, 0.25))
-            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Blue, 0.75))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Magenta, 0.25))
+            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LightBlue, 0.75))
             linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LimeGreen, 1.0))
         // Define material that will use the gradient.
         let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
@@ -36,7 +36,7 @@ module Style =
         do  materialGroup.Children.Add(diffuseMaterial)
         // Define an Emissive Material with a blue brush.
         let emissiveMaterial = 
-            let c = Color.FromScRgb(1.f,255.f,0.f,0.f)               
+            let c = Color.FromScRgb(1.f,160.f,0.f,0.f)               
             EmissiveMaterial(new SolidColorBrush(c))                
         do  materialGroup.Children.Add(emissiveMaterial)
         materialGroup

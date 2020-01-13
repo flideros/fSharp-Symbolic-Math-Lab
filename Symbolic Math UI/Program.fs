@@ -14,7 +14,7 @@ open System.Windows.Controls
 open System.Reflection
 open System.Windows.Media.Imaging
 open Style
-open Control
+open ControlLibrary
 open BasicCalculator
 open DataLab
 
@@ -31,7 +31,7 @@ let button = ButtonStyle("Frank's Button")
 let dataLab = DataLab(RenderTransformOrigin = Point(0.,0.))
 let calculator = Calculator(OverridesDefaultStyle = true) 
 let graphingCalc = GraphingCalculator.GraphingCalculator()
-
+let colorPicker = ColorPicker()
 // Tab Control 
 let tabs = TabControl()
 
@@ -41,10 +41,12 @@ let item2 = TabItem(Header = "SQL Pad")
 do  item2.Content <- dataLab
 let item3 = TabItem(Header = "Calculator")
 do  item3.Content <- calculator
+let item4 = TabItem(Header = "ColorPicker")
+do  item4.Content <- colorPicker
 
 do  tabs.Items.Add(item1) |> ignore
     tabs.Items.Add(item2) |> ignore
-    tabs.Items.Add(item3) |> ignore
+    tabs.Items.Add(item4) |> ignore
 
 // Compose Controls
 //browserBorder.Child <- browser

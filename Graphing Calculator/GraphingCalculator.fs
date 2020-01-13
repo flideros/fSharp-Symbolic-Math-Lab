@@ -2081,8 +2081,7 @@ type GraphingCalculator() as graphingCalculator =
                  | Graph3DParametric -> { state with graph3DParametric = newState}
                  | _ -> state
         
-        setDisplayedText expressionText
-        
+        setDisplayedText expressionText        
         match newState with
         | DrawState d -> 
             do  state <- { state with graph = newState }
@@ -2192,7 +2191,15 @@ type GraphingCalculator() as graphingCalculator =
         | ExpressionDecimalAccumulatorState3DParametric (_sd,_d3) ->
             do state <- { state with graph3DParametric = newState }
                setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " --->>>")        
-        | _ -> setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
+        | _ -> 
+            match state.mode with
+            | Conventional -> 
+                //////////////////////////////////////
+                // TODO handle trig functions, etc. //
+                //////////////////////////////////////
+                setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
+            | _ -> setPendingOpText ((graphServices.getDisplayFromGraphState newState) + " ---<<<")
+        
         // Gridlines
     let handleGridLinesOnCheck () =
         let gl = makeGridLines canvasGridLine_Slider.Value canvasGridLine_Slider.Value
@@ -2419,13 +2426,13 @@ type GraphingCalculator() as graphingCalculator =
     let t = (Math.Pure.Objects.Symbol.Variable "t") |> ExpressionInput.Symbol |> ExpressionInput
     let u = (Math.Pure.Objects.Symbol.Variable "u") |> ExpressionInput.Symbol |> ExpressionInput
     let v = (Math.Pure.Objects.Symbol.Variable "v") |> ExpressionInput.Symbol |> ExpressionInput
-    let sin = (Math.Pure.Objects.Function.Sin) |> ExpressionInput.Function |> ExpressionInput
-    let cos = (Math.Pure.Objects.Function.Cos) |> ExpressionInput.Function |> ExpressionInput
-    let tan = (Math.Pure.Objects.Function.Tan) |> ExpressionInput.Function |> ExpressionInput
-    let pi = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.Pi) |> ExpressionInput.Symbol |> ExpressionInput
-    let e = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.E) |> ExpressionInput.Symbol |> ExpressionInput
-    let dX = (Math.Pure.Objects.Function.Derivative) |> ExpressionInput.Function |> ExpressionInput
-    
+    let pi =(Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.Pi) |> ExpressionInput.Symbol |> ExpressionInput
+    let e = (Math.Pure.Objects.Symbol.Constant Math.Pure.Objects.E)  |> ExpressionInput.Symbol |> ExpressionInput
+    let sin = (Math.Pure.Objects.Function.Sin)        |> ExpressionInput.Function |> ExpressionInput
+    let cos = (Math.Pure.Objects.Function.Cos)        |> ExpressionInput.Function |> ExpressionInput
+    let tan = (Math.Pure.Objects.Function.Tan)        |> ExpressionInput.Function |> ExpressionInput
+    let dX =  (Math.Pure.Objects.Function.Derivative) |> ExpressionInput.Function |> ExpressionInput
+
     do  //add event handler to each button click
         one              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit One)))
         two              .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleInput (Digit Two))) 
@@ -2464,31 +2471,31 @@ type GraphingCalculator() as graphingCalculator =
         t_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> t |> handleGraphInput ))
         u_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> u |> handleGraphInput ))
         v_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> v |> handleGraphInput ))
+        e_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> e |> handleGraphInput ))
         sin_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> sin |> handleGraphInput ))
         cos_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> cos |> handleGraphInput ))
         tan_Button       .Click.AddHandler(RoutedEventHandler(fun _ _ -> tan |> handleGraphInput ))
-        pi_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> pi |> handleGraphInput ))
-        e_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> e |> handleGraphInput ))
-        dx_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> dX |> handleGraphInput ))
+        pi_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> pi  |> handleGraphInput ))
+        dx_Button        .Click.AddHandler(RoutedEventHandler(fun _ _ -> dX  |> handleGraphInput ))
         function_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(Draw)))
         openParentheses  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(OpenParentheses)))
         closeParentheses .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(CloseParentheses)))
-        option_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
-        option_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
+        option_Save_Button   .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
+        option_Reset_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         option2D_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
         option2D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
         option3D_Save_Button .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionSave (getDrawOptions()))))
         option3D_Reset_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(GraphOptionReset)))
-        xSquared_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
-        xPowY_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
-        function2D_Graph_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(Draw2DParametric)))
-        function2D_Spiral_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(SpiralExample)))
-        function2D_Ellipse_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(EllipseExample)))
+        xSquared_Button      .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionSquared)))
+        xPowY_Button         .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleGraphInput(ExpressionToThePowerOf)))
+        function2D_Graph_Button    .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(Draw2DParametric)))
+        function2D_Spiral_Button   .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(SpiralExample)))
+        function2D_Ellipse_Button  .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction2DButtons(EllipseExample)))
         function3D_SolidMesh_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(Draw3DParametric)))
-        function3D_Helix_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(HelixExample)))
-        function3D_Sphere_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(SphereExample)))
-        function3D_Cone_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(ConeExample)))
-        function3D_Torus_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(TorusExample)))
+        function3D_Helix_Button    .Click .AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(HelixExample)))
+        function3D_Sphere_Button   .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(SphereExample)))
+        function3D_Cone_Button     .Click.AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(ConeExample)))
+        function3D_Torus_Button    .Click .AddHandler(RoutedEventHandler(fun _ _ -> handleFunction3DButtons(TorusExample)))
 
         // Other events
         canvasGridLines_CheckBox.Checked.AddHandler  (RoutedEventHandler(fun _ _ -> handleGridLinesOnCheck()))
