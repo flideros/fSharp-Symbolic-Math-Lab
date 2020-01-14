@@ -25,38 +25,22 @@ type ColorPicker() as colorPicker =
                 Height = 330.,
                 Width = 480.
                 )
-        let row1 = RowDefinition(Height = GridLength(35.))
-        let row2 = RowDefinition(Height = GridLength(200.))
-        let row3 = RowDefinition(Height = GridLength(64.))
-        let row4 = RowDefinition(Height = GridLength(6., GridUnitType.Star))
+        let column1 = ColumnDefinition(Width = GridLength(326.))
+        let column2 = ColumnDefinition(Width = GridLength(0.,GridUnitType.Star))
+        do  g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(column2)
+
+        let row1 = RowDefinition(Height = GridLength(286.))
+        let row2 = RowDefinition(Height = GridLength.Auto)
         do  g.RowDefinitions.Add(row1)
             g.RowDefinitions.Add(row2)
-            g.RowDefinitions.Add(row3)
-            g.RowDefinitions.Add(row4)
         g
     
-    let colorSwatch_StackPanel = 
-        let sp = 
-            StackPanel(
-                Background = SolidColorBrush(Colors.Black),                
-                Height = 35.,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                Orientation = Orientation.Horizontal
-                )
-        do sp.SetValue(Grid.RowProperty, 0)
-        sp
-    let colorSwatch_Label = 
-        let l = 
-            Label(
-                Content = " Choose a Swatch",
-                Foreground = SolidColorBrush(Colors.White),
-                FontWeight = FontWeights.Bold,
-                VerticalAlignment = VerticalAlignment.Center
-                )
-        l    
     let colorSwatch1_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch1.png", UriKind.RelativeOrAbsolute))
     let colorSwatch2_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch2.png", UriKind.RelativeOrAbsolute))
     let colorSwatch3_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch3.png", UriKind.RelativeOrAbsolute))
+    let colorSwatch4_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch4.png", UriKind.RelativeOrAbsolute))
+    let colorSwatch5_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch5.png", UriKind.RelativeOrAbsolute))
     let colorSwatch1_Image = 
         let i = 
             Image(
@@ -87,11 +71,98 @@ type ColorPicker() as colorPicker =
                 ToolTip = "Color Swatch 3"                
                 )
         i
+    let colorSwatch4_Image =
+        let i = 
+            Image(
+                Height = 20.,
+                Width = 20.,
+                Source = colorSwatch2_Bitmap,
+                Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
+                ToolTip = "Color Swatch 4"                
+                )
+        i
+    let colorSwatch5_Image =
+        let i = 
+            Image(
+                Height = 20.,
+                Width = 20.,
+                Source = colorSwatch3_Bitmap,
+                Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
+                ToolTip = "Color Swatch 5"                
+                )
+        i    
+    let colorSwatch_StackPanel = 
+        let sp = 
+            StackPanel(
+                Background = SolidColorBrush(Colors.Black),                
+                Height = 35.,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Orientation = Orientation.Horizontal
+                )
+        do sp.SetValue(Grid.RowProperty, 0)
+        sp
+    let colorSwatch_Label = 
+        let l = 
+            Label(
+                Content = " Choose a Swatch",
+                Foreground = SolidColorBrush(Colors.White),
+                FontWeight = FontWeights.Bold,
+                VerticalAlignment = VerticalAlignment.Center
+                )
+        l    
     
-    do  colorSwatch_StackPanel.Children.Add(colorSwatch_Label) |> ignore
+    do  colorSwatch_StackPanel.Children.Add(colorSwatch_Label)  |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch1_Image) |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch2_Image) |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch3_Image) |> ignore
+        colorSwatch_StackPanel.Children.Add(colorSwatch4_Image) |> ignore
+        colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
+    
+    let colorTab_Grid =         
+        let g = 
+            Grid()
+        g
+    let colorTab_TabControl =         
+        let t = 
+            TabControl(
+                Margin = Thickness(left=0.,top=0.,right=0.,bottom=0.),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch)
+        t
+    let colorTabItem1_TabItem  =         
+        let colorSwatch = 
+            let i = 
+                Image(
+                    Height = 240.,
+                    Width = 320.,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    Source = colorSwatch5_Bitmap,
+                    Margin = Thickness(0.))
+            i
+        let g = Grid()
+        do  g.Children.Add(colorSwatch) |> ignore
+        g
+    let colorTabItem2_TabItem =         
+        let colorSwatch = 
+            let i = 
+                Image(
+                    Height = 240.,
+                    Width = 320.,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    Source = colorSwatch4_Bitmap,
+                    Margin = Thickness(0.))
+            i
+        let g = Grid()
+        do  g.Children.Add(colorSwatch) |> ignore
+        g
+
+    do  colorTab_TabControl.Items.Add(colorTabItem1_TabItem) |> ignore
+        colorTab_TabControl.Items.Add(colorTabItem2_TabItem) |> ignore
+        colorTab_Grid.Children.Add(colorTab_TabControl) |> ignore
+    
+    
 
     let main_Grid = 
         let g = 
@@ -138,7 +209,7 @@ type ColorPicker() as colorPicker =
                 Width = 150.,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Top,
-                Source = colorSwatch1_Bitmap,
+                Source = colorSwatch5_Bitmap,
                 Margin = Thickness(2.)
                 )
         i
@@ -163,6 +234,7 @@ type ColorPicker() as colorPicker =
         
         colorPicker_Grid.Children.Add(colorSwatch_StackPanel) |> ignore
         
-        colorPicker_Grid.Children.Add(main_Grid) |> ignore
+        //colorPicker_Grid.Children.Add(main_Grid) |> ignore
+        colorPicker_Grid.Children.Add(colorTab_Grid) |> ignore
 
         colorPicker.Content <- colorPicker_Grid
