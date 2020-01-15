@@ -21,9 +21,9 @@ type ColorPicker() as colorPicker =
     let colorPicker_Grid = 
         let g = 
             Grid(
-                Background = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE")),
-                Height = 330.,
-                Width = 480.
+                Background = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE"))
+                //Height = 330.,
+                //Width = 480.
                 )
         let column1 = ColumnDefinition(Width = GridLength(326.))
         let column2 = ColumnDefinition(Width = GridLength(0.,GridUnitType.Star))
@@ -86,7 +86,7 @@ type ColorPicker() as colorPicker =
             Image(
                 Height = 20.,
                 Width = 20.,
-                Source = colorSwatch3_Bitmap,
+                Source = colorSwatch5_Bitmap,
                 Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
                 ToolTip = "Color Swatch 5"                
                 )
@@ -94,8 +94,8 @@ type ColorPicker() as colorPicker =
     let colorSwatch_StackPanel = 
         let sp = 
             StackPanel(
-                Background = SolidColorBrush(Colors.Black),                
-                Height = 35.,
+                //Background = SolidColorBrush(Colors.Black),                
+                Height = 31.,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 Orientation = Orientation.Horizontal
                 )
@@ -105,7 +105,7 @@ type ColorPicker() as colorPicker =
         let l = 
             Label(
                 Content = " Choose a Swatch",
-                Foreground = SolidColorBrush(Colors.White),
+                Foreground = SolidColorBrush(Colors.Black),
                 FontWeight = FontWeights.Bold,
                 VerticalAlignment = VerticalAlignment.Center
                 )
@@ -133,108 +133,53 @@ type ColorPicker() as colorPicker =
         let colorSwatch = 
             let i = 
                 Image(
-                    Height = 240.,
-                    Width = 320.,
+                    //Height = 240.,
+                    //Width = 320.,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Bottom,
                     Source = colorSwatch5_Bitmap,
                     Margin = Thickness(0.))
             i
+        let tab = TabItem(Header = "Color Picker 1")
         let g = Grid()
+        
+        let row1 = RowDefinition(Height = GridLength(31.))
+        let row2 = RowDefinition(Height = GridLength.Auto)
+        do  g.RowDefinitions.Add(row1)
+            g.RowDefinitions.Add(row2)
+        
         do  g.Children.Add(colorSwatch) |> ignore
-        g
+            g.Children.Add(colorSwatch_StackPanel) |> ignore
+            colorSwatch.SetValue(Grid.RowProperty, 1)
+            tab.Content <- g 
+        tab
     let colorTabItem2_TabItem =         
         let colorSwatch = 
             let i = 
                 Image(
-                    Height = 240.,
-                    Width = 320.,
+                    //Height = 240.,
+                    //Width = 320.,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Bottom,
                     Source = colorSwatch4_Bitmap,
                     Margin = Thickness(0.))
             i
+        let tab = TabItem(Header = "Color Picker 2")
         let g = Grid()
         do  g.Children.Add(colorSwatch) |> ignore
-        g
+            tab.Content <- g 
+        tab
 
     do  colorTab_TabControl.Items.Add(colorTabItem1_TabItem) |> ignore
         colorTab_TabControl.Items.Add(colorTabItem2_TabItem) |> ignore
         colorTab_Grid.Children.Add(colorTab_TabControl) |> ignore
     
-    
-
-    let main_Grid = 
-        let g = 
-            Grid(
-                Background = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE")),
-                Margin = Thickness(left=0.,top=0.,right=0.,bottom=34.),
-                Height = 330.,
-                Width = 480.
-                )        
-
-        let column1 = ColumnDefinition(Width = GridLength(170.))
-        let column2 = ColumnDefinition(Width = GridLength(164.))
-        let column3 = ColumnDefinition(Width = GridLength(176.))
-        do  g.SetValue(Grid.RowProperty, 1)
-            g.ColumnDefinitions.Add(column1)
-            g.ColumnDefinitions.Add(column2)
-            g.ColumnDefinitions.Add(column3)
-        g
-
-    let colorBox_Grid =         
-        let g = 
-            Grid(
-                Margin = Thickness(left=10.,top=30.,right=0.,bottom=0.)
-                )        
-        do  g.SetValue(Grid.ColumnProperty, 0)
-            g.SetValue(Grid.RowProperty, 0)
-        g
-    let colorBox_Border =         
-        let b = 
-            Border(
-                BorderBrush = SolidColorBrush(Colors.Black),
-                BorderThickness = Thickness(2.),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top,
-                Background = SolidColorBrush(Colors.White),
-                Width = 154.,
-                Height = 154.
-                )        
-        b
-    let colorBox_Image =
-        let i = 
-            Image(
-                Height = 150.,
-                Width = 150.,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top,
-                Source = colorSwatch5_Bitmap,
-                Margin = Thickness(2.)
-                )
-        i
-    let colorBox_Canvas = 
-        let g = 
-            Canvas(
-                Height = 150.,
-                Width = 150.,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Top,
-                Background = SolidColorBrush(Colors.Transparent),
-                Margin = Thickness(2.)
-                )        
-        do  g.SetValue(Grid.ColumnProperty, 0)
-            g.SetValue(Grid.RowProperty, 0)
-        g
-    
-    do  colorBox_Grid.Children.Add(colorBox_Border) |> ignore
-        colorBox_Grid.Children.Add(colorBox_Image) |> ignore
-        colorBox_Grid.Children.Add(colorBox_Canvas) |> ignore
-        main_Grid.Children.Add(colorBox_Grid) |> ignore
-        
-        colorPicker_Grid.Children.Add(colorSwatch_StackPanel) |> ignore
-        
-        //colorPicker_Grid.Children.Add(main_Grid) |> ignore
         colorPicker_Grid.Children.Add(colorTab_Grid) |> ignore
-
+                
         colorPicker.Content <- colorPicker_Grid
+
+    // Setters
+    let setSwatch swatch = 
+        let g = Grid()
+        do  g.Children.Add(swatch) |> ignore
+            colorTabItem1_TabItem.Content <- g

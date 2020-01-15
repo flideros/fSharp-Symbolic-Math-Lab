@@ -2162,7 +2162,7 @@ type GraphingCalculator() as graphingCalculator =
                 do state <- { state with graph3DParametric = newState }
                    model3DGroup.Children.Clear()
                    model3DGroup.Children.Add(light)
-                   //model3DGroup.Children.Add(light2)
+                   model3DGroup.Children.Add(light2)
                    setActivetModel (Model3D m)   
                 match state.model with
                 | Trace _ -> ()
