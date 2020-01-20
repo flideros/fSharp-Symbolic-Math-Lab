@@ -8,12 +8,12 @@
     <ProjectGuid>36d2be06-a4c4-449e-aabf-921975ee0fc2</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>ControLibrary</RootNamespace>
-    <AssemblyName>ControLibrary</AssemblyName>
+    <AssemblyName>ControlLibrary</AssemblyName>
     <UseStandardResourceNames>true</UseStandardResourceNames>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <WarningsAsErrors>3239;$(WarningsAsErrors)</WarningsAsErrors>
-    <Name>ControLibrary</Name>
+    <Name>ControlLibrary</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,6 +44,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utilities.fs" />
+    <Compile Include="Brush.fs" />
+    <Compile Include="Container.fs" />
+    <Compile Include="Volume.fs" />
+    <Compile Include="ColorSlider.fs" />
     <Compile Include="ColorPicker.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />

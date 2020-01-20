@@ -13,7 +13,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Graphing Calculator", "Grap
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Database Lab", "Data Base Lab\Database Lab.fsproj", "{362F9170-4DF5-41FE-851B-F5D800DE2C44}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ControLibrary", "ControLibrary\ControLibrary.fsproj", "{36D2BE06-A4C4-449E-AABF-921975EE0FC2}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ControlLibrary", "ControLibrary\ControlLibrary.fsproj", "{36D2BE06-A4C4-449E-AABF-921975EE0FC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

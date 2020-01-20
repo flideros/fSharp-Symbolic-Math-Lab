@@ -74,6 +74,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ControLibrary\ControlLibrary.fsproj">
+      <Name>ControlLibrary</Name>
+      <Project>{36d2be06-a4c4-449e-aabf-921975ee0fc2}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Symbolic Math\Symbolic Math.fsproj">
       <Name>Symbolic Math</Name>
       <Project>{03e8055f-412d-498f-9cd1-c712257fad32}</Project>

@@ -1,11 +1,10 @@
-﻿namespace UI
+﻿namespace ControlLibrary
 
 open System
 open System.Windows          
 open System.Windows.Controls
 open System.Windows.Media
 open System.Windows.Shapes
-open TypeExtension
 
 
 //\/----------------------------------- Shared Value Container ------------------------------------\/
@@ -26,51 +25,56 @@ type SharedValue<'a when 'a : equality>(value:'a) =
 //\/-------------------------------------Shape Container -------------------------------------------\/
 /// Shape container control which reacts when properties of a shape change.
 [<RequireQualifiedAccess>]
-type Shapes = Rectangle | Ellipse | Polygon of PointCollection
+type Shapes = Rectangle | Ellipse | CustomShape of Shape | Polygon of PointCollection | CustomPolygon of PointCollection * Polygon
 
 type ShapeContainer(shapes:SharedValue<Shapes>,
-                    width:SharedValue<int>,
-                    height:SharedValue<int>,
-                    color:SharedValue<Color>) 
-                    // Other properties...
+                    width:SharedValue<float>,
+                    height:SharedValue<float>,
+                    color:SharedValue<Color>)                     
+                    // Other shared properties...
                     as this =    
     
     // -> Refactor this to suit
-    inherit Label(Width=250., Height=250.)
-    
+    inherit Border()//Width=250., Height=250.)
+
     let mutable shape = Ellipse() :> Shape
 
-    let setWidth  width  = shape.Width  <- float width
-    let setHeight height = shape.Height <- float height
+    let setWidth  width  = shape.Width  <- width
+    let setHeight height = shape.Height <- height
     let setColor  color  = shape.Fill   <- SolidColorBrush(color)
-  
-    // -> Refactor this 
-    let makePolygonFrom points =     
-        let p = Polygon()
+         
+    let makePolygonFrom points options =     
+        let p = 
+            match options with 
+            | None -> Polygon()
+            | Some poly -> poly
         do p.Points <- points
            p.Stretch <- shape.Stretch
-           // Other properties...
         p 
   
     let initShape () =
-        this.Content <- shape
+        this.Child <- shape
         setWidth  width.Get
         setHeight height.Get
         setColor  color.Get
-    let setShape du =
-        match du with
+        
+    let setShape s =
+        match s with
           | Shapes.Rectangle -> shape <- Rectangle()
           | Shapes.Ellipse   -> shape <- Ellipse  ()
-          | Shapes.Polygon points -> shape <- makePolygonFrom points           
-            
+          | Shapes.CustomShape e -> shape <- e 
+          | Shapes.Polygon points -> shape <- makePolygonFrom points None
+          | Shapes.CustomPolygon (points,p) -> 
+            shape <- makePolygonFrom points (Some p)
         initShape ()
-    do
-        // specifying cooperations with shared values and the shape
+
+    do  // specifying cooperations with shared values and the shape
         width.Changed.Add  setWidth
         height.Changed.Add setHeight
         color.Changed.Add  setColor 
         shapes.Changed.Add setShape
         // initialization
-        initShape ()
+        setShape shapes.Get
+
 //\-------------------------------------Shape Container -------------------------------------------/\
 
