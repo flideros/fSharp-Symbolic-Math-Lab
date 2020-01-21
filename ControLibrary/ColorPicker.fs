@@ -118,7 +118,7 @@ type ColorPicker() as colorPicker =
         colorSwatch_StackPanel.Children.Add(colorSwatch4_Image) |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
     
-    let colorSlider = ColorThumb()
+    let colorSlider = ColorSlider()
     
     let colorTab_Grid =         
         let g = 
