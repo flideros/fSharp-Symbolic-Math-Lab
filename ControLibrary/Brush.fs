@@ -50,7 +50,7 @@ module CustomBrushes =
                 | _, _  -> Color.FromArgb(byte( 255 ),byte( v * 255. ),byte( p * 255. ),byte( q * 255. ))
 
             seq{for i in 0.0..1.0..28.0 -> convertHsvToRgb (i*12.) 1. 1.}
-        let step = 1. / float (Seq.length spectrumColors)  //need to catch divide by zero
+        let step = 1. / float (Seq.length spectrumColors)  //need to catch divide by zero here
         let sb = 
             LinearGradientBrush(
                 StartPoint = Point (0.5,0.), 

@@ -65,24 +65,36 @@ type ColorThumb() as colorThumb =
 
 type ColorSlider() as colorSlider = 
     inherit UserControl()   
-
-    let spectrumBrush = ()
-   
-    let t = ColorThumb()
-    let b = Border()
+    let g = Grid(Width = 30.,Height = 200., Background = CustomBrushes.spectrumBrush)
+    let t = ColorThumb(Tag = Point(15.,0.))
     let sliderCanvas = 
-        //let g = Grid()
+        
         let c = 
             Canvas(
                 ClipToBounds = true,
-                Height = 200.,
-                Width = 50.)//,Background = Brushes.DarkRed)      
+                Height = 250.,
+                Width = 50.)      
         
-        do  b.SetValue(Canvas.TopProperty,0.)
-            b.SetValue(Canvas.LeftProperty,15.)
-            b.Child <- t
-            c.Children.Add(b) |> ignore            
+        do  t.SetValue(Canvas.TopProperty,0.)
+            t.SetValue(Canvas.LeftProperty,15.)  
+            g.SetValue(Canvas.TopProperty,10.)
+            g.SetValue(Canvas.LeftProperty,5.)
+            c.Children.Add(g) |> ignore
+            c.Children.Add(t) |> ignore            
         c
     
-    do  colorSlider.Content <- sliderCanvas //ColorThumb()
-        sliderCanvas.Background <- CustomBrushes.spectrumBrush
+    do  colorSlider.Content <- sliderCanvas 
+        
+    let handlePreviewMouseLeftButtonDown(e:MouseButtonEventArgs) = 
+        let p0 = e.MouseDevice.GetPosition(sliderCanvas)  
+        do  t.Tag <- p0 
+    let handlePreviewMouseMove(e:MouseEventArgs) = 
+        match e.LeftButton = MouseButtonState.Pressed with
+        | false -> ()
+        | true -> 
+            let p0 = e.MouseDevice.GetPosition(sliderCanvas)
+            do  t.SetValue(Canvas.TopProperty,((p0 - (t.Tag :?> Point)).Y))
+                t.Tag <- p0
+
+    do  t.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handlePreviewMouseLeftButtonDown (e)))
+        colorSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
