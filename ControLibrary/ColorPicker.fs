@@ -155,6 +155,7 @@ type ColorPicker() as colorPicker =
             colorSwatch.SetValue(Grid.RowProperty, 1)
             tab.Content <- g 
         tab
+    let xyLabel = Label(Content = "x y")
     let colorTabItem2_TabItem =         
         let colorSwatch = 
             let i = 
@@ -167,8 +168,8 @@ type ColorPicker() as colorPicker =
                     Margin = Thickness(0.))
             i
         let tab = TabItem(Header = "Color Picker 2")
-        let g = Grid()
-        do  //g.Children.Add(colorSwatch) |> ignore
+        let g = Grid()        
+        do  g.Children.Add(xyLabel) |> ignore
             g.Children.Add(colorSlider) |> ignore
             tab.Content <- g 
         tab
@@ -186,3 +187,9 @@ type ColorPicker() as colorPicker =
         let g = Grid()
         do  g.Children.Add(swatch) |> ignore
             colorTabItem1_TabItem.Content <- g
+
+    let handleMouseMove (e:MouseEventArgs) =  
+        let point = e.MouseDevice.GetPosition(colorSlider)
+        do  xyLabel.Content <- point.ToString()
+
+    do  colorSlider.MouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
