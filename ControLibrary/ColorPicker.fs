@@ -21,7 +21,7 @@ type ColorPicker() as colorPicker =
     let colorPicker_Grid = 
         let g = 
             Grid(
-                Background = SolidColorBrush(Color.FromArgb (byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE"))
+                Background = SolidColorBrush(Color.FromArgb(byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE"))
                 //Height = 330.,
                 //Width = 480.
                 )
@@ -118,7 +118,7 @@ type ColorPicker() as colorPicker =
         colorSwatch_StackPanel.Children.Add(colorSwatch4_Image) |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
     
-    let colorSlider = ColorSlider()
+    let colorSlider = ColorSlider(currentColor = SharedValue (Colors.Transparent))
     
     let colorTab_Grid =         
         let g = 
@@ -193,3 +193,4 @@ type ColorPicker() as colorPicker =
         do  xyLabel.Content <- point.ToString()
 
     do  colorSlider.MouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
+        //colorSlider.

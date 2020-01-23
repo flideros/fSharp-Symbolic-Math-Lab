@@ -15,9 +15,9 @@ open System.Windows.Media.Media3D
 open Utilities
 open System.Windows.Input
 
-type ColorThumb() as colorThumb = 
+type ColorThumb(currentColor:SharedValue<Color>) as colorThumb = 
     inherit UserControl()   
-   
+    
     let colorThumb_Grid = 
         let c = Canvas()        
         c
@@ -55,21 +55,23 @@ type ColorThumb() as colorThumb =
                 shapes = SharedValue arrow_Shape,
                 width = SharedValue glassArrow_ShapeContainer.Width,//200.,
                 height = SharedValue glassArrow_ShapeContainer.Height,//200.,
-                color = SharedValue Colors.Transparent)
+                color = currentColor)
         c
     
     do  colorThumb_Grid.Children.Add(arrow_ShapeContainer) |> ignore
         colorThumb_Grid.Children.Add(glassArrow_ShapeContainer) |> ignore
 
         colorThumb.Content <- colorThumb_Grid
+   
 
-type ColorSlider() as colorSlider = 
+type ColorSlider(currentColor:SharedValue<Color>) as colorSlider = 
     inherit UserControl() 
-
-    let g = Grid(Width = 30.,Height = 200., Background = CustomBrushes.spectrumBrush)
-    let t = ColorThumb()
-    let sliderCanvas = 
-        
+    
+    do currentColor.Set (ColorUtilites.convertHsvToRgb 1. 1. 1. )
+      
+    let gradiant = Grid(Width = 30.,Height = 200., Background = CustomBrushes.spectrumBrush)
+    let thumb = ColorThumb(currentColor = currentColor)
+    let sliderCanvas =         
         let c = 
             Canvas(
                 ClipToBounds = true,
@@ -77,12 +79,12 @@ type ColorSlider() as colorSlider =
                 Width = 50.,
                 Background= Brushes.Transparent)      
         
-        do  t.SetValue(Canvas.TopProperty,2.5)
-            t.SetValue(Canvas.LeftProperty,15.)  
-            g.SetValue(Canvas.TopProperty,15.)
-            g.SetValue(Canvas.LeftProperty,5.)
-            c.Children.Add(g) |> ignore
-            c.Children.Add(t) |> ignore            
+        do  thumb.SetValue(Canvas.TopProperty,2.5)
+            thumb.SetValue(Canvas.LeftProperty,15.)  
+            gradiant.SetValue(Canvas.TopProperty,15.)
+            gradiant.SetValue(Canvas.LeftProperty,5.)
+            c.Children.Add(gradiant) |> ignore
+            c.Children.Add(thumb) |> ignore            
         c
     
     do  colorSlider.Content <- sliderCanvas          
@@ -92,9 +94,11 @@ type ColorSlider() as colorSlider =
         match e.LeftButton = MouseButtonState.Pressed with
         | false -> ()
         | true ->  
-            match point.Y > 0. && point.Y < 215.5 with 
-            | true -> t.SetValue(Canvas.TopProperty,point.Y-12.5)
+            match point.Y > 0. && point.Y < 215.0 with 
+            | true -> 
+                let newColor = ColorUtilites.convertHsvToRgb ((360./200.)*(point.Y-12.5)) 1. 1.
+                do  thumb.SetValue(Canvas.TopProperty,point.Y-12.5)
+                currentColor.Set newColor
             | false -> ()
                 
     do  colorSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
-        
