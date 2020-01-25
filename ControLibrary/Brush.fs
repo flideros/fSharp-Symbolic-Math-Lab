@@ -33,6 +33,24 @@ module ColorUtilites =
         | _, 4. -> Color.FromArgb(byte( 255 ),byte( t * 255. ),byte( p * 255. ),byte( v * 255. ))
         | _, _  -> Color.FromArgb(byte( 255 ),byte( v * 255. ),byte( p * 255. ),byte( q * 255. ))
 
+    let hueFromRGB (color : Color) =        
+        let r,g,b = (float) color.R/255.,(float) color.G/255.,(float) color.B/255.
+        let cMax = System.Math.Max(r,(System.Math.Max(g,b)))
+        let cMin = System.Math.Min(r,(System.Math.Min(g,b)))
+        let delta = cMax-cMin
+        match delta < 0.00001 with
+        | true -> 0.
+        | false -> 
+            let h =
+                match cMax with
+                | x when x = r -> ((g-b)/delta) % 6.
+                | x when x = g -> ((b-r)/delta) + 2.
+                | x when x = b -> ((r-g)/delta) + 4.
+                | _  -> 0.         
+            match h < 0. with
+            | true -> (60. * h) + 360.
+            | false -> 60. * h
+
 module CustomBrushes =
     open ColorUtilites
 
@@ -62,3 +80,4 @@ module CustomBrushes =
         do  Seq.iteri (fun i c -> sb.GradientStops.Add(GradientStop( Color = c, Offset=(float i) * step))) spectrumColors
             
         sb
+

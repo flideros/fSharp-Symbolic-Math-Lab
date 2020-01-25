@@ -15,23 +15,38 @@ open System.Windows.Media.Media3D
 open Utilities
 open System.Windows.Input
 
+
+
+type SaturationBrightnessPicker () as saturationBrightnessPicker =
+     inherit UserControl() 
+
+     let saturationBrightnessPicker_ShapeContainer = 
+         let c = 
+             ShapeContainer(
+                 shapes = SharedValue ControlLibrary.Shapes.Rectangle,
+                 width = SharedValue 400.,
+                 height = SharedValue 400.,
+                 color = SharedValue Colors.Black)
+         c
+     do saturationBrightnessPicker.Content <- saturationBrightnessPicker_ShapeContainer
+
 type ColorPicker() as colorPicker =
     inherit UserControl() 
     
     let colorPicker_Grid = 
         let g = 
             Grid(
-                Background = SolidColorBrush(Color.FromArgb(byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE"))
-                //Height = 330.,
-                //Width = 480.
+                Background = SolidColorBrush(Color.FromArgb(byte "0xFF",  byte "0xEE", byte "0xEE", byte "0xEE")),
+                Height = 400.,
+                Width = 600.
                 )
-        let column1 = ColumnDefinition(Width = GridLength(326.))
+        let column1 = ColumnDefinition(Width = GridLength(600.))
         let column2 = ColumnDefinition(Width = GridLength(0.,GridUnitType.Star))
         do  g.ColumnDefinitions.Add(column1)
             g.ColumnDefinitions.Add(column2)
 
-        let row1 = RowDefinition(Height = GridLength(286.))
-        let row2 = RowDefinition(Height = GridLength.Auto)
+        let row1 = RowDefinition(Height = GridLength(400.))
+        let row2 = RowDefinition(Height = GridLength(0.,GridUnitType.Star))
         do  g.RowDefinitions.Add(row1)
             g.RowDefinitions.Add(row2)
         g
@@ -118,16 +133,27 @@ type ColorPicker() as colorPicker =
         colorSwatch_StackPanel.Children.Add(colorSwatch4_Image) |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
     
-    let colorSlider = ColorSlider(currentColor = SharedValue (Colors.Transparent))
-    
+    let hueValue = SharedValue<float>(0.)
+
+    let hueSlider = HueSlider(hueValue=hueValue,thumbColor = SharedValue (Colors.Transparent))//HueSlider(hueValue=hueValue,thumbColor = SharedValue (Colors.Transparent))
+    do  hueSlider.SetValue(Grid.ColumnProperty,1)
+
+
     let colorTab_Grid =         
         let g = 
             Grid()
+        let column1 = ColumnDefinition(Width = GridLength.Auto)
+        let column2 = ColumnDefinition(Width = GridLength.Auto)
+        let column3 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
+        
+        do  g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(column2)
+            g.ColumnDefinitions.Add(column3)        
         g
     let colorTab_TabControl =         
         let t = 
             TabControl(
-                Margin = Thickness(left=0.,top=0.,right=0.,bottom=0.),
+                Margin = Thickness(left=0.,top=0.,right=0.,bottom=0.),                
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch)
         t
@@ -160,17 +186,27 @@ type ColorPicker() as colorPicker =
         let colorSwatch = 
             let i = 
                 Image(
-                    //Height = 240.,
-                    //Width = 320.,
+                    //Height = 400.,
+                    //Width = 600.,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Bottom,
                     Source = colorSwatch4_Bitmap,
                     Margin = Thickness(0.))
-            i
+            i//I might delete this function...
         let tab = TabItem(Header = "Color Picker 2")
         let g = Grid()        
-        do  g.Children.Add(xyLabel) |> ignore
-            g.Children.Add(colorSlider) |> ignore
+        let column1 = ColumnDefinition(Width = GridLength.Auto)
+        let column2 = ColumnDefinition(Width = GridLength.Auto)
+        let column3 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
+        
+        do  g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(column2)
+            g.ColumnDefinitions.Add(column3)
+        
+            g.Children.Add(colorSwatch) |> ignore
+            //g.Children.Add(SaturationBrightnessPicker ()) |> ignore
+            g.Children.Add(xyLabel) |> ignore
+            g.Children.Add(hueSlider) |> ignore
             tab.Content <- g 
         tab
 
@@ -189,8 +225,6 @@ type ColorPicker() as colorPicker =
             colorTabItem1_TabItem.Content <- g
 
     let handleMouseMove (e:MouseEventArgs) =  
-        let point = e.MouseDevice.GetPosition(colorSlider)
-        do  xyLabel.Content <- point.ToString()
+        do  xyLabel.Content <- hueValue.Get.ToString()
 
-    do  colorSlider.MouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
-        //colorSlider.
+    do  hueSlider.MouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
