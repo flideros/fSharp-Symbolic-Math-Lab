@@ -134,14 +134,17 @@ type ColorPicker() as colorPicker =
         colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
     
     let hueValue = SharedValue<Hue>(0.)
+    //let luminosityValue = SharedValue<Luminosity>(0.)
     let currentColor = SharedValue<Color> (Colors.Transparent)
-
 
     let hueSlider = HueSlider(hueValue=hueValue)
     do  hueSlider.SetValue(Grid.ColumnProperty,1)
 
     let saturationSlider = SaturationSlider(saturationValue=SharedValue (1.), currentHue = hueValue)
     do  saturationSlider.SetValue(Grid.ColumnProperty,2)
+
+    let luminositySlider = LuminositySlider(luminosityValue=SharedValue (1.), currentHue = hueValue)
+    do  luminositySlider.SetValue(Grid.ColumnProperty,3)
 
     let colorTab_Grid =         
         let g = 
@@ -185,7 +188,9 @@ type ColorPicker() as colorPicker =
             colorSwatch.SetValue(Grid.RowProperty, 1)
             tab.Content <- g 
         tab
-    let xyLabel = Label(Content = "x y")
+    
+    let xyLabel = Label(Content = "x y")    
+    
     let colorTabItem2_TabItem =         
         let colorSwatch = 
             let i = 
@@ -201,17 +206,20 @@ type ColorPicker() as colorPicker =
         let g = Grid()        
         let column1 = ColumnDefinition(Width = GridLength.Auto)
         let column2 = ColumnDefinition(Width = GridLength.Auto)
-        let column3 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
+        let column3 = ColumnDefinition(Width = GridLength.Auto)
+        let column4 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
         
         do  g.ColumnDefinitions.Add(column1)
             g.ColumnDefinitions.Add(column2)
             g.ColumnDefinitions.Add(column3)
+            g.ColumnDefinitions.Add(column4)
         
             g.Children.Add(colorSwatch) |> ignore
             //g.Children.Add(SaturationBrightnessPicker ()) |> ignore
             g.Children.Add(xyLabel) |> ignore
             g.Children.Add(hueSlider) |> ignore
             g.Children.Add(saturationSlider) |> ignore
+            g.Children.Add(luminositySlider) |> ignore
             tab.Content <- g 
         tab
 

@@ -231,3 +231,116 @@ type SaturationSlider( saturationValue:SharedValue<Saturation>,
         
     do  saturationSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
         currentHue.Changed.Add(handleOnChange_ThumbHue)
+
+// Luminosity
+type LuminosityThumb(luminosityValue:SharedValue<Luminosity>,
+                     currentHue:SharedValue<Hue>) as luminosityThumb = 
+    inherit UserControl()   
+    
+    let thumbColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. luminosityValue.Get)
+
+    let luminosityThumb_Grid = 
+        let c = Canvas()        
+        c
+
+    let glassArrow_Points =
+        let pc = PointCollection()
+        let p0 = Point(100.,20.)
+        let p1 = Point(80.,50.)
+        let p2 = Point(100.,80.)
+        do  pc.Add(p0) 
+            pc.Add(p1) 
+            pc.Add(p2)
+        pc      
+    let glassArrow_Shape = 
+        Polygon(Stroke = SystemColors.ControlDarkDarkBrush, 
+                Points = glassArrow_Points,
+                StrokeThickness = 2., 
+                Fill = CustomBrushes.glassBrush,
+                Stretch = Stretch.Fill)       
+    let glassArrow_ShapeContainer = 
+        let b = 
+            Border()
+        do  b.Child <- glassArrow_Shape
+            b.Width <- 35.
+            b.Height <-30. 
+        b   
+    
+    let arrow_Points =
+        let poly = Polygon(Stroke = SystemColors.ControlDarkDarkBrush, StrokeThickness = 2.)
+        glassArrow_Points,poly        
+    let arrow_Shape = ControlLibrary.Shapes.CustomPolygon arrow_Points    
+    let arrow_ShapeContainer = 
+        let c = 
+            ShapeContainer(
+                shapes = SharedValue arrow_Shape,
+                width = SharedValue glassArrow_ShapeContainer.Width,
+                height = SharedValue glassArrow_ShapeContainer.Height,
+                color = thumbColor)
+        c
+    
+    do  luminosityThumb_Grid.Children.Add(arrow_ShapeContainer) |> ignore
+        luminosityThumb_Grid.Children.Add(glassArrow_ShapeContainer) |> ignore
+
+        luminosityThumb.Content <- luminosityThumb_Grid
+
+    let handleOnChange_CurrentHue hue  = thumbColor.Set (ColorUtilities.convertHsvToRgb (hue) 1. luminosityValue.Get)
+    let handleOnChange_CurrentLuminosity luminosity  = thumbColor.Set (ColorUtilities.convertHsvToRgb (currentHue.Get) 1. luminosity)
+        
+    do  currentHue.Changed.Add(handleOnChange_CurrentHue)
+        luminosityValue.Changed.Add(handleOnChange_CurrentLuminosity)
+
+type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
+                       currentHue:SharedValue<Hue>) as luminositySlider = 
+    inherit UserControl() 
+    
+    let upperSaturationValue = 100. 
+    let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. luminosityValue.Get)
+    
+    let luminosity_linearGradientBrush = LinearGradientBrush(Colors.Black,(ColorUtilities.convertHsvToRgb currentHue.Get  1. luminosityValue.Get),90.)
+    let gradient = Grid(Width = 30.,Height = 300., Background = luminosity_linearGradientBrush)
+    let thumb = LuminosityThumb(luminosityValue = luminosityValue, currentHue = currentHue)
+    
+    let sliderCanvas =         
+        let c = 
+            Canvas(
+                ClipToBounds = true,
+                Height = (330.),
+                Width = 50.,
+                Background= Brushes.Transparent)      
+        
+        do  thumb.SetValue(Canvas.TopProperty,0.)
+            thumb.SetValue(Canvas.LeftProperty,15.)  
+            gradient.SetValue(Canvas.BottomProperty,15.)
+            gradient.SetValue(Canvas.LeftProperty,5.)
+            c.Children.Add(gradient) |> ignore
+            c.Children.Add(thumb) |> ignore            
+        c
+    
+    do  luminositySlider.Content <- sliderCanvas          
+    
+    let convertYToSaturation (p:Point) = 
+        let h = (upperSaturationValue/gradient.Height)*(p.Y)*0.01
+        match h with 
+        | x when x < 1. && x > 0.993 -> 1.
+        | x when x > 0. && x < 0.007 -> 0.
+        | _ -> h
+    let handlePreviewMouseMove(e:MouseEventArgs) = (**)
+        let point = e.MouseDevice.GetPosition(gradient)                
+        match e.LeftButton = MouseButtonState.Pressed with
+        | false -> ()
+        | true ->  
+            match point.Y >= 0.0 && point.Y <= 300.0 with 
+            | true -> 
+                do  luminosityValue.Set(convertYToSaturation point)
+                let newColor = ColorUtilities.convertHsvToRgb (ColorUtilities.getHueFromRGB currentColor.Get) 1. (luminosityValue.Get)
+                do  thumb.SetValue(Canvas.TopProperty,point.Y)
+                    currentColor.Set newColor
+            | false -> ()
+    let handleOnChange_ThumbHue hue  = 
+        match luminositySlider.IsMouseOver with
+        | true -> ()
+        | false -> gradient.Background <- LinearGradientBrush(Colors.Black,ColorUtilities.convertHsvToRgb hue 1. 1.,90.)
+        
+    do  luminositySlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
+        currentHue.Changed.Add(handleOnChange_ThumbHue)
