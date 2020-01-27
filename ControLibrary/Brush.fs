@@ -15,7 +15,7 @@ open System.Windows.Media.Media3D
 open Utilities
 open System.Windows.Input
 
-module ColorUtilites =
+module ColorUtilities =
     
     let convertHsvToRgb h s v =
         let h = match h = 360. with | true -> 0. | false -> h/60.
@@ -33,7 +33,7 @@ module ColorUtilites =
         | _, 4. -> Color.FromArgb(byte( 255 ),byte( t * 255. ),byte( p * 255. ),byte( v * 255. ))
         | _, _  -> Color.FromArgb(byte( 255 ),byte( v * 255. ),byte( p * 255. ),byte( q * 255. ))
 
-    let hueFromRGB (color : Color) =        
+    let getHueFromRGB (color : Color) =        
         let r,g,b = (float) color.R/255.,(float) color.G/255.,(float) color.B/255.
         let cMax = System.Math.Max(r,(System.Math.Max(g,b)))
         let cMin = System.Math.Min(r,(System.Math.Min(g,b)))
@@ -52,7 +52,7 @@ module ColorUtilites =
             | false -> 60. * h
 
 module CustomBrushes =
-    open ColorUtilites
+    open ColorUtilities
 
     let glassBrush = 
         let gb = 

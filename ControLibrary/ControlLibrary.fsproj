@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Utilities.fs" />
+    <Compile Include="ColorDomain.fs" />
     <Compile Include="Brush.fs" />
     <Compile Include="Container.fs" />
     <Compile Include="Volume.fs" />

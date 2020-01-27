@@ -16,9 +16,13 @@ open Utilities
 open System.Windows.Input
 
 // Hue
-type HueThumb( currentColor:SharedValue<Color>) as hueThumb = 
+type HueThumb(hueValue:SharedValue<Hue>) as hueThumb = 
     inherit UserControl()   
     
+    let color = 
+        let c = ColorUtilities.convertHsvToRgb hueValue.Get 1. 1.
+        SharedValue<Color>(c)
+
     let hueThumb_Grid = 
         let c = Canvas()        
         c
@@ -51,12 +55,13 @@ type HueThumb( currentColor:SharedValue<Color>) as hueThumb =
         glassArrow_Points,poly        
     let arrow_Shape = ControlLibrary.Shapes.CustomPolygon arrow_Points    
     let arrow_ShapeContainer = 
+        
         let c = 
             ShapeContainer(
                 shapes = SharedValue arrow_Shape,
                 width = SharedValue glassArrow_ShapeContainer.Width,
                 height = SharedValue glassArrow_ShapeContainer.Height,
-                color = currentColor)
+                color = color)
         c
     
     do  hueThumb_Grid.Children.Add(arrow_ShapeContainer) |> ignore
@@ -64,23 +69,24 @@ type HueThumb( currentColor:SharedValue<Color>) as hueThumb =
 
         hueThumb.Content <- hueThumb_Grid
 
-type HueSlider( hueValue:SharedValue<float>,
-                thumbColor:SharedValue<Color>) as hueSlider = 
+    let handleOnChanged_HueValue (hue) = color.Set (ColorUtilities.convertHsvToRgb hue 1. 1.)
+
+    do hueValue.Changed.Add(handleOnChanged_HueValue)
+
+type HueSlider( hueValue:SharedValue<Hue>) as hueSlider = 
     inherit UserControl() 
     
-    let upperHueValue = 360.    
+    let upperHueValue = 360.
 
-    do  thumbColor.Set (ColorUtilites.convertHsvToRgb hueValue.Get 1. 1. )
-      
     let spectrum = Grid(Width = 30.,Height = 300., Background = CustomBrushes.spectrumBrush)
-    let thumb = HueThumb(currentColor = thumbColor)
+    let thumb = HueThumb(hueValue = hueValue)
     let sliderCanvas =         
         let c = 
             Canvas(
                 ClipToBounds = true,
                 Height = (330.),
                 Width = 50.,
-                Background= Brushes.Transparent)      
+                Background = Brushes.Transparent)      
         
         do  thumb.SetValue(Canvas.TopProperty,0.)
             thumb.SetValue(Canvas.LeftProperty,15.)  
@@ -106,17 +112,20 @@ type HueSlider( hueValue:SharedValue<float>,
             match point.Y >= 0.0 && point.Y <= 300.0 with 
             | true -> 
                 do  hueValue.Set(convertYToHue point)
-                let newColor = ColorUtilites.convertHsvToRgb (hueValue.Get) 1. 1.
+                let newColor = ColorUtilities.convertHsvToRgb (hueValue.Get) 1. 1.
                 do  thumb.SetValue(Canvas.TopProperty,point.Y)
-                    thumbColor.Set newColor
+                    
             | false -> ()
                 
     do  hueSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
 
 // Saturation
-type SaturationThumb( currentColor:SharedValue<Color>) as saturationThumb = 
+type SaturationThumb(saturationValue:SharedValue<Saturation>,
+                     currentHue:SharedValue<Hue>) as saturationThumb = 
     inherit UserControl()   
     
+    let thumbColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb (currentHue.Get) saturationValue.Get 1.)
+
     let saturationThumb_Grid = 
         let c = Canvas()        
         c
@@ -154,7 +163,7 @@ type SaturationThumb( currentColor:SharedValue<Color>) as saturationThumb =
                 shapes = SharedValue arrow_Shape,
                 width = SharedValue glassArrow_ShapeContainer.Width,
                 height = SharedValue glassArrow_ShapeContainer.Height,
-                color = currentColor)
+                color = thumbColor)
         c
     
     do  saturationThumb_Grid.Children.Add(arrow_ShapeContainer) |> ignore
@@ -162,18 +171,23 @@ type SaturationThumb( currentColor:SharedValue<Color>) as saturationThumb =
 
         saturationThumb.Content <- saturationThumb_Grid
 
-type SaturationSlider( saturationValue:SharedValue<float>,
-                       thumbColor:SharedValue<Color>) as saturationSlider = 
+    let handleOnChange_CurrentHue hue  = thumbColor.Set (ColorUtilities.convertHsvToRgb (hue) saturationValue.Get 1.)
+    let handleOnChange_CurrentSaturation saturation  = thumbColor.Set (ColorUtilities.convertHsvToRgb (currentHue.Get) saturation 1.)
+        
+    do  currentHue.Changed.Add(handleOnChange_CurrentHue)
+        saturationValue.Changed.Add(handleOnChange_CurrentSaturation)
+
+type SaturationSlider( saturationValue:SharedValue<Saturation>,
+                       currentHue:SharedValue<Hue>) as saturationSlider = 
     inherit UserControl() 
     
-    let upperSaturationValue = 100.    
-    let hue = ColorUtilites.hueFromRGB thumbColor.Get
-
-    do  thumbColor.Set (ColorUtilites.convertHsvToRgb hue saturationValue.Get 1. )
+    let upperSaturationValue = 100. 
+    let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get saturationValue.Get 1. )
     
-    let saturation_linearGradientBrush = LinearGradientBrush(Colors.White,thumbColor.Get,0.)
+    let saturation_linearGradientBrush = LinearGradientBrush(Colors.White,(ColorUtilities.convertHsvToRgb currentHue.Get saturationValue.Get 1. ),90.)
     let gradient = Grid(Width = 30.,Height = 300., Background = saturation_linearGradientBrush)
-    let thumb = SaturationThumb(currentColor = thumbColor)
+    let thumb = SaturationThumb(saturationValue = saturationValue, currentHue = currentHue)
+    
     let sliderCanvas =         
         let c = 
             Canvas(
@@ -193,12 +207,12 @@ type SaturationSlider( saturationValue:SharedValue<float>,
     do  saturationSlider.Content <- sliderCanvas          
     
     let convertYToSaturation (p:Point) = 
-        let h = (upperSaturationValue/gradient.Height)*(p.Y)
+        let h = (upperSaturationValue/gradient.Height)*(p.Y)*0.01
         match h with 
-        | x when x < 360. && x > 359.3 -> 360.
-        | x when x > 0. && x < 0.7 -> 0.
+        | x when x < 1. && x > 0.993 -> 1.
+        | x when x > 0. && x < 0.007 -> 0.
         | _ -> h
-    let handlePreviewMouseMove(e:MouseEventArgs) = 
+    let handlePreviewMouseMove(e:MouseEventArgs) = (**)
         let point = e.MouseDevice.GetPosition(gradient)                
         match e.LeftButton = MouseButtonState.Pressed with
         | false -> ()
@@ -206,9 +220,14 @@ type SaturationSlider( saturationValue:SharedValue<float>,
             match point.Y >= 0.0 && point.Y <= 300.0 with 
             | true -> 
                 do  saturationValue.Set(convertYToSaturation point)
-                let newColor = ColorUtilites.convertHsvToRgb (saturationValue.Get) 1. 1.
+                let newColor = ColorUtilities.convertHsvToRgb (ColorUtilities.getHueFromRGB currentColor.Get) (saturationValue.Get) 1.
                 do  thumb.SetValue(Canvas.TopProperty,point.Y)
-                    thumbColor.Set newColor
+                    currentColor.Set newColor
             | false -> ()
-                
+    let handleOnChange_ThumbHue hue  = 
+        match saturationSlider.IsMouseOver with
+        | true -> ()
+        | false -> gradient.Background <- LinearGradientBrush(Colors.White,ColorUtilities.convertHsvToRgb hue 1. 1.,90.)
+        
     do  saturationSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
+        currentHue.Changed.Add(handleOnChange_ThumbHue)

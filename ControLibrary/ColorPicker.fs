@@ -133,11 +133,15 @@ type ColorPicker() as colorPicker =
         colorSwatch_StackPanel.Children.Add(colorSwatch4_Image) |> ignore
         colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
     
-    let hueValue = SharedValue<float>(0.)
+    let hueValue = SharedValue<Hue>(0.)
+    let currentColor = SharedValue<Color> (Colors.Transparent)
 
-    let hueSlider = HueSlider(hueValue=hueValue,thumbColor = SharedValue (Colors.Transparent))//HueSlider(hueValue=hueValue,thumbColor = SharedValue (Colors.Transparent))
+
+    let hueSlider = HueSlider(hueValue=hueValue)
     do  hueSlider.SetValue(Grid.ColumnProperty,1)
 
+    let saturationSlider = SaturationSlider(saturationValue=SharedValue (1.), currentHue = hueValue)
+    do  saturationSlider.SetValue(Grid.ColumnProperty,2)
 
     let colorTab_Grid =         
         let g = 
@@ -207,12 +211,14 @@ type ColorPicker() as colorPicker =
             //g.Children.Add(SaturationBrightnessPicker ()) |> ignore
             g.Children.Add(xyLabel) |> ignore
             g.Children.Add(hueSlider) |> ignore
+            g.Children.Add(saturationSlider) |> ignore
             tab.Content <- g 
         tab
 
     do  colorTab_TabControl.Items.Add(colorTabItem1_TabItem) |> ignore
         colorTab_TabControl.Items.Add(colorTabItem2_TabItem) |> ignore
         colorTab_Grid.Children.Add(colorTab_TabControl) |> ignore
+
     
         colorPicker_Grid.Children.Add(colorTab_Grid) |> ignore
                 
@@ -225,6 +231,9 @@ type ColorPicker() as colorPicker =
             colorTabItem1_TabItem.Content <- g
 
     let handleMouseMove (e:MouseEventArgs) =  
-        do  xyLabel.Content <- hueValue.Get.ToString()
+        match e.LeftButton = MouseButtonState.Pressed with
+        | false -> do xyLabel.Content <- hueValue.Get.ToString()
+        | true ->  do xyLabel.Content <- hueValue.Get.ToString()
+                      currentColor.Set(ColorUtilities.convertHsvToRgb (hueValue.Get) 1. 1. )
 
-    do  hueSlider.MouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
+    do  hueSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
