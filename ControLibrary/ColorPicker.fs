@@ -15,20 +15,43 @@ open System.Windows.Media.Media3D
 open Utilities
 open System.Windows.Input
 
+type SaturationBrightnessPicker ( saturationValue:SharedValue<Saturation>,
+                                  luminosityValue:SharedValue<Luminosity>,
+                                  currentHue:SharedValue<Hue>
+                                ) as saturationBrightnessPicker =
+    inherit UserControl() 
+    let g = Grid(Height = 300.,Width = 300.,Background = Brushes.Black)
+    let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. 1.)
+    let fillGradient color = 
+        let lgb = 
+            LinearGradientBrush(
+               StartPoint = Point (0.0,0.0), 
+               EndPoint = Point (1.0,0.0))
+        do  lgb.GradientStops.Add(GradientStop(Color = Colors.White,Offset = 0.))
+            lgb.GradientStops.Add(GradientStop(Color = color,Offset = 1.))
+        lgb
+    let opacityMaskGradient = 
+        let lgb = 
+            LinearGradientBrush(
+               StartPoint = Point (0.0,0.0), 
+               EndPoint = Point (0.0,1.0))
+        do  lgb.GradientStops.Add(GradientStop(Color = Colors.White,Offset = 0.))
+            lgb.GradientStops.Add(GradientStop(Color = Colors.Transparent,Offset = 1.))
+        lgb
+    let saturationBrightnessPicker_ShapeContainer = 
+        let rectangle = Rectangle(Height = 300.,Width = 300.)
+        do  rectangle.Fill <- (fillGradient currentColor.Get)
+            rectangle.OpacityMask <- opacityMaskGradient
+        rectangle 
+    
+    do  g.Children.Add(saturationBrightnessPicker_ShapeContainer) |> ignore
+        saturationBrightnessPicker.Content <- g
 
-
-type SaturationBrightnessPicker () as saturationBrightnessPicker =
-     inherit UserControl() 
-
-     let saturationBrightnessPicker_ShapeContainer = 
-         let c = 
-             ShapeContainer(
-                 shapes = SharedValue ControlLibrary.Shapes.Rectangle,
-                 width = SharedValue 400.,
-                 height = SharedValue 400.,
-                 color = SharedValue Colors.Black)
-         c
-     do saturationBrightnessPicker.Content <- saturationBrightnessPicker_ShapeContainer
+    let handleHueChanged hue = 
+        do  currentColor.Set(ColorUtilities.convertHsvToRgb hue 1. 1.)
+            saturationBrightnessPicker_ShapeContainer.Fill <- fillGradient currentColor.Get
+    
+    do  currentHue.Changed.Add(handleHueChanged)
 
 type ColorPicker() as colorPicker =
     inherit UserControl() 
@@ -134,17 +157,22 @@ type ColorPicker() as colorPicker =
         colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
     
     let hueValue = SharedValue<Hue>(0.)
-    //let luminosityValue = SharedValue<Luminosity>(0.)
+    let saturationValue=SharedValue (1.)
+    let luminosityValue=SharedValue (1.)
+    
     let currentColor = SharedValue<Color> (Colors.Transparent)
 
     let hueSlider = HueSlider(hueValue=hueValue)
-    do  hueSlider.SetValue(Grid.ColumnProperty,1)
+    do  hueSlider.SetValue(Grid.ColumnProperty,3)
+        hueSlider.SetValue(Grid.RowProperty,2)
 
     let saturationSlider = SaturationSlider(saturationValue=SharedValue (1.), currentHue = hueValue)
-    do  saturationSlider.SetValue(Grid.ColumnProperty,2)
+    do  saturationSlider.SetValue(Grid.RowProperty,1)
+        saturationSlider.SetValue(Grid.RowSpanProperty,1)
 
     let luminositySlider = LuminositySlider(luminosityValue=SharedValue (1.), currentHue = hueValue)
-    do  luminositySlider.SetValue(Grid.ColumnProperty,3)
+    do  luminositySlider.SetValue(Grid.ColumnProperty,2)
+        luminositySlider.SetValue(Grid.RowProperty,2)
 
     let colorTab_Grid =         
         let g = 
@@ -193,27 +221,35 @@ type ColorPicker() as colorPicker =
     
     let colorTabItem2_TabItem =         
         let colorSwatch = 
-            let i = 
-                Image(
-                    //Height = 400.,
-                    //Width = 600.,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Bottom,
-                    Source = colorSwatch4_Bitmap,
-                    Margin = Thickness(0.))
-            i//I might delete this function...
+            SaturationBrightnessPicker (
+                saturationValue = saturationValue,
+                luminosityValue = luminosityValue,
+                currentHue = hueValue )
         let tab = TabItem(Header = "Color Picker 2")
         let g = Grid()        
+        let column0 = ColumnDefinition(Width = GridLength 15.)
         let column1 = ColumnDefinition(Width = GridLength.Auto)
         let column2 = ColumnDefinition(Width = GridLength.Auto)
         let column3 = ColumnDefinition(Width = GridLength.Auto)
         let column4 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
         
-        do  g.ColumnDefinitions.Add(column1)
+        do  colorSwatch.SetValue(Grid.RowProperty,2)
+            colorSwatch.SetValue(Grid.RowSpanProperty,2)
+            colorSwatch.SetValue(Grid.ColumnProperty,1)
+            g.ColumnDefinitions.Add(column0)
+            g.ColumnDefinitions.Add(column1)
             g.ColumnDefinitions.Add(column2)
             g.ColumnDefinitions.Add(column3)
             g.ColumnDefinitions.Add(column4)
         
+        let row0 = RowDefinition(Height = GridLength.Auto)
+        let row1 = RowDefinition(Height = GridLength 15.)
+        let row2 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
+            
+        do  g.RowDefinitions.Add(row0)
+            g.RowDefinitions.Add(row1)
+            g.RowDefinitions.Add(row2)
+            
             g.Children.Add(colorSwatch) |> ignore
             //g.Children.Add(SaturationBrightnessPicker ()) |> ignore
             g.Children.Add(xyLabel) |> ignore
