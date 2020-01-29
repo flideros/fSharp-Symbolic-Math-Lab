@@ -20,7 +20,21 @@ type SaturationBrightnessPicker ( saturationValue:SharedValue<Saturation>,
                                   currentHue:SharedValue<Hue>
                                 ) as saturationBrightnessPicker =
     inherit UserControl() 
-    let g = Grid(Height = 300.,Width = 300.,Background = Brushes.Black)
+    let c = Canvas(Height = 300.,Width = 300.,Background = Brushes.Black)
+    let picker =     
+        let ellipse = 
+            EllipseGeometry(Center = Point(0.,0.),
+                            RadiusX = 5.,
+                            RadiusY = 5.)
+        let path = 
+            Path(
+                Stroke = Brushes.Black,
+                StrokeThickness = 1.,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Data = ellipse)
+        path
+
     let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. 1.)
     let fillGradient color = 
         let lgb = 
@@ -44,14 +58,20 @@ type SaturationBrightnessPicker ( saturationValue:SharedValue<Saturation>,
             rectangle.OpacityMask <- opacityMaskGradient
         rectangle 
     
-    do  g.Children.Add(saturationBrightnessPicker_ShapeContainer) |> ignore
-        saturationBrightnessPicker.Content <- g
+    do  c.Children.Add(saturationBrightnessPicker_ShapeContainer) |> ignore
+        c.Children.Add(picker) |> ignore
+        saturationBrightnessPicker.Content <- c
 
     let handleHueChanged hue = 
         do  currentColor.Set(ColorUtilities.convertHsvToRgb hue 1. 1.)
             saturationBrightnessPicker_ShapeContainer.Fill <- fillGradient currentColor.Get
-    
+    let handlePreviewMouseMove(e:MouseEventArgs) = (**)
+        let point = e.MouseDevice.GetPosition(c)                
+        do  picker.SetValue(Canvas.TopProperty, point.Y)
+            picker.SetValue(Canvas.LeftProperty, point.X)
+
     do  currentHue.Changed.Add(handleHueChanged)
+        c.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
 
 type ColorPicker() as colorPicker =
     inherit UserControl() 
@@ -203,7 +223,7 @@ type ColorPicker() as colorPicker =
                     Source = colorSwatch5_Bitmap,
                     Margin = Thickness(0.))
             i
-        let tab = TabItem(Header = "Color Picker 1")
+        let tab = TabItem(Header = "Swatch Color Picker")
         let g = Grid()
         
         let row1 = RowDefinition(Height = GridLength(31.))
@@ -217,15 +237,13 @@ type ColorPicker() as colorPicker =
             tab.Content <- g 
         tab
     
-    let xyLabel = Label(Content = "x y")    
-    
     let colorTabItem2_TabItem =         
         let colorSwatch = 
             SaturationBrightnessPicker (
                 saturationValue = saturationValue,
                 luminosityValue = luminosityValue,
                 currentHue = hueValue )
-        let tab = TabItem(Header = "Color Picker 2")
+        let tab = TabItem(Header = "HSL Color Picker")
         let g = Grid()        
         let column0 = ColumnDefinition(Width = GridLength 15.)
         let column1 = ColumnDefinition(Width = GridLength.Auto)
@@ -251,11 +269,11 @@ type ColorPicker() as colorPicker =
             g.RowDefinitions.Add(row2)
             
             g.Children.Add(colorSwatch) |> ignore
-            //g.Children.Add(SaturationBrightnessPicker ()) |> ignore
-            g.Children.Add(xyLabel) |> ignore
+            //g.Children.Add(SaturationBrightnessPicker ()) |> ignore            
             g.Children.Add(hueSlider) |> ignore
             g.Children.Add(saturationSlider) |> ignore
             g.Children.Add(luminositySlider) |> ignore
+            
             tab.Content <- g 
         tab
 
@@ -276,8 +294,6 @@ type ColorPicker() as colorPicker =
 
     let handleMouseMove (e:MouseEventArgs) =  
         match e.LeftButton = MouseButtonState.Pressed with
-        | false -> do xyLabel.Content <- hueValue.Get.ToString()
-        | true ->  do xyLabel.Content <- hueValue.Get.ToString()
-                      currentColor.Set(ColorUtilities.convertHsvToRgb (hueValue.Get) 1. 1. )
-
+        | false -> ()
+        | true ->  currentColor.Set(ColorUtilities.convertHsvToRgb (hueValue.Get) 1. 1. )                      
     do  hueSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))

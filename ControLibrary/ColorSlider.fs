@@ -150,7 +150,7 @@ type SaturationThumb(saturationValue:SharedValue<Saturation>,
             Border()
         do  b.Child <- glassArrow_Shape
             b.Width <- 30.
-            b.Height <-35. 
+            b.Height <-30. 
         b   
     
     let arrow_Points =
@@ -185,23 +185,24 @@ type SaturationSlider( saturationValue:SharedValue<Saturation>,
     let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get saturationValue.Get 1. )
     
     let saturation_linearGradientBrush = LinearGradientBrush(Colors.White,(ColorUtilities.convertHsvToRgb currentHue.Get saturationValue.Get 1. ),0.)
-    let gradient = Grid(Width = 300.,Height = 25., Background = saturation_linearGradientBrush)
+    let gradient = Grid(Width = 300.,Height = 20., Background = saturation_linearGradientBrush)
     let thumb = SaturationThumb(saturationValue = saturationValue, currentHue = currentHue)
     
     let sliderCanvas =         
         let c = 
             Canvas(
                 ClipToBounds = false,
-                Height = 30.,
+                Height = 25.,
                 Width = 300.,
                 Background= Brushes.Transparent)      
-        
-        do  thumb.SetValue(Canvas.TopProperty,0.)
+        let trackLine = Line(X1 = 15., X2 = 315., Y1 = 41., Y2 = 41., Stroke = Brushes.LightSlateGray, StrokeThickness = 2.)
+        do  thumb.SetValue(Canvas.TopProperty,10.)
             thumb.SetValue(Canvas.LeftProperty,0.)  
-            gradient.SetValue(Canvas.TopProperty,15.)
+            gradient.SetValue(Canvas.TopProperty,20.)
             gradient.SetValue(Canvas.LeftProperty,15.)
             c.Children.Add(gradient) |> ignore
-            c.Children.Add(thumb) |> ignore            
+            c.Children.Add(thumb) |> ignore
+            c.Children.Add(trackLine) |> ignore
         c
     
     do  saturationSlider.Content <- sliderCanvas          
@@ -262,7 +263,7 @@ type LuminosityThumb(luminosityValue:SharedValue<Luminosity>,
         let b = 
             Border()
         do  b.Child <- glassArrow_Shape
-            b.Width <- 35.
+            b.Width <- 30.
             b.Height <-30. 
         b   
     
@@ -298,7 +299,7 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
     let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. luminosityValue.Get)
     
     let luminosity_linearGradientBrush = LinearGradientBrush((ColorUtilities.convertHsvToRgb currentHue.Get  1. luminosityValue.Get),Colors.Black,90.)
-    let gradient = Grid(Width = 30.,Height = 300., Background = luminosity_linearGradientBrush)
+    let gradient = Grid(Width = 20.,Height = 300., Background = luminosity_linearGradientBrush)
     let thumb = LuminosityThumb(luminosityValue = luminosityValue, currentHue = currentHue)
     
     let sliderCanvas =         
@@ -306,15 +307,16 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
             Canvas(
                 ClipToBounds = false,
                 Height = (330.),
-                Width = 50.,
+                Width = 35.,
                 Background= Brushes.Transparent)      
-        
+        let trackLine = Line(X1 = 0., X2 = 0., Y1 = 15., Y2 = 315., Stroke = Brushes.LightSlateGray, StrokeThickness = 2.)
         do  thumb.SetValue(Canvas.TopProperty,0.)
-            thumb.SetValue(Canvas.LeftProperty,15.)  
+            thumb.SetValue(Canvas.LeftProperty,0.)  
             gradient.SetValue(Canvas.BottomProperty,15.)
-            gradient.SetValue(Canvas.LeftProperty,5.)
+            gradient.SetValue(Canvas.LeftProperty,0.0)
             c.Children.Add(gradient) |> ignore
-            c.Children.Add(thumb) |> ignore            
+            c.Children.Add(thumb) |> ignore
+            c.Children.Add(trackLine) |> ignore
         c
     
     do  luminositySlider.Content <- sliderCanvas          
