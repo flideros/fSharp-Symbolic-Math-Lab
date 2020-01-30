@@ -228,10 +228,15 @@ type SaturationSlider( saturationValue:SharedValue<Saturation>,
     let handleOnChange_ThumbHue hue  = 
         match saturationSlider.IsMouseOver with
         | true -> ()
-        | false -> gradient.Background <- LinearGradientBrush(Colors.White,ColorUtilities.convertHsvToRgb hue 1. 1.,0.)
-        
+        | false -> gradient.Background <- LinearGradientBrush(Colors.White,ColorUtilities.convertHsvToRgb hue 1. 1.,0.)    
+    let handleOnChange_SaturationValue saturation  = 
+        match saturationSlider.IsMouseOver with
+        | true -> ()
+        | false -> thumb.SetValue(Canvas.LeftProperty,saturation*sliderCanvas.Width)
+
     do  saturationSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
         currentHue.Changed.Add(handleOnChange_ThumbHue)
+        saturationValue.Changed.Add(handleOnChange_SaturationValue)
 
 // Luminosity
 type LuminosityThumb(luminosityValue:SharedValue<Luminosity>,
@@ -321,7 +326,7 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
     
     do  luminositySlider.Content <- sliderCanvas          
     
-    let convertYToSaturation (p:Point) = 
+    let convertYToLuminosity (p:Point) = 
         let h = 1.-((upperSaturationValue/gradient.Height)*(p.Y)*0.01)
         match h with 
         | x when x < 1. && x > 0.993 -> 1.
@@ -334,7 +339,7 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
         | true ->  
             match point.Y >= 0.0 && point.Y <= 300.0 with 
             | true -> 
-                do  luminosityValue.Set(convertYToSaturation point)
+                do  luminosityValue.Set(convertYToLuminosity point)
                 let newColor = ColorUtilities.convertHsvToRgb (ColorUtilities.getHueFromRGB currentColor.Get) 1. (luminosityValue.Get)
                 do  thumb.SetValue(Canvas.TopProperty,point.Y)
                     currentColor.Set newColor
@@ -343,6 +348,12 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
         match luminositySlider.IsMouseOver with
         | true -> ()
         | false -> gradient.Background <- LinearGradientBrush(ColorUtilities.convertHsvToRgb hue 1. 1.,Colors.Black,90.)
-        
+    let handleOnChange_LuminosityValue luminosity  = 
+        match luminositySlider.IsMouseOver with
+        | true -> ()
+        | false -> 
+            do thumb.SetValue(Canvas.TopProperty,((1. - luminosity)*300.))                
+     
     do  luminositySlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
         currentHue.Changed.Add(handleOnChange_ThumbHue)
+        luminosityValue.Changed.Add(handleOnChange_LuminosityValue)

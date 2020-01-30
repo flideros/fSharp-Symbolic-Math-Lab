@@ -15,13 +15,13 @@ open System.Windows.Media.Media3D
 open Utilities
 open System.Windows.Input
 
-type SaturationBrightnessPicker ( saturationValue:SharedValue<Saturation>,
-                                  luminosityValue:SharedValue<Luminosity>,
-                                  currentHue:SharedValue<Hue>
-                                ) as saturationBrightnessPicker =
+type SaturationAndLuminosityPicker (saturationValue:SharedValue<Saturation>,
+                                    luminosityValue:SharedValue<Luminosity>,
+                                    currentHue:SharedValue<Hue>
+                                   ) as saturationAndLuminosityPicker =
     inherit UserControl() 
     let c = Canvas(Height = 300.,Width = 300.,Background = Brushes.Black)
-    let picker =     
+    let locus =     
         let ellipse = 
             EllipseGeometry(Center = Point(0.,0.),
                             RadiusX = 5.,
@@ -34,7 +34,6 @@ type SaturationBrightnessPicker ( saturationValue:SharedValue<Saturation>,
                 VerticalAlignment = VerticalAlignment.Center,
                 Data = ellipse)
         path
-
     let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. 1.)
     let fillGradient color = 
         let lgb = 
@@ -57,23 +56,54 @@ type SaturationBrightnessPicker ( saturationValue:SharedValue<Saturation>,
         do  rectangle.Fill <- (fillGradient currentColor.Get)
             rectangle.OpacityMask <- opacityMaskGradient
         rectangle 
-    
+    let convertYToLuminosity (p:Point) = 
+        let h = 1.-((100./c.Height)*(p.Y)*0.01)
+        match h with 
+        | x when x < 1. && x > 0.993 -> luminosityValue.Set(1.)
+        | x when x > 0. && x < 0.007 -> luminosityValue.Set(0.)
+        | x -> match h > 1. || h < 0. with 
+               | false -> luminosityValue.Set(x)
+               | true -> ()
     do  c.Children.Add(saturationBrightnessPicker_ShapeContainer) |> ignore
-        c.Children.Add(picker) |> ignore
-        saturationBrightnessPicker.Content <- c
+        c.Children.Add(locus) |> ignore
+        saturationAndLuminosityPicker.Content <- c
 
     let handleHueChanged hue = 
         do  currentColor.Set(ColorUtilities.convertHsvToRgb hue 1. 1.)
             saturationBrightnessPicker_ShapeContainer.Fill <- fillGradient currentColor.Get
+    let handleOnChange_SaturationValue saturation = 
+        match saturationAndLuminosityPicker.IsMouseOver with
+        | true -> ()
+        | false -> locus.SetValue(Canvas.LeftProperty,saturation*c.Width)
+    let handleOnChange_LuminosityValue luminosity = 
+        match saturationAndLuminosityPicker.IsMouseOver with
+        | true -> ()
+        | false -> locus.SetValue(Canvas.TopProperty,(1.-luminosity)*c.Height)
     let handlePreviewMouseMove(e:MouseEventArgs) = (**)
         let point = e.MouseDevice.GetPosition(c)                
-        do  picker.SetValue(Canvas.TopProperty, point.Y)
-            picker.SetValue(Canvas.LeftProperty, point.X)
-
+        match e.LeftButton = MouseButtonState.Pressed with
+        | false -> ()
+        | true ->  
+            let y = 
+                match point.Y < 300. && point.Y > 0. with
+                | true -> point.Y
+                | false when point.Y >= 300. -> 300.
+                | false -> 0.
+            let x = 
+                match point.X <= 300. && point.X >= 0. with
+                | true -> point.X
+                | false when point.X >= 300. -> 300.
+                | false -> 0.
+            do  locus.SetValue(Canvas.TopProperty, y)
+                locus.SetValue(Canvas.LeftProperty, x)
+                saturationValue.Set(x/c.Width)
+                convertYToLuminosity point
     do  currentHue.Changed.Add(handleHueChanged)
         c.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
+        saturationValue.Changed.Add(handleOnChange_SaturationValue)
+        luminosityValue.Changed.Add(handleOnChange_LuminosityValue)
 
-type ColorPicker() as colorPicker =
+type HslColorPicker() as colorPicker =
     inherit UserControl() 
     
     let colorPicker_Grid = 
@@ -93,204 +123,69 @@ type ColorPicker() as colorPicker =
         do  g.RowDefinitions.Add(row1)
             g.RowDefinitions.Add(row2)
         g
-    
-    let colorSwatch1_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch1.png", UriKind.RelativeOrAbsolute))
-    let colorSwatch2_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch2.png", UriKind.RelativeOrAbsolute))
-    let colorSwatch3_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch3.png", UriKind.RelativeOrAbsolute))
-    let colorSwatch4_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch4.png", UriKind.RelativeOrAbsolute))
-    let colorSwatch5_Bitmap = new BitmapImage(new Uri(__SOURCE_DIRECTORY__ + "/ColorSwatch5.png", UriKind.RelativeOrAbsolute))
-    let colorSwatch1_Image = 
-        let i = 
-            Image(
-                Height = 20.,
-                Width = 20.,
-                Source = colorSwatch1_Bitmap,
-                Margin = Thickness(left=45.,top=0.,right=0.,bottom=0.),
-                ToolTip = "Color Swatch 1"                
-                )
-        i
-    let colorSwatch2_Image =
-        let i = 
-            Image(
-                Height = 20.,
-                Width = 20.,
-                Source = colorSwatch2_Bitmap,
-                Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
-                ToolTip = "Color Swatch 2"                
-                )
-        i
-    let colorSwatch3_Image =
-        let i = 
-            Image(
-                Height = 20.,
-                Width = 20.,
-                Source = colorSwatch3_Bitmap,
-                Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
-                ToolTip = "Color Swatch 3"                
-                )
-        i
-    let colorSwatch4_Image =
-        let i = 
-            Image(
-                Height = 20.,
-                Width = 20.,
-                Source = colorSwatch2_Bitmap,
-                Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
-                ToolTip = "Color Swatch 4"                
-                )
-        i
-    let colorSwatch5_Image =
-        let i = 
-            Image(
-                Height = 20.,
-                Width = 20.,
-                Source = colorSwatch5_Bitmap,
-                Margin = Thickness(left=5.,top=0.,right=0.,bottom=0.),
-                ToolTip = "Color Swatch 5"                
-                )
-        i    
-    let colorSwatch_StackPanel = 
-        let sp = 
-            StackPanel(
-                //Background = SolidColorBrush(Colors.Black),                
-                Height = 31.,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                Orientation = Orientation.Horizontal
-                )
-        do sp.SetValue(Grid.RowProperty, 0)
-        sp
-    let colorSwatch_Label = 
-        let l = 
-            Label(
-                Content = " Choose a Swatch",
-                Foreground = SolidColorBrush(Colors.Black),
-                FontWeight = FontWeights.Bold,
-                VerticalAlignment = VerticalAlignment.Center
-                )
-        l    
-    
-    do  colorSwatch_StackPanel.Children.Add(colorSwatch_Label)  |> ignore
-        colorSwatch_StackPanel.Children.Add(colorSwatch1_Image) |> ignore
-        colorSwatch_StackPanel.Children.Add(colorSwatch2_Image) |> ignore
-        colorSwatch_StackPanel.Children.Add(colorSwatch3_Image) |> ignore
-        colorSwatch_StackPanel.Children.Add(colorSwatch4_Image) |> ignore
-        colorSwatch_StackPanel.Children.Add(colorSwatch5_Image) |> ignore
-    
-    let hueValue = SharedValue<Hue>(0.)
-    let saturationValue=SharedValue (1.)
-    let luminosityValue=SharedValue (1.)
+            
+    let hueValue = SharedValue<Hue> (0.)
+    let saturationValue=SharedValue<Saturation> (1.)
+    let luminosityValue=SharedValue<Luminosity> (1.)
     
     let currentColor = SharedValue<Color> (Colors.Transparent)
 
-    let hueSlider = HueSlider(hueValue=hueValue)
-    do  hueSlider.SetValue(Grid.ColumnProperty,3)
-        hueSlider.SetValue(Grid.RowProperty,2)
+    let hueSlider = 
+        let h = HueSlider(hueValue=hueValue)    
+        do  h.SetValue(Grid.ColumnProperty,3)
+            h.SetValue(Grid.RowProperty,2)
 
-    let saturationSlider = SaturationSlider(saturationValue=SharedValue (1.), currentHue = hueValue)
-    do  saturationSlider.SetValue(Grid.RowProperty,1)
-        saturationSlider.SetValue(Grid.RowSpanProperty,1)
+        h
+    let saturationSlider = 
+        let s = SaturationSlider(saturationValue=saturationValue, currentHue = hueValue)
+        do  s.SetValue(Grid.RowProperty,1)
+        s
+    let luminositySlider = 
+        let l = LuminositySlider(luminosityValue = luminosityValue, currentHue = hueValue)
+        do  l.SetValue(Grid.ColumnProperty,2)
+            l.SetValue(Grid.RowProperty,2)
+        l
 
-    let luminositySlider = LuminositySlider(luminosityValue=SharedValue (1.), currentHue = hueValue)
-    do  luminositySlider.SetValue(Grid.ColumnProperty,2)
-        luminositySlider.SetValue(Grid.RowProperty,2)
-
-    let colorTab_Grid =         
-        let g = 
-            Grid()
-        let column1 = ColumnDefinition(Width = GridLength.Auto)
-        let column2 = ColumnDefinition(Width = GridLength.Auto)
-        let column3 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
-        
-        do  g.ColumnDefinitions.Add(column1)
-            g.ColumnDefinitions.Add(column2)
-            g.ColumnDefinitions.Add(column3)        
-        g
-    let colorTab_TabControl =         
-        let t = 
-            TabControl(
-                Margin = Thickness(left=0.,top=0.,right=0.,bottom=0.),                
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch)
-        t
-    let colorTabItem1_TabItem  =         
-        let colorSwatch = 
-            let i = 
-                Image(
-                    //Height = 240.,
-                    //Width = 320.,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Bottom,
-                    Source = colorSwatch5_Bitmap,
-                    Margin = Thickness(0.))
-            i
-        let tab = TabItem(Header = "Swatch Color Picker")
-        let g = Grid()
-        
-        let row1 = RowDefinition(Height = GridLength(31.))
-        let row2 = RowDefinition(Height = GridLength.Auto)
-        do  g.RowDefinitions.Add(row1)
-            g.RowDefinitions.Add(row2)
-        
-        do  g.Children.Add(colorSwatch) |> ignore
-            g.Children.Add(colorSwatch_StackPanel) |> ignore
-            colorSwatch.SetValue(Grid.RowProperty, 1)
-            tab.Content <- g 
-        tab
-    
-    let colorTabItem2_TabItem =         
-        let colorSwatch = 
-            SaturationBrightnessPicker (
+    let saturationAndLuminosityPicker = 
+        let s = 
+            SaturationAndLuminosityPicker (
                 saturationValue = saturationValue,
                 luminosityValue = luminosityValue,
                 currentHue = hueValue )
-        let tab = TabItem(Header = "HSL Color Picker")
+        do  
+            s.SetValue(Grid.RowProperty,2)            
+            s.SetValue(Grid.ColumnProperty,1)
+        s
+    let hslColorPickerGrid = 
         let g = Grid()        
         let column0 = ColumnDefinition(Width = GridLength 15.)
         let column1 = ColumnDefinition(Width = GridLength.Auto)
         let column2 = ColumnDefinition(Width = GridLength.Auto)
         let column3 = ColumnDefinition(Width = GridLength.Auto)
         let column4 = ColumnDefinition(Width = GridLength(50., GridUnitType.Star))
-        
-        do  colorSwatch.SetValue(Grid.RowProperty,2)
-            colorSwatch.SetValue(Grid.RowSpanProperty,2)
-            colorSwatch.SetValue(Grid.ColumnProperty,1)
-            g.ColumnDefinitions.Add(column0)
+        do  g.ColumnDefinitions.Add(column0)
             g.ColumnDefinitions.Add(column1)
             g.ColumnDefinitions.Add(column2)
             g.ColumnDefinitions.Add(column3)
             g.ColumnDefinitions.Add(column4)
-        
+
         let row0 = RowDefinition(Height = GridLength.Auto)
-        let row1 = RowDefinition(Height = GridLength 15.)
-        let row2 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
-            
+        let row1 = RowDefinition(Height = GridLength.Auto)
+        let row2 = RowDefinition(Height = GridLength.Auto)
+        let row3= RowDefinition(Height = GridLength(0., GridUnitType.Star))
         do  g.RowDefinitions.Add(row0)
             g.RowDefinitions.Add(row1)
             g.RowDefinitions.Add(row2)
+            g.RowDefinitions.Add(row3)
             
-            g.Children.Add(colorSwatch) |> ignore
-            //g.Children.Add(SaturationBrightnessPicker ()) |> ignore            
+            g.Children.Add(saturationAndLuminosityPicker) |> ignore            
             g.Children.Add(hueSlider) |> ignore
             g.Children.Add(saturationSlider) |> ignore
             g.Children.Add(luminositySlider) |> ignore
-            
-            tab.Content <- g 
-        tab
+        g
 
-    do  colorTab_TabControl.Items.Add(colorTabItem1_TabItem) |> ignore
-        colorTab_TabControl.Items.Add(colorTabItem2_TabItem) |> ignore
-        colorTab_Grid.Children.Add(colorTab_TabControl) |> ignore
-
-    
-        colorPicker_Grid.Children.Add(colorTab_Grid) |> ignore
-                
+    do  colorPicker_Grid.Children.Add(hslColorPickerGrid) |> ignore
         colorPicker.Content <- colorPicker_Grid
-
-    // Setters
-    let setSwatch swatch = 
-        let g = Grid()
-        do  g.Children.Add(swatch) |> ignore
-            colorTabItem1_TabItem.Content <- g
 
     let handleMouseMove (e:MouseEventArgs) =  
         match e.LeftButton = MouseButtonState.Pressed with
