@@ -18,4 +18,4 @@ open System.Windows.Input
 type Hue = float
 type Saturation = float
 type Luminosity = float
-
+type Opacity = float

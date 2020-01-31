@@ -81,3 +81,28 @@ module CustomBrushes =
             
         sb
 
+    let checkerBrush = 
+        let square1 = RectangleGeometry(Rect(Point(0.,0.),Point(100.,100.)))
+        let square2 = RectangleGeometry(Rect(Point(0.,0.),Point(50.,50.)))
+        let square3 = RectangleGeometry(Rect(Point(50.,50.),Point(100.,100.)))
+    
+        let gd1 = GeometryDrawing(Brush = Brushes.White)
+        do  gd1.Geometry <- square1
+
+        let gd2 = GeometryDrawing(Brush = Brushes.LightGray)
+        let gg2 = GeometryGroup()
+        do  gg2.Children.Add(square2)
+            gg2.Children.Add(square3)
+            gd2.Geometry <- gg2
+
+        let dg1 = DrawingGroup()
+        do  dg1.Children.Add(gd1)
+            dg1.Children.Add(gd2)
+
+        let db = 
+            DrawingBrush(Viewport = Rect(0.,0.,10.,10.),
+                         ViewportUnits = BrushMappingMode.Absolute,
+                         TileMode = TileMode.Tile
+                        )
+        do  db.Drawing <- dg1
+        db

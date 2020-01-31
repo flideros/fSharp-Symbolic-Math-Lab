@@ -357,3 +357,4 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
     do  luminositySlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
         currentHue.Changed.Add(handleOnChange_ThumbHue)
         luminosityValue.Changed.Add(handleOnChange_LuminosityValue)
+

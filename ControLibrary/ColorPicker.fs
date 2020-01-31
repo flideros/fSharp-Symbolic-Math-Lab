@@ -21,6 +21,7 @@ type SaturationAndLuminosityPicker (saturationValue:SharedValue<Saturation>,
                                    ) as saturationAndLuminosityPicker =
     inherit UserControl() 
     let c = Canvas(Height = 300.,Width = 300.,Background = Brushes.Black)
+    let b = Border(Height = 300.,Width = 300.,Background = CustomBrushes.checkerBrush)
     let locus =     
         let ellipse = 
             EllipseGeometry(Center = Point(0.,0.),
@@ -51,7 +52,7 @@ type SaturationAndLuminosityPicker (saturationValue:SharedValue<Saturation>,
         do  lgb.GradientStops.Add(GradientStop(Color = Colors.White,Offset = 0.))
             lgb.GradientStops.Add(GradientStop(Color = Colors.Transparent,Offset = 1.))
         lgb
-    let saturationBrightnessPicker_ShapeContainer = 
+    let saturationLuminosityPicker_ShapeContainer = 
         let rectangle = Rectangle(Height = 300.,Width = 300.)
         do  rectangle.Fill <- (fillGradient currentColor.Get)
             rectangle.OpacityMask <- opacityMaskGradient
@@ -64,13 +65,14 @@ type SaturationAndLuminosityPicker (saturationValue:SharedValue<Saturation>,
         | x -> match h > 1. || h < 0. with 
                | false -> luminosityValue.Set(x)
                | true -> ()
-    do  c.Children.Add(saturationBrightnessPicker_ShapeContainer) |> ignore
+    do  c.Children.Add(saturationLuminosityPicker_ShapeContainer) |> ignore
         c.Children.Add(locus) |> ignore
-        saturationAndLuminosityPicker.Content <- c
+        b.Child <- c
+        saturationAndLuminosityPicker.Content <- b
 
     let handleHueChanged hue = 
         do  currentColor.Set(ColorUtilities.convertHsvToRgb hue 1. 1.)
-            saturationBrightnessPicker_ShapeContainer.Fill <- fillGradient currentColor.Get
+            saturationLuminosityPicker_ShapeContainer.Fill <- fillGradient currentColor.Get
     let handleOnChange_SaturationValue saturation = 
         match saturationAndLuminosityPicker.IsMouseOver with
         | true -> ()
@@ -125,9 +127,8 @@ type HslColorPicker() as colorPicker =
         g
             
     let hueValue = SharedValue<Hue> (0.)
-    let saturationValue=SharedValue<Saturation> (1.)
-    let luminosityValue=SharedValue<Luminosity> (1.)
-    
+    let saturationValue = SharedValue<Saturation> (1.)
+    let luminosityValue = SharedValue<Luminosity> (1.)    
     let currentColor = SharedValue<Color> (Colors.Transparent)
 
     let hueSlider = 
@@ -145,6 +146,76 @@ type HslColorPicker() as colorPicker =
         do  l.SetValue(Grid.ColumnProperty,2)
             l.SetValue(Grid.RowProperty,2)
         l
+    
+    let colorDetails_Grid = 
+        let g = Grid(Margin = Thickness(5.,0.,5.,0.))
+        let column1 = ColumnDefinition()
+        let column2 = ColumnDefinition()
+        let column3 = ColumnDefinition()
+        do  g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(column2)
+            g.ColumnDefinitions.Add(column3)
+
+        let row1 = RowDefinition(Height = GridLength.Auto)
+        let row2 = RowDefinition(Height = GridLength.Auto)
+        let row3 = RowDefinition(Height = GridLength.Auto)
+        do  g.RowDefinitions.Add(row1)
+            g.RowDefinitions.Add(row2)    
+            g.RowDefinitions.Add(row3)
+        g
+    let colorDetailsControls_Grid = 
+        let g = Grid(Margin = Thickness(5.,0.,5.,0.))
+        let row1 = RowDefinition(Height = GridLength.Auto)
+        let row2 = RowDefinition()
+        let row3 = RowDefinition(Height = GridLength.Auto)
+        let row4 = RowDefinition()
+        do  g.RowDefinitions.Add(row1)
+            g.RowDefinitions.Add(row2)    
+            g.RowDefinitions.Add(row3)
+            g.RowDefinitions.Add(row4)
+            g.SetValue(Grid.RowProperty,0)
+            g.SetValue(Grid.ColumnSpanProperty,3)
+        g
+    
+    let selectedColor_TextBlock = 
+        let t = TextBlock(Text = "Selected Color", FontWeight = FontWeights.Bold)
+        t.SetValue(Grid.RowProperty,0)
+        t
+    let selectedColor_Border = 
+        let b = 
+            Border(
+                BorderBrush = SystemColors.ControlDarkDarkBrush,
+                BorderThickness = Thickness(2.),
+                Background = CustomBrushes.checkerBrush,
+                Margin = Thickness(0.,0.,0.,5.))
+        do  b.SetValue(Grid.RowProperty,1)
+        b
+
+    let opacitySlider =
+        
+        let lgb = LinearGradientBrush(StartPoint = Point(0.,0.5),EndPoint = Point (1.,0.5))
+        let gs1 = GradientStop(Offset = 0., Color = Colors.Black)
+        let gs2 = GradientStop(Offset = 1., Color = Colors.Transparent)
+        let s = 
+            Slider(Orientation = Orientation.Horizontal,
+                   Minimum = 0.,
+                   Maximum = 1.,
+                   TickFrequency = 0.01,
+                   SmallChange = 0.01,
+                   LargeChange = 0.02,
+                   IsDirectionReversed=true)
+        do  lgb.GradientStops.Add(gs1)
+            lgb.GradientStops.Add(gs2)
+            s.Background <- lgb
+        s        
+    let opacitySlider_Border = 
+            Border(
+                BorderBrush = SystemColors.ControlDarkDarkBrush,
+                BorderThickness = Thickness(2.,2.,2.,2.),
+                Background = CustomBrushes.checkerBrush,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = Thickness(2.,2.,2.,2.),
+                Child = opacitySlider) 
 
     let saturationAndLuminosityPicker = 
         let s = 
