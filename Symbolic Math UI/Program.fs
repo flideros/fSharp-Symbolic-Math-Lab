@@ -31,7 +31,7 @@ let button = ButtonStyle("Frank's Button")
 let dataLab = DataLab(RenderTransformOrigin = Point(0.,0.))
 let calculator = Calculator(OverridesDefaultStyle = true) 
 let graphingCalc = GraphingCalculator.GraphingCalculator()
-let colorPicker = HslColorPicker()
+let colorPicker = HsvColorPicker()
 // Tab Control 
 let tabs = TabControl()
 

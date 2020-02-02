@@ -238,14 +238,14 @@ type SaturationSlider( saturationValue:SharedValue<Saturation>,
         currentHue.Changed.Add(handleOnChange_ThumbHue)
         saturationValue.Changed.Add(handleOnChange_SaturationValue)
 
-// Luminosity
-type LuminosityThumb(luminosityValue:SharedValue<Luminosity>,
-                     currentHue:SharedValue<Hue>) as luminosityThumb = 
+// Brightness
+type BrightnessThumb(brightnessValue:SharedValue<Brightness>,
+                     currentHue:SharedValue<Hue>) as BrightnessThumb = 
     inherit UserControl()   
     
-    let thumbColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. luminosityValue.Get)
+    let thumbColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. brightnessValue.Get)
 
-    let luminosityThumb_Grid = 
+    let BrightnessThumb_Grid = 
         let c = Canvas()        
         c
 
@@ -285,27 +285,27 @@ type LuminosityThumb(luminosityValue:SharedValue<Luminosity>,
                 color = thumbColor)
         c
     
-    do  luminosityThumb_Grid.Children.Add(arrow_ShapeContainer) |> ignore
-        luminosityThumb_Grid.Children.Add(glassArrow_ShapeContainer) |> ignore
+    do  BrightnessThumb_Grid.Children.Add(arrow_ShapeContainer) |> ignore
+        BrightnessThumb_Grid.Children.Add(glassArrow_ShapeContainer) |> ignore
 
-        luminosityThumb.Content <- luminosityThumb_Grid
+        BrightnessThumb.Content <- BrightnessThumb_Grid
 
-    let handleOnChange_CurrentHue hue  = thumbColor.Set (ColorUtilities.convertHsvToRgb (hue) 1. luminosityValue.Get)
-    let handleOnChange_CurrentLuminosity luminosity  = thumbColor.Set (ColorUtilities.convertHsvToRgb (currentHue.Get) 1. luminosity)
+    let handleOnChange_CurrentHue hue  = thumbColor.Set (ColorUtilities.convertHsvToRgb (hue) 1. brightnessValue.Get)
+    let handleOnChange_CurrentBrightness brightness  = thumbColor.Set (ColorUtilities.convertHsvToRgb (currentHue.Get) 1. brightness)
         
     do  currentHue.Changed.Add(handleOnChange_CurrentHue)
-        luminosityValue.Changed.Add(handleOnChange_CurrentLuminosity)
+        brightnessValue.Changed.Add(handleOnChange_CurrentBrightness)
 
-type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
-                       currentHue:SharedValue<Hue>) as luminositySlider = 
+type BrightnessSlider( brightnessValue:SharedValue<Brightness>,
+                       currentHue:SharedValue<Hue>) as BrightnessSlider = 
     inherit UserControl() 
     
     let upperSaturationValue = 100. 
-    let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. luminosityValue.Get)
+    let currentColor = SharedValue<Color>(ColorUtilities.convertHsvToRgb currentHue.Get 1. brightnessValue.Get)
     
-    let luminosity_linearGradientBrush = LinearGradientBrush((ColorUtilities.convertHsvToRgb currentHue.Get  1. luminosityValue.Get),Colors.Black,90.)
-    let gradient = Grid(Width = 20.,Height = 300., Background = luminosity_linearGradientBrush)
-    let thumb = LuminosityThumb(luminosityValue = luminosityValue, currentHue = currentHue)
+    let brightness_linearGradientBrush = LinearGradientBrush((ColorUtilities.convertHsvToRgb currentHue.Get  1. brightnessValue.Get),Colors.Black,90.)
+    let gradient = Grid(Width = 20.,Height = 300., Background = brightness_linearGradientBrush)
+    let thumb = BrightnessThumb(brightnessValue = brightnessValue, currentHue = currentHue)
     
     let sliderCanvas =         
         let c = 
@@ -324,9 +324,9 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
             c.Children.Add(trackLine) |> ignore
         c
     
-    do  luminositySlider.Content <- sliderCanvas          
+    do  BrightnessSlider.Content <- sliderCanvas          
     
-    let convertYToLuminosity (p:Point) = 
+    let convertYToBrightness (p:Point) = 
         let h = 1.-((upperSaturationValue/gradient.Height)*(p.Y)*0.01)
         match h with 
         | x when x < 1. && x > 0.993 -> 1.
@@ -339,22 +339,22 @@ type LuminositySlider( luminosityValue:SharedValue<Luminosity>,
         | true ->  
             match point.Y >= 0.0 && point.Y <= 300.0 with 
             | true -> 
-                do  luminosityValue.Set(convertYToLuminosity point)
-                let newColor = ColorUtilities.convertHsvToRgb (ColorUtilities.getHueFromRGB currentColor.Get) 1. (luminosityValue.Get)
+                do  brightnessValue.Set(convertYToBrightness point)
+                let newColor = ColorUtilities.convertHsvToRgb (ColorUtilities.getHueFromRGB currentColor.Get) 1. (brightnessValue.Get)
                 do  thumb.SetValue(Canvas.TopProperty,point.Y)
                     currentColor.Set newColor
             | false -> ()
     let handleOnChange_ThumbHue hue  = 
-        match luminositySlider.IsMouseOver with
+        match BrightnessSlider.IsMouseOver with
         | true -> ()
         | false -> gradient.Background <- LinearGradientBrush(ColorUtilities.convertHsvToRgb hue 1. 1.,Colors.Black,90.)
-    let handleOnChange_LuminosityValue luminosity  = 
-        match luminositySlider.IsMouseOver with
+    let handleOnChange_BrightnessValue brightness  = 
+        match BrightnessSlider.IsMouseOver with
         | true -> ()
         | false -> 
-            do thumb.SetValue(Canvas.TopProperty,((1. - luminosity)*300.))                
+            do thumb.SetValue(Canvas.TopProperty,((1. - brightness)*300.))                
      
-    do  luminositySlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
+    do  BrightnessSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
         currentHue.Changed.Add(handleOnChange_ThumbHue)
-        luminosityValue.Changed.Add(handleOnChange_LuminosityValue)
+        brightnessValue.Changed.Add(handleOnChange_BrightnessValue)
 
