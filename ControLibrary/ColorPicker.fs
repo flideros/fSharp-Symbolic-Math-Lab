@@ -132,7 +132,7 @@ type HsvColorPicker() as colorPicker =
     
     // Shared Values
     let hueValue = SharedValue<Hue> (0.)
-    let saturationValue = SharedValue<Saturation> (1.)
+    let saturationValue = SharedValue<Saturation> (0.)
     let brightnessValue = SharedValue<Brightness> (1.)    
     let currentColor = SharedValue<Color> (Colors.Transparent)
     let selectedColor = SharedValue<Color> (Colors.Transparent)    
@@ -286,11 +286,173 @@ type HsvColorPicker() as colorPicker =
                 g.Children.Add(opacity_TextBlock) |> ignore
                 g.Children.Add(opacitySlider_Border) |> ignore
             g    
+
+    // sRGB 
+    let sRGB_Label = 
+        let l = Label(Content = "sRgb",FontWeight = FontWeights.Bold)
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,0)
+            l.SetValue(Grid.ColumnSpanProperty,2)
+        l
+    let sA_Label = 
+        let l = Label(Content = "A")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,1)
+        l
+    let sR_Label = 
+        let l = Label(Content = "R")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,2)
+        l
+    let sG_Label = 
+        let l = Label(Content = "G")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,3)
+        l
+    let sB_Label = 
+        let l = Label(Content = "B")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,4)
+        l
+    
+    let sA_TextBox = 
+        let tb = TextBox(MaxLength = 5,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,1)
+        tb
+    let sR_TextBox = 
+        let tb = TextBox(MaxLength = 5,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,2)
+        tb
+    let sG_TextBox = 
+        let tb = TextBox(MaxLength = 5,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,3)
+        tb
+    let sB_TextBox = 
+        let tb = TextBox(MaxLength = 5,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,4)
+        tb
+
+    // HSV 
+    let hsv_Label = 
+        let l = Label(Content = "HSV",FontWeight = FontWeights.Bold)
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,0)
+            l.SetValue(Grid.ColumnSpanProperty,2)
+        l
+    let opacity_Label = 
+        let l = Label(Content = "Opacity")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,1)
+        l
+    let hue_Label = 
+        let l = Label(Content = "Hue")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,2)
+        l
+    let saturation_Label = 
+        let l = Label(Content = "Saturation")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,3)
+        l
+    let brightness_Label = 
+        let l = Label(Content = "Brightness")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,4)
+        l
+    
+    let opacity_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,1)
+        tb
+    let hue_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,2)
+        tb
+    let saturation_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,3)
+        tb
+    let brightness_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,4)
+        tb
+
+    let sRGBDetails_Grid = 
+        let g = Grid(Margin = Thickness(2.,2.,7.,2.))
+        let column1 = ColumnDefinition(Width=GridLength 13.)
+        let column2 = ColumnDefinition()
+        do  g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(column2)
+
+        let row1 = RowDefinition()
+        let row2 = RowDefinition()
+        let row3 = RowDefinition()
+        let row4 = RowDefinition()
+        let row5 = RowDefinition()
+        do  g.RowDefinitions.Add(row1)
+            g.RowDefinitions.Add(row2)
+            g.RowDefinitions.Add(row3)
+            g.RowDefinitions.Add(row4)
+            g.RowDefinitions.Add(row5)
+
+            g.SetValue(Grid.ColumnProperty,2)
+            g.SetValue(Grid.RowProperty,1)
+
+            g.Children.Add(sRGB_Label) |> ignore
+            g.Children.Add(sA_Label) |> ignore
+            g.Children.Add(sR_Label) |> ignore
+            g.Children.Add(sG_Label) |> ignore
+            g.Children.Add(sB_Label) |> ignore            
+            g.Children.Add(sA_TextBox) |> ignore
+            g.Children.Add(sR_TextBox) |> ignore
+            g.Children.Add(sG_TextBox) |> ignore
+            g.Children.Add(sB_TextBox) |> ignore
+        g
+    let hsvDetails_Grid = 
+        let g = Grid(Margin = Thickness(2.,2.,7.,2.))
+        let column1 = ColumnDefinition()
+        let column2 = ColumnDefinition()
+        do  g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(column2)
+
+        let row1 = RowDefinition()
+        let row2 = RowDefinition()
+        let row3 = RowDefinition()
+        let row4 = RowDefinition()
+        let row5 = RowDefinition()
+        do  g.RowDefinitions.Add(row1)
+            g.RowDefinitions.Add(row2)
+            g.RowDefinitions.Add(row3)
+            g.RowDefinitions.Add(row4)
+            g.RowDefinitions.Add(row5)
+
+            g.SetValue(Grid.ColumnProperty,0)
+            g.SetValue(Grid.ColumnSpanProperty,2)
+            g.SetValue(Grid.RowProperty,1)
+
+            g.Children.Add(hsv_Label) |> ignore
+            g.Children.Add(opacity_Label) |> ignore
+            g.Children.Add(saturation_Label) |> ignore
+            g.Children.Add(hue_Label) |> ignore
+            g.Children.Add(brightness_Label) |> ignore            
+            g.Children.Add(opacity_TextBox) |> ignore
+            g.Children.Add(saturation_TextBox) |> ignore
+            g.Children.Add(hue_TextBox) |> ignore
+            g.Children.Add(brightness_TextBox) |> ignore
+        g
     let colorDetails_Grid = 
         let g = Grid(Margin = Thickness(5.,0.,5.,0.))
         let column1 = ColumnDefinition()
         let column2 = ColumnDefinition()
-        let column3 = ColumnDefinition()
+        let column3 = ColumnDefinition(Width=GridLength 60.)
         do  g.ColumnDefinitions.Add(column1)
             g.ColumnDefinitions.Add(column2)
             g.ColumnDefinitions.Add(column3)
@@ -305,6 +467,8 @@ type HsvColorPicker() as colorPicker =
             g.SetValue(Grid.ColumnProperty,1)
 
             g.Children.Add(colorDetailControls_Grid) |> ignore
+            g.Children.Add(hsvDetails_Grid) |> ignore
+            g.Children.Add(sRGBDetails_Grid) |> ignore
         g    
 
     do  // Assemble the pieces
@@ -318,14 +482,29 @@ type HsvColorPicker() as colorPicker =
         | false -> ()
         | true ->  currentColor.Set(ColorUtilities.convertHsvToRgb (hueValue.Get) 1. 1. )                      
     let handleSelectColor() = 
-        do  selectedColor.Set(ColorUtilities.convertHsvToRgb (hueValue.Get) (saturationValue.Get) (brightnessValue.Get) )
-    let handleOpacityOnChange() = do  selectedColor_shapeContainer.Opacity <- opacity_Slider.Value
-
+        let h,s,v = (hueValue.Get), (saturationValue.Get), (brightnessValue.Get)
+        let color = ColorUtilities.convertHsvToRgb h s v 
+        do  selectedColor.Set(color)
+            hue_TextBox.Text <- h.ToString()
+            saturation_TextBox.Text <- s.ToString()
+            brightness_TextBox.Text <- v.ToString()
+            opacity_TextBox.Text <- opacity_Slider.Value.ToString()
+            sA_TextBox.Text <- System.Math.Truncate(255. * opacity_Slider.Value) .ToString()
+            sR_TextBox.Text <- color.R.ToString()
+            sG_TextBox.Text <- color.G.ToString()
+            sB_TextBox.Text <- color.B.ToString()
+    let handleOpacityOnChange() = 
+        do selectedColor_shapeContainer.Opacity <- opacity_Slider.Value
+           opacity_TextBox.Text <- opacity_Slider.Value.ToString()
+           sA_TextBox.Text <- System.Math.Truncate(255. * opacity_Slider.Value) .ToString()
     
     do  // Add event handlers to control interactions
         hueSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove (e)))
         hueSlider.MouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSelectColor ()))
+        hueSlider.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> handleSelectColor ()))
         saturationSlider.MouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSelectColor ()))
+        saturationSlider.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> handleSelectColor ()))
         brightnessSlider.MouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSelectColor ()))
+        brightnessSlider.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> handleSelectColor ()))
         saturationAndBrightnessPicker.MouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSelectColor ()))
         opacity_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleOpacityOnChange()))

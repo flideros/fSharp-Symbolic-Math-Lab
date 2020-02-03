@@ -73,7 +73,7 @@ type HueThumb(hueValue:SharedValue<Hue>) as hueThumb =
 
     do hueValue.Changed.Add(handleOnChanged_HueValue)
 
-type HueSlider( hueValue:SharedValue<Hue>) as hueSlider = 
+type HueSlider(hueValue:SharedValue<Hue>) as hueSlider = 
     inherit UserControl() 
     
     let upperHueValue = 360.
@@ -101,7 +101,7 @@ type HueSlider( hueValue:SharedValue<Hue>) as hueSlider =
     let convertYToHue (p:Point) = 
         let h = (upperHueValue/spectrum.Height)*(p.Y)
         match h with 
-        | x when x < 360. && x > 359.3 -> 360.
+        | x when x < 360. && x > 358.3 -> 360.
         | x when x > 0. && x < 0.7 -> 0.
         | _ -> h
     let handlePreviewMouseMove(e:MouseEventArgs) = 
@@ -116,6 +116,7 @@ type HueSlider( hueValue:SharedValue<Hue>) as hueSlider =
                 do  thumb.SetValue(Canvas.TopProperty,point.Y)
                     
             | false -> ()
+
                 
     do  hueSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
 
