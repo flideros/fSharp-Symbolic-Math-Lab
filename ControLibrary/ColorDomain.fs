@@ -55,3 +55,23 @@ module ColorUtilities =
             match h < 0. with
             | true -> (60. * h) + 360.
             | false -> 60. * h
+
+    let getSaturationFromRGB (color : Color) =        
+        let r,g,b = (float) color.R/255.,(float) color.G/255.,(float) color.B/255.
+        let cMax = System.Math.Max(r,(System.Math.Max(g,b)))
+        let cMin = System.Math.Min(r,(System.Math.Min(g,b)))
+        let delta = cMax-cMin
+        match cMax = 0. with
+        | true -> 0.
+        | false -> delta/cMax
+
+    let getBrightnessFromRGB (color : Color) =        
+        let r,g,b = (float) color.R/255.,(float) color.G/255.,(float) color.B/255.
+        let cMax = System.Math.Max(r,(System.Math.Max(g,b)))
+        cMax
+    
+    let isValidInput_ARGB (text:string) =
+        let n = Double.TryParse text 
+        match n with 
+        | true, n when n >= 0. && n <= 255. -> true
+        | _, _ -> false

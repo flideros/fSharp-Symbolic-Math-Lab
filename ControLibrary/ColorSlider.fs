@@ -198,7 +198,7 @@ type SaturationSlider( saturationValue:SharedValue<Saturation>,
                 Background= Brushes.Transparent)      
         let trackLine = Line(X1 = 15., X2 = 315., Y1 = 41., Y2 = 41., Stroke = Brushes.LightSlateGray, StrokeThickness = 2.)
         do  thumb.SetValue(Canvas.TopProperty,10.)
-            thumb.SetValue(Canvas.LeftProperty,0.)  
+            thumb.SetValue(Canvas.LeftProperty,300.)  
             gradient.SetValue(Canvas.TopProperty,20.)
             gradient.SetValue(Canvas.LeftProperty,15.)
             c.Children.Add(gradient) |> ignore
