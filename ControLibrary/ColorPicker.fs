@@ -108,7 +108,7 @@ type SaturationAndBrightnessPicker (saturationValue:SharedValue<Saturation>,
         brightnessValue.Changed.Add(handleOnChange_BrightnessValue)
         saturationAndBrightnessPicker.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> initializeComponent()))
 
-type HsvColorPicker() as colorPicker =
+type HsvColorPicker(selectedColor:SharedValue<Color>) as colorPicker =
     inherit UserControl() 
     (* https://en.wikipedia.org/wiki/List_of_color_spaces_and_their_uses
     HSV is a transformation of Cartesian RGB primaries. HSV (hue, saturation, value)
@@ -138,7 +138,6 @@ type HsvColorPicker() as colorPicker =
     let saturationValue = SharedValue<Saturation> (1.)
     let brightnessValue = SharedValue<Brightness> (1.)    
     let currentColor = SharedValue<Color> (Colors.Transparent)
-    let selectedColor = SharedValue<Color> (Colors.Transparent)    
     
     // Color Controls
     let hueSlider = 
