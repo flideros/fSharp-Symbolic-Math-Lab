@@ -289,10 +289,103 @@ type HsvColorPicker() as colorPicker =
                 g.Children.Add(opacity_TextBlock) |> ignore
                 g.Children.Add(opacitySlider_Border) |> ignore
             g    
+    
+    // HSV 
+    let hsv_Label = 
+        let l = Label(Content = "HSV",FontWeight = FontWeights.Bold)
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,0)
+            l.SetValue(Grid.ColumnSpanProperty,2)
+        l
+    let opacity_Label = 
+        let l = Label(Content = "Opacity")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,1)
+        l
+    let hue_Label = 
+        let l = Label(Content = "Hue")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,2)
+        l
+    let saturation_Label = 
+        let l = Label(Content = "Saturation")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,3)
+        l
+    let brightness_Label = 
+        let l = Label(Content = "Brightness")
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,4)
+        l
+    
+    let opacity_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,1)
+        let handleTextChanged() = 
+            match ColorUtilities.isValidInput_SaturationBrightnessOrOpacity tb.Text with
+            | true -> opacity_Slider.Value <- Double.Parse(tb.Text)
+            | false ->       
+                do  MessageBox.Show("Enter a number between 0 and 1, inclusive.") |> ignore
+                    tb.Text <- opacity_Slider.Value.ToString()
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
+        tb
+    let hue_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,2)
+        let handleHueChange hue = tb.Text <- hue.ToString()
+        do  hueValue.Changed.Add(handleHueChange)
+        let handleTextChanged() = 
+            match ColorUtilities.isValidInput_Hue tb.Text with
+            | true -> 
+                let newColor = ColorUtilities.convertHsvToRgb (Double.Parse(tb.Text)) saturationValue.Get brightnessValue.Get
+                hueValue.Set (Double.Parse tb.Text)
+                selectedColor.Set newColor      
+            | false ->       
+                do  MessageBox.Show("Enter a number between 0 and 360, inclusive.") |> ignore
+                    tb.Text <- hueValue.Get.ToString()
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
+        
+        tb
+    let saturation_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,3)
+        let handleSaturationChange saturation = tb.Text <- saturation.ToString()
+        do  saturationValue.Changed.Add(handleSaturationChange)
+        let handleTextChanged() = 
+            match ColorUtilities.isValidInput_SaturationBrightnessOrOpacity tb.Text with
+            | true -> 
+                let newColor = ColorUtilities.convertHsvToRgb hueValue.Get (Double.Parse(tb.Text)) brightnessValue.Get
+                saturationValue.Set (Double.Parse tb.Text)
+                selectedColor.Set newColor      
+            | false ->       
+                do  MessageBox.Show("Enter a number between 0 and 1, inclusive.") |> ignore
+                    tb.Text <- saturationValue.Get.ToString()
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
+        tb
+    let brightness_TextBox = 
+        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
+        do  tb.SetValue(Grid.ColumnProperty,1)
+            tb.SetValue(Grid.RowProperty,4)
+        let handleBrightnessChange brightness = tb.Text <- brightness.ToString()
+        do  brightnessValue.Changed.Add(handleBrightnessChange)
+        let handleTextChanged() = 
+            match ColorUtilities.isValidInput_SaturationBrightnessOrOpacity tb.Text with
+            | true -> 
+                let newColor = ColorUtilities.convertHsvToRgb hueValue.Get saturationValue.Get (Double.Parse(tb.Text)) 
+                brightnessValue.Set (Double.Parse tb.Text)
+                selectedColor.Set newColor      
+            | false ->       
+                do  MessageBox.Show("Enter a number between 0 and 1, inclusive.") |> ignore
+                    tb.Text <- brightnessValue.Get.ToString()
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
+        tb
 
     // sRGB 
     let sRGB_Label = 
-        let l = Label(Content = "sRgb",FontWeight = FontWeights.Bold)
+        let l = Label(Content = "sRGB",FontWeight = FontWeights.Bold)
         do  l.SetValue(Grid.ColumnProperty,0)
             l.SetValue(Grid.RowProperty,0)
             l.SetValue(Grid.ColumnSpanProperty,2)
@@ -328,99 +421,76 @@ type HsvColorPicker() as colorPicker =
             | false ->       
                 do  MessageBox.Show("Enter a number between 0 and 255, inclusive.") |> ignore
                     tb.Text <- System.Math.Truncate(opacity_Slider.Value * 255.).ToString()
-        //do  tb.TextChanged.AddHandler(TextChangedEventHandler(fun _ _ -> handleTextChanged()))            
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))            
         tb
     let sR_TextBox = 
         let tb = TextBox(MaxLength = 5,MinWidth = 25.)
         do  tb.SetValue(Grid.ColumnProperty,1)
             tb.SetValue(Grid.RowProperty,2)
+        let handleSelectedColorChange (color:Color) = tb.Text <- color.R.ToString()
+        do  selectedColor.Changed.Add(handleSelectedColorChange)
         let handleTextChanged() = 
             match ColorUtilities.isValidInput_ARGB tb.Text with
             | true -> 
-                let newColor = Color.FromRgb(Byte.Parse(tb.Text),currentColor.Get.G,currentColor.Get.B)
-                do  currentColor.Set newColor
-                    hueValue.Set (ColorUtilities.getHueFromRGB(currentColor.Get))
-                    saturationValue.Set (ColorUtilities.getSaturationFromRGB(currentColor.Get))
-                    brightnessValue.Set (ColorUtilities.getBrightnessFromRGB(currentColor.Get))
+                let newColor = Color.FromRgb(Byte.Parse(tb.Text),selectedColor.Get.G,selectedColor.Get.B)                
+                let h = ColorUtilities.getHueFromRGB(newColor)
+                let s = ColorUtilities.getSaturationFromRGB(newColor)
+                let v = ColorUtilities.getBrightnessFromRGB(newColor)
+                do  hueValue.Set h
+                    saturationValue.Set s
+                    brightnessValue.Set v
+                    selectedColor.Set newColor
             | false ->       
                 do  MessageBox.Show("Enter a number between 0 and 255, inclusive.") |> ignore
-                    tb.Text <- System.Math.Truncate(opacity_Slider.Value * 255.).ToString()
+                    tb.Text <- currentColor.Get.R.ToString()
         do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
         tb
     let sG_TextBox = 
         let tb = TextBox(MaxLength = 5,MinWidth = 25.)
         do  tb.SetValue(Grid.ColumnProperty,1)
             tb.SetValue(Grid.RowProperty,3)
+        let handleSelectedColorChange (color:Color) = tb.Text <- color.G.ToString()
+        do  selectedColor.Changed.Add(handleSelectedColorChange)
         let handleTextChanged() = 
             match ColorUtilities.isValidInput_ARGB tb.Text with
-            | true -> opacity_Slider.Value <- Double.Parse(tb.Text) / 255.
+            | true -> 
+                let newColor = Color.FromRgb(selectedColor.Get.R,Byte.Parse(tb.Text),selectedColor.Get.B)
+                let h = ColorUtilities.getHueFromRGB(newColor)
+                let s = ColorUtilities.getSaturationFromRGB(newColor)
+                let v = ColorUtilities.getBrightnessFromRGB(newColor)
+                do  hueValue.Set h
+                    saturationValue.Set s
+                    brightnessValue.Set v
+                    selectedColor.Set newColor
             | false ->       
                 do  MessageBox.Show("Enter a number between 0 and 255, inclusive.") |> ignore
-                    tb.Text <- System.Math.Truncate(opacity_Slider.Value * 255.).ToString()
-        //do  tb.TextChanged.AddHandler(TextChangedEventHandler(fun _ _ -> handleTextChanged()))
+                    tb.Text <- currentColor.Get.G.ToString()
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
         tb
     let sB_TextBox = 
         let tb = TextBox(MaxLength = 5,MinWidth = 25.)
         do  tb.SetValue(Grid.ColumnProperty,1)
             tb.SetValue(Grid.RowProperty,4)
+        let handleSelectedColorChange (color:Color) = tb.Text <- color.B.ToString()
+        do  selectedColor.Changed.Add(handleSelectedColorChange)
         let handleTextChanged() = 
             match ColorUtilities.isValidInput_ARGB tb.Text with
-            | true -> opacity_Slider.Value <- Double.Parse(tb.Text) / 255.
+            | true -> 
+                let newColor = Color.FromRgb(selectedColor.Get.R,selectedColor.Get.G,Byte.Parse(tb.Text)) 
+                let h = ColorUtilities.getHueFromRGB(newColor)
+                let s = ColorUtilities.getSaturationFromRGB(newColor)
+                let v = ColorUtilities.getBrightnessFromRGB(newColor)
+                do  hueValue.Set h
+                    saturationValue.Set s
+                    brightnessValue.Set v
+                    selectedColor.Set newColor
             | false ->       
                 do  MessageBox.Show("Enter a number between 0 and 255, inclusive.") |> ignore
-                    tb.Text <- System.Math.Truncate(opacity_Slider.Value * 255.).ToString()
-        //do  tb.TextChanged.AddHandler(TextChangedEventHandler(fun _ _ -> handleTextChanged()))
+                    tb.Text <- currentColor.Get.B.ToString()
+        do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
         tb
 
-    // HSV 
-    let hsv_Label = 
-        let l = Label(Content = "HSV",FontWeight = FontWeights.Bold)
-        do  l.SetValue(Grid.ColumnProperty,0)
-            l.SetValue(Grid.RowProperty,0)
-            l.SetValue(Grid.ColumnSpanProperty,2)
-        l
-    let opacity_Label = 
-        let l = Label(Content = "Opacity")
-        do  l.SetValue(Grid.ColumnProperty,0)
-            l.SetValue(Grid.RowProperty,1)
-        l
-    let hue_Label = 
-        let l = Label(Content = "Hue")
-        do  l.SetValue(Grid.ColumnProperty,0)
-            l.SetValue(Grid.RowProperty,2)
-        l
-    let saturation_Label = 
-        let l = Label(Content = "Saturation")
-        do  l.SetValue(Grid.ColumnProperty,0)
-            l.SetValue(Grid.RowProperty,3)
-        l
-    let brightness_Label = 
-        let l = Label(Content = "Brightness")
-        do  l.SetValue(Grid.ColumnProperty,0)
-            l.SetValue(Grid.RowProperty,4)
-        l
-    
-    let opacity_TextBox = 
-        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
-        do  tb.SetValue(Grid.ColumnProperty,1)
-            tb.SetValue(Grid.RowProperty,1)
-        tb
-    let hue_TextBox = 
-        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
-        do  tb.SetValue(Grid.ColumnProperty,1)
-            tb.SetValue(Grid.RowProperty,2)
-        tb
-    let saturation_TextBox = 
-        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
-        do  tb.SetValue(Grid.ColumnProperty,1)
-            tb.SetValue(Grid.RowProperty,3)
-        tb
-    let brightness_TextBox = 
-        let tb = TextBox(MaxLength = 8,MinWidth = 25.)
-        do  tb.SetValue(Grid.ColumnProperty,1)
-            tb.SetValue(Grid.RowProperty,4)
-        tb
-
+    // detail grids
     let sRGBDetails_Grid = 
         let g = Grid(Margin = Thickness(2.,2.,7.,2.))
         let column1 = ColumnDefinition(Width=GridLength 13.)
@@ -521,7 +591,6 @@ type HsvColorPicker() as colorPicker =
         let h,s,v = (hueValue.Get), (saturationValue.Get), (brightnessValue.Get)
         let color = ColorUtilities.convertHsvToRgb h s v 
         do  selectedColor.Set(color)
-            
             hue_TextBox.Text <- h.ToString()
             saturation_TextBox.Text <- s.ToString()
             brightness_TextBox.Text <- v.ToString()

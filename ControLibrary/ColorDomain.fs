@@ -75,3 +75,15 @@ module ColorUtilities =
         match n with 
         | true, n when n >= 0. && n <= 255. -> true
         | _, _ -> false
+
+    let isValidInput_Hue (text:string) =
+        let n = Double.TryParse text 
+        match n with 
+        | true, n when n >= 0. && n <= 360. -> true
+        | _, _ -> false
+
+    let isValidInput_SaturationBrightnessOrOpacity (text:string) =
+        let n = Double.TryParse text 
+        match n with 
+        | true, n when n >= 0. && n <= 1. -> true
+        | _, _ -> false

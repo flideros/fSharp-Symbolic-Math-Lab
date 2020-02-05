@@ -116,9 +116,10 @@ type HueSlider(hueValue:SharedValue<Hue>) as hueSlider =
                 do  thumb.SetValue(Canvas.TopProperty,point.Y)
                     
             | false -> ()
-
+    let handleOnChange_ThumbHue hue = do  thumb.SetValue(Canvas.TopProperty,300.*(hue/360.))
                 
     do  hueSlider.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handlePreviewMouseMove (e)))
+        hueValue.Changed.Add(handleOnChange_ThumbHue)
 
 // Saturation
 type SaturationThumb(saturationValue:SharedValue<Saturation>,
