@@ -490,6 +490,19 @@ type HsvColorPicker() as colorPicker =
         do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
         tb
 
+    let hexColor_Label = 
+        let l = Label()
+        do  l.SetValue(Grid.ColumnProperty,0)
+            l.SetValue(Grid.RowProperty,3)
+        let handleColorChange (color:Color) = 
+            let colorWithOpacity = 
+                match Byte.TryParse (sA_TextBox.Text) with
+                | true, a -> Color.FromArgb (a,color.R,color.G,color.B)
+                | _ -> Color.FromArgb (Byte.Parse("255"),color.R,color.G,color.B)
+            do  l.Content <- colorWithOpacity.ToString()        
+        do  selectedColor.Changed.Add(handleColorChange)
+            sA_TextBox.TextChanged.AddHandler(TextChangedEventHandler(fun _ _ -> handleColorChange selectedColor.Get))
+        l 
     // detail grids
     let sRGBDetails_Grid = 
         let g = Grid(Margin = Thickness(2.,2.,7.,2.))
@@ -566,15 +579,18 @@ type HsvColorPicker() as colorPicker =
         let row1 = RowDefinition(Height = GridLength.Auto)
         let row2 = RowDefinition(Height = GridLength.Auto)
         let row3 = RowDefinition(Height = GridLength.Auto)
+        let row4 = RowDefinition(Height = GridLength.Auto)
         do  g.RowDefinitions.Add(row1)
             g.RowDefinitions.Add(row2)    
             g.RowDefinitions.Add(row3)
+            g.RowDefinitions.Add(row4)
 
             g.SetValue(Grid.ColumnProperty,1)
 
             g.Children.Add(colorDetailControls_Grid) |> ignore
             g.Children.Add(hsvDetails_Grid) |> ignore
             g.Children.Add(sRGBDetails_Grid) |> ignore
+            g.Children.Add(hexColor_Label) |> ignore
         g    
 
     do  // Assemble the pieces
