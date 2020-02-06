@@ -1337,8 +1337,17 @@ type GraphingCalculator() as graphingCalculator =
     let rpnButtons = [drop; duplicate; swap; clearStack; enter]    
 
     //-----Graph Buttons
-    let blank = CalcButton(Name = "blank",Visibility = Visibility.Hidden)
-    let graphButtons = [blank]
+    let colorPicker = 
+        let b = CalcButton(Content = "Color Picker")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            let picker = ControlLibrary.HsvColorPicker(Style.selectedColor)
+            do  w.Content <- picker
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b
+    let graphButtons = [colorPicker]
 
     do // Place buttons in a grid
         List.iter ( fun x -> calcButton_Grid.Children.Add(x) |> ignore) calcButtons         
@@ -1390,7 +1399,7 @@ type GraphingCalculator() as graphingCalculator =
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
 
         //-----Graph Buttons
-        blank               .SetValue(Grid.RowProperty,0); blank                 .SetValue(Grid.ColumnProperty,0);
+        colorPicker         .SetValue(Grid.RowProperty,0); colorPicker          .SetValue(Grid.ColumnProperty,0);
 
     //----- Gridlines
     let xInterval = 5
@@ -1831,7 +1840,8 @@ type GraphingCalculator() as graphingCalculator =
         | Graph2DParametric -> 
             graphButton_Grid.IsHitTestVisible <- false
         | Graph3DParametric -> 
-            graphButton_Grid.IsHitTestVisible <- false
+            graphButton_Grid.Visibility <- Visibility.Visible
+            graphButton_Grid.IsHitTestVisible <- true
     // a function that sets the input mode
     let setInputMode mode = 
         do state <- {state with mode = mode}

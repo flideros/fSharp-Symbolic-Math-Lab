@@ -20,6 +20,9 @@ open Utilities
 
 module Style = 
     
+    // shared values
+    let selectedColor = ControlLibrary.SharedValue<Color>(Color.FromScRgb(1.f,160.f,0.f,0.f))
+
     //Materials
     let genericMaterial = 
         let linearGradiantBrush = LinearGradientBrush()
@@ -35,11 +38,18 @@ module Style =
         let materialGroup = MaterialGroup()
         do  materialGroup.Children.Add(diffuseMaterial)
         // Define an Emissive Material with a blue brush.
-        let emissiveMaterial = 
-            let c = Color.FromScRgb(1.f,160.f,0.f,0.f)               
-            EmissiveMaterial(new SolidColorBrush(c))                
-        do  materialGroup.Children.Add(emissiveMaterial)
+        let emissiveMaterial c = 
+            let c = selectedColor.Get              
+            EmissiveMaterial(SolidColorBrush(c))                
+        let handleColorChange c = 
+            do  materialGroup.Children.Clear()
+                materialGroup.Children.Add(diffuseMaterial)
+                materialGroup.Children.Add(EmissiveMaterial(SolidColorBrush(c)))
+        do  materialGroup.Children.Add(emissiveMaterial selectedColor.Get)
+            selectedColor.Changed.Add(handleColorChange)
+
         materialGroup
+
     
     //Images
     let checkedBox = Image(Source = new BitmapImage(new Uri((__SOURCE_DIRECTORY__ + "/5091-512.png"), UriKind.RelativeOrAbsolute)),Width=20., Height=20. )

@@ -484,7 +484,7 @@ type HsvColorPicker(selectedColor:SharedValue<Color>) as colorPicker =
                     brightnessValue.Set v
                     selectedColor.Set newColor
             | false ->       
-                do  MessageBox.Show("Enter a number between 0 and 255, inclusive.") |> ignore
+                do  MessageBox .Show("Enter a number between 0 and 255, inclusive.") |> ignore
                     tb.Text <- currentColor.Get.B.ToString()
         do  tb.PreviewKeyUp .AddHandler(KeyEventHandler(fun _ _ -> handleTextChanged()))
         tb
@@ -498,10 +498,12 @@ type HsvColorPicker(selectedColor:SharedValue<Color>) as colorPicker =
                 match Byte.TryParse (sA_TextBox.Text) with
                 | true, a -> Color.FromArgb (a,color.R,color.G,color.B)
                 | _ -> Color.FromArgb (Byte.Parse("255"),color.R,color.G,color.B)
-            do  l.Content <- colorWithOpacity.ToString()        
+            do  selectedColor.Set colorWithOpacity
+                l.Content <- colorWithOpacity.ToString()        
         do  selectedColor.Changed.Add(handleColorChange)
             sA_TextBox.TextChanged.AddHandler(TextChangedEventHandler(fun _ _ -> handleColorChange selectedColor.Get))
         l 
+    
     // detail grids
     let sRGBDetails_Grid = 
         let g = Grid(Margin = Thickness(2.,2.,7.,2.))
