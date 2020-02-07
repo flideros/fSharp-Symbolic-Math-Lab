@@ -24,16 +24,9 @@ module Style =
     let selectedColor = ControlLibrary.SharedValue<Color>(Color.FromScRgb(1.f,160.f,0.f,0.f))
 
     //Materials
-    let genericMaterial = 
-        let linearGradiantBrush = LinearGradientBrush()
-        do  linearGradiantBrush.StartPoint <- System.Windows.Point(0., 0.5)
-            linearGradiantBrush.EndPoint <- System.Windows.Point(1., 0.5)
-            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Yellow, 0.0))
-            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.Magenta, 0.25))
-            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LightBlue, 0.75))
-            linearGradiantBrush.GradientStops.Add(GradientStop(Colors.LimeGreen, 1.0))
+    let genericMaterial =        
         // Define material that will use the gradient.
-        let diffuseMaterial = DiffuseMaterial(linearGradiantBrush)
+        let diffuseMaterial = DiffuseMaterial(ControlLibrary.CustomBrushes.checkerBrush)
         // Add this gradient to a MaterialGroup.
         let materialGroup = MaterialGroup()
         do  materialGroup.Children.Add(diffuseMaterial)

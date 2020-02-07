@@ -57,9 +57,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TypeExtensions.fs" />
-    <Compile Include="OperatorDictionary.fs" />
-    <Compile Include="MathML.fs" />
-    <Compile Include="OpenMath.fs" />
     <Compile Include="Symbol.fs" />
     <Compile Include="Function.fs" />
     <Compile Include="Number.fs" />
@@ -72,7 +69,6 @@
     <Compile Include="Calculus.fs" />
     <Compile Include="Factorization.fs" />
     <Compile Include="PartialFraction.fs" />
-    <Compile Include="Display.fs" />
     <None Include="MainScript.fsx" />
     <None Include="fsLab.fsx" />
     <None Include="set.fsx" />

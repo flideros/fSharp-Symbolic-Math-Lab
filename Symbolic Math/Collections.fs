@@ -7,17 +7,7 @@ module Set =
     open Math.Pure.Objects
     open System.Collections.Generic
     open Math.Pure.Quantity
-    open OpenMath
     
-    //type Set<'T> = F# Collection Type Set
-    
-    // Content Dictionaries
-
-    //let private _omSet = FROM.cD "set1"    
-
-    // Definition    
-    let definition = ""//GET.definitionEntry "set" _omSet
-
     module Size =
 
         let oF set = Integer (bigint(Set.count set))
@@ -27,32 +17,23 @@ module Set =
             with
             | :? System.InvalidOperationException -> PositiveInfinity
                              
-        // Definition
-        let definition = Size.definition    
-
     module Map =
 
         let tO set func = Set.map func set
         let tOList set func = List.map func set
                               |> Seq.distinct |> List.ofSeq
-        // Definition
-        let definition = Map.definition
 
     module Union =
 
         let oF left right = Set.union left right        
         let oFList left right =
            List.append left right |> Seq.distinct |> List.ofSeq
-        // Definition
-        let definition = Union.definition
     
     module MultiUnion =
         
         let oF setList = List.fold (fun acc x -> Set.union acc x) Set.empty setList        
         let oFManyLists lists =
            List.fold (fun acc x ->List.append acc x) [] lists |> Seq.distinct |> List.ofSeq
-        // Definition
-        //let definition = MultiUnion.definition
 
     module Intersection = 
         
@@ -62,18 +43,13 @@ module Set =
             let cache = HashSet< 'a >(right, HashIdentity.Structural)
             left |> List.filter (fun n -> cache.Contains n)
             |> Seq.distinct |> List.ofSeq        
-        // Definition
-        let definition = Intersect.definition
-
+ 
     module MuliIntersection = 
 
         let oF sets = Set.intersectMany sets
         
         let oFLists lists = 
             List.reduce (fun acc x -> Intersection.oFList acc x) lists
-
-        // Definition
-        //let definition = MultiIntersect.definition
     
     module Difference = 
 
@@ -83,9 +59,6 @@ module Set =
             let cache = HashSet< 'a >(right, HashIdentity.Structural)
             left |> List.filter (fun n -> not (cache.Contains n))
             |> Seq.distinct |> List.ofSeq
-
-        // Definition
-        //let definition = Setdiff.definition
 
 [<RequireQualifiedAccess>]
 module Bag =

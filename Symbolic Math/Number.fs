@@ -22,8 +22,7 @@ type Fraction =
         match this.numerator > 0I with
         | true -> this.numerator / this.denominator
         | false -> (this.numerator / this.denominator) - 1I   
-    static member floorDefinition = Floor.definition
-
+    
     member this.Ceiling = 
         match this.numerator > 0I with
         | true -> match snd (BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
@@ -32,12 +31,8 @@ type Fraction =
         | false -> match snd (BigInteger.DivRem (this.numerator, this.denominator)) <> 0I with
                    | true -> (this.numerator / this.denominator) 
                    | false -> (this.numerator / this.denominator) - 1I
-    static member ceilingDefinition = Ceiling.definition
     
     static member Zero = {numerator = 0I; denominator = 1I}
-    static member zeroDefinition = Zero.definition
-
-
 
 [<StructuralEquality;NoComparison>]
 type NumberType =
@@ -66,7 +61,6 @@ module Number =
 
     module HCF = 
         let rec oF x y = BigInteger.GreatestCommonDivisor (x, y)
-        let definition = Gcd.definition
 
     let compare x y =
         match x,y with
@@ -251,13 +245,4 @@ type NumberType with
             | Integer x when x < 0I -> n * factorial (-n + -(Integer 1I))
             | _ -> Undefined
         factorial x
-    member this.definition = 
-        match this with
-        | Complex c -> ComplexCartesianType.definition
-        | Rational r -> RationalType.definition
-        | Integer i -> IntegerType.definition
-        | Real r -> RealType.definition
-        | PositiveInfinity -> Infinity.definition
-        | NegativeInfinity -> Infinity.definition
-        | ComplexInfinity -> Infinity.definition
-        | Undefined -> None
+ 
