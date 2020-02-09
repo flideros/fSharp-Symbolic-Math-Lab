@@ -23,18 +23,17 @@ let resource = new Uri("app.xaml",System.UriKind.Relative)
 let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
-//let browser = FrameBrowser(@"https://www.bing.com/")
-//let browserBorder = Border()
-let dockPanel = DockPanelStyle()
-let button = ButtonStyle("Frank's Button")
-//let notepad = new AppContainer()
 let dataLab = DataLab(RenderTransformOrigin = Point(0.,0.))
 let calculator = Calculator(OverridesDefaultStyle = true) 
 let graphingCalc = GraphingCalculator.GraphingCalculator()
 let colorPicker = HsvColorPicker(selectedColor=SharedValue(Colors.Transparent))
+let testCanvas = MathML.TestCanvas(MathML.Glyph.testGlyph)
+
 // Tab Control 
 let tabs = TabControl()
 
+let item0 = TabItem(Header = "Test Canvas")
+do  item0.Content <- testCanvas
 let item1 = TabItem(Header = "Graphing Calculator")
 do  item1.Content <- graphingCalc
 let item2 = TabItem(Header = "SQL Pad")
@@ -44,17 +43,10 @@ do  item3.Content <- calculator
 let item4 = TabItem(Header = "ColorPicker")
 do  item4.Content <- colorPicker
 
-do  tabs.Items.Add(item1) |> ignore
+do  tabs.Items.Add(item0) |> ignore
+    tabs.Items.Add(item1) |> ignore
     tabs.Items.Add(item2) |> ignore
     tabs.Items.Add(item4) |> ignore
-
-// Compose Controls
-//browserBorder.Child <- browser
-dockPanel.Children.Add (button) |> ignore
-//dockPanel.Children.Add (browserBorder) |> ignore
-// Initialize Components
-//do notepad.ExeName <- "wordpad.exe"
-   //notepad.InitializeComponent()
 
 (**)
 // Make a window and add content
