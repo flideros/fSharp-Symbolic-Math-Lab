@@ -27,7 +27,7 @@ let dataLab = DataLab(RenderTransformOrigin = Point(0.,0.))
 let calculator = Calculator(OverridesDefaultStyle = true) 
 let graphingCalc = GraphingCalculator.GraphingCalculator()
 let colorPicker = HsvColorPicker(selectedColor=SharedValue(Colors.Transparent))
-let testCanvas = MathML.TestCanvas(MathML.Glyph.testGlyph)
+let testCanvas = Math.Presentation.TestCanvas(Math.Presentation.Glyph.sigma)
 
 // Tab Control 
 let tabs = TabControl()
