@@ -4,102 +4,7 @@ open System.Windows.Controls
 open System.Windows.Shapes  
 open System.Windows.Media
 
-
-type Glyph = 
-    {path:Path;
-     leftBearing:float;
-     rightBearing:float}
-
-type GlyphBox (glyph) as glyphBox =
-    inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
-    let g = Grid()
-    let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
-    let column1 = ColumnDefinition(Width = GridLength.Auto)
-    let column2 = ColumnDefinition(Width = GridLength(glyph.rightBearing))
-        
-    do  glyph.path.SetValue(Grid.ColumnProperty,1)
-        g.ColumnDefinitions.Add(column0)
-        g.ColumnDefinitions.Add(column1)
-        g.ColumnDefinitions.Add(column2)
-        g.Children.Add(glyph.path) |> ignore
-        glyphBox.SetValue(Grid.RowProperty,1)
-        glyphBox.Child <- g
-
-type TestCanvas(testGlyph:Path) as this  =  
-    inherit UserControl()
-    
-    //let sigma_GlyphBox = GlyphBox({path=testGlyph;rightBearing=30.;leftBearing=28.})
-    let p_GlyphBox = GlyphBox({path=testGlyph;rightBearing=22.;leftBearing=35.})
-    
-    let em_Grid =
-        let g = Grid(Height = 1000.)
-        let row0 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
-        let row1 = RowDefinition(Height = GridLength.Auto)
-        let row2 = RowDefinition(Height = GridLength(18.))
-            
-        do  g.RowDefinitions.Add(row0)
-            g.RowDefinitions.Add(row1)
-            g.RowDefinitions.Add(row2)
-            g.Children.Add(p_GlyphBox) |> ignore
-        g
-    let em_Border = 
-        let b = Border(BorderThickness=Thickness(1.),BorderBrush=Brushes.Green,Child=em_Grid)
-        do  b.SetValue(Grid.RowProperty,1)
-        b
-    
-    let font_Grid = 
-        let g = Grid(MaxHeight = 3900.)
-        let row0 = RowDefinition(Height = GridLength(0., GridUnitType.Star))
-        let row1 = RowDefinition(Height = GridLength.Auto)
-        let row2 = RowDefinition(Height = GridLength(250.))
-            
-        do  g.RowDefinitions.Add(row0)
-            g.RowDefinitions.Add(row1)
-            g.RowDefinitions.Add(row2)
-            g.Children.Add(em_Border) |> ignore
-        g
-    let font_Border = Border(BorderThickness=Thickness(1.),BorderBrush=Brushes.Black,Child=font_Grid)
-    
-    let canvasGridLine_Slider =
-        let s = 
-            Slider(
-                Margin = Thickness(left = 0., top = 20., right = 0., bottom = 0.),
-                Minimum = 5.,
-                Maximum = 100.,
-                TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight,
-                TickFrequency = 5.,
-                IsSnapToTickEnabled = true,
-                IsEnabled = true)        
-        do s.SetValue(Grid.RowProperty, 0)
-        let handleValueChanged (s)= 
-            font_Border.RenderTransform <- ScaleTransform(ScaleX = 5./s,ScaleY=5./s)
-        s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
-
-        s
-    let canvas_DockPanel_Grid =
-        let g = Grid()
-        do 
-            g.SetValue(DockPanel.DockProperty,Dock.Top)
-            g.Children.Add(canvasGridLine_Slider) |> ignore
-        g    
-    let canvas = Canvas(ClipToBounds = true)
-    let canvas_DockPanel =
-        let d = DockPanel()
-        do d.Children.Add(canvas_DockPanel_Grid) |> ignore
-        do d.Children.Add(canvas) |> ignore
-        d
-    let screen_Canvas =
-        let g = Grid()
-        do g.SetValue(Grid.RowProperty, 1)        
-        do g.Children.Add(canvas_DockPanel) |> ignore
-        
-        g
- 
-    do  canvas.Children.Add(font_Border) |> ignore
-
-        this.Content <- screen_Canvas
-
-module Glyph =
+module Glyphs =
 
     let testGlyph = 
         let p = Path(Stroke = Brushes.Black, StrokeThickness = 1.,Fill=Brushes.Black)
@@ -162,7 +67,7 @@ module Glyph =
         p
 
     let p = 
-        let p = Path(Stroke = Brushes.Black, StrokeThickness = 1.,Fill=Brushes.Transparent,Stretch = Stretch.Uniform)
+        let p = Path(Stroke = Brushes.Black, StrokeThickness = 1.,Fill=Brushes.Black,Stretch = Stretch.Uniform)
         let pf = PathFigure(StartPoint = Point  (176., -482.))
         do  pf.Segments.Add( LineSegment(Point  (176., -398.), true ))
             pf.Segments.Add( LineSegment(Point  (179., -398.), true ))
