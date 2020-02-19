@@ -1,1126 +1,9954 @@
-﻿module OperatorDictionary
-
+﻿namespace MathML
 ///\/-------------------------------------Notes------------------------------------\/
 
 /// 1..When an operator is expanded vertically, it is implemented in a function elsewhere 
 ///    in subsequent code.
 
-///\-------------------------------------Notes-------------------------------------/\
+///\-------------------------------------Notes-------------------------------------/\ 
+    module OperatorDictionary =
 
-
-type Operator = 
-    { character : string
-      glyph : string
-      name : string
-      form : string
-      priority : string
-      lspace : string
-      rspace : string
-      properties: string list    
-    }  
-
-let acuteAccentPostfix = {character = "&#xB4;"; glyph = "´"; name="acute accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let acuteAngleInfix = {character = "&#x299F;"; glyph = "⦟"; name="acute angle"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let allEqualToInfix = {character = "&#x224C;"; glyph = "≌"; name="all equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let almostEqualOrEqualToInfix = {character = "&#x224A;"; glyph = "≊"; name="almost equal or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let almostEqualToInfix = {character = "&#x2248;"; glyph = "≈"; name="almost equal to"; form="infix"; priority="247"; lspace="5"; rspace="5"; properties=[]}
-let almostEqualToWithCircumflexAccentInfix = {character = "&#x2A6F;"; glyph = "⩯"; name="almost equal to with circumflex accent"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let amalgamationOrCoproductInfix = {character = "&#x2A3F;"; glyph = "⨿"; name="amalgamation or coproduct"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let ampersandPostfix = {character = "&amp;"; glyph = "&"; name="ampersand"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=[]}
-let anglePrefix = {character = "&#x2220;"; glyph = "∠"; name="angle"; form="prefix"; priority="670"; lspace="0"; rspace="0"; properties=[]}
-let angleWithSInsideInfix = {character = "&#x299E;"; glyph = "⦞"; name="angle with s inside"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let angleWithUnderbarInfix = {character = "&#x29A4;"; glyph = "⦤"; name="angle with underbar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let anticlockwiseClosedCircleArrowInfix = {character = "&#x2940;"; glyph = "⥀"; name="anticlockwise closed circle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let anticlockwiseContourIntegralPrefix = {character = "&#x2233;"; glyph = "∳"; name="anticlockwise contour integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let anticlockwiseIntegrationPrefix = {character = "&#x2A11;"; glyph = "⨑"; name="anticlockwise integration"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let anticlockwiseOpenCircleArrowInfix = {character = "&#x21BA;"; glyph = "↺"; name="anticlockwise open circle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let anticlockwiseTopSemicircleArrowInfix = {character = "&#x21B6;"; glyph = "↶"; name="anticlockwise top semicircle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let apostrophePostfix = {character = "'"; glyph = "'"; name="apostrophe"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let approachesTheLimitInfix = {character = "&#x2250;"; glyph = "≐"; name="approaches the limit"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let approximatelyButNotActuallyEqualToInfix = {character = "&#x2246;"; glyph = "≆"; name="approximately but not actually equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let approximatelyEqualOrEqualToInfix = {character = "&#x2A70;"; glyph = "⩰"; name="approximately equal or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let approximatelyEqualToInfix = {character = "&#x2245;"; glyph = "≅"; name="approximately equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let approximatelyEqualToOrTheImageOfInfix = {character = "&#x2252;"; glyph = "≒"; name="approximately equal to or the image of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let arrowPointingDownwardsThenCurvingLeftwardsInfix = {character = "&#x2936;"; glyph = "⤶"; name="arrow pointing downwards then curving leftwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let arrowPointingDownwardsThenCurvingRightwardsInfix = {character = "&#x2937;"; glyph = "⤷"; name="arrow pointing downwards then curving rightwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let arrowPointingRightwardsThenCurvingDownwardsInfix = {character = "&#x2935;"; glyph = "⤵"; name="arrow pointing rightwards then curving downwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let arrowPointingRightwardsThenCurvingUpwardsInfix = {character = "&#x2934;"; glyph = "⤴"; name="arrow pointing rightwards then curving upwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let assertionInfix = {character = "&#x22A6;"; glyph = "⊦"; name="assertion"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let asteriskInfix = {character = "*"; glyph = "*"; name="asterisk"; form="infix"; priority="390"; lspace="3"; rspace="3"; properties=[]}
-let asteriskOperatorInfix = {character = "&#x2217;"; glyph = "∗"; name="asterisk operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let asymptoticallyEqualToInfix = {character = "&#x2243;"; glyph = "≃"; name="asymptotically equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let becauseInfix = {character = "&#x2235;"; glyph = "∵"; name="because"; form="infix"; priority="70"; lspace="5"; rspace="5"; properties=[]}
-let betweenInfix = {character = "&#x226C;"; glyph = "≬"; name="between"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let bigReverseSolidusInfix = {character = "&#x29F9;"; glyph = "⧹"; name="big reverse solidus"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let bigSolidusInfix = {character = "&#x29F8;"; glyph = "⧸"; name="big solidus"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let blackBowtieInfix = {character = "&#x29D3;"; glyph = "⧓"; name="black bowtie"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let blackCircleInfix = {character = "&#x25CF;"; glyph = "●"; name="black circle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackCircleWithDownArrowInfix = {character = "&#x29ED;"; glyph = "⧭"; name="black circle with down arrow"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let blackDiamondInfix = {character = "&#x25C6;"; glyph = "◆"; name="black diamond"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackDiamondWithDownArrowInfix = {character = "&#x29EA;"; glyph = "⧪"; name="black diamond with down arrow"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let blackDownPointingSmallTriangleInfix = {character = "&#x25BE;"; glyph = "▾"; name="black down-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackDownPointingTriangleInfix = {character = "&#x25BC;"; glyph = "▼"; name="black down-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackHourglassInfix = {character = "&#x29D7;"; glyph = "⧗"; name="black hourglass"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let blackLeftPointingPointerInfix = {character = "&#x25C4;"; glyph = "◄"; name="black left-pointing pointer"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackLeftPointingSmallTriangleInfix = {character = "&#x25C2;"; glyph = "◂"; name="black left-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackLeftPointingTriangleInfix = {character = "&#x25C0;"; glyph = "◀"; name="black left-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackLozengeInfix = {character = "&#x29EB;"; glyph = "⧫"; name="black lozenge"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let blackParallelogramInfix = {character = "&#x25B0;"; glyph = "▰"; name="black parallelogram"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let blackRightPointingSmallTriangleInfix = {character = "&#x25B8;"; glyph = "▸"; name="black right-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackRightPointingTriangleInfix = {character = "&#x25B6;"; glyph = "▶"; name="black right-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackSmallSquareInfix = {character = "&#x25AA;"; glyph = "▪"; name="black small square"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let blackSquareInfix = {character = "&#x25A0;"; glyph = "■"; name="black square"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let blackUpPointingSmallTriangleInfix = {character = "&#x25B4;"; glyph = "▴"; name="black up-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let blackUpPointingTriangleInfix = {character = "&#x25B2;"; glyph = "▲"; name="black up-pointing triangle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let blackVerticalRectangleInfix = {character = "&#x25AE;"; glyph = "▮"; name="black vertical rectangle"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let bottomArcAnticlockwiseArrowInfix = {character = "&#x293B;"; glyph = "⤻"; name="bottom arc anticlockwise arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let bottomCurlyBracketPostfix = {character = "&#x23DF;"; glyph = "⏟"; name="bottom curly bracket"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let bottomParenthesisPostfix = {character = "&#x23DD;"; glyph = "⏝"; name="bottom parenthesis"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let bottomSquareBracketPostfix = {character = "&#x23B5;"; glyph = "⎵"; name="bottom square bracket"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let bottomTortoiseShellBracketPostfix = {character = "&#x23E1;"; glyph = "⏡"; name="bottom tortoise shell bracket"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let bowtieInfix = {character = "&#x22C8;"; glyph = "⋈"; name="bowtie"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let bowtieWithLeftHalfBlackInfix = {character = "&#x29D1;"; glyph = "⧑"; name="bowtie with left half black"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let bowtieWithRightHalfBlackInfix = {character = "&#x29D2;"; glyph = "⧒"; name="bowtie with right half black"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let brevePostfix = {character = "&#x2D8;"; glyph = "˘"; name="breve"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let bulletInfix = {character = "&#x2022;"; glyph = "•"; name="bullet"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let bulletOperatorInfix = {character = "&#x2219;"; glyph = "∙"; name="bullet operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let bullseyeInfix = {character = "&#x25CE;"; glyph = "◎"; name="bullseye"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let caronPostfix = {character = "&#x2C7;"; glyph = "ˇ"; name="caron"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let cedillaPostfix = {character = "&#xB8;"; glyph = "¸"; name="cedilla"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let circledAnticlockwiseRotatedDivisionSignInfix = {character = "&#x29BC;"; glyph = "⦼"; name="circled anticlockwise-rotated division sign"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledAsteriskOperatorInfix = {character = "&#x229B;"; glyph = "⊛"; name="circled asterisk operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledBulletInfix = {character = "&#x29BF;"; glyph = "⦿"; name="circled bullet"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledDashInfix = {character = "&#x229D;"; glyph = "⊝"; name="circled dash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledDivisionSignInfix = {character = "&#x2A38;"; glyph = "⨸"; name="circled division sign"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledDivisionSlashInfix = {character = "&#x2298;"; glyph = "⊘"; name="circled division slash"; form="infix"; priority="300"; lspace="4"; rspace="4"; properties=[]}
-let circledDotOperatorInfix = {character = "&#x2299;"; glyph = "⊙"; name="circled dot operator"; form="infix"; priority="710"; lspace="4"; rspace="4"; properties=[]}
-let circledEqualsInfix = {character = "&#x229C;"; glyph = "⊜"; name="circled equals"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledGreaterThanInfix = {character = "&#x29C1;"; glyph = "⧁"; name="circled greater-than"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let circleDividedByHorizontalBarAndTopHalfDividedByVerticalBarInfix = {character = "&#x29BA;"; glyph = "⦺"; name="circle divided by horizontal bar and top half divided by vertical bar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledLessThanInfix = {character = "&#x29C0;"; glyph = "⧀"; name="circled less-than"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let circledMinusInfix = {character = "&#x2296;"; glyph = "⊖"; name="circled minus"; form="infix"; priority="300"; lspace="4"; rspace="4"; properties=[]}
-let circledMultiplicationSignWithCircumflexAccentInfix = {character = "&#x2A36;"; glyph = "⨶"; name="circled multiplication sign with circumflex accent"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledParallelInfix = {character = "&#x29B7;"; glyph = "⦷"; name="circled parallel"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledPerpendicularInfix = {character = "&#x29B9;"; glyph = "⦹"; name="circled perpendicular"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledPlusInfix = {character = "&#x2295;"; glyph = "⊕"; name="circled plus"; form="infix"; priority="300"; lspace="4"; rspace="4"; properties=[]}
-let circledReverseSolidusInfix = {character = "&#x29B8;"; glyph = "⦸"; name="circled reverse solidus"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledRingOperatorInfix = {character = "&#x229A;"; glyph = "⊚"; name="circled ring operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledTimesInfix = {character = "&#x2297;"; glyph = "⊗"; name="circled times"; form="infix"; priority="410"; lspace="4"; rspace="4"; properties=[]}
-let circledVerticalBarInfix = {character = "&#x29B6;"; glyph = "⦶"; name="circled vertical bar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circledWhiteBulletInfix = {character = "&#x29BE;"; glyph = "⦾"; name="circled white bullet"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circleWithHorizontalBarInfix = {character = "&#x29B5;"; glyph = "⦵"; name="circle with horizontal bar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let circleWithSmallCircleToTheRightInfix = {character = "&#x29C2;"; glyph = "⧂"; name="circle with small circle to the right"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let circleWithSuperimposedXInfix = {character = "&#x29BB;"; glyph = "⦻"; name="circle with superimposed x"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let circleWithTwoHorizontalStrokesToTheRightInfix = {character = "&#x29C3;"; glyph = "⧃"; name="circle with two horizontal strokes to the right"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let circleWithVerticalFillInfix = {character = "&#x25CD;"; glyph = "◍"; name="circle with vertical fill"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let circulationFunctionPrefix = {character = "&#x2A10;"; glyph = "⨐"; name="circulation function"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let circumflexAccentInfix = {character = "^"; glyph = "^"; name="circumflex accent"; form="infix"; priority="780"; lspace="1"; rspace="1"; properties=[]}
-let circumflexAccentPostfix = {character = "^"; glyph = "^"; name="circumflex accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let clockwiseClosedCircleArrowInfix = {character = "&#x2941;"; glyph = "⥁"; name="clockwise closed circle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let clockwiseContourIntegralPrefix = {character = "&#x2232;"; glyph = "∲"; name="clockwise contour integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let clockwiseIntegralPrefix = {character = "&#x2231;"; glyph = "∱"; name="clockwise integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let clockwiseOpenCircleArrowInfix = {character = "&#x21BB;"; glyph = "↻"; name="clockwise open circle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let clockwiseTopSemicircleArrowInfix = {character = "&#x21B7;"; glyph = "↷"; name="clockwise top semicircle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let closedIntersectionWithSerifsInfix = {character = "&#x2A4D;"; glyph = "⩍"; name="closed intersection with serifs"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let closedSubsetInfix = {character = "&#x2ACF;"; glyph = "⫏"; name="closed subset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let closedSubsetOrEqualToInfix = {character = "&#x2AD1;"; glyph = "⫑"; name="closed subset or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let closedSupersetInfix = {character = "&#x2AD0;"; glyph = "⫐"; name="closed superset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let closedSupersetOrEqualToInfix = {character = "&#x2AD2;"; glyph = "⫒"; name="closed superset or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let closedUnionWithSerifsAndSmashProductInfix = {character = "&#x2A50;"; glyph = "⩐"; name="closed union with serifs and smash product"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let closedUnionWithSerifsInfix = {character = "&#x2A4C;"; glyph = "⩌"; name="closed union with serifs"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let colonEqualsInfix = {character = "&#x2254;"; glyph = "≔"; name="colon equals"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let colonInfix = {character = ":"; glyph = ":"; name="colon"; form="infix"; priority="100"; lspace="1"; rspace="2"; properties=[]}
-let combiningCircumflexAccentPostfix = {character = "&#x302;"; glyph = "̂"; name="combining circumflex accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let combiningFourDotsAbovePostfix = {character = "&#x20DC;"; glyph = "⃜"; name="combining four dots above"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let combiningInvertedBrevePostfix = {character = "&#x311;"; glyph = "̑"; name="combining inverted breve"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let combiningThreeDotsAbovePostfix = {character = "&#x20DB;"; glyph = "⃛"; name="combining three dots above"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let commaInfix = {character = ","; glyph = ","; name="comma"; form="infix"; priority="40"; lspace="0"; rspace="3"; properties=["separator"; "linebreakstyle=after"]}
-let commercialAtInfix = {character = "@"; glyph = "@"; name="commercial at"; form="infix"; priority="825"; lspace="1"; rspace="1"; properties=[]}
-let complementInfix = {character = "&#x2201;"; glyph = "∁"; name="complement"; form="infix"; priority="240"; lspace="1"; rspace="2"; properties=[]}
-let congruentWithDotAboveInfix = {character = "&#x2A6D;"; glyph = "⩭"; name="congruent with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let containsAsMemberInfix = {character = "&#x220B;"; glyph = "∋"; name="contains as member"; form="infix"; priority="160"; lspace="5"; rspace="5"; properties=[]}
-let containsAsNormalSubgroupInfix = {character = "&#x22B3;"; glyph = "⊳"; name="contains as normal subgroup"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let containsAsNormalSubgroupOrEqualToInfix = {character = "&#x22B5;"; glyph = "⊵"; name="contains as normal subgroup or equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let containsWithLongHorizontalStrokeInfix = {character = "&#x22FA;"; glyph = "⋺"; name="contains with long horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let containsWithOverbarInfix = {character = "&#x22FD;"; glyph = "⋽"; name="contains with overbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let containsWithVerticalBarAtEndOfHorizontalStrokeInfix = {character = "&#x22FB;"; glyph = "⋻"; name="contains with vertical bar at end of horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let contourIntegralPrefix = {character = "&#x222E;"; glyph = "∮"; name="contour integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let correspondsToInfix = {character = "&#x2258;"; glyph = "≘"; name="corresponds to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let cubeRootPrefix = {character = "&#x221B;"; glyph = "∛"; name="cube root"; form="prefix"; priority="845"; lspace="1"; rspace="1"; properties=[]}
-let curlyLogicalAndInfix = {character = "&#x22CF;"; glyph = "⋏"; name="curly logical and"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let curlyLogicalOrInfix = {character = "&#x22CE;"; glyph = "⋎"; name="curly logical or"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let degreeSignPostfix = {character = "&#xB0;"; glyph = "°"; name="degree sign"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=[]}
-let deltaEqualToInfix = {character = "&#x225C;"; glyph = "≜"; name="delta equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let diaeresisPostfix = {character = "&#xA8;"; glyph = "¨"; name="diaeresis"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let diamondOperatorInfix = {character = "&#x22C4;"; glyph = "⋄"; name="diamond operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let differenceBetweenInfix = {character = "&#x224F;"; glyph = "≏"; name="difference between"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let differenceBetweenWithSlashInfix = {character = "&#x224F;&#x338;"; glyph = "≏̸"; name="difference between with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let dividesInfix = {character = "&#x2223;"; glyph = "∣"; name="divides"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let divisionSignInfix = {character = "&#xF7;"; glyph = "÷"; name="division sign"; form="infix"; priority="660"; lspace="4"; rspace="4"; properties=[]}
-let divisionSlashInfix = {character = "&#x2215;"; glyph = "∕"; name="division slash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=["stretchy"]}
-let divisionTimesInfix = {character = "&#x22C7;"; glyph = "⋇"; name="division times"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doesNotContainAsMemberInfix = {character = "&#x220C;"; glyph = "∌"; name="does not contain as member"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let doesNotContainAsNormalSubgroupInfix = {character = "&#x22EB;"; glyph = "⋫"; name="does not contain as normal subgroup"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let doesNotContainAsNormalSubgroupOrEqualInfix = {character = "&#x22ED;"; glyph = "⋭"; name="does not contain as normal subgroup or equal"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let doesNotDivideInfix = {character = "&#x2224;"; glyph = "∤"; name="does not divide"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let doesNotDivideWithReversedNegationSlashInfix = {character = "&#x2AEE;"; glyph = "⫮"; name="does not divide with reversed negation slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doesNotForceInfix = {character = "&#x22AE;"; glyph = "⊮"; name="does not force"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let doesNotPrecedeInfix = {character = "&#x2280;"; glyph = "⊀"; name="does not precede"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let doesNotPrecedeOrEqualInfix = {character = "&#x22E0;"; glyph = "⋠"; name="does not precede or equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doesNotProveInfix = {character = "&#x22AC;"; glyph = "⊬"; name="does not prove"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let doesNotSucceedInfix = {character = "&#x2281;"; glyph = "⊁"; name="does not succeed"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let doesNotSucceedOrEqualInfix = {character = "&#x22E1;"; glyph = "⋡"; name="does not succeed or equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let dotAbovePostfix = {character = "&#x2D9;"; glyph = "˙"; name="dot above"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let dotMinusInfix = {character = "&#x2238;"; glyph = "∸"; name="dot minus"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let dotOperatorInfix = {character = "&#x22C5;"; glyph = "⋅"; name="dot operator"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let dotPlusInfix = {character = "&#x2214;"; glyph = "∔"; name="dot plus"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let dottedCircleInfix = {character = "&#x25CC;"; glyph = "◌"; name="dotted circle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let dottedFenceInfix = {character = "&#x2999;"; glyph = "⦙"; name="dotted fence"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let doubleAcuteAccentPostfix = {character = "&#x2DD;"; glyph = "˝"; name="double acute accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let doubleColonEqualInfix = {character = "&#x2A74;"; glyph = "⩴"; name="double colon equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleDownTackInfix = {character = "&#x2AEA;"; glyph = "⫪"; name="double down tack"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleEndedMultimapInfix = {character = "&#x29DF;"; glyph = "⧟"; name="double-ended multimap"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let doubleHighReversed9QuotationMarkPostfix = {character = "&#x201F;"; glyph = "‟"; name="double high-reversed-9 quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let doubleIntegralPrefix = {character = "&#x222C;"; glyph = "∬"; name="double integral"; form="prefix"; priority="300"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let doubleIntersectionInfix = {character = "&#x22D2;"; glyph = "⋒"; name="double intersection"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleLeftArcGreaterThanBracketPrefix = {character = "&#x2995;"; glyph = "⦕"; name="double left arc greater-than bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let doubleLineEqualToOrGreaterThanInfix = {character = "&#x2A9A;"; glyph = "⪚"; name="double-line equal to or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleLineEqualToOrLessThanInfix = {character = "&#x2A99;"; glyph = "⪙"; name="double-line equal to or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleLineSlantedEqualToOrGreaterThanInfix = {character = "&#x2A9C;"; glyph = "⪜"; name="double-line slanted equal to or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleLineSlantedEqualToOrLessThanInfix = {character = "&#x2A9B;"; glyph = "⪛"; name="double-line slanted equal to or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleLineSlantedGreaterThanOrEqualToInfix = {character = "&#x2AFA;"; glyph = "⫺"; name="double-line slanted greater-than or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleLineSlantedLessThanOrEqualToInfix = {character = "&#x2AF9;"; glyph = "⫹"; name="double-line slanted less-than or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleLogicalAndInfix = {character = "&#x2A53;"; glyph = "⩓"; name="double logical and"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleLogicalOrInfix = {character = "&#x2A54;"; glyph = "⩔"; name="double logical or"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleLow9QuotationMarkPostfix = {character = "&#x201E;"; glyph = "„"; name="double low-9 quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let doubleNestedGreaterThanInfix = {character = "&#x2AA2;"; glyph = "⪢"; name="double nested greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleNestedGreaterThanWithSlashInfix = {character = "&#x2AA2;&#x338;"; glyph = "⪢̸"; name="double nested greater-than with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleNestedLessThanInfix = {character = "&#x2AA1;"; glyph = "⪡"; name="double nested less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleNestedLessThanWithSlashInfix = {character = "&#x2AA1;&#x338;"; glyph = "⪡̸"; name="double nested less-than with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleNestedLessThanWithUnderbarInfix = {character = "&#x2AA3;"; glyph = "⪣"; name="double nested less-than with underbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doublePlusInfix = {character = "&#x29FA;"; glyph = "⧺"; name="double plus"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let doublePrecedesInfix = {character = "&#x2ABB;"; glyph = "⪻"; name="double precedes"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doublePrimePostfix = {character = "&#x2033;"; glyph = "″"; name="double prime"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let doubleRightArcLessThanBracketPostfix = {character = "&#x2996;"; glyph = "⦖"; name="double right arc less-than bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let doubleSolidusOperatorInfix = {character = "&#x2AFD;"; glyph = "⫽"; name="double solidus operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleSquareIntersectionInfix = {character = "&#x2A4E;"; glyph = "⩎"; name="double square intersection"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleSquareUnionInfix = {character = "&#x2A4F;"; glyph = "⩏"; name="double square union"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleStrokeNotSignInfix = {character = "&#x2AEC;"; glyph = "⫬"; name="double stroke not sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleStruckItalicCapitalDPrefix = {character = "&#x2145;"; glyph = "ⅅ"; name="double-struck italic capital d"; form="prefix"; priority="845"; lspace="2"; rspace="1"; properties=[]}
-let doubleStruckItalicSmallDPrefix = {character = "&#x2146;"; glyph = "ⅆ"; name="double-struck italic small d"; form="prefix"; priority="845"; lspace="2"; rspace="0"; properties=[]}
-let doubleSubsetInfix = {character = "&#x22D0;"; glyph = "⋐"; name="double subset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleSucceedsInfix = {character = "&#x2ABC;"; glyph = "⪼"; name="double succeeds"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleSupersetInfix = {character = "&#x22D1;"; glyph = "⋑"; name="double superset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleUnionInfix = {character = "&#x22D3;"; glyph = "⋓"; name="double union"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let doubleUpTackInfix = {character = "&#x2AEB;"; glyph = "⫫"; name="double up tack"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleVerticalBarDoubleLeftTurnstileInfix = {character = "&#x2AE5;"; glyph = "⫥"; name="double vertical bar double left turnstile"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleVerticalBarDoubleRightTurnstileInfix = {character = "&#x22AB;"; glyph = "⊫"; name="double vertical bar double right turnstile"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleVerticalBarLeftTurnstileInfix = {character = "&#x2AE3;"; glyph = "⫣"; name="double vertical bar left turnstile"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let doubleVerticalLinePostfix = {character = "&#x2016;"; glyph = "‖"; name="double vertical line"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"]}
-let doubleVerticalLinePrefix = {character = "&#x2016;"; glyph = "‖"; name="double vertical line"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"]}
-let downFishTailInfix = {character = "&#x297F;"; glyph = "⥿"; name="down fish tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let downPointingTriangleWithLeftHalfBlackInfix = {character = "&#x29E8;"; glyph = "⧨"; name="down-pointing triangle with left half black"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let downPointingTriangleWithRightHalfBlackInfix = {character = "&#x29E9;"; glyph = "⧩"; name="down-pointing triangle with right half black"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let downRightDiagonalEllipsisInfix = {character = "&#x22F1;"; glyph = "⋱"; name="down right diagonal ellipsis"; form="infix"; priority="150"; lspace="5"; rspace="5"; properties=[]}
-let downTackInfix = {character = "&#x22A4;"; glyph = "⊤"; name="down tack"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let downTackWithCircleBelowInfix = {character = "&#x2AF1;"; glyph = "⫱"; name="down tack with circle below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let downwardsArrowFromBarInfix = {character = "&#x21A7;"; glyph = "↧"; name="downwards arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsArrowInfix = {character = "&#x2193;"; glyph = "↓"; name="downwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsArrowLeftwardsOfUpwardsArrowInfix = {character = "&#x21F5;"; glyph = "⇵"; name="downwards arrow leftwards of upwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsArrowToBarInfix = {character = "&#x2913;"; glyph = "⤓"; name="downwards arrow to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsArrowWithCornerLeftwardsInfix = {character = "&#x21B5;"; glyph = "↵"; name="downwards arrow with corner leftwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsArrowWithDoubleStrokeInfix = {character = "&#x21DF;"; glyph = "⇟"; name="downwards arrow with double stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let downwardsArrowWithHorizontalStrokeInfix = {character = "&#x2908;"; glyph = "⤈"; name="downwards arrow with horizontal stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let downwardsArrowWithTipLeftwardsInfix = {character = "&#x21B2;"; glyph = "↲"; name="downwards arrow with tip leftwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsArrowWithTipRightwardsInfix = {character = "&#x21B3;"; glyph = "↳"; name="downwards arrow with tip rightwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsDashedArrowInfix = {character = "&#x21E3;"; glyph = "⇣"; name="downwards dashed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsDoubleArrowInfix = {character = "&#x21D3;"; glyph = "⇓"; name="downwards double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbLeftBesideDownwardsHarpoonWithBarbRightInfix = {character = "&#x2965;"; glyph = "⥥"; name="downwards harpoon with barb left beside downwards harpoon with barb right"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let downwardsHarpoonWithBarbLeftBesideUpwardsHarpoonWithBarbRightInfix = {character = "&#x296F;"; glyph = "⥯"; name="downwards harpoon with barb left beside upwards harpoon with barb right"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbLeftFromBarInfix = {character = "&#x2961;"; glyph = "⥡"; name="downwards harpoon with barb left from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbLeftToBarInfix = {character = "&#x2959;"; glyph = "⥙"; name="downwards harpoon with barb left to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbLeftwardsInfix = {character = "&#x21C3;"; glyph = "⇃"; name="downwards harpoon with barb leftwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbRightFromBarInfix = {character = "&#x295D;"; glyph = "⥝"; name="downwards harpoon with barb right from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbRightToBarInfix = {character = "&#x2955;"; glyph = "⥕"; name="downwards harpoon with barb right to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsHarpoonWithBarbRightwardsInfix = {character = "&#x21C2;"; glyph = "⇂"; name="downwards harpoon with barb rightwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsPairedArrowsInfix = {character = "&#x21CA;"; glyph = "⇊"; name="downwards paired arrows"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsQuadrupleArrowInfix = {character = "&#x27F1;"; glyph = "⟱"; name="downwards quadruple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsTripleArrowInfix = {character = "&#x290B;"; glyph = "⤋"; name="downwards triple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsTwoHeadedArrowInfix = {character = "&#x21A1;"; glyph = "↡"; name="downwards two headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsWhiteArrowInfix = {character = "&#x21E9;"; glyph = "⇩"; name="downwards white arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let downwardsZigzagArrowInfix = {character = "&#x21AF;"; glyph = "↯"; name="downwards zigzag arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let elementOfInfix = {character = "&#x2208;"; glyph = "∈"; name="element of"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let elementOfOpeningDownwardsInfix = {character = "&#x2AD9;"; glyph = "⫙"; name="element of opening downwards"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let elementOfWithDotAboveInfix = {character = "&#x22F5;"; glyph = "⋵"; name="element of with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let elementOfWithLongHorizontalStrokeInfix = {character = "&#x22F2;"; glyph = "⋲"; name="element of with long horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let elementOfWithOverbarInfix = {character = "&#x22F6;"; glyph = "⋶"; name="element of with overbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let elementOfWithTwoHorizontalStrokesInfix = {character = "&#x22F9;"; glyph = "⋹"; name="element of with two horizontal strokes"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let elementOfWithUnderbarInfix = {character = "&#x22F8;"; glyph = "⋸"; name="element of with underbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let elementOfWithVerticalBarAtEndOfHorizontalStrokeInfix = {character = "&#x22F3;"; glyph = "⋳"; name="element of with vertical bar at end of horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let emptySetWithLeftArrowAboveInfix = {character = "&#x29B4;"; glyph = "⦴"; name="empty set with left arrow above"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let emptySetWithOverbarInfix = {character = "&#x29B1;"; glyph = "⦱"; name="empty set with overbar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let emptySetWithRightArrowAboveInfix = {character = "&#x29B3;"; glyph = "⦳"; name="empty set with right arrow above"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let emptySetWithSmallCircleAboveInfix = {character = "&#x29B2;"; glyph = "⦲"; name="empty set with small circle above"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let endOfProofInfix = {character = "&#x220E;"; glyph = "∎"; name="end of proof"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let equalAndParallelToInfix = {character = "&#x22D5;"; glyph = "⋕"; name="equal and parallel to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalsColonInfix = {character = "&#x2255;"; glyph = "≕"; name="equals colon"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignAbovePlusSignInfix = {character = "&#x2A71;"; glyph = "⩱"; name="equals sign above plus sign"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let equalsSignAboveRightwardsArrowInfix = {character = "&#x2971;"; glyph = "⥱"; name="equals sign above rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let equalsSignAboveTildeOperatorInfix = {character = "&#x2A73;"; glyph = "⩳"; name="equals sign above tilde operator"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignAndSlantedParallelInfix = {character = "&#x29E3;"; glyph = "⧣"; name="equals sign and slanted parallel"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignAndSlantedParallelWithTildeAboveInfix = {character = "&#x29E4;"; glyph = "⧤"; name="equals sign and slanted parallel with tilde above"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignEqualsInfix = {character = "="; glyph = "="; name="equals sign"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignWithBumpyAboveInfix = {character = "&#x2AAE;"; glyph = "⪮"; name="equals sign with bumpy above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignWithDotBelowInfix = {character = "&#x2A66;"; glyph = "⩦"; name="equals sign with dot below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalsSignWithTwoDotsAboveAndTwoDotsBelowInfix = {character = "&#x2A77;"; glyph = "⩷"; name="equals sign with two dots above and two dots below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalsWithAsteriskInfix = {character = "&#x2A6E;"; glyph = "⩮"; name="equals with asterisk"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalToByDefinitionInfix = {character = "&#x225D;"; glyph = "≝"; name="equal to by definition"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalToOrGreaterThanInfix = {character = "&#x22DD;"; glyph = "⋝"; name="equal to or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalToOrLessThanInfix = {character = "&#x22DC;"; glyph = "⋜"; name="equal to or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalToOrPrecedesInfix = {character = "&#x22DE;"; glyph = "⋞"; name="equal to or precedes"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equalToOrSucceedsInfix = {character = "&#x22DF;"; glyph = "⋟"; name="equal to or succeeds"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let equiangularToInfix = {character = "&#x225A;"; glyph = "≚"; name="equiangular to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let equivalentToInfix = {character = "&#x224D;"; glyph = "≍"; name="equivalent to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let equivalentWithFourDotsAboveInfix = {character = "&#x2A78;"; glyph = "⩸"; name="equivalent with four dots above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let errorBarredBlackCircleInfix = {character = "&#x29F3;"; glyph = "⧳"; name="error-barred black circle"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let errorBarredBlackDiamondInfix = {character = "&#x29F1;"; glyph = "⧱"; name="error-barred black diamond"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let errorBarredBlackSquareInfix = {character = "&#x29EF;"; glyph = "⧯"; name="error-barred black square"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let errorBarredWhiteCircleInfix = {character = "&#x29F2;"; glyph = "⧲"; name="error-barred white circle"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let errorBarredWhiteDiamondInfix = {character = "&#x29F0;"; glyph = "⧰"; name="error-barred white diamond"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let errorBarredWhiteSquareInfix = {character = "&#x29EE;"; glyph = "⧮"; name="error-barred white square"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let estimatesInfix = {character = "&#x2259;"; glyph = "≙"; name="estimates"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let excessInfix = {character = "&#x2239;"; glyph = "∹"; name="excess"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let exclamationMarkPostfix = {character = "!"; glyph = "!"; name="exclamation mark"; form="postfix"; priority="810"; lspace="1"; rspace="0"; properties=[]}
-let fallingDiagonalCrossingNorthEastArrowInfix = {character = "&#x292F;"; glyph = "⤯"; name="falling diagonal crossing north east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let fallingDiagonalCrossingRisingDiagonalInfix = {character = "&#x292C;"; glyph = "⤬"; name="falling diagonal crossing rising diagonal"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let feminineOrdinalIndicatorPostfix = {character = "&#xAA;"; glyph = "ª"; name="feminine ordinal indicator"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let finitePartIntegralPrefix = {character = "&#x2A0D;"; glyph = "⨍"; name="finite part integral"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let fisheyeInfix = {character = "&#x25C9;"; glyph = "◉"; name="fisheye"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let forAllPrefix = {character = "&#x2200;"; glyph = "∀"; name="for all"; form="prefix"; priority="230"; lspace="2"; rspace="1"; properties=[]}
-let forcesInfix = {character = "&#x22A9;"; glyph = "⊩"; name="forces"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let fourthRootPrefix = {character = "&#x221C;"; glyph = "∜"; name="fourth root"; form="prefix"; priority="845"; lspace="1"; rspace="1"; properties=[]}
-let fractionSlashInfix = {character = "&#x2044;"; glyph = "⁄"; name="fraction slash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=["stretchy"]}
-let fullStopInfix = {character = "."; glyph = "."; name="full stop"; form="infix"; priority="390"; lspace="3"; rspace="3"; properties=[]}
-let functionApplicationInfix = {character = "&#x2061;"; glyph = "⁡"; name="function application"; form="infix"; priority="850"; lspace="0"; rspace="0"; properties=[]}
-let geometricallyEqualToInfix = {character = "&#x2251;"; glyph = "≑"; name="geometrically equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let geometricallyEquivalentToInfix = {character = "&#x224E;"; glyph = "≎"; name="geometrically equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let geometricallyEquivalentToWithSlashInfix = {character = "&#x224E;&#x338;"; glyph = "≎̸"; name="geometrically equivalent to with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let geometricProportionInfix = {character = "&#x223A;"; glyph = "∺"; name="geometric proportion"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let gleichStarkInfix = {character = "&#x29E6;"; glyph = "⧦"; name="gleich stark"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let graveAccentPostfix = {character = "`"; glyph = "`"; name="grave accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let greaterThanAboveDoubleLineEqualAboveLessThanInfix = {character = "&#x2A8C;"; glyph = "⪌"; name="greater-than above double-line equal above less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanAboveLessThanAboveDoubleLineEqualInfix = {character = "&#x2A92;"; glyph = "⪒"; name="greater-than above less-than above double-line equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanAboveRightwardsArrowInfix = {character = "&#x2978;"; glyph = "⥸"; name="greater-than above rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let greaterThanAboveSimilarAboveLessThanInfix = {character = "&#x2A90;"; glyph = "⪐"; name="greater-than above similar above less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanAboveSimilarOrEqualInfix = {character = "&#x2A8E;"; glyph = "⪎"; name="greater-than above similar or equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanAboveSlantedEqualAboveLessThanAboveSlantedEqualInfix = {character = "&#x2A94;"; glyph = "⪔"; name="greater-than above slanted equal above less-than above slanted equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanAndNotApproximateInfix = {character = "&#x2A8A;"; glyph = "⪊"; name="greater-than and not approximate"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanAndSingleLineNotEqualToInfix = {character = "&#x2A88;"; glyph = "⪈"; name="greater-than and single-line not equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanBesideLessThanInfix = {character = "&#x2AA5;"; glyph = "⪥"; name="greater-than beside less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanButNotEqualToInfix = {character = "&#x2269;"; glyph = "≩"; name="greater-than but not equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanButNotEquivalentToInfix = {character = "&#x22E7;"; glyph = "⋧"; name="greater-than but not equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanClosedByCurveAboveSlantedEqualInfix = {character = "&#x2AA9;"; glyph = "⪩"; name="greater-than closed by curve above slanted equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanClosedByCurveInfix = {character = "&#x2AA7;"; glyph = "⪧"; name="greater-than closed by curve"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanEqualToOrLessThanInfix = {character = "&#x22DB;"; glyph = "⋛"; name="greater-than equal to or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrApproximateInfix = {character = "&#x2A86;"; glyph = "⪆"; name="greater-than or approximate"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrEquivalentToInfix = {character = "&#x2273;"; glyph = "≳"; name="greater-than or equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrLessThanInfix = {character = "&#x2277;"; glyph = "≷"; name="greater-than or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrSlantedEqualToInfix = {character = "&#x2A7E;"; glyph = "⩾"; name="greater-than or slanted equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrSlantedEqualToWithDotAboveInfix = {character = "&#x2A82;"; glyph = "⪂"; name="greater-than or slanted equal to with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrSlantedEqualToWithDotAboveLeftInfix = {character = "&#x2A84;"; glyph = "⪄"; name="greater-than or slanted equal to with dot above left"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrSlantedEqualToWithDotInsideInfix = {character = "&#x2A80;"; glyph = "⪀"; name="greater-than or slanted equal to with dot inside"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOrSlantedEqualToWithSlashInfix = {character = "&#x2A7E;&#x338;"; glyph = "⩾̸"; name="greater-than or slanted equal to with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOverEqualToInfix = {character = "&#x2267;"; glyph = "≧"; name="greater-than over equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanOverlappingLessThanInfix = {character = "&#x2AA4;"; glyph = "⪤"; name="greater-than overlapping less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanSignInfix = {character = ">"; glyph = ">"; name="greater-than sign"; form="infix"; priority="243"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanWithCircleInsideInfix = {character = "&#x2A7A;"; glyph = "⩺"; name="greater-than with circle inside"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanWithDotInfix = {character = "&#x22D7;"; glyph = "⋗"; name="greater-than with dot"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let greaterThanWithQuestionMarkAboveInfix = {character = "&#x2A7C;"; glyph = "⩼"; name="greater-than with question mark above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let greateThanOrEqualToInfix = {character = "&#x2265;"; glyph = "≥"; name="greater-than or equal to"; form="infix"; priority="242"; lspace="5"; rspace="5"; properties=[]}
-let greekReversedLunateEpsilonSymbolInfix = {character = "&#x3F6;"; glyph = "϶"; name="greek reversed lunate epsilon symbol"; form="infix"; priority="110"; lspace="5"; rspace="5"; properties=[]}
-let hermitianConjugateMatrixInfix = {character = "&#x22B9;"; glyph = "⊹"; name="hermitian conjugate matrix"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let homotheticInfix = {character = "&#x223B;"; glyph = "∻"; name="homothetic"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let horizontalEllipsisInfix = {character = "&#x2026;"; glyph = "…"; name="horizontal ellipsis"; form="infix"; priority="150"; lspace="0"; rspace="0"; properties=[]}
-let hyphenBulletInfix = {character = "&#x2043;"; glyph = "⁃"; name="hyphen bullet"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let hyphenMinusInfix = {character = "-"; glyph = "-"; name="hyphen-minus"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let hyphenMinusPrefix = {character = "-"; glyph = "-"; name="hyphen-minus"; form="prefix"; priority="275"; lspace="0"; rspace="1"; properties=[]}
-let identicalToAndSlantedParallelInfix = {character = "&#x29E5;"; glyph = "⧥"; name="identical to and slanted parallel"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let identicalToInfix = {character = "&#x2261;"; glyph = "≡"; name="identical to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let identicalWithDotAboveInfix = {character = "&#x2A67;"; glyph = "⩧"; name="identical with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let imageOfInfix = {character = "&#x22B7;"; glyph = "⊷"; name="image of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let imageOfOrApproximatelyEqualToInfix = {character = "&#x2253;"; glyph = "≓"; name="image of or approximately equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let incompleteInfinityInfix = {character = "&#x29DC;"; glyph = "⧜"; name="incomplete infinity"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let increasesAsInfix = {character = "&#x29E1;"; glyph = "⧡"; name="increases as"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let incrementInfix = {character = "&#x2206;"; glyph = "∆"; name="increment"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let infinityNegatedWithVerticalBarInfix = {character = "&#x29DE;"; glyph = "⧞"; name="infinity negated with vertical bar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let integralAroundAPointOperatorPrefix = {character = "&#x2A15;"; glyph = "⨕"; name="integral around a point operator"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralAverageWithSlashPrefix = {character = "&#x2A0F;"; glyph = "⨏"; name="integral average with slash"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralPrefix = {character = "&#x222B;"; glyph = "∫"; name="integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let integralWithDoubleStrokePrefix = {character = "&#x2A0E;"; glyph = "⨎"; name="integral with double stroke"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralWithIntersectionPrefix = {character = "&#x2A19;"; glyph = "⨙"; name="integral with intersection"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralWithLeftwardsArrowWithHookPrefix = {character = "&#x2A17;"; glyph = "⨗"; name="integral with leftwards arrow with hook"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralWithOverbarPrefix = {character = "&#x2A1B;"; glyph = "⨛"; name="integral with overbar"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralWithTimesSignPrefix = {character = "&#x2A18;"; glyph = "⨘"; name="integral with times sign"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralWithUnderbarPrefix = {character = "&#x2A1C;"; glyph = "⨜"; name="integral with underbar"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let integralWithUnionPrefix = {character = "&#x2A1A;"; glyph = "⨚"; name="integral with union"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let intercalateInfix = {character = "&#x22BA;"; glyph = "⊺"; name="intercalate"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let interiorProductInfix = {character = "&#x2A3C;"; glyph = "⨼"; name="interior product"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let intersectionAboveBarAboveUnionInfix = {character = "&#x2A49;"; glyph = "⩉"; name="intersection above bar above union"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let intersectionAboveUnionInfix = {character = "&#x2A47;"; glyph = "⩇"; name="intersection above union"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let intersectionBesideAndJoinedWithIntersectionInfix = {character = "&#x2A4B;"; glyph = "⩋"; name="intersection beside and joined with intersection"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let intersectionInfix = {character = "&#x2229;"; glyph = "∩"; name="intersection"; form="infix"; priority="350"; lspace="4"; rspace="4"; properties=[]}
-let intersectionWithDotInfix = {character = "&#x2A40;"; glyph = "⩀"; name="intersection with dot"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let intersectionWithLogicalAndInfix = {character = "&#x2A44;"; glyph = "⩄"; name="intersection with logical and"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let intersectionWithOverbarInfix = {character = "&#x2A43;"; glyph = "⩃"; name="intersection with overbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let invertedLazySInfix = {character = "&#x223E;"; glyph = "∾"; name="inverted lazy s"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let invisiblePlusInfix = {character = "&#x2064;"; glyph = "⁤"; name="invisible plus"; form="infix"; priority="880"; lspace="0"; rspace="0"; properties=[]}
-let invisibleSeparatorInfix = {character = "&#x2063;"; glyph = "⁣"; name="invisible separator"; form="infix"; priority="40"; lspace="0"; rspace="0"; properties=["separator"; "linebreakstyle=after"]}
-let invisibleTimesInfix = {character = "&#x2062;"; glyph = "⁢"; name="invisible times"; form="infix"; priority="390"; lspace="0"; rspace="0"; properties=[]}
-let joinInfix = {character = "&#x2A1D;"; glyph = "⨝"; name="join"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let largeLeftTriangleOperatorInfix = {character = "&#x2A1E;"; glyph = "⨞"; name="large left triangle operator"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let largerThanInfix = {character = "&#x2AAB;"; glyph = "⪫"; name="larger than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let largerThanOrEqualToInfix = {character = "&#x2AAD;"; glyph = "⪭"; name="larger than or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let largeTripleVerticalBarOperatorPrefix = {character = "&#x2AFC;"; glyph = "⫼"; name="large triple vertical bar operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let leftAngleBracketWithDotPrefix = {character = "&#x2991;"; glyph = "⦑"; name="left angle bracket with dot"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftArcLessThanBracketPrefix = {character = "&#x2993;"; glyph = "⦓"; name="left arc less-than bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftBarbDownRightBarbDownHarpoonInfix = {character = "&#x2950;"; glyph = "⥐"; name="left barb down right barb down harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftBarbDownRightBarbUpHarpoonInfix = {character = "&#x294B;"; glyph = "⥋"; name="left barb down right barb up harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftBarbUpRightBarbDownHarpoonInfix = {character = "&#x294A;"; glyph = "⥊"; name="left barb up right barb down harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftBarbUpRightBarbUpHarpoonInfix = {character = "&#x294E;"; glyph = "⥎"; name="left barb up right barb up harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftBlackTortoiseShellBracketPrefix = {character = "&#x2997;"; glyph = "⦗"; name="left black tortoise shell bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftCeilingPrefix = {character = "&#x2308;"; glyph = "⌈"; name="left ceiling"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftCurlyBracketPrefix = {character = "{"; glyph = "{"; name="left curly bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftDoubleQuotationMarkPrefix = {character = "&#x201C;"; glyph = "“"; name="left double quotation mark"; form="prefix"; priority="10"; lspace="0"; rspace="0"; properties=["fence"]}
-let leftFishTailInfix = {character = "&#x297C;"; glyph = "⥼"; name="left fish tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftFloorPrefix = {character = "&#x230A;"; glyph = "⌊"; name="left floor"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftHalfBlackCircleInfix = {character = "&#x25D6;"; glyph = "◖"; name="left half black circle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let leftNormalFactorSemidirectProductInfix = {character = "&#x22C9;"; glyph = "⋉"; name="left normal factor semidirect product"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let leftParenthesisPrefix = {character = "("; glyph = "("; name="left parenthesis"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftPointingAngleBracketPrefix = {character = "&#x2329;"; glyph = "〈"; name="left-pointing angle bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftPointingCurvedAngleBracketPrefix = {character = "&#x29FC;"; glyph = "⧼"; name="left-pointing curved angle bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftRightArrowInfix = {character = "&#x2194;"; glyph = "↔"; name="left right arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftRightArrowThroughSmallCircleInfix = {character = "&#x2948;"; glyph = "⥈"; name="left right arrow through small circle"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftRightArrowWithDoubleVerticalStrokeInfix = {character = "&#x21FC;"; glyph = "⇼"; name="left right arrow with double vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftRightArrowWithStrokeInfix = {character = "&#x21AE;"; glyph = "↮"; name="left right arrow with stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftRightArrowWithVerticalStrokeInfix = {character = "&#x21F9;"; glyph = "⇹"; name="left right arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftRightDoubleArrowInfix = {character = "&#x21D4;"; glyph = "⇔"; name="left right double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftRightDoubleArrowWithStrokeInfix = {character = "&#x21CE;"; glyph = "⇎"; name="left right double arrow with stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftRightDoubleArrowWithVerticalStrokeInfix = {character = "&#x2904;"; glyph = "⤄"; name="left right double arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftRightOpenHeadedArrowInfix = {character = "&#x21FF;"; glyph = "⇿"; name="left right open-headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftRightWaveArrowInfix = {character = "&#x21AD;"; glyph = "↭"; name="left right wave arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftSemidirectProductInfix = {character = "&#x22CB;"; glyph = "⋋"; name="left semidirect product"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let leftSideArcAnticlockwiseArrowInfix = {character = "&#x2939;"; glyph = "⤹"; name="left-side arc anticlockwise arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let leftSingleQuotationMarkPrefix = {character = "&#x2018;"; glyph = "‘"; name="left single quotation mark"; form="prefix"; priority="10"; lspace="0"; rspace="0"; properties=["fence"]}
-let leftSquareBracketPrefix = {character = "["; glyph = "["; name="left square bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftSquareBracketWithTickInBottomCornerPrefix = {character = "&#x298F;"; glyph = "⦏"; name="left square bracket with tick in bottom corner"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftSquareBracketWithTickInTopCornerPrefix = {character = "&#x298D;"; glyph = "⦍"; name="left square bracket with tick in top corner"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftSquareBracketWithUnderbarPrefix = {character = "&#x298B;"; glyph = "⦋"; name="left square bracket with underbar"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftTackInfix = {character = "&#x22A3;"; glyph = "⊣"; name="left tack"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let leftTriangleBesideVerticalBarInfix = {character = "&#x29CF;"; glyph = "⧏"; name="left triangle beside vertical bar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let leftTriangleBesideVerticalBarWithSlashInfix = {character = "&#x29CF;&#x338;"; glyph = "⧏̸"; name="left triangle beside vertical bar with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let leftwardsArrowAboveShortRightwardsArrowInfix = {character = "&#x2943;"; glyph = "⥃"; name="leftwards arrow above short rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowAboveTildeOperatorInfix = {character = "&#x2973;"; glyph = "⥳"; name="leftwards arrow above tilde operator"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowFromBarInfix = {character = "&#x21A4;"; glyph = "↤"; name="leftwards arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowFromBarToBlackDiamondInfix = {character = "&#x291F;"; glyph = "⤟"; name="leftwards arrow from bar to black diamond"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowInfix = {character = "&#x2190;"; glyph = "←"; name="leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowOverRightwardsArrowInfix = {character = "&#x21C6;"; glyph = "⇆"; name="leftwards arrow over rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowTailInfix = {character = "&#x2919;"; glyph = "⤙"; name="leftwards arrow-tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowThroughLessThanInfix = {character = "&#x2977;"; glyph = "⥷"; name="leftwards arrow through less-than"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowThroughSubsetInfix = {character = "&#x297A;"; glyph = "⥺"; name="leftwards arrow through subset"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowToBarInfix = {character = "&#x21E4;"; glyph = "⇤"; name="leftwards arrow to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowToBarOverRightwardsArrowToBarInfix = {character = "&#x21B9;"; glyph = "↹"; name="leftwards arrow to bar over rightwards arrow to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowToBlackDiamondInfix = {character = "&#x291D;"; glyph = "⤝"; name="leftwards arrow to black diamond"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowWithDoubleVerticalStrokeInfix = {character = "&#x21FA;"; glyph = "⇺"; name="leftwards arrow with double vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowWithHookInfix = {character = "&#x21A9;"; glyph = "↩"; name="leftwards arrow with hook"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowWithLoopInfix = {character = "&#x21AB;"; glyph = "↫"; name="leftwards arrow with loop"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowWithPlusBelowInfix = {character = "&#x2946;"; glyph = "⥆"; name="leftwards arrow with plus below"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowWithStrokeInfix = {character = "&#x219A;"; glyph = "↚"; name="leftwards arrow with stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsArrowWithTailInfix = {character = "&#x21A2;"; glyph = "↢"; name="leftwards arrow with tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsArrowWithVerticalStrokeInfix = {character = "&#x21F7;"; glyph = "⇷"; name="leftwards arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsDashedArrowInfix = {character = "&#x21E0;"; glyph = "⇠"; name="leftwards dashed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsDoubleArrowFromBarInfix = {character = "&#x2906;"; glyph = "⤆"; name="leftwards double arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsDoubleArrowInfix = {character = "&#x21D0;"; glyph = "⇐"; name="leftwards double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsDoubleArrowTailInfix = {character = "&#x291B;"; glyph = "⤛"; name="leftwards double arrow-tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsDoubleArrowWithStrokeInfix = {character = "&#x21CD;"; glyph = "⇍"; name="leftwards double arrow with stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsDoubleArrowWithVerticalStrokeInfix = {character = "&#x2902;"; glyph = "⤂"; name="leftwards double arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsDoubleDashArrowInfix = {character = "&#x290C;"; glyph = "⤌"; name="leftwards double dash arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsHarpoonOverRightwardsHarpoonInfix = {character = "&#x21CB;"; glyph = "⇋"; name="leftwards harpoon over rightwards harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsHarpoonWithBarbDownAboveRightwardsHarpoonWithBarbDownInfix = {character = "&#x2967;"; glyph = "⥧"; name="leftwards harpoon with barb down above rightwards harpoon with barb down"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsHarpoonWithBarbDownBelowLongDashInfix = {character = "&#x296B;"; glyph = "⥫"; name="leftwards harpoon with barb down below long dash"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsHarpoonWithBarbDownFromBarInfix = {character = "&#x295E;"; glyph = "⥞"; name="leftwards harpoon with barb down from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsHarpoonWithBarbDownToBarInfix = {character = "&#x2956;"; glyph = "⥖"; name="leftwards harpoon with barb down to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let leftwardsHarpoonWithBarbDownwardsInfix = {character = "&#x21BD;"; glyph = "↽"; name="leftwards harpoon with barb downwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsHarpoonWithBarbUpAboveLeftwardsHarpoonWithBarbDownInfix = {character = "&#x2962;"; glyph = "⥢"; name="leftwards harpoon with barb up above leftwards harpoon with barb down"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsHarpoonWithBarbUpAboveLongDashInfix = {character = "&#x296A;"; glyph = "⥪"; name="leftwards harpoon with barb up above long dash"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsHarpoonWithBarbUpAboveRightwardsHarpoonWithBarbUpInfix = {character = "&#x2966;"; glyph = "⥦"; name="leftwards harpoon with barb up above rightwards harpoon with barb up"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let leftwardsHarpoonWithBarbUpFromBarInfix = {character = "&#x295A;"; glyph = "⥚"; name="leftwards harpoon with barb up from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsHarpoonWithBarbUpToBarInfix = {character = "&#x2952;"; glyph = "⥒"; name="leftwards harpoon with barb up to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsHarpoonWithBarbUpwardsInfix = {character = "&#x21BC;"; glyph = "↼"; name="leftwards harpoon with barb upwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsOpenHeadedArrowInfix = {character = "&#x21FD;"; glyph = "⇽"; name="leftwards open-headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsPairedArrowsInfix = {character = "&#x21C7;"; glyph = "⇇"; name="leftwards paired arrows"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsQuadrupleArrowInfix = {character = "&#x2B45;"; glyph = "⭅"; name="leftwards quadruple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let leftwardsSquiggleArrowInfix = {character = "&#x21DC;"; glyph = "⇜"; name="leftwards squiggle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsTripleArrowInfix = {character = "&#x21DA;"; glyph = "⇚"; name="leftwards triple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsTripleDashArrowInfix = {character = "&#x290E;"; glyph = "⤎"; name="leftwards triple dash arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsTwoHeadedArrowInfix = {character = "&#x219E;"; glyph = "↞"; name="leftwards two headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsWaveArrowInfix = {character = "&#x219C;"; glyph = "↜"; name="leftwards wave arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftwardsWhiteArrowInfix = {character = "&#x21E6;"; glyph = "⇦"; name="leftwards white arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let leftWhiteCurlyBracketPrefix = {character = "&#x2983;"; glyph = "⦃"; name="left white curly bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftWhiteParenthesisPrefix = {character = "&#x2985;"; glyph = "⦅"; name="left white parenthesis"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let leftWigglyFenceInfix = {character = "&#x29D8;"; glyph = "⧘"; name="left wiggly fence"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let lessThanAboveDoubleLineEqualAboveGreaterThanInfix = {character = "&#x2A8B;"; glyph = "⪋"; name="less-than above double-line equal above greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanAboveGreaterThanAboveDoubleLineEqualInfix = {character = "&#x2A91;"; glyph = "⪑"; name="less-than above greater-than above double-line equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanAboveLeftwardsArrowInfix = {character = "&#x2976;"; glyph = "⥶"; name="less-than above leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let lessThanAboveSimilarAboveGreaterThanInfix = {character = "&#x2A8F;"; glyph = "⪏"; name="less-than above similar above greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanAboveSimilarOrEqualInfix = {character = "&#x2A8D;"; glyph = "⪍"; name="less-than above similar or equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanAboveSlantedEqualAboveGreaterThanAboveSlantedEqualInfix = {character = "&#x2A93;"; glyph = "⪓"; name="less-than above slanted equal above greater-than above slanted equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanAndNotApproximateInfix = {character = "&#x2A89;"; glyph = "⪉"; name="less-than and not approximate"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanAndSingleLineNotEqualToInfix = {character = "&#x2A87;"; glyph = "⪇"; name="less-than and single-line not equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let lessThanButNotEqualToInfix = {character = "&#x2268;"; glyph = "≨"; name="less-than but not equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let lessThanButNotEquivalentToInfix = {character = "&#x22E6;"; glyph = "⋦"; name="less-than but not equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanClosedByCurveAboveSlantedEqualInfix = {character = "&#x2AA8;"; glyph = "⪨"; name="less-than closed by curve above slanted equal"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanClosedByCurveInfix = {character = "&#x2AA6;"; glyph = "⪦"; name="less-than closed by curve"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanEqualToOrGreaterThanInfix = {character = "&#x22DA;"; glyph = "⋚"; name="less-than equal to or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrApproximateInfix = {character = "&#x2A85;"; glyph = "⪅"; name="less-than or approximate"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrEqualToInfix = {character = "&#x2264;"; glyph = "≤"; name="less-than or equal to"; form="infix"; priority="241"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrEquivalentToInfix = {character = "&#x2272;"; glyph = "≲"; name="less-than or equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrGreaterThanInfix = {character = "&#x2276;"; glyph = "≶"; name="less-than or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrSlantedEqualToInfix = {character = "&#x2A7D;"; glyph = "⩽"; name="less-than or slanted equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrSlantedEqualToWithDotAboveInfix = {character = "&#x2A81;"; glyph = "⪁"; name="less-than or slanted equal to with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrSlantedEqualToWithDotAboveRightInfix = {character = "&#x2A83;"; glyph = "⪃"; name="less-than or slanted equal to with dot above right"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrSlantedEqualToWithDotInsideInfix = {character = "&#x2A7F;"; glyph = "⩿"; name="less-than or slanted equal to with dot inside"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOrSlantedEqualToWithSlashInfix = {character = "&#x2A7D;&#x338;"; glyph = "⩽̸"; name="less-than or slanted equal to with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOverEqualToInfix = {character = "&#x2266;"; glyph = "≦"; name="less-than over equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanOverEqualToWithSlashInfix = {character = "&#x2266;&#x338;"; glyph = "≦̸"; name="less-than over equal to with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanSignInfix = {character = "&lt;"; glyph = "<"; name="less-than sign"; form="infix"; priority="245"; lspace="5"; rspace="5"; properties=[]}
-let lessThanWithCircleInsideInfix = {character = "&#x2A79;"; glyph = "⩹"; name="less-than with circle inside"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lessThanWithDotInfix = {character = "&#x22D6;"; glyph = "⋖"; name="less-than with dot"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let lessThanWithQuestionMarkAboveInfix = {character = "&#x2A7B;"; glyph = "⩻"; name="less-than with question mark above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lightLeftTortoiseShellBracketOrnamentPrefix = {character = "&#x2772;"; glyph = "❲"; name="light left tortoise shell bracket ornament"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let lightRightTortoiseShellBracketOrnamentPostfix = {character = "&#x2773;"; glyph = "❳"; name="light right tortoise shell bracket ornament"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let lightVerticalBarInfix = {character = "&#x2758;"; glyph = "❘"; name="light vertical bar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let lineIntegrationNotIncludingThePolePrefix = {character = "&#x2A14;"; glyph = "⨔"; name="line integration not including the pole"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let lineIntegrationWithRectangularPathAroundPolePrefix = {character = "&#x2A12;"; glyph = "⨒"; name="line integration with rectangular path around pole"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let lineIntegrationWithSemicircularPathAroundPolePrefix = {character = "&#x2A13;"; glyph = "⨓"; name="line integration with semicircular path around pole"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let logicalAndInfix = {character = "&#x2227;"; glyph = "∧"; name="logical and"; form="infix"; priority="200"; lspace="4"; rspace="4"; properties=[]}
-let logicalAndWithDotAboveInfix = {character = "&#x2A51;"; glyph = "⩑"; name="logical and with dot above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalAndWithDoubleOverbarInfix = {character = "&#x2A5E;"; glyph = "⩞"; name="logical and with double overbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalAndWithDoubleUnderbarInfix = {character = "&#x2A60;"; glyph = "⩠"; name="logical and with double underbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalAndWithHorizontalDashInfix = {character = "&#x2A5C;"; glyph = "⩜"; name="logical and with horizontal dash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalAndWithMiddleStemInfix = {character = "&#x2A5A;"; glyph = "⩚"; name="logical and with middle stem"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalAndWithUnderbarInfix = {character = "&#x2A5F;"; glyph = "⩟"; name="logical and with underbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalOrInfix = {character = "&#x2228;"; glyph = "∨"; name="logical or"; form="infix"; priority="190"; lspace="4"; rspace="4"; properties=[]}
-let logicalOrOverlappingLogicalAndInfix = {character = "&#x2A59;"; glyph = "⩙"; name="logical or overlapping logical and"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let logicalOrWithDotAboveInfix = {character = "&#x2A52;"; glyph = "⩒"; name="logical or with dot above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalOrWithDoubleOverbarInfix = {character = "&#x2A62;"; glyph = "⩢"; name="logical or with double overbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalOrWithDoubleUnderbarInfix = {character = "&#x2A63;"; glyph = "⩣"; name="logical or with double underbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalOrWithHorizontalDashInfix = {character = "&#x2A5D;"; glyph = "⩝"; name="logical or with horizontal dash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let logicalOrWithMiddleStemInfix = {character = "&#x2A5B;"; glyph = "⩛"; name="logical or with middle stem"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let longDashFromLeftMemberOfDoubleVerticalInfix = {character = "&#x2AE6;"; glyph = "⫦"; name="long dash from left member of double vertical"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let longLeftRightArrowInfix = {character = "&#x27F7;"; glyph = "⟷"; name="long left right arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longLeftRightDoubleArrowInfix = {character = "&#x27FA;"; glyph = "⟺"; name="long left right double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longLeftwardsArrowFromBarInfix = {character = "&#x27FB;"; glyph = "⟻"; name="long leftwards arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longLeftwardsArrowInfix = {character = "&#x27F5;"; glyph = "⟵"; name="long leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longLeftwardsDoubleArrowFromBarInfix = {character = "&#x27FD;"; glyph = "⟽"; name="long leftwards double arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longLeftwardsDoubleArrowInfix = {character = "&#x27F8;"; glyph = "⟸"; name="long leftwards double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longRightwardsArrowFromBarInfix = {character = "&#x27FC;"; glyph = "⟼"; name="long rightwards arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longRightwardsArrowInfix = {character = "&#x27F6;"; glyph = "⟶"; name="long rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longRightwardsDoubleArrowFromBarInfix = {character = "&#x27FE;"; glyph = "⟾"; name="long rightwards double arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longRightwardsDoubleArrowInfix = {character = "&#x27F9;"; glyph = "⟹"; name="long rightwards double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let longRightwardsSquiggleArrowInfix = {character = "&#x27FF;"; glyph = "⟿"; name="long rightwards squiggle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let lowerLeftSemicircularAnticlockwiseArrowInfix = {character = "&#x293F;"; glyph = "⤿"; name="lower left semicircular anticlockwise arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let lowerRightSemicircularClockwiseArrowInfix = {character = "&#x293E;"; glyph = "⤾"; name="lower right semicircular clockwise arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let lowLineInfix = {character = "_"; glyph = "_"; name="low line"; form="infix"; priority="900"; lspace="1"; rspace="1"; properties=[]}
-let lowLinePostfix = {character = "_"; glyph = "_"; name="low line"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let macronPostfix = {character = "&#xAF;"; glyph = "¯"; name="macron"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let masculineOrdinalIndicatorPostfix = {character = "&#xBA;"; glyph = "º"; name="masculine ordinal indicator"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let mathematicalLeftAngleBracketPrefix = {character = "&#x27E8;"; glyph = "⟨"; name="mathematical left angle bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalLeftDoubleAngleBracketPrefix = {character = "&#x27EA;"; glyph = "⟪"; name="mathematical left double angle bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalLeftFlattenedParenthesisPrefix = {character = "&#x27EE;"; glyph = "⟮"; name="mathematical left flattened parenthesis"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalLeftWhiteSquareBracketPrefix = {character = "&#x27E6;"; glyph = "⟦"; name="mathematical left white square bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalLeftWhiteTortoiseShellBracketPrefix = {character = "&#x27EC;"; glyph = "⟬"; name="mathematical left white tortoise shell bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalRightAngleBracketPostfix = {character = "&#x27E9;"; glyph = "⟩"; name="mathematical right angle bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalRightDoubleAngleBracketPostfix = {character = "&#x27EB;"; glyph = "⟫"; name="mathematical right double angle bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalRightFlattenedParenthesisPostfix = {character = "&#x27EF;"; glyph = "⟯"; name="mathematical right flattened parenthesis"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalRightWhiteSquareBracketPostfix = {character = "&#x27E7;"; glyph = "⟧"; name="mathematical right white square bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let mathematicalRightWhiteTortoiseShellBracketPostfix = {character = "&#x27ED;"; glyph = "⟭"; name="mathematical right white tortoise shell bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let measuredAngleOpeningLeftInfix = {character = "&#x299B;"; glyph = "⦛"; name="measured angle opening left"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let measuredAnglePrefix = {character = "&#x2221;"; glyph = "∡"; name="measured angle"; form="prefix"; priority="670"; lspace="0"; rspace="0"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingDownAndLeftInfix = {character = "&#x29AB;"; glyph = "⦫"; name="measured angle with open arm ending in arrow pointing down and left"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingDownAndRightInfix = {character = "&#x29AA;"; glyph = "⦪"; name="measured angle with open arm ending in arrow pointing down and right"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingLeftAndDownInfix = {character = "&#x29AF;"; glyph = "⦯"; name="measured angle with open arm ending in arrow pointing left and down"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingLeftAndUpInfix = {character = "&#x29AD;"; glyph = "⦭"; name="measured angle with open arm ending in arrow pointing left and up"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingRightAndDownInfix = {character = "&#x29AE;"; glyph = "⦮"; name="measured angle with open arm ending in arrow pointing right and down"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingRightAndUpInfix = {character = "&#x29AC;"; glyph = "⦬"; name="measured angle with open arm ending in arrow pointing right and up"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingUpAndLeftInfix = {character = "&#x29A9;"; glyph = "⦩"; name="measured angle with open arm ending in arrow pointing up and left"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredAngleWithOpenArmEndingInArrowPointingUpAndRightInfix = {character = "&#x29A8;"; glyph = "⦨"; name="measured angle with open arm ending in arrow pointing up and right"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let measuredByInfix = {character = "&#x225E;"; glyph = "≞"; name="measured by"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let measuredRightAngleWithDotInfix = {character = "&#x299D;"; glyph = "⦝"; name="measured right angle with dot"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let middleDotInfix = {character = "&#xB7;"; glyph = "·"; name="middle dot"; form="infix"; priority="400"; lspace="4"; rspace="4"; properties=[]}
-let midlineHorizontalEllipsisInfix = {character = "&#x22EF;"; glyph = "⋯"; name="midline horizontal ellipsis"; form="infix"; priority="150"; lspace="0"; rspace="0"; properties=[]}
-let minusOrPlusSignInfix = {character = "&#x2213;"; glyph = "∓"; name="minus-or-plus sign"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let minusOrPlusSignPrefix = {character = "&#x2213;"; glyph = "∓"; name="minus-or-plus sign"; form="prefix"; priority="275"; lspace="0"; rspace="1"; properties=[]}
-let minusSignInfix = {character = "&#x2212;"; glyph = "−"; name="minus sign"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let minusSignInTriangleInfix = {character = "&#x2A3A;"; glyph = "⨺"; name="minus sign in triangle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let minusSignPrefix = {character = "&#x2212;"; glyph = "−"; name="minus sign"; form="prefix"; priority="275"; lspace="0"; rspace="1"; properties=[]}
-let minusSignWithCommaAboveInfix = {character = "&#x2A29;"; glyph = "⨩"; name="minus sign with comma above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let minusSignWithDotBelowInfix = {character = "&#x2A2A;"; glyph = "⨪"; name="minus sign with dot below"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let minusSignWithFallingDotsInfix = {character = "&#x2A2B;"; glyph = "⨫"; name="minus sign with falling dots"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let minusSignWithRisingDotsInfix = {character = "&#x2A2C;"; glyph = "⨬"; name="minus sign with rising dots"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let minusTildeInfix = {character = "&#x2242;"; glyph = "≂"; name="minus tilde"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let minusTildeWithSlashInfix = {character = "&#x2242;&#x338;"; glyph = "≂̸"; name="minus tilde with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let minyInfix = {character = "&#x29FF;"; glyph = "⧿"; name="miny"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let modelsInfix = {character = "&#x22A7;"; glyph = "⊧"; name="models"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let modifierLetterAcuteAccentPostfix = {character = "&#x2CA;"; glyph = "ˊ"; name="modifier letter acute accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let modifierLetterCircumflexAccentPostfix = {character = "&#x2C6;"; glyph = "ˆ"; name="modifier letter circumflex accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let modifierLetterGraveAccentPostfix = {character = "&#x2CB;"; glyph = "ˋ"; name="modifier letter grave accent"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let modifierLetterLowMacronPostfix = {character = "&#x2CD;"; glyph = "ˍ"; name="modifier letter low macron"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let modifierLetterLowTildePostfix = {character = "&#x2F7;"; glyph = "˷"; name="modifier letter low tilde"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let modifierLetterMacronPostfix = {character = "&#x2C9;"; glyph = "ˉ"; name="modifier letter macron"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let moduloTwoSumPrefix = {character = "&#x2A0A;"; glyph = "⨊"; name="modulo two sum"; form="prefix"; priority="290"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let muchGreaterThanInfix = {character = "&#x226B;"; glyph = "≫"; name="much greater-than"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let muchGreaterThanWithSlashInfix = {character = "&#x226B;&#x338;"; glyph = "≫̸"; name="much greater than with slash"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let muchLessThanInfix = {character = "&#x226A;"; glyph = "≪"; name="much less-than"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let muchLessThanWithSlashInfix = {character = "&#x226A;&#x338;"; glyph = "≪̸"; name="much less than with slash"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let multimapInfix = {character = "&#x22B8;"; glyph = "⊸"; name="multimap"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let multipleCharacterOperatorDoubleExclamationPostfix = {character = "!!"; glyph = "!!"; name="multiple character operator: !!"; form="postfix"; priority="810"; lspace="1"; rspace="0"; properties=[]}
-let multipleCharacterOperatorDoubleForwardSlashInfix = {character = "//"; glyph = "//"; name="multiple character operator: //"; form="infix"; priority="820"; lspace="1"; rspace="1"; properties=[]}
-let multipleCharacterOperatorDoubleMinusPostfix = {character = "--"; glyph = "--"; name="multiple character operator: --"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=[]}
-let multipleCharacterOperatorDoublePlusPostfix = {character = "++"; glyph = "++"; name="multiple character operator: ++"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=[]}
-let multipleCharacterOperatorDoubleVerticalLineInfix = {character = "||"; glyph = "||"; name="multiple character operator: ||"; form="infix"; priority="270"; lspace="2"; rspace="2"; properties=["fence"; "stretchy"; "symmetric"]}
-let multipleCharacterOperatorEqualsEqualsInfix = {character = "=="; glyph = "=="; name="multiple character operator: =="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorExclamationEqualsInfix = {character = "!="; glyph = "!="; name="multiple character operator: !="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorForwardSlashEqualsInfix = {character = "/="; glyph = "/="; name="multiple character operator: /="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorGreaterThanOrEqualsInfix = {character = ">="; glyph = ">="; name="multiple character operator: >="; form="infix"; priority="243"; lspace="5"; rspace="5"; properties=[]}
-let multipleCharacterOperatorLessThanEqualToInfix = {character = "&lt;="; glyph = "<="; name="multiple character operator: <="; form="infix"; priority="241"; lspace="5"; rspace="5"; properties=[]}
-let multipleCharacterOperatorLessThanOrGreaterThanInfix = {character = "&lt;>"; glyph = "<>"; name="multiple character operator: <>"; form="infix"; priority="780"; lspace="1"; rspace="1"; properties=[]}
-let multipleCharacterOperatorMinusEqualsInfix = {character = "-="; glyph = "-="; name="multiple character operator: -="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorMinusGreaterThanInfix = {character = "->"; glyph = "->"; name="multiple character operator: ->"; form="infix"; priority="90"; lspace="5"; rspace="5"; properties=[]}
-let multipleCharacterOperatorPlusEqualsInfix = {character = "+="; glyph = "+="; name="multiple character operator: +="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorSemiColonEqualsInfix = {character = ":="; glyph = ":="; name="multiple character operator: :="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorStarEqualsInfix = {character = "*="; glyph = "*="; name="multiple character operator: *="; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorThreeDotPostfix = {character = "..."; glyph = "..."; name="multiple character operator: ..."; form="postfix"; priority="100"; lspace="0"; rspace="0"; properties=[]}
-let multipleCharacterOperatorTripleVerticalLineInfix = {character = "|||"; glyph = "|||"; name="multiple character operator: |||"; form="infix"; priority="270"; lspace="2"; rspace="2"; properties=["fence"; "stretchy"; "symmetric"]}
-let multipleCharacterOperatorTwoAmpersandInfix = {character = "&amp;&amp;"; glyph = "&&"; name="multiple character operator: &&"; form="infix"; priority="200"; lspace="4"; rspace="4"; properties=[]}
-let multipleCharacterOperatorTwoDotPostfix = {character = ".."; glyph = ".."; name="multiple character operator: .."; form="postfix"; priority="100"; lspace="0"; rspace="0"; properties=[]}
-let multipleCharacterOperatorTwoStarInfix = {character = "**"; glyph = "**"; name="multiple character operator: **"; form="infix"; priority="780"; lspace="1"; rspace="1"; properties=[]}
-let multipleCharacterThreeVerticalLineOperatorPostfix = {character = "|||"; glyph = "|||"; name="multiple character operator: |||"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let multipleCharacterThreeVerticalLineOperatorPrefix = {character = "|||"; glyph = "|||"; name="multiple character operator: |||"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let multipleCharacterTwoVerticalLineOperatorPostfix = {character = "||"; glyph = "||"; name="multiple character operator: ||"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let multipleCharacterTwoVerticalLineOperatorPrefix = {character = "||"; glyph = "||"; name="multiple character operator: ||"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let multiplicationSignInDoubleCircleInfix = {character = "&#x2A37;"; glyph = "⨷"; name="multiplication sign in double circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multiplicationSignInfix = {character = "&#xD7;"; glyph = "×"; name="multiplication sign"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let multiplicationSignInLeftHalfCircleInfix = {character = "&#x2A34;"; glyph = "⨴"; name="multiplication sign in left half circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multiplicationSignInRightHalfCircleInfix = {character = "&#x2A35;"; glyph = "⨵"; name="multiplication sign in right half circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multiplicationSignInTriangleInfix = {character = "&#x2A3B;"; glyph = "⨻"; name="multiplication sign in triangle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multiplicationSignWithDotAboveInfix = {character = "&#x2A30;"; glyph = "⨰"; name="multiplication sign with dot above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multiplicationSignWithUnderbarInfix = {character = "&#x2A31;"; glyph = "⨱"; name="multiplication sign with underbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multisetInfix = {character = "&#x228C;"; glyph = "⊌"; name="multiset"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multisetMultiplicationInfix = {character = "&#x228D;"; glyph = "⊍"; name="multiset multiplication"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let multisetUnionInfix = {character = "&#x228E;"; glyph = "⊎"; name="multiset union"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let musicFlatSignPostfix = {character = "&#x266D;"; glyph = "♭"; name="music flat sign"; form="postfix"; priority="800"; lspace="0"; rspace="2"; properties=[]}
-let musicNaturalSignPostfix = {character = "&#x266E;"; glyph = "♮"; name="music natural sign"; form="postfix"; priority="800"; lspace="0"; rspace="2"; properties=[]}
-let musicSharpSignPostfix = {character = "&#x266F;"; glyph = "♯"; name="music sharp sign"; form="postfix"; priority="800"; lspace="0"; rspace="2"; properties=[]}
-let nablaPrefix = {character = "&#x2207;"; glyph = "∇"; name="nabla"; form="prefix"; priority="740"; lspace="2"; rspace="1"; properties=[]}
-let nandInfix = {character = "&#x22BC;"; glyph = "⊼"; name="nand"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let nAryCircledDotOperatorPrefix = {character = "&#x2A00;"; glyph = "⨀"; name="n-ary circled dot operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryCircledPlusOperatorPrefix = {character = "&#x2A01;"; glyph = "⨁"; name="n-ary circled plus operator"; form="prefix"; priority="300"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryCircledTimesOperatorPrefix = {character = "&#x2A02;"; glyph = "⨂"; name="n-ary circled times operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryCoproductPrefix = {character = "&#x2210;"; glyph = "∐"; name="n-ary coproduct"; form="prefix"; priority="350"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryIntersectionPrefix = {character = "&#x22C2;"; glyph = "⋂"; name="n-ary intersection"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryLogicalAndPrefix = {character = "&#x22C0;"; glyph = "⋀"; name="n-ary logical and"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryLogicalOrPrefix = {character = "&#x22C1;"; glyph = "⋁"; name="n-ary logical or"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryProductPrefix = {character = "&#x220F;"; glyph = "∏"; name="n-ary product"; form="prefix"; priority="350"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nArySquareIntersectionOperatorPrefix = {character = "&#x2A05;"; glyph = "⨅"; name="n-ary square intersection operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nArySquareUnionOperatorPrefix = {character = "&#x2A06;"; glyph = "⨆"; name="n-ary square union operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nArySummationPrefix = {character = "&#x2211;"; glyph = "∑"; name="n-ary summation"; form="prefix"; priority="290"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryTimesOperatorPrefix = {character = "&#x2A09;"; glyph = "⨉"; name="n-ary times operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryUnionOperatorWithDotPrefix = {character = "&#x2A03;"; glyph = "⨃"; name="n-ary union operator with dot"; form="prefix"; priority="320"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryUnionOperatorWithPlusPrefix = {character = "&#x2A04;"; glyph = "⨄"; name="n-ary union operator with plus"; form="prefix"; priority="320"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryUnionPrefix = {character = "&#x22C3;"; glyph = "⋃"; name="n-ary union"; form="prefix"; priority="320"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let nAryWhiteVerticalBarPrefix = {character = "&#x2AFF;"; glyph = "⫿"; name="n-ary white vertical bar"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let negatedDoubleVerticalBarDoubleRightTurnstileInfix = {character = "&#x22AF;"; glyph = "⊯"; name="negated double vertical bar double right turnstile"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let neitherApproximatelyNorActuallyEqualToInfix = {character = "&#x2247;"; glyph = "≇"; name="neither approximately nor actually equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let neitherASubsetOfNorEqualToInfix = {character = "&#x2288;"; glyph = "⊈"; name="neither a subset of nor equal to"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let neitherASupersetOfNorEqualToInfix = {character = "&#x2289;"; glyph = "⊉"; name="neither a superset of nor equal to"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let neitherGreaterThanNorEqualToInfix = {character = "&#x2271;"; glyph = "≱"; name="neither greater-than nor equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let neitherGreaterThanNorEquivalentToInfix = {character = "&#x2275;"; glyph = "≵"; name="neither greater-than nor equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let neitherGreaterThanNorLessThanInfix = {character = "&#x2279;"; glyph = "≹"; name="neither greater-than nor less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let neitherLessThanNorEqualToInfix = {character = "&#x2270;"; glyph = "≰"; name="neither less-than nor equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let neitherLessThanNorEquivalentToInfix = {character = "&#x2274;"; glyph = "≴"; name="neither less-than nor equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let neitherLessThanNorGreaterThanInfix = {character = "&#x2278;"; glyph = "≸"; name="neither less-than nor greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let nonforkingInfix = {character = "&#x2ADD;"; glyph = "⫝"; name="nonforking"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let nonforkingWithSlashInfix = {character = "&#x2ADD;&#x338;"; glyph = "⫝̸"; name="nonforking with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let norInfix = {character = "&#x22BD;"; glyph = "⊽"; name="nor"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let normalSubgroupOfInfix = {character = "&#x22B2;"; glyph = "⊲"; name="normal subgroup of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let normalSubgroupOfOrEqualToInfix = {character = "&#x22B4;"; glyph = "⊴"; name="normal subgroup of or equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let northEastAndSouthWestArrowInfix = {character = "&#x2922;"; glyph = "⤢"; name="north east and south west arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let northEastArrowAndSouthEastArrowInfix = {character = "&#x2928;"; glyph = "⤨"; name="north east arrow and south east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northEastArrowCrossingNorthWestArrowInfix = {character = "&#x2931;"; glyph = "⤱"; name="north east arrow crossing north west arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northEastArrowCrossingSouthEastArrowInfix = {character = "&#x292E;"; glyph = "⤮"; name="north east arrow crossing south east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northEastArrowInfix = {character = "&#x2197;"; glyph = "↗"; name="north east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let northEastArrowWithHookInfix = {character = "&#x2924;"; glyph = "⤤"; name="north east arrow with hook"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northEastDoubleArrowInfix = {character = "&#x21D7;"; glyph = "⇗"; name="north east double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let northWestAndSouthEastArrowInfix = {character = "&#x2921;"; glyph = "⤡"; name="north west and south east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let northWestArrowAndNorthEastArrowInfix = {character = "&#x2927;"; glyph = "⤧"; name="north west arrow and north east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northWestArrowCrossingNorthEastArrowInfix = {character = "&#x2932;"; glyph = "⤲"; name="north west arrow crossing north east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northWestArrowInfix = {character = "&#x2196;"; glyph = "↖"; name="north west arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let northWestArrowToCornerInfix = {character = "&#x21F1;"; glyph = "⇱"; name="north west arrow to corner"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northWestArrowToLongBarInfix = {character = "&#x21B8;"; glyph = "↸"; name="north west arrow to long bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northWestArrowWithHookInfix = {character = "&#x2923;"; glyph = "⤣"; name="north west arrow with hook"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let northWestDoubleArrowInfix = {character = "&#x21D6;"; glyph = "⇖"; name="north west double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let notAlmostEqualToInfix = {character = "&#x2249;"; glyph = "≉"; name="not almost equal to"; form="infix"; priority="250"; lspace="5"; rspace="5"; properties=[]}
-let notAnElementOfInfix = {character = "&#x2209;"; glyph = "∉"; name="not an element of"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let notASubsetOfInfix = {character = "&#x2284;"; glyph = "⊄"; name="not a subset of"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let notASupersetOfInfix = {character = "&#x2285;"; glyph = "⊅"; name="not a superset of"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let notAsymptoticallyEqualToInfix = {character = "&#x2244;"; glyph = "≄"; name="not asymptotically equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let notEqualToInfix = {character = "&#x2260;"; glyph = "≠"; name="not equal to"; form="infix"; priority="255"; lspace="5"; rspace="5"; properties=[]}
-let notEquivalentToInfix = {character = "&#x226D;"; glyph = "≭"; name="not equivalent to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let notGreaterThanInfix = {character = "&#x226F;"; glyph = "≯"; name="not greater-than"; form="infix"; priority="244"; lspace="5"; rspace="5"; properties=[]}
-let notIdenticalToInfix = {character = "&#x2262;"; glyph = "≢"; name="not identical to"; form="infix"; priority="252"; lspace="5"; rspace="5"; properties=[]}
-let notLessThanInfix = {character = "&#x226E;"; glyph = "≮"; name="not less-than"; form="infix"; priority="246"; lspace="5"; rspace="5"; properties=[]}
-let notNormalSubgroupOfInfix = {character = "&#x22EA;"; glyph = "⋪"; name="not normal subgroup of"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let notNormalSubgroupOfOrEqualToInfix = {character = "&#x22EC;"; glyph = "⋬"; name="not normal subgroup of or equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let notParallelToInfix = {character = "&#x2226;"; glyph = "∦"; name="not parallel to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let notSignPrefix = {character = "&#xAC;"; glyph = "¬"; name="not sign"; form="prefix"; priority="680"; lspace="2"; rspace="1"; properties=[]}
-let notSquareImageOfOrEqualToInfix = {character = "&#x22E2;"; glyph = "⋢"; name="not square image of or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let notSquareOriginalOfOrEqualToInfix = {character = "&#x22E3;"; glyph = "⋣"; name="not square original of or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let notTildeInfix = {character = "&#x2241;"; glyph = "≁"; name="not tilde"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let notTrueInfix = {character = "&#x22AD;"; glyph = "⊭"; name="not true"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let obliqueAngleOpeningDownInfix = {character = "&#x29A7;"; glyph = "⦧"; name="oblique angle opening down"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let obliqueAngleOpeningUpInfix = {character = "&#x29A6;"; glyph = "⦦"; name="oblique angle opening up"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let originalOfInfix = {character = "&#x22B6;"; glyph = "⊶"; name="original of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let overlinePostfix = {character = "&#x203E;"; glyph = "‾"; name="overline"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let parallelToInfix = {character = "&#x2225;"; glyph = "∥"; name="parallel to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let parallelWithHorizontalStrokeInfix = {character = "&#x2AF2;"; glyph = "⫲"; name="parallel with horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let parallelWithTildeOperatorInfix = {character = "&#x2AF3;"; glyph = "⫳"; name="parallel with tilde operator"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let partialDifferentialPrefix = {character = "&#x2202;"; glyph = "∂"; name="partial differential"; form="prefix"; priority="740"; lspace="2"; rspace="1"; properties=[]}
-let percentSignInfix = {character = "%"; glyph = "%"; name="percent sign"; form="infix"; priority="640"; lspace="3"; rspace="3"; properties=[]}
-let perpendicularWithSInfix = {character = "&#x2AE1;"; glyph = "⫡"; name="perpendicular with s"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let pitchforkInfix = {character = "&#x22D4;"; glyph = "⋔"; name="pitchfork"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let pitchforkWithTeeTopInfix = {character = "&#x2ADA;"; glyph = "⫚"; name="pitchfork with tee top"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let plusMinusSignInfix = {character = "&#xB1;"; glyph = "±"; name="plus-minus sign"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let plusMinusSignPrefix = {character = "&#xB1;"; glyph = "±"; name="plus-minus sign"; form="prefix"; priority="275"; lspace="0"; rspace="1"; properties=[]}
-let plusSignAboveEqualsSignInfix = {character = "&#x2A72;"; glyph = "⩲"; name="plus sign above equals sign"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignInfix = {character = "+"; glyph = "+"; name="plus sign"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let plusSignInLeftHalfCircleInfix = {character = "&#x2A2D;"; glyph = "⨭"; name="plus sign in left half circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignInRightHalfCircleInfix = {character = "&#x2A2E;"; glyph = "⨮"; name="plus sign in right half circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignInTriangleInfix = {character = "&#x2A39;"; glyph = "⨹"; name="plus sign in triangle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignPrefix = {character = "+"; glyph = "+"; name="plus sign"; form="prefix"; priority="275"; lspace="0"; rspace="1"; properties=[]}
-let plusSignWithBlackTriangleInfix = {character = "&#x2A28;"; glyph = "⨨"; name="plus sign with black triangle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignWithCircumflexAccentAboveInfix = {character = "&#x2A23;"; glyph = "⨣"; name="plus sign with circumflex accent above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignWithDotBelowInfix = {character = "&#x2A25;"; glyph = "⨥"; name="plus sign with dot below"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignWithSmallCircleAboveInfix = {character = "&#x2A22;"; glyph = "⨢"; name="plus sign with small circle above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignWithSubscriptTwoInfix = {character = "&#x2A27;"; glyph = "⨧"; name="plus sign with subscript two"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignWithTildeAboveInfix = {character = "&#x2A24;"; glyph = "⨤"; name="plus sign with tilde above"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let plusSignWithTildeBelowInfix = {character = "&#x2A26;"; glyph = "⨦"; name="plus sign with tilde below"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let precedesAboveAlmostEqualToInfix = {character = "&#x2AB7;"; glyph = "⪷"; name="precedes above almost equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesAboveEqualsSignInfix = {character = "&#x2AB3;"; glyph = "⪳"; name="precedes above equals sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesAboveNotAlmostEqualToInfix = {character = "&#x2AB9;"; glyph = "⪹"; name="precedes above not almost equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesAboveNotEqualToInfix = {character = "&#x2AB5;"; glyph = "⪵"; name="precedes above not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesAboveSingleLineEqualsSignInfix = {character = "&#x2AAF;"; glyph = "⪯"; name="precedes above single-line equals sign"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let precedesAboveSingleLineEqualsSignWithSlashInfix = {character = "&#x2AAF;&#x338;"; glyph = "⪯̸"; name="precedes above single-line equals sign with slash"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let precedesAboveSingleLineNotEqualToInfix = {character = "&#x2AB1;"; glyph = "⪱"; name="precedes above single-line not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesButNotEquivalentToInfix = {character = "&#x22E8;"; glyph = "⋨"; name="precedes but not equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesInfix = {character = "&#x227A;"; glyph = "≺"; name="precedes"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let precedesOrEqualToInfix = {character = "&#x227C;"; glyph = "≼"; name="precedes or equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let precedesOrEquivalentToInfix = {character = "&#x227E;"; glyph = "≾"; name="precedes or equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let precedesUnderRelationInfix = {character = "&#x22B0;"; glyph = "⊰"; name="precedes under relation"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let primePostfix = {character = "&#x2032;"; glyph = "′"; name="prime"; form="postfix"; priority="800"; lspace="0"; rspace="0"; properties=[]}
-let proportionalToInfix = {character = "&#x221D;"; glyph = "∝"; name="proportional to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let proportionInfix = {character = "&#x2237;"; glyph = "∷"; name="proportion"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let quadrupleIntegralOperatorPrefix = {character = "&#x2A0C;"; glyph = "⨌"; name="quadruple integral operator"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let quadruplePrimePostfix = {character = "&#x2057;"; glyph = "⁗"; name="quadruple prime"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let quaternionIntegralOperatorPrefix = {character = "&#x2A16;"; glyph = "⨖"; name="quaternion integral operator"; form="prefix"; priority="310"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let questionedEqualToInfix = {character = "&#x225F;"; glyph = "≟"; name="questioned equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let questionMarkInfix = {character = "?"; glyph = "?"; name="question mark"; form="infix"; priority="835"; lspace="1"; rspace="1"; properties=[]}
-let quotationMarkPostfix = {character = "\""; glyph = "\""; name="quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let ratioInfix = {character = "&#x2236;"; glyph = "∶"; name="ratio"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let reversedAngleInfix = {character = "&#x29A3;"; glyph = "⦣"; name="reversed angle"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let reversedAngleWithUnderbarInfix = {character = "&#x29A5;"; glyph = "⦥"; name="reversed angle with underbar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let reversedDoublePrimePostfix = {character = "&#x2036;"; glyph = "‶"; name="reversed double prime"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let reversedDoubleStrokeNotSignInfix = {character = "&#x2AED;"; glyph = "⫭"; name="reversed double stroke not sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let reversedEmptySetInfix = {character = "&#x29B0;"; glyph = "⦰"; name="reversed empty set"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let reversedPrimePostfix = {character = "&#x2035;"; glyph = "‵"; name="reversed prime"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let reversedTildeEqualsInfix = {character = "&#x22CD;"; glyph = "⋍"; name="reversed tilde equals"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let reversedTildeInfix = {character = "&#x223D;"; glyph = "∽"; name="reversed tilde"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let reversedTildeWithUnderlineInfix = {character = "&#x223D;&#x331;"; glyph = "∽̱"; name="reversed tilde with underline"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let reversedTriplePrimePostfix = {character = "&#x2037;"; glyph = "‷"; name="reversed triple prime"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let reverseSolidusInfix = {character = @"\"; glyph = @"\"; name="reverse solidus"; form="infix"; priority="650"; lspace="0"; rspace="0"; properties=[]}
-let reverseSolidusOperatorInfix = {character = "&#x29F5;"; glyph = "⧵"; name="reverse solidus operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let reverseSolidusWithHorizontalStrokeInfix = {character = "&#x29F7;"; glyph = "⧷"; name="reverse solidus with horizontal stroke"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let rightAngleBracketWithDotPostfix = {character = "&#x2992;"; glyph = "⦒"; name="right angle bracket with dot"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightAngleInfix = {character = "&#x221F;"; glyph = "∟"; name="right angle"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let rightAngleVariantWithSquareInfix = {character = "&#x299C;"; glyph = "⦜"; name="right angle variant with square"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let rightAngleWithArcInfix = {character = "&#x22BE;"; glyph = "⊾"; name="right angle with arc"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let rightArcGreaterThanBracketPostfix = {character = "&#x2994;"; glyph = "⦔"; name="right arc greater-than bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightArrowWithSmallCircleInfix = {character = "&#x21F4;"; glyph = "⇴"; name="right arrow with small circle"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightBlackTortoiseShellBracketPostfix = {character = "&#x2998;"; glyph = "⦘"; name="right black tortoise shell bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightCeilingPostfix = {character = "&#x2309;"; glyph = "⌉"; name="right ceiling"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightCurlyBracketPostfix = {character = "}"; glyph = "}"; name="right curly bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightDoubleArrowWithRoundedHeadInfix = {character = "&#x2970;"; glyph = "⥰"; name="right double arrow with rounded head"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightDoubleQuotationMarkPostfix = {character = "&#x201D;"; glyph = "”"; name="right double quotation mark"; form="postfix"; priority="10"; lspace="0"; rspace="0"; properties=["fence"]}
-let rightDoubleWigglyFenceInfix = {character = "&#x29DB;"; glyph = "⧛"; name="right double wiggly fence"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let rightFishTailInfix = {character = "&#x297D;"; glyph = "⥽"; name="right fish tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightFloorPostfix = {character = "&#x230B;"; glyph = "⌋"; name="right floor"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightHalfBlackCircleInfix = {character = "&#x25D7;"; glyph = "◗"; name="right half black circle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let righthandInteriorProductInfix = {character = "&#x2A3D;"; glyph = "⨽"; name="righthand interior product"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let rightNormalFactorSemidirectProductInfix = {character = "&#x22CA;"; glyph = "⋊"; name="right normal factor semidirect product"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let rightParenthesisPostfix = {character = ")"; glyph = ")"; name="right parenthesis"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightPointingAngleBracketPostfix = {character = "&#x232A;"; glyph = "〉"; name="right-pointing angle bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightPointingCurvedAngleBracketPostfix = {character = "&#x29FD;"; glyph = "⧽"; name="right-pointing curved angle bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightSemidirectProductInfix = {character = "&#x22CC;"; glyph = "⋌"; name="right semidirect product"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let rightSideArcClockwiseArrowInfix = {character = "&#x2938;"; glyph = "⤸"; name="right-side arc clockwise arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let rightSingleQuotationMarkPostfix = {character = "&#x2019;"; glyph = "’"; name="right single quotation mark"; form="postfix"; priority="10"; lspace="0"; rspace="0"; properties=["fence"]}
-let rightSquareBracketPostfix = {character = "]"; glyph = "]"; name="right square bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightSquareBracketWithTickInBottomCornerPostfix = {character = "&#x298E;"; glyph = "⦎"; name="right square bracket with tick in bottom corner"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightSquareBracketWithTickInTopCornerPostfix = {character = "&#x2990;"; glyph = "⦐"; name="right square bracket with tick in top corner"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightSquareBracketWithUnderbarPostfix = {character = "&#x298C;"; glyph = "⦌"; name="right square bracket with underbar"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightTackInfix = {character = "&#x22A2;"; glyph = "⊢"; name="right tack"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let rightTriangleAboveLeftTriangleInfix = {character = "&#x29CE;"; glyph = "⧎"; name="right triangle above left triangle"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let rightTriangleInfix = {character = "&#x22BF;"; glyph = "⊿"; name="right triangle"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let rightwardsArrowAboveAlmostEqualToInfix = {character = "&#x2975;"; glyph = "⥵"; name="rightwards arrow above almost equal to"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowAboveShortLeftwardsArrowInfix = {character = "&#x2942;"; glyph = "⥂"; name="rightwards arrow above short leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowAboveTildeOperatorInfix = {character = "&#x2974;"; glyph = "⥴"; name="rightwards arrow above tilde operator"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowFromBarInfix = {character = "&#x21A6;"; glyph = "↦"; name="rightwards arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowFromBarToBlackDiamondInfix = {character = "&#x2920;"; glyph = "⤠"; name="rightwards arrow from bar to black diamond"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowInfix = {character = "&#x2192;"; glyph = "→"; name="rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowOverLeftwardsArrowInfix = {character = "&#x21C4;"; glyph = "⇄"; name="rightwards arrow over leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowTailInfix = {character = "&#x291A;"; glyph = "⤚"; name="rightwards arrow-tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowThroughXInfix = {character = "&#x2947;"; glyph = "⥇"; name="rightwards arrow through x"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowToBarInfix = {character = "&#x21E5;"; glyph = "⇥"; name="rightwards arrow to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowToBlackDiamondInfix = {character = "&#x291E;"; glyph = "⤞"; name="rightwards arrow to black diamond"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithCornerDownwardsInfix = {character = "&#x21B4;"; glyph = "↴"; name="rightwards arrow with corner downwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let rightwardsArrowWithDottedStemInfix = {character = "&#x2911;"; glyph = "⤑"; name="rightwards arrow with dotted stem"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithDoubleVerticalStrokeInfix = {character = "&#x21FB;"; glyph = "⇻"; name="rightwards arrow with double vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithHookInfix = {character = "&#x21AA;"; glyph = "↪"; name="rightwards arrow with hook"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowWithLoopInfix = {character = "&#x21AC;"; glyph = "↬"; name="rightwards arrow with loop"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowWithPlusBelowInfix = {character = "&#x2945;"; glyph = "⥅"; name="rightwards arrow with plus below"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithStrokeInfix = {character = "&#x219B;"; glyph = "↛"; name="rightwards arrow with stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithTailInfix = {character = "&#x21A3;"; glyph = "↣"; name="rightwards arrow with tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsArrowWithTailWithDoubleVerticalStrokeInfix = {character = "&#x2915;"; glyph = "⤕"; name="rightwards arrow with tail with double vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithTailWithVerticalStrokeInfix = {character = "&#x2914;"; glyph = "⤔"; name="rightwards arrow with tail with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsArrowWithVerticalStrokeInfix = {character = "&#x21F8;"; glyph = "⇸"; name="rightwards arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsDashedArrowInfix = {character = "&#x21E2;"; glyph = "⇢"; name="rightwards dashed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsDoubleArrowFromBarInfix = {character = "&#x2907;"; glyph = "⤇"; name="rightwards double arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsDoubleArrowInfix = {character = "&#x21D2;"; glyph = "⇒"; name="rightwards double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsDoubleArrowTailInfix = {character = "&#x291C;"; glyph = "⤜"; name="rightwards double arrow-tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsDoubleArrowWithStrokeInfix = {character = "&#x21CF;"; glyph = "⇏"; name="rightwards double arrow with stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsDoubleArrowWithVerticalStrokeInfix = {character = "&#x2903;"; glyph = "⤃"; name="rightwards double arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsDoubleDashArrowInfix = {character = "&#x290D;"; glyph = "⤍"; name="rightwards double dash arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsHarpoonOverLeftwardsHarpoonInfix = {character = "&#x21CC;"; glyph = "⇌"; name="rightwards harpoon over leftwards harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsHarpoonWithBarbDownAboveLeftwardsHarpoonWithBarbDownInfix = {character = "&#x2969;"; glyph = "⥩"; name="rightwards harpoon with barb down above leftwards harpoon with barb down"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsHarpoonWithBarbDownBelowLongDashInfix = {character = "&#x296D;"; glyph = "⥭"; name="rightwards harpoon with barb down below long dash"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsHarpoonWithBarbDownFromBarInfix = {character = "&#x295F;"; glyph = "⥟"; name="rightwards harpoon with barb down from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsHarpoonWithBarbDownToBarInfix = {character = "&#x2957;"; glyph = "⥗"; name="rightwards harpoon with barb down to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let rightwardsHarpoonWithBarbDownwardsInfix = {character = "&#x21C1;"; glyph = "⇁"; name="rightwards harpoon with barb downwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsHarpoonWithBarbUpAboveLeftwardsHarpoonWithBarbUpInfix = {character = "&#x2968;"; glyph = "⥨"; name="rightwards harpoon with barb up above leftwards harpoon with barb up"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsHarpoonWithBarbUpAboveLongDashInfix = {character = "&#x296C;"; glyph = "⥬"; name="rightwards harpoon with barb up above long dash"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsHarpoonWithBarbUpAboveRightwardsHarpoonWithBarbDownInfix = {character = "&#x2964;"; glyph = "⥤"; name="rightwards harpoon with barb up above rightwards harpoon with barb down"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsHarpoonWithBarbUpFromBarInfix = {character = "&#x295B;"; glyph = "⥛"; name="rightwards harpoon with barb up from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsHarpoonWithBarbUpToBarInfix = {character = "&#x2953;"; glyph = "⥓"; name="rightwards harpoon with barb up to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsHarpoonWithBarbUpwardsInfix = {character = "&#x21C0;"; glyph = "⇀"; name="rightwards harpoon with barb upwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsOpenHeadedArrowInfix = {character = "&#x21FE;"; glyph = "⇾"; name="rightwards open-headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsPairedArrowsInfix = {character = "&#x21C9;"; glyph = "⇉"; name="rightwards paired arrows"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsQuadrupleArrowInfix = {character = "&#x2B46;"; glyph = "⭆"; name="rightwards quadruple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let rightwardsSquiggleArrowInfix = {character = "&#x21DD;"; glyph = "⇝"; name="rightwards squiggle arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsTripleArrowInfix = {character = "&#x21DB;"; glyph = "⇛"; name="rightwards triple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsTripleDashArrowInfix = {character = "&#x290F;"; glyph = "⤏"; name="rightwards triple dash arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsTwoHeadedArrowFromBarInfix = {character = "&#x2905;"; glyph = "⤅"; name="rightwards two-headed arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsTwoHeadedArrowInfix = {character = "&#x21A0;"; glyph = "↠"; name="rightwards two headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsTwoHeadedArrowWithDoubleVerticalStrokeInfix = {character = "&#x2901;"; glyph = "⤁"; name="rightwards two-headed arrow with double vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsTwoHeadedArrowWithTailInfix = {character = "&#x2916;"; glyph = "⤖"; name="rightwards two-headed arrow with tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsTwoHeadedArrowWithTailWithDoubleVerticalStrokeInfix = {character = "&#x2918;"; glyph = "⤘"; name="rightwards two-headed arrow with tail with double vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsTwoHeadedArrowWithTailWithVerticalStrokeInfix = {character = "&#x2917;"; glyph = "⤗"; name="rightwards two-headed arrow with tail with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsTwoHeadedArrowWithVerticalStrokeInfix = {character = "&#x2900;"; glyph = "⤀"; name="rightwards two-headed arrow with vertical stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let rightwardsTwoHeadedTripleDashArrowInfix = {character = "&#x2910;"; glyph = "⤐"; name="rightwards two-headed triple dash arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsWaveArrowInfix = {character = "&#x219D;"; glyph = "↝"; name="rightwards wave arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsWhiteArrowFromWallInfix = {character = "&#x21F0;"; glyph = "⇰"; name="rightwards white arrow from wall"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightwardsWhiteArrowInfix = {character = "&#x21E8;"; glyph = "⇨"; name="rightwards white arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let rightWhiteCurlyBracketPostfix = {character = "&#x2984;"; glyph = "⦄"; name="right white curly bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightWhiteParenthesisPostfix = {character = "&#x2986;"; glyph = "⦆"; name="right white parenthesis"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let rightWigglyFenceInfix = {character = "&#x29D9;"; glyph = "⧙"; name="right wiggly fence"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let ringAbovePostfix = {character = "&#x2DA;"; glyph = "˚"; name="ring above"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let ringEqualToInfix = {character = "&#x2257;"; glyph = "≗"; name="ring equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let ringInEqualToInfix = {character = "&#x2256;"; glyph = "≖"; name="ring in equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let ringOperatorInfix = {character = "&#x2218;"; glyph = "∘"; name="ring operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let risingDiagonalCrossingFallingDiagonalInfix = {character = "&#x292B;"; glyph = "⤫"; name="rising diagonal crossing falling diagonal"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let risingDiagonalCrossingSouthEastArrowInfix = {character = "&#x2930;"; glyph = "⤰"; name="rising diagonal crossing south east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let ruleDelayedInfix = {character = "&#x29F4;"; glyph = "⧴"; name="rule-delayed"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let semicolonInfix = {character = ";"; glyph = ";"; name="semicolon"; form="infix"; priority="30"; lspace="0"; rspace="3"; properties=["separator"; "linebreakstyle=after"]}
-let semidirectProductWithBottomClosedInfix = {character = "&#x2A32;"; glyph = "⨲"; name="semidirect product with bottom closed"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let setMinusInfix = {character = "&#x2216;"; glyph = "∖"; name="set minus"; form="infix"; priority="650"; lspace="4"; rspace="4"; properties=[]}
-let shortDownTackInfix = {character = "&#x2ADF;"; glyph = "⫟"; name="short down tack"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let shortDownTackWithOverbarInfix = {character = "&#x2AE7;"; glyph = "⫧"; name="short down tack with overbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let shortLeftTackInfix = {character = "&#x2ADE;"; glyph = "⫞"; name="short left tack"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let shortRightwardsArrowAboveLeftwardsArrowInfix = {character = "&#x2944;"; glyph = "⥄"; name="short rightwards arrow above leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let shortUpTackAboveShortDownTackInfix = {character = "&#x2AE9;"; glyph = "⫩"; name="short up tack above short down tack"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let shortUpTackInfix = {character = "&#x2AE0;"; glyph = "⫠"; name="short up tack"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let shortUpTackWithUnderbarInfix = {character = "&#x2AE8;"; glyph = "⫨"; name="short up tack with underbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let shuffleProductInfix = {character = "&#x29E2;"; glyph = "⧢"; name="shuffle product"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let similarAboveGreaterThanAboveEqualsSignInfix = {character = "&#x2AA0;"; glyph = "⪠"; name="similar above greater-than above equals sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let similarAboveLessThanAboveEqualsSignInfix = {character = "&#x2A9F;"; glyph = "⪟"; name="similar above less-than above equals sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let similarMinusSimilarInfix = {character = "&#x2A6C;"; glyph = "⩬"; name="similar minus similar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let similarOrGreaterThanInfix = {character = "&#x2A9E;"; glyph = "⪞"; name="similar or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let similarOrLessThanInfix = {character = "&#x2A9D;"; glyph = "⪝"; name="similar or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let sineWaveInfix = {character = "&#x223F;"; glyph = "∿"; name="sine wave"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let singleHighReversed9QuotationMarkPostfix = {character = "&#x201B;"; glyph = "‛"; name="single high-reversed-9 quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let singleLow9QuotationMarkPostfix = {character = "&#x201A;"; glyph = "‚"; name="single low-9 quotation mark"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let sInTriangleInfix = {character = "&#x29CC;"; glyph = "⧌"; name="s in triangle"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let slantedEqualToOrGreaterThanInfix = {character = "&#x2A96;"; glyph = "⪖"; name="slanted equal to or greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let slantedEqualToOrGreaterThanWithDotInsideInfix = {character = "&#x2A98;"; glyph = "⪘"; name="slanted equal to or greater-than with dot inside"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let slantedEqualToOrLessThanInfix = {character = "&#x2A95;"; glyph = "⪕"; name="slanted equal to or less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let slantedEqualToOrLessThanWithDotInsideInfix = {character = "&#x2A97;"; glyph = "⪗"; name="slanted equal to or less-than with dot inside"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let slopingLargeAndInfix = {character = "&#x2A58;"; glyph = "⩘"; name="sloping large and"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let slopingLargeOrInfix = {character = "&#x2A57;"; glyph = "⩗"; name="sloping large or"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let smallContainsAsMemberInfix = {character = "&#x220D;"; glyph = "∍"; name="small contains as member"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallContainsWithOverbarInfix = {character = "&#x22FE;"; glyph = "⋾"; name="small contains with overbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallContainsWithVerticalBarAtEndOfHorizontalStrokeInfix = {character = "&#x22FC;"; glyph = "⋼"; name="small contains with vertical bar at end of horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallElementOfInfix = {character = "&#x220A;"; glyph = "∊"; name="small element of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallElementOfWithOverbarInfix = {character = "&#x22F7;"; glyph = "⋷"; name="small element of with overbar"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallElementOfWithVerticalBarAtEndOfHorizontalStrokeInfix = {character = "&#x22F4;"; glyph = "⋴"; name="small element of with vertical bar at end of horizontal stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallerThanInfix = {character = "&#x2AAA;"; glyph = "⪪"; name="smaller than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallerThanOrEqualToInfix = {character = "&#x2AAC;"; glyph = "⪬"; name="smaller than or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let smallTildePostfix = {character = "&#x2DC;"; glyph = "˜"; name="small tilde"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let smallVeeWithUnderbarInfix = {character = "&#x2A61;"; glyph = "⩡"; name="small vee with underbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let smashProductInfix = {character = "&#x2A33;"; glyph = "⨳"; name="smash product"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let solidusInfix = {character = "/"; glyph = "/"; name="solidus"; form="infix"; priority="660"; lspace="1"; rspace="1"; properties=[]}
-let solidusWithOverbarInfix = {character = "&#x29F6;"; glyph = "⧶"; name="solidus with overbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let southEastArrowAndSouthWestArrowInfix = {character = "&#x2929;"; glyph = "⤩"; name="south east arrow and south west arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let southEastArrowCrossingNorthEastArrowInfix = {character = "&#x292D;"; glyph = "⤭"; name="south east arrow crossing north east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let southEastArrowInfix = {character = "&#x2198;"; glyph = "↘"; name="south east arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let southEastArrowToCornerInfix = {character = "&#x21F2;"; glyph = "⇲"; name="south east arrow to corner"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let southEastArrowWithHookInfix = {character = "&#x2925;"; glyph = "⤥"; name="south east arrow with hook"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let southEastDoubleArrowInfix = {character = "&#x21D8;"; glyph = "⇘"; name="south east double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let southWestArrowAndNorthWestArrowInfix = {character = "&#x292A;"; glyph = "⤪"; name="south west arrow and north west arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let southWestArrowInfix = {character = "&#x2199;"; glyph = "↙"; name="south west arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let southWestArrowWithHookInfix = {character = "&#x2926;"; glyph = "⤦"; name="south west arrow with hook"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let southWestDoubleArrowInfix = {character = "&#x21D9;"; glyph = "⇙"; name="south west double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let sphericalAngleOpeningLeftInfix = {character = "&#x29A0;"; glyph = "⦠"; name="spherical angle opening left"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let sphericalAngleOpeningUpInfix = {character = "&#x29A1;"; glyph = "⦡"; name="spherical angle opening up"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let sphericalAnglePrefix = {character = "&#x2222;"; glyph = "∢"; name="spherical angle"; form="prefix"; priority="670"; lspace="0"; rspace="0"; properties=[]}
-let squareCapInfix = {character = "&#x2293;"; glyph = "⊓"; name="square cap"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squareCupInfix = {character = "&#x2294;"; glyph = "⊔"; name="square cup"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squaredAsteriskInfix = {character = "&#x29C6;"; glyph = "⧆"; name="squared asterisk"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squaredDotOperatorInfix = {character = "&#x22A1;"; glyph = "⊡"; name="squared dot operator"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let squaredFallingDiagonalSlashInfix = {character = "&#x29C5;"; glyph = "⧅"; name="squared falling diagonal slash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squaredMinusInfix = {character = "&#x229F;"; glyph = "⊟"; name="squared minus"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let squaredPlusInfix = {character = "&#x229E;"; glyph = "⊞"; name="squared plus"; form="infix"; priority="275"; lspace="4"; rspace="4"; properties=[]}
-let squaredRisingDiagonalSlashInfix = {character = "&#x29C4;"; glyph = "⧄"; name="squared rising diagonal slash"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squaredSmallCircleInfix = {character = "&#x29C7;"; glyph = "⧇"; name="squared small circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squaredSquareInfix = {character = "&#x29C8;"; glyph = "⧈"; name="squared square"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let squaredTimesInfix = {character = "&#x22A0;"; glyph = "⊠"; name="squared times"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let squareImageOfInfix = {character = "&#x228F;"; glyph = "⊏"; name="square image of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareImageOfOrEqualToInfix = {character = "&#x2291;"; glyph = "⊑"; name="square image of or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareImageOfOrNotEqualToInfix = {character = "&#x22E4;"; glyph = "⋤"; name="square image of or not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareImageOfWithSlashInfix = {character = "&#x228F;&#x338;"; glyph = "⊏̸"; name="square image of with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareLeftOpenBoxOperatorInfix = {character = "&#x2ACD;"; glyph = "⫍"; name="square left open box operator"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareOriginalOfInfix = {character = "&#x2290;"; glyph = "⊐"; name="square original of"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareOriginalOfOrEqualToInfix = {character = "&#x2292;"; glyph = "⊒"; name="square original of or equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareOriginalOfOrNotEqualToInfix = {character = "&#x22E5;"; glyph = "⋥"; name="square original of or not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareOriginalOfWithSlashInfix = {character = "&#x2290;&#x338;"; glyph = "⊐̸"; name="square original of with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareRightOpenBoxOperatorInfix = {character = "&#x2ACE;"; glyph = "⫎"; name="square right open box operator"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let squareRootPrefix = {character = "&#x221A;"; glyph = "√"; name="square root"; form="prefix"; priority="845"; lspace="1"; rspace="1"; properties=["stretchy"]}
-let squareWithContouredOutlineInfix = {character = "&#x29E0;"; glyph = "⧠"; name="square with contoured outline"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let starEqualsInfix = {character = "&#x225B;"; glyph = "≛"; name="star equals"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let starOperatorInfix = {character = "&#x22C6;"; glyph = "⋆"; name="star operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let strictlyEquivalentToInfix = {character = "&#x2263;"; glyph = "≣"; name="strictly equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetAboveRightwardsArrowInfix = {character = "&#x2979;"; glyph = "⥹"; name="subset above rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let subsetAboveSubsetInfix = {character = "&#x2AD5;"; glyph = "⫕"; name="subset above subset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetAboveSupersetInfix = {character = "&#x2AD3;"; glyph = "⫓"; name="subset above superset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfAboveAlmostEqualToInfix = {character = "&#x2AC9;"; glyph = "⫉"; name="subset of above almost equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfAboveEqualsSignInfix = {character = "&#x2AC5;"; glyph = "⫅"; name="subset of above equals sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfAboveNotEqualToInfix = {character = "&#x2ACB;"; glyph = "⫋"; name="subset of above not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfAboveTildeOperatorInfix = {character = "&#x2AC7;"; glyph = "⫇"; name="subset of above tilde operator"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfInfix = {character = "&#x2282;"; glyph = "⊂"; name="subset of"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfOrEqualToInfix = {character = "&#x2286;"; glyph = "⊆"; name="subset of or equal to"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfOrEqualToWithDotAboveInfix = {character = "&#x2AC3;"; glyph = "⫃"; name="subset of or equal to with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfWithNotEqualToInfix = {character = "&#x228A;"; glyph = "⊊"; name="subset of with not equal to"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let subsetOfWithVerticalLineInfix = {character = "&#x2282;&#x20D2;"; glyph = "⊂⃒"; name="subset of with vertical line"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let subsetWithDotInfix = {character = "&#x2ABD;"; glyph = "⪽"; name="subset with dot"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetWithMultiplicationSignBelowInfix = {character = "&#x2AC1;"; glyph = "⫁"; name="subset with multiplication sign below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let subsetWithPlusSignBelowInfix = {character = "&#x2ABF;"; glyph = "⪿"; name="subset with plus sign below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveAlmostEqualToInfix = {character = "&#x2AB8;"; glyph = "⪸"; name="succeeds above almost equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveEqualsSignInfix = {character = "&#x2AB4;"; glyph = "⪴"; name="succeeds above equals sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveNotAlmostEqualToInfix = {character = "&#x2ABA;"; glyph = "⪺"; name="succeeds above not almost equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveNotEqualToInfix = {character = "&#x2AB6;"; glyph = "⪶"; name="succeeds above not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveSingleLineEqualsSignInfix = {character = "&#x2AB0;"; glyph = "⪰"; name="succeeds above single-line equals sign"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveSingleLineEqualsSignWithSlashInfix = {character = "&#x2AB0;&#x338;"; glyph = "⪰̸"; name="succeeds above single-line equals sign with slash"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let succeedsAboveSingleLineNotEqualToInfix = {character = "&#x2AB2;"; glyph = "⪲"; name="succeeds above single-line not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsButNotEquivalentToInfix = {character = "&#x22E9;"; glyph = "⋩"; name="succeeds but not equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsInfix = {character = "&#x227B;"; glyph = "≻"; name="succeeds"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let succeedsOrEqualToInfix = {character = "&#x227D;"; glyph = "≽"; name="succeeds or equal to"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let succeedsOrEquivalentToInfix = {character = "&#x227F;"; glyph = "≿"; name="succeeds or equivalent to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsOrEquivalentToWithSlashInfix = {character = "&#x227F;&#x338;"; glyph = "≿̸"; name="succeeds or equivalent to with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let succeedsUnderRelationInfix = {character = "&#x22B1;"; glyph = "⊱"; name="succeeds under relation"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let summationWithIntegralPrefix = {character = "&#x2A0B;"; glyph = "⨋"; name="summation with integral"; form="prefix"; priority="290"; lspace="1"; rspace="2"; properties=["largeop"; "symmetric"]}
-let superscriptOnePostfix = {character = "&#xB9;"; glyph = "¹"; name="superscript one"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let superscriptThreePostfix = {character = "&#xB3;"; glyph = "³"; name="superscript three"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let superscriptTwoPostfix = {character = "&#xB2;"; glyph = "²"; name="superscript two"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let supersetAboveLeftwardsArrowInfix = {character = "&#x297B;"; glyph = "⥻"; name="superset above leftwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let supersetAboveSubsetInfix = {character = "&#x2AD4;"; glyph = "⫔"; name="superset above subset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetAboveSupersetInfix = {character = "&#x2AD6;"; glyph = "⫖"; name="superset above superset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetBesideAndJoinedByDashWithSubsetInfix = {character = "&#x2AD8;"; glyph = "⫘"; name="superset beside and joined by dash with subset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetBesideSubsetInfix = {character = "&#x2AD7;"; glyph = "⫗"; name="superset beside subset"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfAboveAlmostEqualToInfix = {character = "&#x2ACA;"; glyph = "⫊"; name="superset of above almost equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfAboveEqualsSignInfix = {character = "&#x2AC6;"; glyph = "⫆"; name="superset of above equals sign"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfAboveNotEqualToInfix = {character = "&#x2ACC;"; glyph = "⫌"; name="superset of above not equal to"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfAboveTildeOperatorInfix = {character = "&#x2AC8;"; glyph = "⫈"; name="superset of above tilde operator"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfInfix = {character = "&#x2283;"; glyph = "⊃"; name="superset of"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfOrEqualToInfix = {character = "&#x2287;"; glyph = "⊇"; name="superset of or equal to"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfOrEqualToWithDotAboveInfix = {character = "&#x2AC4;"; glyph = "⫄"; name="superset of or equal to with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfWithNotEqualToInfix = {character = "&#x228B;"; glyph = "⊋"; name="superset of with not equal to"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let supersetOfWithVerticalLineInfix = {character = "&#x2283;&#x20D2;"; glyph = "⊃⃒"; name="superset of with vertical line"; form="infix"; priority="240"; lspace="5"; rspace="5"; properties=[]}
-let supersetWithDotInfix = {character = "&#x2ABE;"; glyph = "⪾"; name="superset with dot"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetWithMultiplicationSignBelowInfix = {character = "&#x2AC2;"; glyph = "⫂"; name="superset with multiplication sign below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let supersetWithPlusSignBelowInfix = {character = "&#x2AC0;"; glyph = "⫀"; name="superset with plus sign below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let surfaceIntegralPrefix = {character = "&#x222F;"; glyph = "∯"; name="surface integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let thereDoesNotExistPrefix = {character = "&#x2204;"; glyph = "∄"; name="there does not exist"; form="prefix"; priority="230"; lspace="2"; rspace="1"; properties=[]}
-let thereExistsPrefix = {character = "&#x2203;"; glyph = "∃"; name="there exists"; form="prefix"; priority="230"; lspace="2"; rspace="1"; properties=[]}
-let thereforeInfix = {character = "&#x2234;"; glyph = "∴"; name="therefore"; form="infix"; priority="70"; lspace="5"; rspace="5"; properties=[]}
-let thermodynamicInfix = {character = "&#x29E7;"; glyph = "⧧"; name="thermodynamic"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let threeConsecutiveEqualsSignsInfix = {character = "&#x2A76;"; glyph = "⩶"; name="three consecutive equals signs"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let threeRightwardsArrowsInfix = {character = "&#x21F6;"; glyph = "⇶"; name="three rightwards arrows"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let tieOverInfinityInfix = {character = "&#x29DD;"; glyph = "⧝"; name="tie over infinity"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let tildeOperatorAboveRightwardsArrowInfix = {character = "&#x2972;"; glyph = "⥲"; name="tilde operator above rightwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let tildeOperatorInfix = {character = "&#x223C;"; glyph = "∼"; name="tilde operator"; form="infix"; priority="250"; lspace="5"; rspace="5"; properties=[]}
-let tildeOperatorWithDotAboveInfix = {character = "&#x2A6A;"; glyph = "⩪"; name="tilde operator with dot above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tildeOperatorWithRisingDotsInfix = {character = "&#x2A6B;"; glyph = "⩫"; name="tilde operator with rising dots"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tildePostfix = {character = "~"; glyph = "~"; name="tilde"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let timesWithLeftHalfBlackInfix = {character = "&#x29D4;"; glyph = "⧔"; name="times with left half black"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let timesWithRightHalfBlackInfix = {character = "&#x29D5;"; glyph = "⧕"; name="times with right half black"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tinyInfix = {character = "&#x29FE;"; glyph = "⧾"; name="tiny"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let topArcAnticlockwiseArrowInfix = {character = "&#x293A;"; glyph = "⤺"; name="top arc anticlockwise arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let topArcAnticlockwiseArrowWithPlusInfix = {character = "&#x293D;"; glyph = "⤽"; name="top arc anticlockwise arrow with plus"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let topArcClockwiseArrowWithMinusInfix = {character = "&#x293C;"; glyph = "⤼"; name="top arc clockwise arrow with minus"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let topCurlyBracketPostfix = {character = "&#x23DE;"; glyph = "⏞"; name="top curly bracket"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let topParenthesisPostfix = {character = "&#x23DC;"; glyph = "⏜"; name="top parenthesis"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let topSquareBracketPostfix = {character = "&#x23B4;"; glyph = "⎴"; name="top square bracket"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let topTortoiseShellBracketPostfix = {character = "&#x23E0;"; glyph = "⏠"; name="top tortoise shell bracket"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["stretchy"; "accent"]}
-let transversalIntersectionInfix = {character = "&#x2ADB;"; glyph = "⫛"; name="transversal intersection"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let triangleWithDotAboveInfix = {character = "&#x29CA;"; glyph = "⧊"; name="triangle with dot above"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let triangleWithSerifsAtBottomInfix = {character = "&#x29CD;"; glyph = "⧍"; name="triangle with serifs at bottom"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let triangleWithUnderbarInfix = {character = "&#x29CB;"; glyph = "⧋"; name="triangle with underbar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let tripleColonOperatorInfix = {character = "&#x2AF6;"; glyph = "⫶"; name="triple colon operator"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let tripleHorizontalBarWithDoubleVerticalStrokeInfix = {character = "&#x2A68;"; glyph = "⩨"; name="triple horizontal bar with double vertical stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tripleHorizontalBarWithTripleVerticalStrokeInfix = {character = "&#x2A69;"; glyph = "⩩"; name="triple horizontal bar with triple vertical stroke"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tripleIntegralPrefix = {character = "&#x222D;"; glyph = "∭"; name="triple integral"; form="prefix"; priority="300"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let tripleNestedGreaterThanInfix = {character = "&#x2AF8;"; glyph = "⫸"; name="triple nested greater-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tripleNestedLessThanInfix = {character = "&#x2AF7;"; glyph = "⫷"; name="triple nested less-than"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let triplePlusInfix = {character = "&#x29FB;"; glyph = "⧻"; name="triple plus"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let triplePrimePostfix = {character = "&#x2034;"; glyph = "‴"; name="triple prime"; form="postfix"; priority="880"; lspace="0"; rspace="0"; properties=["accent"]}
-let tripleSolidusBinaryRelationInfix = {character = "&#x2AFB;"; glyph = "⫻"; name="triple solidus binary relation"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let tripleTildeInfix = {character = "&#x224B;"; glyph = "≋"; name="triple tilde"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tripleVerticalBarBinaryRelationInfix = {character = "&#x2AF4;"; glyph = "⫴"; name="triple vertical bar binary relation"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let tripleVerticalBarDelimiterPostfix = {character = "&#x2980;"; glyph = "⦀"; name="triple vertical bar delimiter"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"]}
-let tripleVerticalBarDelimiterPrefix = {character = "&#x2980;"; glyph = "⦀"; name="triple vertical bar delimiter"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"]}
-let tripleVerticalBarRightTurnstileInfix = {character = "&#x22AA;"; glyph = "⊪"; name="triple vertical bar right turnstile"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let tripleVerticalBarWithHorizontalStrokeInfix = {character = "&#x2AF5;"; glyph = "⫵"; name="triple vertical bar with horizontal stroke"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let trueInfix = {character = "&#x22A8;"; glyph = "⊨"; name="TRUE"; form="infix"; priority="170"; lspace="5"; rspace="5"; properties=[]}
-let turnedAngleInfix = {character = "&#x29A2;"; glyph = "⦢"; name="turned angle"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let twoConsecutiveEqualsSignsInfix = {character = "&#x2A75;"; glyph = "⩵"; name="two consecutive equals signs"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let twoIntersectingLogicalAndInfix = {character = "&#x2A55;"; glyph = "⩕"; name="two intersecting logical and"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let twoIntersectingLogicalOrInfix = {character = "&#x2A56;"; glyph = "⩖"; name="two intersecting logical or"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let twoJoinedSquaresInfix = {character = "&#x29C9;"; glyph = "⧉"; name="two joined squares"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let twoLogicalAndOperatorPrefix = {character = "&#x2A07;"; glyph = "⨇"; name="two logical and operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let twoLogicalOrOperatorPrefix = {character = "&#x2A08;"; glyph = "⨈"; name="two logical or operator"; form="prefix"; priority="330"; lspace="1"; rspace="2"; properties=["largeop"; "movablelimits"; "symmetric"]}
-let unionAboveBarAboveIntersectionInfix = {character = "&#x2A48;"; glyph = "⩈"; name="union above bar above intersection"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let unionAboveIntersectionInfix = {character = "&#x2A46;"; glyph = "⩆"; name="union above intersection"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let unionBesideAndJoinedWithUnionInfix = {character = "&#x2A4A;"; glyph = "⩊"; name="union beside and joined with union"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let unionInfix = {character = "&#x222A;"; glyph = "∪"; name="union"; form="infix"; priority="350"; lspace="4"; rspace="4"; properties=[]}
-let unionWithLogicalOrInfix = {character = "&#x2A45;"; glyph = "⩅"; name="union with logical or"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let unionWithMinusSignInfix = {character = "&#x2A41;"; glyph = "⩁"; name="union with minus sign"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let unionWithOverbarInfix = {character = "&#x2A42;"; glyph = "⩂"; name="union with overbar"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let upArrowThroughCircleInfix = {character = "&#x29BD;"; glyph = "⦽"; name="up arrow through circle"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let upBarbLeftDownBarbLeftHarpoonInfix = {character = "&#x2951;"; glyph = "⥑"; name="up barb left down barb left harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upBarbLeftDownBarbRightHarpoonInfix = {character = "&#x294D;"; glyph = "⥍"; name="up barb left down barb right harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upBarbRightDownBarbLeftHarpoonInfix = {character = "&#x294C;"; glyph = "⥌"; name="up barb right down barb left harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upBarbRightDownBarbRightHarpoonInfix = {character = "&#x294F;"; glyph = "⥏"; name="up barb right down barb right harpoon"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upDownArrowInfix = {character = "&#x2195;"; glyph = "↕"; name="up down arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upDownArrowWithBaseInfix = {character = "&#x21A8;"; glyph = "↨"; name="up down arrow with base"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upDownDoubleArrowInfix = {character = "&#x21D5;"; glyph = "⇕"; name="up down double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upDownWhiteArrowInfix = {character = "&#x21F3;"; glyph = "⇳"; name="up down white arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upFishTailInfix = {character = "&#x297E;"; glyph = "⥾"; name="up fish tail"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upRightDiagonalEllipsisInfix = {character = "&#x22F0;"; glyph = "⋰"; name="up right diagonal ellipsis"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let upTackInfix = {character = "&#x22A5;"; glyph = "⊥"; name="up tack"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let upwardsArrowFromBarInfix = {character = "&#x21A5;"; glyph = "↥"; name="upwards arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsArrowInfix = {character = "&#x2191;"; glyph = "↑"; name="upwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsArrowLeftwardsOfDownwardsArrowInfix = {character = "&#x21C5;"; glyph = "⇅"; name="upwards arrow leftwards of downwards arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsArrowToBarInfix = {character = "&#x2912;"; glyph = "⤒"; name="upwards arrow to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsArrowWithDoubleStrokeInfix = {character = "&#x21DE;"; glyph = "⇞"; name="upwards arrow with double stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upwardsArrowWithHorizontalStrokeInfix = {character = "&#x2909;"; glyph = "⤉"; name="upwards arrow with horizontal stroke"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upwardsArrowWithTipLeftwardsInfix = {character = "&#x21B0;"; glyph = "↰"; name="upwards arrow with tip leftwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsArrowWithTipRightwardsInfix = {character = "&#x21B1;"; glyph = "↱"; name="upwards arrow with tip rightwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsDashedArrowInfix = {character = "&#x21E1;"; glyph = "⇡"; name="upwards dashed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsDoubleArrowInfix = {character = "&#x21D1;"; glyph = "⇑"; name="upwards double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbLeftBesideDownwardsHarpoonWithBarbRightInfix = {character = "&#x296E;"; glyph = "⥮"; name="upwards harpoon with barb left beside downwards harpoon with barb right"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbLeftBesideUpwardsHarpoonWithBarbRightInfix = {character = "&#x2963;"; glyph = "⥣"; name="upwards harpoon with barb left beside upwards harpoon with barb right"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upwardsHarpoonWithBarbLeftFromBarInfix = {character = "&#x2960;"; glyph = "⥠"; name="upwards harpoon with barb left from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbLeftToBarInfix = {character = "&#x2958;"; glyph = "⥘"; name="upwards harpoon with barb left to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbLeftwardsInfix = {character = "&#x21BF;"; glyph = "↿"; name="upwards harpoon with barb leftwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbRightFromBarInfix = {character = "&#x295C;"; glyph = "⥜"; name="upwards harpoon with barb right from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbRightToBarInfix = {character = "&#x2954;"; glyph = "⥔"; name="upwards harpoon with barb right to bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsHarpoonWithBarbRightwardsInfix = {character = "&#x21BE;"; glyph = "↾"; name="upwards harpoon with barb rightwards"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsPairedArrowsInfix = {character = "&#x21C8;"; glyph = "⇈"; name="upwards paired arrows"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsQuadrupleArrowInfix = {character = "&#x27F0;"; glyph = "⟰"; name="upwards quadruple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsTripleArrowInfix = {character = "&#x290A;"; glyph = "⤊"; name="upwards triple arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsTwoHeadedArrowFromSmallCircleInfix = {character = "&#x2949;"; glyph = "⥉"; name="upwards two-headed arrow from small circle"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=[]}
-let upwardsTwoHeadedArrowInfix = {character = "&#x219F;"; glyph = "↟"; name="upwards two headed arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"; "accent"]}
-let upwardsWhiteArrowFromBarInfix = {character = "&#x21EA;"; glyph = "⇪"; name="upwards white arrow from bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsWhiteArrowInfix = {character = "&#x21E7;"; glyph = "⇧"; name="upwards white arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsWhiteArrowOnPedestalInfix = {character = "&#x21EB;"; glyph = "⇫"; name="upwards white arrow on pedestal"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsWhiteArrowOnPedestalWithHorizontalBarInfix = {character = "&#x21EC;"; glyph = "⇬"; name="upwards white arrow on pedestal with horizontal bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsWhiteArrowOnPedestalWithVerticalBarInfix = {character = "&#x21ED;"; glyph = "⇭"; name="upwards white arrow on pedestal with vertical bar"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsWhiteDoubleArrowInfix = {character = "&#x21EE;"; glyph = "⇮"; name="upwards white double arrow"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let upwardsWhiteDoubleArrowOnPedestalInfix = {character = "&#x21EF;"; glyph = "⇯"; name="upwards white double arrow on pedestal"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["stretchy"]}
-let vectorOrCrossProductInfix = {character = "&#x2A2F;"; glyph = "⨯"; name="vector or cross product"; form="infix"; priority="390"; lspace="4"; rspace="4"; properties=[]}
-let verticalBarBesideRightTriangleInfix = {character = "&#x29D0;"; glyph = "⧐"; name="vertical bar beside right triangle"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let verticalBarBesideRightTriangleWithSlashInfix = {character = "&#x29D0;&#x338;"; glyph = "⧐̸"; name="vertical bar beside right triangle with slash"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let verticalBarDoubleLeftTurnstileInfix = {character = "&#x2AE4;"; glyph = "⫤"; name="vertical bar double left turnstile"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let verticalBarTripleRightTurnstileInfix = {character = "&#x2AE2;"; glyph = "⫢"; name="vertical bar triple right turnstile"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let verticalEllipsisInfix = {character = "&#x22EE;"; glyph = "⋮"; name="vertical ellipsis"; form="infix"; priority="150"; lspace="5"; rspace="5"; properties=[]}
-let verticalLineInfix = {character = "|"; glyph = "|"; name="vertical line"; form="infix"; priority="270"; lspace="2"; rspace="2"; properties=["fence"; "stretchy"; "symmetric"]}
-let verticalLinePostfix = {character = "|"; glyph = "|"; name="vertical line"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let verticalLinePrefix = {character = "|"; glyph = "|"; name="vertical line"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let verticalLineWithCircleAboveInfix = {character = "&#x2AEF;"; glyph = "⫯"; name="vertical line with circle above"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let verticalLineWithCircleBelowInfix = {character = "&#x2AF0;"; glyph = "⫰"; name="vertical line with circle below"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let verticalZigzagLineInfix = {character = "&#x299A;"; glyph = "⦚"; name="vertical zigzag line"; form="infix"; priority="270"; lspace="3"; rspace="3"; properties=[]}
-let veryMuchGreaterThanInfix = {character = "&#x22D9;"; glyph = "⋙"; name="very much greater-than"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let veryMuchLessThanInfix = {character = "&#x22D8;"; glyph = "⋘"; name="very much less-than"; form="infix"; priority="260"; lspace="5"; rspace="5"; properties=[]}
-let volumeIntegralPrefix = {character = "&#x2230;"; glyph = "∰"; name="volume integral"; form="prefix"; priority="310"; lspace="0"; rspace="1"; properties=["largeop"; "symmetric"]}
-let waveArrowPointingDirectlyRightInfix = {character = "&#x2933;"; glyph = "⤳"; name="wave arrow pointing directly right"; form="infix"; priority="270"; lspace="5"; rspace="5"; properties=["accent"]}
-let whiteBulletInfix = {character = "&#x25E6;"; glyph = "◦"; name="white bullet"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteCircleWithDownArrowInfix = {character = "&#x29EC;"; glyph = "⧬"; name="white circle with down arrow"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let whiteDiamondContainingBlackSmallDiamondInfix = {character = "&#x25C8;"; glyph = "◈"; name="white diamond containing black small diamond"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteDiamondInfix = {character = "&#x25C7;"; glyph = "◇"; name="white diamond"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteDownPointingSmallTriangleInfix = {character = "&#x25BF;"; glyph = "▿"; name="white down-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteDownPointingTriangleInfix = {character = "&#x25BD;"; glyph = "▽"; name="white down-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteHourglassInfix = {character = "&#x29D6;"; glyph = "⧖"; name="white hourglass"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let whiteLeftPointingPointerInfix = {character = "&#x25C5;"; glyph = "◅"; name="white left-pointing pointer"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteLeftPointingSmallTriangleInfix = {character = "&#x25C3;"; glyph = "◃"; name="white left-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteLeftPointingTriangleInfix = {character = "&#x25C1;"; glyph = "◁"; name="white left-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteParallelogramInfix = {character = "&#x25B1;"; glyph = "▱"; name="white parallelogram"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let whiteRectangleInfix = {character = "&#x25AD;"; glyph = "▭"; name="white rectangle"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let whiteRightPointingSmallTriangleInfix = {character = "&#x25B9;"; glyph = "▹"; name="white right-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteRightPointingTriangleInfix = {character = "&#x25B7;"; glyph = "▷"; name="white right-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteSmallSquareInfix = {character = "&#x25AB;"; glyph = "▫"; name="white small square"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let whiteSquareInfix = {character = "&#x25A1;"; glyph = "□"; name="white square"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let whiteUpPointingSmallTriangleInfix = {character = "&#x25B5;"; glyph = "▵"; name="white up-pointing small triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteUpPointingTriangleInfix = {character = "&#x25B3;"; glyph = "△"; name="white up-pointing triangle"; form="infix"; priority="260"; lspace="4"; rspace="4"; properties=[]}
-let whiteVerticalBarInfix = {character = "&#x2AFE;"; glyph = "⫾"; name="white vertical bar"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let whiteVerticalRectangleInfix = {character = "&#x25AF;"; glyph = "▯"; name="white vertical rectangle"; form="infix"; priority="260"; lspace="3"; rspace="3"; properties=[]}
-let wreathProductInfix = {character = "&#x2240;"; glyph = "≀"; name="wreath product"; form="infix"; priority="340"; lspace="4"; rspace="4"; properties=[]}
-let xorInfix = {character = "&#x22BB;"; glyph = "⊻"; name="xor"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let zNotationBagMembershipInfix = {character = "&#x22FF;"; glyph = "⋿"; name="z notation bag membership"; form="infix"; priority="265"; lspace="5"; rspace="5"; properties=[]}
-let zNotationDomainAntirestrictionInfix = {character = "&#x2A64;"; glyph = "⩤"; name="z notation domain antirestriction"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let zNotationLeftBindingBracketPrefix = {character = "&#x2989;"; glyph = "⦉"; name="z notation left binding bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let zNotationLeftImageBracketPrefix = {character = "&#x2987;"; glyph = "⦇"; name="z notation left image bracket"; form="prefix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let zNotationRangeAntirestrictionInfix = {character = "&#x2A65;"; glyph = "⩥"; name="z notation range antirestriction"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let zNotationRelationalCompositionInfix = {character = "&#x2A3E;"; glyph = "⨾"; name="z notation relational composition"; form="infix"; priority="265"; lspace="4"; rspace="4"; properties=[]}
-let zNotationRightBindingBracketPostfix = {character = "&#x298A;"; glyph = "⦊"; name="z notation right binding bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let zNotationRightImageBracketPostfix = {character = "&#x2988;"; glyph = "⦈"; name="z notation right image bracket"; form="postfix"; priority="20"; lspace="0"; rspace="0"; properties=["fence"; "stretchy"; "symmetric"]}
-let zNotationSchemaCompositionInfix = {character = "&#x2A1F;"; glyph = "⨟"; name="z notation schema composition"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let zNotationSchemaPipingInfix = {character = "&#x2A20;"; glyph = "⨠"; name="z notation schema piping"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let zNotationSchemaProjectionInfix = {character = "&#x2A21;"; glyph = "⨡"; name="z notation schema projection"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let zNotationSpotInfix = {character = "&#x2981;"; glyph = "⦁"; name="z notation spot"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
-let zNotationTypeColonInfix = {character = "&#x2982;"; glyph = "⦂"; name="z notation type colon"; form="infix"; priority="265"; lspace="3"; rspace="3"; properties=[]}
+        let acuteAccentPostfix =            
+             {character = Unicode 0xB4;  
+              glyph = "´";  
+              name="acute accent";  
+              priority = 880;  
+              form = Postfix;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]} 
+        let acuteAngleInfix = 
+             {character = Unicode 0x299F;  
+              glyph = "⦟";  
+              name="acute angle";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let allEqualToInfix = 
+             {character = Unicode 0x224C;  
+              glyph = "≌";  
+              name="all equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let almostEqualOrEqualToInfix = 
+             {character = Unicode 0x224A;  
+              glyph = "≊";  
+              name="almost equal or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let almostEqualToInfix = 
+             {character = Unicode 0x2248;  
+              glyph = "≈";  
+              name="almost equal to";  
+              form = Infix;  
+              priority = 247;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let almostEqualToWithCircumflexAccentInfix = 
+             {character = Unicode 0x2A6F;  
+              glyph = "⩯";  
+              name="almost equal to with circumflex accent";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let amalgamationOrCoproductInfix = 
+             {character = Unicode 0x2A3F;  
+              glyph = "⨿";  
+              name="amalgamation or coproduct";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let ampersandPostfix = 
+             {character = Char '&';  
+              glyph = "&";  
+              name="ampersand";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let anglePrefix = 
+             {character = Unicode 0x2220;  
+              glyph = "∠";  
+              name="angle";  
+              form = Prefix;  
+              priority = 670;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let angleWithSInsideInfix = 
+             {character = Unicode 0x299E;  
+              glyph = "⦞";  
+              name="angle with s inside";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let angleWithUnderbarInfix = 
+             {character = Unicode 0x29A4;  
+              glyph = "⦤";  
+              name="angle with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let anticlockwiseClosedCircleArrowInfix = 
+             {character = Unicode 0x2940;  
+              glyph = "⥀";  
+              name="anticlockwise closed circle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let anticlockwiseContourIntegralPrefix = 
+             {character = Unicode 0x2233;  
+              glyph = "∳";  
+              name="anticlockwise contour integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let anticlockwiseIntegrationPrefix = 
+             {character = Unicode 0x2A11;  
+              glyph = "⨑";  
+              name="anticlockwise integration";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let anticlockwiseOpenCircleArrowInfix = 
+             {character = Unicode 0x21BA;  
+              glyph = "↺";  
+              name="anticlockwise open circle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let anticlockwiseTopSemicircleArrowInfix = 
+             {character = Unicode 0x21B6;  
+              glyph = "↶";  
+              name="anticlockwise top semicircle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let apostrophePostfix = 
+             {character = Char ''';  
+              glyph = "'";  
+              name="apostrophe";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let approachesTheLimitInfix = 
+             {character = Unicode 0x2250;  
+              glyph = "≐";  
+              name="approaches the limit";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let approximatelyButNotActuallyEqualToInfix = 
+             {character = Unicode 0x2246;  
+              glyph = "≆";  
+              name="approximately but not actually equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let approximatelyEqualOrEqualToInfix = 
+             {character = Unicode 0x2A70;  
+              glyph = "⩰";  
+              name="approximately equal or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let approximatelyEqualToInfix = 
+             {character = Unicode 0x2245;  
+              glyph = "≅";  
+              name="approximately equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let approximatelyEqualToOrTheImageOfInfix = 
+             {character = Unicode 0x2252;  
+              glyph = "≒";  
+              name="approximately equal to or the image of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let arrowPointingDownwardsThenCurvingLeftwardsInfix = 
+             {character = Unicode 0x2936;  
+              glyph = "⤶";  
+              name="arrow pointing downwards then curving leftwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let arrowPointingDownwardsThenCurvingRightwardsInfix = 
+             {character = Unicode 0x2937;  
+              glyph = "⤷";  
+              name="arrow pointing downwards then curving rightwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let arrowPointingRightwardsThenCurvingDownwardsInfix = 
+             {character = Unicode 0x2935;  
+              glyph = "⤵";  
+              name="arrow pointing rightwards then curving downwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let arrowPointingRightwardsThenCurvingUpwardsInfix = 
+             {character = Unicode 0x2934;  
+              glyph = "⤴";  
+              name="arrow pointing rightwards then curving upwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let assertionInfix = 
+             {character = Unicode 0x22A6;  
+              glyph = "⊦";  
+              name="assertion";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let asteriskInfix = 
+             {character = Char '*';  
+              glyph = "*";  
+              name="asterisk";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let asteriskOperatorInfix = 
+             {character = Unicode 0x2217;  
+              glyph = "∗";  
+              name="asterisk operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let asymptoticallyEqualToInfix = 
+             {character = Unicode 0x2243;  
+              glyph = "≃";  
+              name="asymptotically equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let becauseInfix = 
+             {character = Unicode 0x2235;  
+              glyph = "∵";  
+              name="because";  
+              form = Infix;  
+              priority = 70;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let betweenInfix = 
+             {character = Unicode 0x226C;  
+              glyph = "≬";  
+              name="between";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let bigReverseSolidusInfix = 
+             {character = Unicode 0x29F9;  
+              glyph = "⧹";  
+              name="big reverse solidus";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let bigSolidusInfix = 
+             {character = Unicode 0x29F8;  
+              glyph = "⧸";  
+              name="big solidus";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackBowtieInfix = 
+             {character = Unicode 0x29D3;  
+              glyph = "⧓";  
+              name="black bowtie";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let blackCircleInfix = 
+             {character = Unicode 0x25CF;  
+              glyph = "●";  
+              name="black circle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackCircleWithDownArrowInfix = 
+             {character = Unicode 0x29ED;  
+              glyph = "⧭";  
+              name="black circle with down arrow";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackDiamondInfix = 
+             {character = Unicode 0x25C6;  
+              glyph = "◆";  
+              name="black diamond";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackDiamondWithDownArrowInfix = 
+             {character = Unicode 0x29EA;  
+              glyph = "⧪";  
+              name="black diamond with down arrow";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackDownPointingSmallTriangleInfix = 
+             {character = Unicode 0x25BE;  
+              glyph = "▾";  
+              name="black down-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackDownPointingTriangleInfix = 
+             {character = Unicode 0x25BC;  
+              glyph = "▼";  
+              name="black down-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackHourglassInfix = 
+             {character = Unicode 0x29D7;  
+              glyph = "⧗";  
+              name="black hourglass";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackLeftPointingPointerInfix = 
+             {character = Unicode 0x25C4;  
+              glyph = "◄";  
+              name="black left-pointing pointer";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackLeftPointingSmallTriangleInfix = 
+             {character = Unicode 0x25C2;  
+              glyph = "◂";  
+              name="black left-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackLeftPointingTriangleInfix = 
+             {character = Unicode 0x25C0;  
+              glyph = "◀";  
+              name="black left-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackLozengeInfix = 
+             {character = Unicode 0x29EB;  
+              glyph = "⧫";  
+              name="black lozenge";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackParallelogramInfix = 
+             {character = Unicode 0x25B0;  
+              glyph = "▰";  
+              name="black parallelogram";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackRightPointingSmallTriangleInfix = 
+             {character = Unicode 0x25B8;  
+              glyph = "▸";  
+              name="black right-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackRightPointingTriangleInfix = 
+             {character = Unicode 0x25B6;  
+              glyph = "▶";  
+              name="black right-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackSmallSquareInfix = 
+             {character = Unicode 0x25AA;  
+              glyph = "▪";  
+              name="black small square";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackSquareInfix = 
+             {character = Unicode 0x25A0;  
+              glyph = "■";  
+              name="black square";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let blackUpPointingSmallTriangleInfix = 
+             {character = Unicode 0x25B4;  
+              glyph = "▴";  
+              name="black up-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackUpPointingTriangleInfix = 
+             {character = Unicode 0x25B2;  
+              glyph = "▲";  
+              name="black up-pointing triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let blackVerticalRectangleInfix = 
+             {character = Unicode 0x25AE;  
+              glyph = "▮";  
+              name="black vertical rectangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let bottomArcAnticlockwiseArrowInfix = 
+             {character = Unicode 0x293B;  
+              glyph = "⤻";  
+              name="bottom arc anticlockwise arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let bottomCurlyBracketPostfix = 
+             {character = Unicode 0x23DF;  
+              glyph = "⏟";  
+              name="bottom curly bracket";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let bottomParenthesisPostfix = 
+             {character = Unicode 0x23DD;  
+              glyph = "⏝";  
+              name="bottom parenthesis";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let bottomSquareBracketPostfix = 
+             {character = Unicode 0x23B5;  
+              glyph = "⎵";  
+              name="bottom square bracket";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let bottomTortoiseShellBracketPostfix = 
+             {character = Unicode 0x23E1;  
+              glyph = "⏡";  
+              name="bottom tortoise shell bracket";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let bowtieInfix = 
+             {character = Unicode 0x22C8;  
+              glyph = "⋈";  
+              name="bowtie";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let bowtieWithLeftHalfBlackInfix = 
+             {character = Unicode 0x29D1;  
+              glyph = "⧑";  
+              name="bowtie with left half black";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let bowtieWithRightHalfBlackInfix = 
+             {character = Unicode 0x29D2;  
+              glyph = "⧒";  
+              name="bowtie with right half black";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let brevePostfix = 
+             {character = Unicode 0x2D8;  
+              glyph = "˘";  
+              name="breve";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let bulletInfix = 
+             {character = Unicode 0x2022;  
+              glyph = "•";  
+              name="bullet";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let bulletOperatorInfix = 
+             {character = Unicode 0x2219;  
+              glyph = "∙";  
+              name="bullet operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let bullseyeInfix = 
+             {character = Unicode 0x25CE;  
+              glyph = "◎";  
+              name="bullseye";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let caronPostfix = 
+             {character = Unicode 0x2C7;  
+              glyph = "ˇ";  
+              name="caron";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let cedillaPostfix = 
+             {character = Unicode 0xB8;  
+              glyph = "¸";  
+              name="cedilla";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let circledAnticlockwiseRotatedDivisionSignInfix = 
+             {character = Unicode 0x29BC;  
+              glyph = "⦼";  
+              name="circled anticlockwise-rotated division sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledAsteriskOperatorInfix = 
+             {character = Unicode 0x229B;  
+              glyph = "⊛";  
+              name="circled asterisk operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledBulletInfix = 
+             {character = Unicode 0x29BF;  
+              glyph = "⦿";  
+              name="circled bullet";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledDashInfix = 
+             {character = Unicode 0x229D;  
+              glyph = "⊝";  
+              name="circled dash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledDivisionSignInfix = 
+             {character = Unicode 0x2A38;  
+              glyph = "⨸";  
+              name="circled division sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledDivisionSlashInfix = 
+             {character = Unicode 0x2298;  
+              glyph = "⊘";  
+              name="circled division slash";  
+              form = Infix;  
+              priority = 300;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledDotOperatorInfix = 
+             {character = Unicode 0x2299;  
+              glyph = "⊙";  
+              name="circled dot operator";  
+              form = Infix;  
+              priority = 710;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledEqualsInfix = 
+             {character = Unicode 0x229C;  
+              glyph = "⊜";  
+              name="circled equals";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledGreaterThanInfix = 
+             {character = Unicode 0x29C1;  
+              glyph = "⧁";  
+              name="circled greater-than";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let circleDividedByHorizontalBarAndTopHalfDividedByVerticalBarInfix = 
+             {character = Unicode 0x29BA;  
+              glyph = "⦺";  
+              name="circle divided by horizontal bar and top half divided by vertical bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledLessThanInfix = 
+             {character = Unicode 0x29C0;  
+              glyph = "⧀";  
+              name="circled less-than";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let circledMinusInfix = 
+             {character = Unicode 0x2296;  
+              glyph = "⊖";  
+              name="circled minus";  
+              form = Infix;  
+              priority = 300;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledMultiplicationSignWithCircumflexAccentInfix = 
+             {character = Unicode 0x2A36;  
+              glyph = "⨶";  
+              name="circled multiplication sign with circumflex accent";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledParallelInfix = 
+             {character = Unicode 0x29B7;  
+              glyph = "⦷";  
+              name="circled parallel";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledPerpendicularInfix = 
+             {character = Unicode 0x29B9;  
+              glyph = "⦹";  
+              name="circled perpendicular";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledPlusInfix = 
+             {character = Unicode 0x2295;  
+              glyph = "⊕";  
+              name="circled plus";  
+              form = Infix;  
+              priority = 300;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledReverseSolidusInfix = 
+             {character = Unicode 0x29B8;  
+              glyph = "⦸";  
+              name="circled reverse solidus";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledRingOperatorInfix = 
+             {character = Unicode 0x229A;  
+              glyph = "⊚";  
+              name="circled ring operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledTimesInfix = 
+             {character = Unicode 0x2297;  
+              glyph = "⊗";  
+              name="circled times";  
+              form = Infix;  
+              priority = 410;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledVerticalBarInfix = 
+             {character = Unicode 0x29B6;  
+              glyph = "⦶";  
+              name="circled vertical bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circledWhiteBulletInfix = 
+             {character = Unicode 0x29BE;  
+              glyph = "⦾";  
+              name="circled white bullet";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circleWithHorizontalBarInfix = 
+             {character = Unicode 0x29B5;  
+              glyph = "⦵";  
+              name="circle with horizontal bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let circleWithSmallCircleToTheRightInfix = 
+             {character = Unicode 0x29C2;  
+              glyph = "⧂";  
+              name="circle with small circle to the right";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let circleWithSuperimposedXInfix = 
+             {character = Unicode 0x29BB;  
+              glyph = "⦻";  
+              name="circle with superimposed x";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circleWithTwoHorizontalStrokesToTheRightInfix = 
+             {character = Unicode 0x29C3;  
+              glyph = "⧃";  
+              name="circle with two horizontal strokes to the right";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let circleWithVerticalFillInfix = 
+             {character = Unicode 0x25CD;  
+              glyph = "◍";  
+              name="circle with vertical fill";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let circulationFunctionPrefix = 
+             {character = Unicode 0x2A10;  
+              glyph = "⨐";  
+              name="circulation function";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let circumflexAccentInfix = 
+             {character = Char '^';  
+              glyph = "^";  
+              name="circumflex accent";  
+              form = Infix;  
+              priority = 780;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let circumflexAccentPostfix = 
+             {character = Char '^';  
+              glyph = "^";  
+              name="circumflex accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let clockwiseClosedCircleArrowInfix = 
+             {character = Unicode 0x2941;  
+              glyph = "⥁";  
+              name="clockwise closed circle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let clockwiseContourIntegralPrefix = 
+             {character = Unicode 0x2232;  
+              glyph = "∲";  
+              name="clockwise contour integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let clockwiseIntegralPrefix = 
+             {character = Unicode 0x2231;  
+              glyph = "∱";  
+              name="clockwise integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let clockwiseOpenCircleArrowInfix = 
+             {character = Unicode 0x21BB;  
+              glyph = "↻";  
+              name="clockwise open circle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let clockwiseTopSemicircleArrowInfix = 
+             {character = Unicode 0x21B7;  
+              glyph = "↷";  
+              name="clockwise top semicircle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let closedIntersectionWithSerifsInfix = 
+             {character = Unicode 0x2A4D;  
+              glyph = "⩍";  
+              name="closed intersection with serifs";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let closedSubsetInfix = 
+             {character = Unicode 0x2ACF;  
+              glyph = "⫏";  
+              name="closed subset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let closedSubsetOrEqualToInfix = 
+             {character = Unicode 0x2AD1;  
+              glyph = "⫑";  
+              name="closed subset or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let closedSupersetInfix = 
+             {character = Unicode 0x2AD0;  
+              glyph = "⫐";  
+              name="closed superset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let closedSupersetOrEqualToInfix = 
+             {character = Unicode 0x2AD2;  
+              glyph = "⫒";  
+              name="closed superset or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let closedUnionWithSerifsAndSmashProductInfix = 
+             {character = Unicode 0x2A50;  
+              glyph = "⩐";  
+              name="closed union with serifs and smash product";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let closedUnionWithSerifsInfix = 
+             {character = Unicode 0x2A4C;  
+              glyph = "⩌";  
+              name="closed union with serifs";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let colonEqualsInfix = 
+             {character = Unicode 0x2254;  
+              glyph = "≔";  
+              name="colon equals";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let colonInfix = 
+             {character = Char ':';  
+              glyph = ":";  
+              name="colon";  
+              form = Infix;  
+              priority = 100;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=[]}
+        let combiningCircumflexAccentPostfix = 
+             {character = Unicode 0x302;  
+              glyph = "̂";  
+              name="combining circumflex accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let combiningFourDotsAbovePostfix = 
+             {character = Unicode 0x20DC;  
+              glyph = "⃜";  
+              name="combining four dots above";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let combiningInvertedBrevePostfix = 
+             {character = Unicode 0x311;  
+              glyph = "̑";  
+              name="combining inverted breve";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let combiningThreeDotsAbovePostfix = 
+             {character = Unicode 0x20DB;  
+              glyph = "⃛";  
+              name="combining three dots above";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let commaInfix = 
+             {character = Char ',';  
+              glyph = ",";  
+              name="comma";  
+              form = Infix;  
+              priority = 40;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=["separator"; "linebreakstyle=after"]}
+        let commercialAtInfix = 
+             {character = Char '@';  
+              glyph = "@";  
+              name="commercial at";  
+              form = Infix;  
+              priority = 825;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let complementInfix = 
+             {character = Unicode 0x2201;  
+              glyph = "∁";  
+              name="complement";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=[]}
+        let congruentWithDotAboveInfix = 
+             {character = Unicode 0x2A6D;  
+              glyph = "⩭";  
+              name="congruent with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let containsAsMemberInfix = 
+             {character = Unicode 0x220B;  
+              glyph = "∋";  
+              name="contains as member";  
+              form = Infix;  
+              priority = 160;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let containsAsNormalSubgroupInfix = 
+             {character = Unicode 0x22B3;  
+              glyph = "⊳";  
+              name="contains as normal subgroup";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let containsAsNormalSubgroupOrEqualToInfix = 
+             {character = Unicode 0x22B5;  
+              glyph = "⊵";  
+              name="contains as normal subgroup or equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let containsWithLongHorizontalStrokeInfix = 
+             {character = Unicode 0x22FA;  
+              glyph = "⋺";  
+              name="contains with long horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let containsWithOverbarInfix = 
+             {character = Unicode 0x22FD;  
+              glyph = "⋽";  
+              name="contains with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let containsWithVerticalBarAtEndOfHorizontalStrokeInfix = 
+             {character = Unicode 0x22FB;  
+              glyph = "⋻";  
+              name="contains with vertical bar at end of horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let contourIntegralPrefix = 
+             {character = Unicode 0x222E;  
+              glyph = "∮";  
+              name="contour integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let correspondsToInfix = 
+             {character = Unicode 0x2258;  
+              glyph = "≘";  
+              name="corresponds to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let cubeRootPrefix = 
+             {character = Unicode 0x221B;  
+              glyph = "∛";  
+              name="cube root";  
+              form = Prefix;  
+              priority = 845;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let curlyLogicalAndInfix = 
+             {character = Unicode 0x22CF;  
+              glyph = "⋏";  
+              name="curly logical and";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let curlyLogicalOrInfix = 
+             {character = Unicode 0x22CE;  
+              glyph = "⋎";  
+              name="curly logical or";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let degreeSignPostfix = 
+             {character = Unicode 0xB0;  
+              glyph = "°";  
+              name="degree sign";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let deltaEqualToInfix = 
+             {character = Unicode 0x225C;  
+              glyph = "≜";  
+              name="delta equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let diaeresisPostfix = 
+             {character = Unicode 0xA8;  
+              glyph = "¨";  
+              name="diaeresis";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let diamondOperatorInfix = 
+             {character = Unicode 0x22C4;  
+              glyph = "⋄";  
+              name="diamond operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let differenceBetweenInfix = 
+             {character = Unicode 0x224F;  
+              glyph = "≏";  
+              name="difference between";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let differenceBetweenWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x224F; Unicode 0x338|];  
+              glyph = "≏̸";  
+              name="difference between with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let dividesInfix = 
+             {character = Unicode 0x2223;  
+              glyph = "∣";  
+              name="divides";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let divisionSignInfix = 
+             {character = Unicode 0xF7;  
+              glyph = "÷";  
+              name="division sign";  
+              form = Infix;  
+              priority = 660;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let divisionSlashInfix = 
+             {character = Unicode 0x2215;  
+              glyph = "∕";  
+              name="division slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=["stretchy"]}
+        let divisionTimesInfix = 
+             {character = Unicode 0x22C7;  
+              glyph = "⋇";  
+              name="division times";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doesNotContainAsMemberInfix = 
+             {character = Unicode 0x220C;  
+              glyph = "∌";  
+              name="does not contain as member";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotContainAsNormalSubgroupInfix = 
+             {character = Unicode 0x22EB;  
+              glyph = "⋫";  
+              name="does not contain as normal subgroup";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotContainAsNormalSubgroupOrEqualInfix = 
+             {character = Unicode 0x22ED;  
+              glyph = "⋭";  
+              name="does not contain as normal subgroup or equal";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotDivideInfix = 
+             {character = Unicode 0x2224;  
+              glyph = "∤";  
+              name="does not divide";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotDivideWithReversedNegationSlashInfix = 
+             {character = Unicode 0x2AEE;  
+              glyph = "⫮";  
+              name="does not divide with reversed negation slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotForceInfix = 
+             {character = Unicode 0x22AE;  
+              glyph = "⊮";  
+              name="does not force";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotPrecedeInfix = 
+             {character = Unicode 0x2280;  
+              glyph = "⊀";  
+              name="does not precede";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotPrecedeOrEqualInfix = 
+             {character = Unicode 0x22E0;  
+              glyph = "⋠";  
+              name="does not precede or equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotProveInfix = 
+             {character = Unicode 0x22AC;  
+              glyph = "⊬";  
+              name="does not prove";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotSucceedInfix = 
+             {character = Unicode 0x2281;  
+              glyph = "⊁";  
+              name="does not succeed";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doesNotSucceedOrEqualInfix = 
+             {character = Unicode 0x22E1;  
+              glyph = "⋡";  
+              name="does not succeed or equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let dotAbovePostfix = 
+             {character = Unicode 0x2D9;  
+              glyph = "˙";  
+              name="dot above";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let dotMinusInfix = 
+             {character = Unicode 0x2238;  
+              glyph = "∸";  
+              name="dot minus";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let dotOperatorInfix = 
+             {character = Unicode 0x22C5;  
+              glyph = "⋅";  
+              name="dot operator";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let dotPlusInfix = 
+             {character = Unicode 0x2214;  
+              glyph = "∔";  
+              name="dot plus";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let dottedCircleInfix = 
+             {character = Unicode 0x25CC;  
+              glyph = "◌";  
+              name="dotted circle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let dottedFenceInfix = 
+             {character = Unicode 0x2999;  
+              glyph = "⦙";  
+              name="dotted fence";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let doubleAcuteAccentPostfix = 
+             {character = Unicode 0x2DD;  
+              glyph = "˝";  
+              name="double acute accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let doubleColonEqualInfix = 
+             {character = Unicode 0x2A74;  
+              glyph = "⩴";  
+              name="double colon equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleDownTackInfix = 
+             {character = Unicode 0x2AEA;  
+              glyph = "⫪";  
+              name="double down tack";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleEndedMultimapInfix = 
+             {character = Unicode 0x29DF;  
+              glyph = "⧟";  
+              name="double-ended multimap";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let doubleHighReversed9QuotationMarkPostfix = 
+             {character = Unicode 0x201F;  
+              glyph = "‟";  
+              name="double high-reversed-9 quotation mark";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let doubleIntegralPrefix = 
+             {character = Unicode 0x222C;  
+              glyph = "∬";  
+              name="double integral";  
+              form = Prefix;  
+              priority = 300;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let doubleIntersectionInfix = 
+             {character = Unicode 0x22D2;  
+              glyph = "⋒";  
+              name="double intersection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleLeftArcGreaterThanBracketPrefix = 
+             {character = Unicode 0x2995;  
+              glyph = "⦕";  
+              name="double left arc greater-than bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let doubleLineEqualToOrGreaterThanInfix = 
+             {character = Unicode 0x2A9A;  
+              glyph = "⪚";  
+              name="double-line equal to or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleLineEqualToOrLessThanInfix = 
+             {character = Unicode 0x2A99;  
+              glyph = "⪙";  
+              name="double-line equal to or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleLineSlantedEqualToOrGreaterThanInfix = 
+             {character = Unicode 0x2A9C;  
+              glyph = "⪜";  
+              name="double-line slanted equal to or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleLineSlantedEqualToOrLessThanInfix = 
+             {character = Unicode 0x2A9B;  
+              glyph = "⪛";  
+              name="double-line slanted equal to or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleLineSlantedGreaterThanOrEqualToInfix = 
+             {character = Unicode 0x2AFA;  
+              glyph = "⫺";  
+              name="double-line slanted greater-than or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleLineSlantedLessThanOrEqualToInfix = 
+             {character = Unicode 0x2AF9;  
+              glyph = "⫹";  
+              name="double-line slanted less-than or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleLogicalAndInfix = 
+             {character = Unicode 0x2A53;  
+              glyph = "⩓";  
+              name="double logical and";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleLogicalOrInfix = 
+             {character = Unicode 0x2A54;  
+              glyph = "⩔";  
+              name="double logical or";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleLow9QuotationMarkPostfix = 
+             {character = Unicode 0x201E;  
+              glyph = "„";  
+              name="double low-9 quotation mark";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let doubleNestedGreaterThanInfix = 
+             {character = Unicode 0x2AA2;  
+              glyph = "⪢";  
+              name="double nested greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleNestedGreaterThanWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2AA2;Unicode 0x338|];  
+              glyph = "⪢̸";  
+              name="double nested greater-than with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleNestedLessThanInfix = 
+             {character = Unicode 0x2AA1;  
+              glyph = "⪡";  
+              name="double nested less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleNestedLessThanWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2AA1;Unicode 0x338|];  
+              glyph = "⪡̸";  
+              name="double nested less-than with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleNestedLessThanWithUnderbarInfix = 
+             {character = Unicode 0x2AA3;  
+              glyph = "⪣";  
+              name="double nested less-than with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doublePlusInfix = 
+             {character = Unicode 0x29FA;  
+              glyph = "⧺";  
+              name="double plus";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let doublePrecedesInfix = 
+             {character = Unicode 0x2ABB;  
+              glyph = "⪻";  
+              name="double precedes";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doublePrimePostfix = 
+             {character = Unicode 0x2033;  
+              glyph = "″";  
+              name="double prime";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let doubleRightArcLessThanBracketPostfix = 
+             {character = Unicode 0x2996;  
+              glyph = "⦖";  
+              name="double right arc less-than bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let doubleSolidusOperatorInfix = 
+             {character = Unicode 0x2AFD;  
+              glyph = "⫽";  
+              name="double solidus operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleSquareIntersectionInfix = 
+             {character = Unicode 0x2A4E;  
+              glyph = "⩎";  
+              name="double square intersection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleSquareUnionInfix = 
+             {character = Unicode 0x2A4F;  
+              glyph = "⩏";  
+              name="double square union";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleStrokeNotSignInfix = 
+             {character = Unicode 0x2AEC;  
+              glyph = "⫬";  
+              name="double stroke not sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleStruckItalicCapitalDPrefix = 
+             {character = Unicode 0x2145;  
+              glyph = "ⅅ";  
+              name="double-struck italic capital d";  
+              form = Prefix;  
+              priority = 845;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let doubleStruckItalicSmallDPrefix = 
+             {character = Unicode 0x2146;  
+              glyph = "ⅆ";  
+              name="double-struck italic small d";  
+              form = Prefix;  
+              priority = 845;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let doubleSubsetInfix = 
+             {character = Unicode 0x22D0;  
+              glyph = "⋐";  
+              name="double subset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleSucceedsInfix = 
+             {character = Unicode 0x2ABC;  
+              glyph = "⪼";  
+              name="double succeeds";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleSupersetInfix = 
+             {character = Unicode 0x22D1;  
+              glyph = "⋑";  
+              name="double superset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleUnionInfix = 
+             {character = Unicode 0x22D3;  
+              glyph = "⋓";  
+              name="double union";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let doubleUpTackInfix = 
+             {character = Unicode 0x2AEB;  
+              glyph = "⫫";  
+              name="double up tack";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleVerticalBarDoubleLeftTurnstileInfix = 
+             {character = Unicode 0x2AE5;  
+              glyph = "⫥";  
+              name="double vertical bar double left turnstile";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleVerticalBarDoubleRightTurnstileInfix = 
+             {character = Unicode 0x22AB;  
+              glyph = "⊫";  
+              name="double vertical bar double right turnstile";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleVerticalBarLeftTurnstileInfix = 
+             {character = Unicode 0x2AE3;  
+              glyph = "⫣";  
+              name="double vertical bar left turnstile";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let doubleVerticalLinePostfix = 
+             {character = Unicode 0x2016;  
+              glyph = "‖";  
+              name="double vertical line";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"]}
+        let doubleVerticalLinePrefix = 
+             {character = Unicode 0x2016;  
+              glyph = "‖";  
+              name="double vertical line";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"]}
+        let downFishTailInfix = 
+             {character = Unicode 0x297F;  
+              glyph = "⥿";  
+              name="down fish tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downPointingTriangleWithLeftHalfBlackInfix = 
+             {character = Unicode 0x29E8;  
+              glyph = "⧨";  
+              name="down-pointing triangle with left half black";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let downPointingTriangleWithRightHalfBlackInfix = 
+             {character = Unicode 0x29E9;  
+              glyph = "⧩";  
+              name="down-pointing triangle with right half black";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let downRightDiagonalEllipsisInfix = 
+             {character = Unicode 0x22F1;  
+              glyph = "⋱";  
+              name="down right diagonal ellipsis";  
+              form = Infix;  
+              priority = 150;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downTackInfix = 
+             {character = Unicode 0x22A4;  
+              glyph = "⊤";  
+              name="down tack";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downTackWithCircleBelowInfix = 
+             {character = Unicode 0x2AF1;  
+              glyph = "⫱";  
+              name="down tack with circle below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downwardsArrowFromBarInfix = 
+             {character = Unicode 0x21A7;  
+              glyph = "↧";  
+              name="downwards arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsArrowInfix = 
+             {character = Unicode 0x2193;  
+              glyph = "↓";  
+              name="downwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsArrowLeftwardsOfUpwardsArrowInfix = 
+             {character = Unicode 0x21F5;  
+              glyph = "⇵";  
+              name="downwards arrow leftwards of upwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsArrowToBarInfix = 
+             {character = Unicode 0x2913;  
+              glyph = "⤓";  
+              name="downwards arrow to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsArrowWithCornerLeftwardsInfix = 
+             {character = Unicode 0x21B5;  
+              glyph = "↵";  
+              name="downwards arrow with corner leftwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsArrowWithDoubleStrokeInfix = 
+             {character = Unicode 0x21DF;  
+              glyph = "⇟";  
+              name="downwards arrow with double stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downwardsArrowWithHorizontalStrokeInfix = 
+             {character = Unicode 0x2908;  
+              glyph = "⤈";  
+              name="downwards arrow with horizontal stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downwardsArrowWithTipLeftwardsInfix = 
+             {character = Unicode 0x21B2;  
+              glyph = "↲";  
+              name="downwards arrow with tip leftwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsArrowWithTipRightwardsInfix = 
+             {character = Unicode 0x21B3;  
+              glyph = "↳";  
+              name="downwards arrow with tip rightwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsDashedArrowInfix = 
+             {character = Unicode 0x21E3;  
+              glyph = "⇣";  
+              name="downwards dashed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsDoubleArrowInfix = 
+             {character = Unicode 0x21D3;  
+              glyph = "⇓";  
+              name="downwards double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbLeftBesideDownwardsHarpoonWithBarbRightInfix = 
+             {character = Unicode 0x2965;  
+              glyph = "⥥";  
+              name="downwards harpoon with barb left beside downwards harpoon with barb right";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let downwardsHarpoonWithBarbLeftBesideUpwardsHarpoonWithBarbRightInfix = 
+             {character = Unicode 0x296F;  
+              glyph = "⥯";  
+              name="downwards harpoon with barb left beside upwards harpoon with barb right";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbLeftFromBarInfix = 
+             {character = Unicode 0x2961;  
+              glyph = "⥡";  
+              name="downwards harpoon with barb left from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbLeftToBarInfix = 
+             {character = Unicode 0x2959;  
+              glyph = "⥙";  
+              name="downwards harpoon with barb left to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbLeftwardsInfix = 
+             {character = Unicode 0x21C3;  
+              glyph = "⇃";  
+              name="downwards harpoon with barb leftwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbRightFromBarInfix = 
+             {character = Unicode 0x295D;  
+              glyph = "⥝";  
+              name="downwards harpoon with barb right from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbRightToBarInfix = 
+             {character = Unicode 0x2955;  
+              glyph = "⥕";  
+              name="downwards harpoon with barb right to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsHarpoonWithBarbRightwardsInfix = 
+             {character = Unicode 0x21C2;  
+              glyph = "⇂";  
+              name="downwards harpoon with barb rightwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsPairedArrowsInfix = 
+             {character = Unicode 0x21CA;  
+              glyph = "⇊";  
+              name="downwards paired arrows";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsQuadrupleArrowInfix = 
+             {character = Unicode 0x27F1;  
+              glyph = "⟱";  
+              name="downwards quadruple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsTripleArrowInfix = 
+             {character = Unicode 0x290B;  
+              glyph = "⤋";  
+              name="downwards triple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsTwoHeadedArrowInfix = 
+             {character = Unicode 0x21A1;  
+              glyph = "↡";  
+              name="downwards two headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsWhiteArrowInfix = 
+             {character = Unicode 0x21E9;  
+              glyph = "⇩";  
+              name="downwards white arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let downwardsZigzagArrowInfix = 
+             {character = Unicode 0x21AF;  
+              glyph = "↯";  
+              name="downwards zigzag arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let elementOfInfix = 
+             {character = Unicode 0x2208;  
+              glyph = "∈";  
+              name="element of";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfOpeningDownwardsInfix = 
+             {character = Unicode 0x2AD9;  
+              glyph = "⫙";  
+              name="element of opening downwards";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfWithDotAboveInfix = 
+             {character = Unicode 0x22F5;  
+              glyph = "⋵";  
+              name="element of with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfWithLongHorizontalStrokeInfix = 
+             {character = Unicode 0x22F2;  
+              glyph = "⋲";  
+              name="element of with long horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfWithOverbarInfix = 
+             {character = Unicode 0x22F6;  
+              glyph = "⋶";  
+              name="element of with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfWithTwoHorizontalStrokesInfix = 
+             {character = Unicode 0x22F9;  
+              glyph = "⋹";  
+              name="element of with two horizontal strokes";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfWithUnderbarInfix = 
+             {character = Unicode 0x22F8;  
+              glyph = "⋸";  
+              name="element of with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let elementOfWithVerticalBarAtEndOfHorizontalStrokeInfix = 
+             {character = Unicode 0x22F3;  
+              glyph = "⋳";  
+              name="element of with vertical bar at end of horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let emptySetWithLeftArrowAboveInfix = 
+             {character = Unicode 0x29B4;  
+              glyph = "⦴";  
+              name="empty set with left arrow above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let emptySetWithOverbarInfix = 
+             {character = Unicode 0x29B1;  
+              glyph = "⦱";  
+              name="empty set with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let emptySetWithRightArrowAboveInfix = 
+             {character = Unicode 0x29B3;  
+              glyph = "⦳";  
+              name="empty set with right arrow above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let emptySetWithSmallCircleAboveInfix = 
+             {character = Unicode 0x29B2;  
+              glyph = "⦲";  
+              name="empty set with small circle above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let endOfProofInfix = 
+             {character = Unicode 0x220E;  
+              glyph = "∎";  
+              name="end of proof";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let equalAndParallelToInfix = 
+             {character = Unicode 0x22D5;  
+              glyph = "⋕";  
+              name="equal and parallel to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsColonInfix = 
+             {character = Unicode 0x2255;  
+              glyph = "≕";  
+              name="equals colon";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignAbovePlusSignInfix = 
+             {character = Unicode 0x2A71;  
+              glyph = "⩱";  
+              name="equals sign above plus sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let equalsSignAboveRightwardsArrowInfix = 
+             {character = Unicode 0x2971;  
+              glyph = "⥱";  
+              name="equals sign above rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let equalsSignAboveTildeOperatorInfix = 
+             {character = Unicode 0x2A73;  
+              glyph = "⩳";  
+              name="equals sign above tilde operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignAndSlantedParallelInfix = 
+             {character = Unicode 0x29E3;  
+              glyph = "⧣";  
+              name="equals sign and slanted parallel";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignAndSlantedParallelWithTildeAboveInfix = 
+             {character = Unicode 0x29E4;  
+              glyph = "⧤";  
+              name="equals sign and slanted parallel with tilde above";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignEqualsInfix = 
+             {character = Char  '=';  
+              glyph = "=";  
+              name="equals sign";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignWithBumpyAboveInfix = 
+             {character = Unicode 0x2AAE;  
+              glyph = "⪮";  
+              name="equals sign with bumpy above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignWithDotBelowInfix = 
+             {character = Unicode 0x2A66;  
+              glyph = "⩦";  
+              name="equals sign with dot below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsSignWithTwoDotsAboveAndTwoDotsBelowInfix = 
+             {character = Unicode 0x2A77;  
+              glyph = "⩷";  
+              name="equals sign with two dots above and two dots below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalsWithAsteriskInfix = 
+             {character = Unicode 0x2A6E;  
+              glyph = "⩮";  
+              name="equals with asterisk";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalToByDefinitionInfix = 
+             {character = Unicode 0x225D;  
+              glyph = "≝";  
+              name="equal to by definition";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalToOrGreaterThanInfix = 
+             {character = Unicode 0x22DD;  
+              glyph = "⋝";  
+              name="equal to or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalToOrLessThanInfix = 
+             {character = Unicode 0x22DC;  
+              glyph = "⋜";  
+              name="equal to or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalToOrPrecedesInfix = 
+             {character = Unicode 0x22DE;  
+              glyph = "⋞";  
+              name="equal to or precedes";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equalToOrSucceedsInfix = 
+             {character = Unicode 0x22DF;  
+              glyph = "⋟";  
+              name="equal to or succeeds";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equiangularToInfix = 
+             {character = Unicode 0x225A;  
+              glyph = "≚";  
+              name="equiangular to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equivalentToInfix = 
+             {character = Unicode 0x224D;  
+              glyph = "≍";  
+              name="equivalent to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let equivalentWithFourDotsAboveInfix = 
+             {character = Unicode 0x2A78;  
+              glyph = "⩸";  
+              name="equivalent with four dots above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let errorBarredBlackCircleInfix = 
+             {character = Unicode 0x29F3;  
+              glyph = "⧳";  
+              name="error-barred black circle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let errorBarredBlackDiamondInfix = 
+             {character = Unicode 0x29F1;  
+              glyph = "⧱";  
+              name="error-barred black diamond";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let errorBarredBlackSquareInfix = 
+             {character = Unicode 0x29EF;  
+              glyph = "⧯";  
+              name="error-barred black square";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let errorBarredWhiteCircleInfix = 
+             {character = Unicode 0x29F2;  
+              glyph = "⧲";  
+              name="error-barred white circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let errorBarredWhiteDiamondInfix = 
+             {character = Unicode 0x29F0;  
+              glyph = "⧰";  
+              name="error-barred white diamond";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let errorBarredWhiteSquareInfix = 
+             {character = Unicode 0x29EE;  
+              glyph = "⧮";  
+              name="error-barred white square";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let estimatesInfix = 
+             {character = Unicode 0x2259;  
+              glyph = "≙";  
+              name="estimates";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let excessInfix = 
+             {character = Unicode 0x2239;  
+              glyph = "∹";  
+              name="excess";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let exclamationMarkPostfix = 
+             {character = Char  '!';  
+              glyph = "!";  
+              name="exclamation mark";  
+              form = Postfix;  
+              priority = 810;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let fallingDiagonalCrossingNorthEastArrowInfix = 
+             {character = Unicode 0x292F;  
+              glyph = "⤯";  
+              name="falling diagonal crossing north east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let fallingDiagonalCrossingRisingDiagonalInfix = 
+             {character = Unicode 0x292C;  
+              glyph = "⤬";  
+              name="falling diagonal crossing rising diagonal";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let feminineOrdinalIndicatorPostfix = 
+             {character = Unicode 0xAA;  
+              glyph = "ª";  
+              name="feminine ordinal indicator";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let finitePartIntegralPrefix = 
+             {character = Unicode 0x2A0D;  
+              glyph = "⨍";  
+              name="finite part integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let fisheyeInfix = 
+             {character = Unicode 0x25C9;  
+              glyph = "◉";  
+              name="fisheye";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let forAllPrefix = 
+             {character = Unicode 0x2200;  
+              glyph = "∀";  
+              name="for all";  
+              form = Prefix;  
+              priority = 230;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let forcesInfix = 
+             {character = Unicode 0x22A9;  
+              glyph = "⊩";  
+              name="forces";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let fourthRootPrefix = 
+             {character = Unicode 0x221C;  
+              glyph = "∜";  
+              name="fourth root";  
+              form = Prefix;  
+              priority = 845;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let fractionSlashInfix = 
+             {character = Unicode 0x2044;  
+              glyph = "⁄";  
+              name="fraction slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=["stretchy"]}
+        let fullStopInfix = 
+             {character = Char  '.';  
+              glyph = ".";  
+              name="full stop";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let functionApplicationInfix = 
+             {character = Unicode 0x2061;  
+              glyph = "⁡";  
+              name="function application";  
+              form = Infix;  
+              priority = 850;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let geometricallyEqualToInfix = 
+             {character = Unicode 0x2251;  
+              glyph = "≑";  
+              name="geometrically equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let geometricallyEquivalentToInfix = 
+             {character = Unicode 0x224E;  
+              glyph = "≎";  
+              name="geometrically equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let geometricallyEquivalentToWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x224E;Unicode 0x338|];  
+              glyph = "≎̸";  
+              name="geometrically equivalent to with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let geometricProportionInfix = 
+             {character = Unicode 0x223A;  
+              glyph = "∺";  
+              name="geometric proportion";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let gleichStarkInfix = 
+             {character = Unicode 0x29E6;  
+              glyph = "⧦";  
+              name="gleich stark";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let graveAccentPostfix = 
+             {character = Char  '`';  
+              glyph = "`";  
+              name="grave accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let greaterThanAboveDoubleLineEqualAboveLessThanInfix = 
+             {character = Unicode 0x2A8C;  
+              glyph = "⪌";  
+              name="greater-than above double-line equal above less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanAboveLessThanAboveDoubleLineEqualInfix = 
+             {character = Unicode 0x2A92;  
+              glyph = "⪒";  
+              name="greater-than above less-than above double-line equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanAboveRightwardsArrowInfix = 
+             {character = Unicode 0x2978;  
+              glyph = "⥸";  
+              name="greater-than above rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let greaterThanAboveSimilarAboveLessThanInfix = 
+             {character = Unicode 0x2A90;  
+              glyph = "⪐";  
+              name="greater-than above similar above less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanAboveSimilarOrEqualInfix = 
+             {character = Unicode 0x2A8E;  
+              glyph = "⪎";  
+              name="greater-than above similar or equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanAboveSlantedEqualAboveLessThanAboveSlantedEqualInfix = 
+             {character = Unicode 0x2A94;  
+              glyph = "⪔";  
+              name="greater-than above slanted equal above less-than above slanted equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanAndNotApproximateInfix = 
+             {character = Unicode 0x2A8A;  
+              glyph = "⪊";  
+              name="greater-than and not approximate";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanAndSingleLineNotEqualToInfix = 
+             {character = Unicode 0x2A88;  
+              glyph = "⪈";  
+              name="greater-than and single-line not equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanBesideLessThanInfix = 
+             {character = Unicode 0x2AA5;  
+              glyph = "⪥";  
+              name="greater-than beside less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanButNotEqualToInfix = 
+             {character = Unicode 0x2269;  
+              glyph = "≩";  
+              name="greater-than but not equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanButNotEquivalentToInfix = 
+             {character = Unicode 0x22E7;  
+              glyph = "⋧";  
+              name="greater-than but not equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanClosedByCurveAboveSlantedEqualInfix = 
+             {character = Unicode 0x2AA9;  
+              glyph = "⪩";  
+              name="greater-than closed by curve above slanted equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanClosedByCurveInfix = 
+             {character = Unicode 0x2AA7;  
+              glyph = "⪧";  
+              name="greater-than closed by curve";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanEqualToOrLessThanInfix = 
+             {character = Unicode 0x22DB;  
+              glyph = "⋛";  
+              name="greater-than equal to or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrApproximateInfix = 
+             {character = Unicode 0x2A86;  
+              glyph = "⪆";  
+              name="greater-than or approximate";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrEquivalentToInfix = 
+             {character = Unicode 0x2273;  
+              glyph = "≳";  
+              name="greater-than or equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrLessThanInfix = 
+             {character = Unicode 0x2277;  
+              glyph = "≷";  
+              name="greater-than or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrSlantedEqualToInfix = 
+             {character = Unicode 0x2A7E;  
+              glyph = "⩾";  
+              name="greater-than or slanted equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrSlantedEqualToWithDotAboveInfix = 
+             {character = Unicode 0x2A82;  
+              glyph = "⪂";  
+              name="greater-than or slanted equal to with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrSlantedEqualToWithDotAboveLeftInfix = 
+             {character = Unicode 0x2A84;  
+              glyph = "⪄";  
+              name="greater-than or slanted equal to with dot above left";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrSlantedEqualToWithDotInsideInfix = 
+             {character = Unicode 0x2A80;  
+              glyph = "⪀";  
+              name="greater-than or slanted equal to with dot inside";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOrSlantedEqualToWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2A7E;Unicode 0x338|];  
+              glyph = "⩾̸";  
+              name="greater-than or slanted equal to with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOverEqualToInfix = 
+             {character = Unicode 0x2267;  
+              glyph = "≧";  
+              name="greater-than over equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanOverlappingLessThanInfix = 
+             {character = Unicode 0x2AA4;  
+              glyph = "⪤";  
+              name="greater-than overlapping less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanSignInfix = 
+             {character = Char  '>';  
+              glyph = ">";  
+              name="greater-than sign";  
+              form = Infix;  
+              priority = 243;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanWithCircleInsideInfix = 
+             {character = Unicode 0x2A7A;  
+              glyph = "⩺";  
+              name="greater-than with circle inside";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanWithDotInfix = 
+             {character = Unicode 0x22D7;  
+              glyph = "⋗";  
+              name="greater-than with dot";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greaterThanWithQuestionMarkAboveInfix = 
+             {character = Unicode 0x2A7C;  
+              glyph = "⩼";  
+              name="greater-than with question mark above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greateThanOrEqualToInfix = 
+             {character = Unicode 0x2265;  
+              glyph = "≥";  
+              name="greater-than or equal to";  
+              form = Infix;  
+              priority = 242;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let greekReversedLunateEpsilonSymbolInfix = 
+             {character = Unicode 0x3F6;  
+              glyph = "϶";  
+              name="greek reversed lunate epsilon symbol";  
+              form = Infix;  
+              priority = 110;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let hermitianConjugateMatrixInfix = 
+             {character = Unicode 0x22B9;  
+              glyph = "⊹";  
+              name="hermitian conjugate matrix";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let homotheticInfix = 
+             {character = Unicode 0x223B;  
+              glyph = "∻";  
+              name="homothetic";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let horizontalEllipsisInfix = 
+             {character = Unicode 0x2026;  
+              glyph = "…";  
+              name="horizontal ellipsis";  
+              form = Infix;  
+              priority = 150;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let hyphenBulletInfix = 
+             {character = Unicode 0x2043;  
+              glyph = "⁃";  
+              name="hyphen bullet";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let hyphenMinusInfix = 
+             {character = Char  '-';  
+              glyph = "-";  
+              name="hyphen-minus";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let hyphenMinusPrefix = 
+             {character = Char  '-';  
+              glyph = "-";  
+              name="hyphen-minus";  
+              form = Prefix;  
+              priority = 275;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let identicalToAndSlantedParallelInfix = 
+             {character = Unicode 0x29E5;  
+              glyph = "⧥";  
+              name="identical to and slanted parallel";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let identicalToInfix = 
+             {character = Unicode 0x2261;  
+              glyph = "≡";  
+              name="identical to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let identicalWithDotAboveInfix = 
+             {character = Unicode 0x2A67;  
+              glyph = "⩧";  
+              name="identical with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let imageOfInfix = 
+             {character = Unicode 0x22B7;  
+              glyph = "⊷";  
+              name="image of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let imageOfOrApproximatelyEqualToInfix = 
+             {character = Unicode 0x2253;  
+              glyph = "≓";  
+              name="image of or approximately equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let incompleteInfinityInfix = 
+             {character = Unicode 0x29DC;  
+              glyph = "⧜";  
+              name="incomplete infinity";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let increasesAsInfix = 
+             {character = Unicode 0x29E1;  
+              glyph = "⧡";  
+              name="increases as";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let incrementInfix = 
+             {character = Unicode 0x2206;  
+              glyph = "∆";  
+              name="increment";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let infinityNegatedWithVerticalBarInfix = 
+             {character = Unicode 0x29DE;  
+              glyph = "⧞";  
+              name="infinity negated with vertical bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let integralAroundAPointOperatorPrefix = 
+             {character = Unicode 0x2A15;  
+              glyph = "⨕";  
+              name="integral around a point operator";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralAverageWithSlashPrefix = 
+             {character = Unicode 0x2A0F;  
+              glyph = "⨏";  
+              name="integral average with slash";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralPrefix = 
+             {character = Unicode 0x222B;  
+              glyph = "∫";  
+              name="integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithDoubleStrokePrefix = 
+             {character = Unicode 0x2A0E;  
+              glyph = "⨎";  
+              name="integral with double stroke";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithIntersectionPrefix = 
+             {character = Unicode 0x2A19;  
+              glyph = "⨙";  
+              name="integral with intersection";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithLeftwardsArrowWithHookPrefix = 
+             {character = Unicode 0x2A17;  
+              glyph = "⨗";  
+              name="integral with leftwards arrow with hook";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithOverbarPrefix = 
+             {character = Unicode 0x2A1B;  
+              glyph = "⨛";  
+              name="integral with overbar";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithTimesSignPrefix = 
+             {character = Unicode 0x2A18;  
+              glyph = "⨘";  
+              name="integral with times sign";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithUnderbarPrefix = 
+             {character = Unicode 0x2A1C;  
+              glyph = "⨜";  
+              name="integral with underbar";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let integralWithUnionPrefix = 
+             {character = Unicode 0x2A1A;  
+              glyph = "⨚";  
+              name="integral with union";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let intercalateInfix = 
+             {character = Unicode 0x22BA;  
+              glyph = "⊺";  
+              name="intercalate";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let interiorProductInfix = 
+             {character = Unicode 0x2A3C;  
+              glyph = "⨼";  
+              name="interior product";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionAboveBarAboveUnionInfix = 
+             {character = Unicode 0x2A49;  
+              glyph = "⩉";  
+              name="intersection above bar above union";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionAboveUnionInfix = 
+             {character = Unicode 0x2A47;  
+              glyph = "⩇";  
+              name="intersection above union";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionBesideAndJoinedWithIntersectionInfix = 
+             {character = Unicode 0x2A4B;  
+              glyph = "⩋";  
+              name="intersection beside and joined with intersection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionInfix = 
+             {character = Unicode 0x2229;  
+              glyph = "∩";  
+              name="intersection";  
+              form = Infix;  
+              priority = 350;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionWithDotInfix = 
+             {character = Unicode 0x2A40;  
+              glyph = "⩀";  
+              name="intersection with dot";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionWithLogicalAndInfix = 
+             {character = Unicode 0x2A44;  
+              glyph = "⩄";  
+              name="intersection with logical and";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let intersectionWithOverbarInfix = 
+             {character = Unicode 0x2A43;  
+              glyph = "⩃";  
+              name="intersection with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let invertedLazySInfix = 
+             {character = Unicode 0x223E;  
+              glyph = "∾";  
+              name="inverted lazy s";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let invisiblePlusInfix = 
+             {character = Unicode 0x2064;  
+              glyph = "⁤";  
+              name="invisible plus";  
+              form = Infix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let invisibleSeparatorInfix = 
+             {character = Unicode 0x2063;  
+              glyph = "⁣";  
+              name="invisible separator";  
+              form = Infix;  
+              priority = 40;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["separator"; "linebreakstyle=after"]}
+        let invisibleTimesInfix = 
+             {character = Unicode 0x2062;  
+              glyph = "⁢";  
+              name="invisible times";  
+              form = Infix;  
+              priority = 390;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let joinInfix = 
+             {character = Unicode 0x2A1D;  
+              glyph = "⨝";  
+              name="join";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let largeLeftTriangleOperatorInfix = 
+             {character = Unicode 0x2A1E;  
+              glyph = "⨞";  
+              name="large left triangle operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let largerThanInfix = 
+             {character = Unicode 0x2AAB;  
+              glyph = "⪫";  
+              name="larger than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let largerThanOrEqualToInfix = 
+             {character = Unicode 0x2AAD;  
+              glyph = "⪭";  
+              name="larger than or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let largeTripleVerticalBarOperatorPrefix = 
+             {character = Unicode 0x2AFC;  
+              glyph = "⫼";  
+              name="large triple vertical bar operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let leftAngleBracketWithDotPrefix = 
+             {character = Unicode 0x2991;  
+              glyph = "⦑";  
+              name="left angle bracket with dot";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftArcLessThanBracketPrefix = 
+             {character = Unicode 0x2993;  
+              glyph = "⦓";  
+              name="left arc less-than bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftBarbDownRightBarbDownHarpoonInfix = 
+             {character = Unicode 0x2950;  
+              glyph = "⥐";  
+              name="left barb down right barb down harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftBarbDownRightBarbUpHarpoonInfix = 
+             {character = Unicode 0x294B;  
+              glyph = "⥋";  
+              name="left barb down right barb up harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftBarbUpRightBarbDownHarpoonInfix = 
+             {character = Unicode 0x294A;  
+              glyph = "⥊";  
+              name="left barb up right barb down harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftBarbUpRightBarbUpHarpoonInfix = 
+             {character = Unicode 0x294E;  
+              glyph = "⥎";  
+              name="left barb up right barb up harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftBlackTortoiseShellBracketPrefix = 
+             {character = Unicode 0x2997;  
+              glyph = "⦗";  
+              name="left black tortoise shell bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftCeilingPrefix = 
+             {character = Unicode 0x2308;  
+              glyph = "⌈";  
+              name="left ceiling";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftCurlyBracketPrefix = 
+             {character = Char  '{';  
+              glyph = "{";  
+              name="left curly bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftDoubleQuotationMarkPrefix = 
+             {character = Unicode 0x201C;  
+              glyph = "“";  
+              name="left double quotation mark";  
+              form = Prefix;  
+              priority = 10;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"]}
+        let leftFishTailInfix = 
+             {character = Unicode 0x297C;  
+              glyph = "⥼";  
+              name="left fish tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftFloorPrefix = 
+             {character = Unicode 0x230A;  
+              glyph = "⌊";  
+              name="left floor";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftHalfBlackCircleInfix = 
+             {character = Unicode 0x25D6;  
+              glyph = "◖";  
+              name="left half black circle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let leftNormalFactorSemidirectProductInfix = 
+             {character = Unicode 0x22C9;  
+              glyph = "⋉";  
+              name="left normal factor semidirect product";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let leftParenthesisPrefix = 
+             {character = Char  '(';  
+              glyph = "(";  
+              name="left parenthesis";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftPointingAngleBracketPrefix = 
+             {character = Unicode 0x2329;  
+              glyph = "〈";  
+              name="left-pointing angle bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftPointingCurvedAngleBracketPrefix = 
+             {character = Unicode 0x29FC;  
+              glyph = "⧼";  
+              name="left-pointing curved angle bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftRightArrowInfix = 
+             {character = Unicode 0x2194;  
+              glyph = "↔";  
+              name="left right arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftRightArrowThroughSmallCircleInfix = 
+             {character = Unicode 0x2948;  
+              glyph = "⥈";  
+              name="left right arrow through small circle";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftRightArrowWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x21FC;  
+              glyph = "⇼";  
+              name="left right arrow with double vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftRightArrowWithStrokeInfix = 
+             {character = Unicode 0x21AE;  
+              glyph = "↮";  
+              name="left right arrow with stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftRightArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x21F9;  
+              glyph = "⇹";  
+              name="left right arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftRightDoubleArrowInfix = 
+             {character = Unicode 0x21D4;  
+              glyph = "⇔";  
+              name="left right double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftRightDoubleArrowWithStrokeInfix = 
+             {character = Unicode 0x21CE;  
+              glyph = "⇎";  
+              name="left right double arrow with stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftRightDoubleArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x2904;  
+              glyph = "⤄";  
+              name="left right double arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftRightOpenHeadedArrowInfix = 
+             {character = Unicode 0x21FF;  
+              glyph = "⇿";  
+              name="left right open-headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftRightWaveArrowInfix = 
+             {character = Unicode 0x21AD;  
+              glyph = "↭";  
+              name="left right wave arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftSemidirectProductInfix = 
+             {character = Unicode 0x22CB;  
+              glyph = "⋋";  
+              name="left semidirect product";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let leftSideArcAnticlockwiseArrowInfix = 
+             {character = Unicode 0x2939;  
+              glyph = "⤹";  
+              name="left-side arc anticlockwise arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let leftSingleQuotationMarkPrefix = 
+             {character = Unicode 0x2018;  
+              glyph = "‘";  
+              name="left single quotation mark";  
+              form = Prefix;  
+              priority = 10;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"]}
+        let leftSquareBracketPrefix = 
+             {character = Char  '[';  
+              glyph = "[";  
+              name="left square bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftSquareBracketWithTickInBottomCornerPrefix = 
+             {character = Unicode 0x298F;  
+              glyph = "⦏";  
+              name="left square bracket with tick in bottom corner";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftSquareBracketWithTickInTopCornerPrefix = 
+             {character = Unicode 0x298D;  
+              glyph = "⦍";  
+              name="left square bracket with tick in top corner";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftSquareBracketWithUnderbarPrefix = 
+             {character = Unicode 0x298B;  
+              glyph = "⦋";  
+              name="left square bracket with underbar";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftTackInfix = 
+             {character = Unicode 0x22A3;  
+              glyph = "⊣";  
+              name="left tack";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let leftTriangleBesideVerticalBarInfix = 
+             {character = Unicode 0x29CF;  
+              glyph = "⧏";  
+              name="left triangle beside vertical bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let leftTriangleBesideVerticalBarWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x29CF;Unicode 0x338|];  
+              glyph = "⧏̸";  
+              name="left triangle beside vertical bar with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let leftwardsArrowAboveShortRightwardsArrowInfix = 
+             {character = Unicode 0x2943;  
+              glyph = "⥃";  
+              name="leftwards arrow above short rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowAboveTildeOperatorInfix = 
+             {character = Unicode 0x2973;  
+              glyph = "⥳";  
+              name="leftwards arrow above tilde operator";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowFromBarInfix = 
+             {character = Unicode 0x21A4;  
+              glyph = "↤";  
+              name="leftwards arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowFromBarToBlackDiamondInfix = 
+             {character = Unicode 0x291F;  
+              glyph = "⤟";  
+              name="leftwards arrow from bar to black diamond";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowInfix = 
+             {character = Unicode 0x2190;  
+              glyph = "←";  
+              name="leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowOverRightwardsArrowInfix = 
+             {character = Unicode 0x21C6;  
+              glyph = "⇆";  
+              name="leftwards arrow over rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowTailInfix = 
+             {character = Unicode 0x2919;  
+              glyph = "⤙";  
+              name="leftwards arrow-tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowThroughLessThanInfix = 
+             {character = Unicode 0x2977;  
+              glyph = "⥷";  
+              name="leftwards arrow through less-than";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowThroughSubsetInfix = 
+             {character = Unicode 0x297A;  
+              glyph = "⥺";  
+              name="leftwards arrow through subset";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowToBarInfix = 
+             {character = Unicode 0x21E4;  
+              glyph = "⇤";  
+              name="leftwards arrow to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowToBarOverRightwardsArrowToBarInfix = 
+             {character = Unicode 0x21B9;  
+              glyph = "↹";  
+              name="leftwards arrow to bar over rightwards arrow to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowToBlackDiamondInfix = 
+             {character = Unicode 0x291D;  
+              glyph = "⤝";  
+              name="leftwards arrow to black diamond";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x21FA;  
+              glyph = "⇺";  
+              name="leftwards arrow with double vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowWithHookInfix = 
+             {character = Unicode 0x21A9;  
+              glyph = "↩";  
+              name="leftwards arrow with hook";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowWithLoopInfix = 
+             {character = Unicode 0x21AB;  
+              glyph = "↫";  
+              name="leftwards arrow with loop";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowWithPlusBelowInfix = 
+             {character = Unicode 0x2946;  
+              glyph = "⥆";  
+              name="leftwards arrow with plus below";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowWithStrokeInfix = 
+             {character = Unicode 0x219A;  
+              glyph = "↚";  
+              name="leftwards arrow with stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsArrowWithTailInfix = 
+             {character = Unicode 0x21A2;  
+              glyph = "↢";  
+              name="leftwards arrow with tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x21F7;  
+              glyph = "⇷";  
+              name="leftwards arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsDashedArrowInfix = 
+             {character = Unicode 0x21E0;  
+              glyph = "⇠";  
+              name="leftwards dashed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsDoubleArrowFromBarInfix = 
+             {character = Unicode 0x2906;  
+              glyph = "⤆";  
+              name="leftwards double arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsDoubleArrowInfix = 
+             {character = Unicode 0x21D0;  
+              glyph = "⇐";  
+              name="leftwards double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsDoubleArrowTailInfix = 
+             {character = Unicode 0x291B;  
+              glyph = "⤛";  
+              name="leftwards double arrow-tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsDoubleArrowWithStrokeInfix = 
+             {character = Unicode 0x21CD;  
+              glyph = "⇍";  
+              name="leftwards double arrow with stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsDoubleArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x2902;  
+              glyph = "⤂";  
+              name="leftwards double arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsDoubleDashArrowInfix = 
+             {character = Unicode 0x290C;  
+              glyph = "⤌";  
+              name="leftwards double dash arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsHarpoonOverRightwardsHarpoonInfix = 
+             {character = Unicode 0x21CB;  
+              glyph = "⇋";  
+              name="leftwards harpoon over rightwards harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsHarpoonWithBarbDownAboveRightwardsHarpoonWithBarbDownInfix = 
+             {character = Unicode 0x2967;  
+              glyph = "⥧";  
+              name="leftwards harpoon with barb down above rightwards harpoon with barb down";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsHarpoonWithBarbDownBelowLongDashInfix = 
+             {character = Unicode 0x296B;  
+              glyph = "⥫";  
+              name="leftwards harpoon with barb down below long dash";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsHarpoonWithBarbDownFromBarInfix = 
+             {character = Unicode 0x295E;  
+              glyph = "⥞";  
+              name="leftwards harpoon with barb down from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsHarpoonWithBarbDownToBarInfix = 
+             {character = Unicode 0x2956;  
+              glyph = "⥖";  
+              name="leftwards harpoon with barb down to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let leftwardsHarpoonWithBarbDownwardsInfix = 
+             {character = Unicode 0x21BD;  
+              glyph = "↽";  
+              name="leftwards harpoon with barb downwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsHarpoonWithBarbUpAboveLeftwardsHarpoonWithBarbDownInfix = 
+             {character = Unicode 0x2962;  
+              glyph = "⥢";  
+              name="leftwards harpoon with barb up above leftwards harpoon with barb down";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsHarpoonWithBarbUpAboveLongDashInfix = 
+             {character = Unicode 0x296A;  
+              glyph = "⥪";  
+              name="leftwards harpoon with barb up above long dash";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsHarpoonWithBarbUpAboveRightwardsHarpoonWithBarbUpInfix = 
+             {character = Unicode 0x2966;  
+              glyph = "⥦";  
+              name="leftwards harpoon with barb up above rightwards harpoon with barb up";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let leftwardsHarpoonWithBarbUpFromBarInfix = 
+             {character = Unicode 0x295A;  
+              glyph = "⥚";  
+              name="leftwards harpoon with barb up from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsHarpoonWithBarbUpToBarInfix = 
+             {character = Unicode 0x2952;  
+              glyph = "⥒";  
+              name="leftwards harpoon with barb up to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsHarpoonWithBarbUpwardsInfix = 
+             {character = Unicode 0x21BC;  
+              glyph = "↼";  
+              name="leftwards harpoon with barb upwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsOpenHeadedArrowInfix = 
+             {character = Unicode 0x21FD;  
+              glyph = "⇽";  
+              name="leftwards open-headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsPairedArrowsInfix = 
+             {character = Unicode 0x21C7;  
+              glyph = "⇇";  
+              name="leftwards paired arrows";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsQuadrupleArrowInfix = 
+             {character = Unicode 0x2B45;  
+              glyph = "⭅";  
+              name="leftwards quadruple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let leftwardsSquiggleArrowInfix = 
+             {character = Unicode 0x21DC;  
+              glyph = "⇜";  
+              name="leftwards squiggle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsTripleArrowInfix = 
+             {character = Unicode 0x21DA;  
+              glyph = "⇚";  
+              name="leftwards triple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsTripleDashArrowInfix = 
+             {character = Unicode 0x290E;  
+              glyph = "⤎";  
+              name="leftwards triple dash arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsTwoHeadedArrowInfix = 
+             {character = Unicode 0x219E;  
+              glyph = "↞";  
+              name="leftwards two headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsWaveArrowInfix = 
+             {character = Unicode 0x219C;  
+              glyph = "↜";  
+              name="leftwards wave arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftwardsWhiteArrowInfix = 
+             {character = Unicode 0x21E6;  
+              glyph = "⇦";  
+              name="leftwards white arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let leftWhiteCurlyBracketPrefix = 
+             {character = Unicode 0x2983;  
+              glyph = "⦃";  
+              name="left white curly bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftWhiteParenthesisPrefix = 
+             {character = Unicode 0x2985;  
+              glyph = "⦅";  
+              name="left white parenthesis";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let leftWigglyFenceInfix = 
+             {character = Unicode 0x29D8;  
+              glyph = "⧘";  
+              name="left wiggly fence";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let lessThanAboveDoubleLineEqualAboveGreaterThanInfix = 
+             {character = Unicode 0x2A8B;  
+              glyph = "⪋";  
+              name="less-than above double-line equal above greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanAboveGreaterThanAboveDoubleLineEqualInfix = 
+             {character = Unicode 0x2A91;  
+              glyph = "⪑";  
+              name="less-than above greater-than above double-line equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanAboveLeftwardsArrowInfix = 
+             {character = Unicode 0x2976;  
+              glyph = "⥶";  
+              name="less-than above leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let lessThanAboveSimilarAboveGreaterThanInfix = 
+             {character = Unicode 0x2A8F;  
+              glyph = "⪏";  
+              name="less-than above similar above greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanAboveSimilarOrEqualInfix = 
+             {character = Unicode 0x2A8D;  
+              glyph = "⪍";  
+              name="less-than above similar or equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanAboveSlantedEqualAboveGreaterThanAboveSlantedEqualInfix = 
+             {character = Unicode 0x2A93;  
+              glyph = "⪓";  
+              name="less-than above slanted equal above greater-than above slanted equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanAndNotApproximateInfix = 
+             {character = Unicode 0x2A89;  
+              glyph = "⪉";  
+              name="less-than and not approximate";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanAndSingleLineNotEqualToInfix = 
+             {character = Unicode 0x2A87;  
+              glyph = "⪇";  
+              name="less-than and single-line not equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanButNotEqualToInfix = 
+             {character = Unicode 0x2268;  
+              glyph = "≨";  
+              name="less-than but not equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanButNotEquivalentToInfix = 
+             {character = Unicode 0x22E6;  
+              glyph = "⋦";  
+              name="less-than but not equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanClosedByCurveAboveSlantedEqualInfix = 
+             {character = Unicode 0x2AA8;  
+              glyph = "⪨";  
+              name="less-than closed by curve above slanted equal";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanClosedByCurveInfix = 
+             {character = Unicode 0x2AA6;  
+              glyph = "⪦";  
+              name="less-than closed by curve";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanEqualToOrGreaterThanInfix = 
+             {character = Unicode 0x22DA;  
+              glyph = "⋚";  
+              name="less-than equal to or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrApproximateInfix = 
+             {character = Unicode 0x2A85;  
+              glyph = "⪅";  
+              name="less-than or approximate";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrEqualToInfix = 
+             {character = Unicode 0x2264;  
+              glyph = "≤";  
+              name="less-than or equal to";  
+              form = Infix;  
+              priority = 241;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrEquivalentToInfix = 
+             {character = Unicode 0x2272;  
+              glyph = "≲";  
+              name="less-than or equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrGreaterThanInfix = 
+             {character = Unicode 0x2276;  
+              glyph = "≶";  
+              name="less-than or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrSlantedEqualToInfix = 
+             {character = Unicode 0x2A7D;  
+              glyph = "⩽";  
+              name="less-than or slanted equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrSlantedEqualToWithDotAboveInfix = 
+             {character = Unicode 0x2A81;  
+              glyph = "⪁";  
+              name="less-than or slanted equal to with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrSlantedEqualToWithDotAboveRightInfix = 
+             {character = Unicode 0x2A83;  
+              glyph = "⪃";  
+              name="less-than or slanted equal to with dot above right";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrSlantedEqualToWithDotInsideInfix = 
+             {character = Unicode 0x2A7F;  
+              glyph = "⩿";  
+              name="less-than or slanted equal to with dot inside";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOrSlantedEqualToWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2A7D;Unicode 0x338|];  
+              glyph = "⩽̸";  
+              name="less-than or slanted equal to with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOverEqualToInfix = 
+             {character = Unicode 0x2266;  
+              glyph = "≦";  
+              name="less-than over equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanOverEqualToWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2266;Unicode 0x338|];  
+              glyph = "≦̸";  
+              name="less-than over equal to with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanSignInfix = 
+             {character = Char '<';  
+              glyph = "<";  
+              name="less-than sign";  
+              form = Infix;  
+              priority = 245;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanWithCircleInsideInfix = 
+             {character = Unicode 0x2A79;  
+              glyph = "⩹";  
+              name="less-than with circle inside";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanWithDotInfix = 
+             {character = Unicode 0x22D6;  
+              glyph = "⋖";  
+              name="less-than with dot";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lessThanWithQuestionMarkAboveInfix = 
+             {character = Unicode 0x2A7B;  
+              glyph = "⩻";  
+              name="less-than with question mark above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lightLeftTortoiseShellBracketOrnamentPrefix = 
+             {character = Unicode 0x2772;  
+              glyph = "❲";  
+              name="light left tortoise shell bracket ornament";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let lightRightTortoiseShellBracketOrnamentPostfix = 
+             {character = Unicode 0x2773;  
+              glyph = "❳";  
+              name="light right tortoise shell bracket ornament";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let lightVerticalBarInfix = 
+             {character = Unicode 0x2758;  
+              glyph = "❘";  
+              name="light vertical bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lineIntegrationNotIncludingThePolePrefix = 
+             {character = Unicode 0x2A14;  
+              glyph = "⨔";  
+              name="line integration not including the pole";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let lineIntegrationWithRectangularPathAroundPolePrefix = 
+             {character = Unicode 0x2A12;  
+              glyph = "⨒";  
+              name="line integration with rectangular path around pole";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let lineIntegrationWithSemicircularPathAroundPolePrefix = 
+             {character = Unicode 0x2A13;  
+              glyph = "⨓";  
+              name="line integration with semicircular path around pole";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let logicalAndInfix = 
+             {character = Unicode 0x2227;  
+              glyph = "∧";  
+              name="logical and";  
+              form = Infix;  
+              priority = 200;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalAndWithDotAboveInfix = 
+             {character = Unicode 0x2A51;  
+              glyph = "⩑";  
+              name="logical and with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalAndWithDoubleOverbarInfix = 
+             {character = Unicode 0x2A5E;  
+              glyph = "⩞";  
+              name="logical and with double overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalAndWithDoubleUnderbarInfix = 
+             {character = Unicode 0x2A60;  
+              glyph = "⩠";  
+              name="logical and with double underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalAndWithHorizontalDashInfix = 
+             {character = Unicode 0x2A5C;  
+              glyph = "⩜";  
+              name="logical and with horizontal dash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalAndWithMiddleStemInfix = 
+             {character = Unicode 0x2A5A;  
+              glyph = "⩚";  
+              name="logical and with middle stem";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalAndWithUnderbarInfix = 
+             {character = Unicode 0x2A5F;  
+              glyph = "⩟";  
+              name="logical and with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalOrInfix = 
+             {character = Unicode 0x2228;  
+              glyph = "∨";  
+              name="logical or";  
+              form = Infix;  
+              priority = 190;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalOrOverlappingLogicalAndInfix = 
+             {character = Unicode 0x2A59;  
+              glyph = "⩙";  
+              name="logical or overlapping logical and";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let logicalOrWithDotAboveInfix = 
+             {character = Unicode 0x2A52;  
+              glyph = "⩒";  
+              name="logical or with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalOrWithDoubleOverbarInfix = 
+             {character = Unicode 0x2A62;  
+              glyph = "⩢";  
+              name="logical or with double overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalOrWithDoubleUnderbarInfix = 
+             {character = Unicode 0x2A63;  
+              glyph = "⩣";  
+              name="logical or with double underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalOrWithHorizontalDashInfix = 
+             {character = Unicode 0x2A5D;  
+              glyph = "⩝";  
+              name="logical or with horizontal dash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let logicalOrWithMiddleStemInfix = 
+             {character = Unicode 0x2A5B;  
+              glyph = "⩛";  
+              name="logical or with middle stem";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let longDashFromLeftMemberOfDoubleVerticalInfix = 
+             {character = Unicode 0x2AE6;  
+              glyph = "⫦";  
+              name="long dash from left member of double vertical";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let longLeftRightArrowInfix = 
+             {character = Unicode 0x27F7;  
+              glyph = "⟷";  
+              name="long left right arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longLeftRightDoubleArrowInfix = 
+             {character = Unicode 0x27FA;  
+              glyph = "⟺";  
+              name="long left right double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longLeftwardsArrowFromBarInfix = 
+             {character = Unicode 0x27FB;  
+              glyph = "⟻";  
+              name="long leftwards arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longLeftwardsArrowInfix = 
+             {character = Unicode 0x27F5;  
+              glyph = "⟵";  
+              name="long leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longLeftwardsDoubleArrowFromBarInfix = 
+             {character = Unicode 0x27FD;  
+              glyph = "⟽";  
+              name="long leftwards double arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longLeftwardsDoubleArrowInfix = 
+             {character = Unicode 0x27F8;  
+              glyph = "⟸";  
+              name="long leftwards double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longRightwardsArrowFromBarInfix = 
+             {character = Unicode 0x27FC;  
+              glyph = "⟼";  
+              name="long rightwards arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longRightwardsArrowInfix = 
+             {character = Unicode 0x27F6;  
+              glyph = "⟶";  
+              name="long rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longRightwardsDoubleArrowFromBarInfix = 
+             {character = Unicode 0x27FE;  
+              glyph = "⟾";  
+              name="long rightwards double arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longRightwardsDoubleArrowInfix = 
+             {character = Unicode 0x27F9;  
+              glyph = "⟹";  
+              name="long rightwards double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let longRightwardsSquiggleArrowInfix = 
+             {character = Unicode 0x27FF;  
+              glyph = "⟿";  
+              name="long rightwards squiggle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let lowerLeftSemicircularAnticlockwiseArrowInfix = 
+             {character = Unicode 0x293F;  
+              glyph = "⤿";  
+              name="lower left semicircular anticlockwise arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lowerRightSemicircularClockwiseArrowInfix = 
+             {character = Unicode 0x293E;  
+              glyph = "⤾";  
+              name="lower right semicircular clockwise arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let lowLineInfix = 
+             {character = Char  '_';  
+              glyph = "_";  
+              name="low line";  
+              form = Infix;  
+              priority = 900;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let lowLinePostfix = 
+             {character = Char  '_';  
+              glyph = "_";  
+              name="low line";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let macronPostfix = 
+             {character = Unicode 0xAF;  
+              glyph = "¯";  
+              name="macron";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let masculineOrdinalIndicatorPostfix = 
+             {character = Unicode 0xBA;  
+              glyph = "º";  
+              name="masculine ordinal indicator";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let mathematicalLeftAngleBracketPrefix = 
+             {character = Unicode 0x27E8;  
+              glyph = "⟨";  
+              name="mathematical left angle bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalLeftDoubleAngleBracketPrefix = 
+             {character = Unicode 0x27EA;  
+              glyph = "⟪";  
+              name="mathematical left double angle bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalLeftFlattenedParenthesisPrefix = 
+             {character = Unicode 0x27EE;  
+              glyph = "⟮";  
+              name="mathematical left flattened parenthesis";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalLeftWhiteSquareBracketPrefix = 
+             {character = Unicode 0x27E6;  
+              glyph = "⟦";  
+              name="mathematical left white square bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalLeftWhiteTortoiseShellBracketPrefix = 
+             {character = Unicode 0x27EC;  
+              glyph = "⟬";  
+              name="mathematical left white tortoise shell bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalRightAngleBracketPostfix = 
+             {character = Unicode 0x27E9;  
+              glyph = "⟩";  
+              name="mathematical right angle bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalRightDoubleAngleBracketPostfix = 
+             {character = Unicode 0x27EB;  
+              glyph = "⟫";  
+              name="mathematical right double angle bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalRightFlattenedParenthesisPostfix = 
+             {character = Unicode 0x27EF;  
+              glyph = "⟯";  
+              name="mathematical right flattened parenthesis";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalRightWhiteSquareBracketPostfix = 
+             {character = Unicode 0x27E7;  
+              glyph = "⟧";  
+              name="mathematical right white square bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let mathematicalRightWhiteTortoiseShellBracketPostfix = 
+             {character = Unicode 0x27ED;  
+              glyph = "⟭";  
+              name="mathematical right white tortoise shell bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let measuredAngleOpeningLeftInfix = 
+             {character = Unicode 0x299B;  
+              glyph = "⦛";  
+              name="measured angle opening left";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAnglePrefix = 
+             {character = Unicode 0x2221;  
+              glyph = "∡";  
+              name="measured angle";  
+              form = Prefix;  
+              priority = 670;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingDownAndLeftInfix = 
+             {character = Unicode 0x29AB;  
+              glyph = "⦫";  
+              name="measured angle with open arm ending in arrow pointing down and left";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingDownAndRightInfix = 
+             {character = Unicode 0x29AA;  
+              glyph = "⦪";  
+              name="measured angle with open arm ending in arrow pointing down and right";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingLeftAndDownInfix = 
+             {character = Unicode 0x29AF;  
+              glyph = "⦯";  
+              name="measured angle with open arm ending in arrow pointing left and down";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingLeftAndUpInfix = 
+             {character = Unicode 0x29AD;  
+              glyph = "⦭";  
+              name="measured angle with open arm ending in arrow pointing left and up";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingRightAndDownInfix = 
+             {character = Unicode 0x29AE;  
+              glyph = "⦮";  
+              name="measured angle with open arm ending in arrow pointing right and down";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingRightAndUpInfix = 
+             {character = Unicode 0x29AC;  
+              glyph = "⦬";  
+              name="measured angle with open arm ending in arrow pointing right and up";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingUpAndLeftInfix = 
+             {character = Unicode 0x29A9;  
+              glyph = "⦩";  
+              name="measured angle with open arm ending in arrow pointing up and left";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredAngleWithOpenArmEndingInArrowPointingUpAndRightInfix = 
+             {character = Unicode 0x29A8;  
+              glyph = "⦨";  
+              name="measured angle with open arm ending in arrow pointing up and right";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let measuredByInfix = 
+             {character = Unicode 0x225E;  
+              glyph = "≞";  
+              name="measured by";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let measuredRightAngleWithDotInfix = 
+             {character = Unicode 0x299D;  
+              glyph = "⦝";  
+              name="measured right angle with dot";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let middleDotInfix = 
+             {character = Unicode 0xB7;  
+              glyph = "·";  
+              name="middle dot";  
+              form = Infix;  
+              priority = 400;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let midlineHorizontalEllipsisInfix = 
+             {character = Unicode 0x22EF;  
+              glyph = "⋯";  
+              name="midline horizontal ellipsis";  
+              form = Infix;  
+              priority = 150;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let minusOrPlusSignInfix = 
+             {character = Unicode 0x2213;  
+              glyph = "∓";  
+              name="minus-or-plus sign";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusOrPlusSignPrefix = 
+             {character = Unicode 0x2213;  
+              glyph = "∓";  
+              name="minus-or-plus sign";  
+              form = Prefix;  
+              priority = 275;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let minusSignInfix = 
+             {character = Unicode 0x2212;  
+              glyph = "−";  
+              name="minus sign";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusSignInTriangleInfix = 
+             {character = Unicode 0x2A3A;  
+              glyph = "⨺";  
+              name="minus sign in triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusSignPrefix = 
+             {character = Unicode 0x2212;  
+              glyph = "−";  
+              name="minus sign";  
+              form = Prefix;  
+              priority = 275;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let minusSignWithCommaAboveInfix = 
+             {character = Unicode 0x2A29;  
+              glyph = "⨩";  
+              name="minus sign with comma above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusSignWithDotBelowInfix = 
+             {character = Unicode 0x2A2A;  
+              glyph = "⨪";  
+              name="minus sign with dot below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusSignWithFallingDotsInfix = 
+             {character = Unicode 0x2A2B;  
+              glyph = "⨫";  
+              name="minus sign with falling dots";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusSignWithRisingDotsInfix = 
+             {character = Unicode 0x2A2C;  
+              glyph = "⨬";  
+              name="minus sign with rising dots";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let minusTildeInfix = 
+             {character = Unicode 0x2242;  
+              glyph = "≂";  
+              name="minus tilde";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let minusTildeWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2242;Unicode 0x338|];  
+              glyph = "≂̸";  
+              name="minus tilde with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let minyInfix = 
+             {character = Unicode 0x29FF;  
+              glyph = "⧿";  
+              name="miny";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let modelsInfix = 
+             {character = Unicode 0x22A7;  
+              glyph = "⊧";  
+              name="models";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let modifierLetterAcuteAccentPostfix = 
+             {character = Unicode 0x2CA;  
+              glyph = "ˊ";  
+              name="modifier letter acute accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let modifierLetterCircumflexAccentPostfix = 
+             {character = Unicode 0x2C6;  
+              glyph = "ˆ";  
+              name="modifier letter circumflex accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let modifierLetterGraveAccentPostfix = 
+             {character = Unicode 0x2CB;  
+              glyph = "ˋ";  
+              name="modifier letter grave accent";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let modifierLetterLowMacronPostfix = 
+             {character = Unicode 0x2CD;  
+              glyph = "ˍ";  
+              name="modifier letter low macron";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let modifierLetterLowTildePostfix = 
+             {character = Unicode 0x2F7;  
+              glyph = "˷";  
+              name="modifier letter low tilde";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let modifierLetterMacronPostfix = 
+             {character = Unicode 0x2C9;  
+              glyph = "ˉ";  
+              name="modifier letter macron";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let moduloTwoSumPrefix = 
+             {character = Unicode 0x2A0A;  
+              glyph = "⨊";  
+              name="modulo two sum";  
+              form = Prefix;  
+              priority = 290;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let muchGreaterThanInfix = 
+             {character = Unicode 0x226B;  
+              glyph = "≫";  
+              name="much greater-than";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let muchGreaterThanWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x226B;Unicode 0x338|];  
+              glyph = "≫̸";  
+              name="much greater than with slash";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let muchLessThanInfix = 
+             {character = Unicode 0x226A;  
+              glyph = "≪";  
+              name="much less-than";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let muchLessThanWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x226A;Unicode 0x338|];  
+              glyph = "≪̸";  
+              name="much less than with slash";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let multimapInfix = 
+             {character = Unicode 0x22B8;  
+              glyph = "⊸";  
+              name="multimap";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorDoubleExclamationPostfix = 
+             {character = UnicodeArray [| Char '!'; Char '!'|];  
+              glyph = "!!";  
+              name="multiple character operator: !!";  
+              form = Postfix;  
+              priority = 810;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let multipleCharacterOperatorDoubleForwardSlashInfix = 
+             {character = UnicodeArray [| Char '/'; Char '/'|];  
+              glyph = "//";  
+              name="multiple character operator: //";  
+              form = Infix;  
+              priority = 820;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorDoubleMinusPostfix = 
+             {character = UnicodeArray [| Char  '-'; Char '-'|];  
+              glyph = "--";  
+              name="multiple character operator: --";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let multipleCharacterOperatorDoublePlusPostfix = 
+             {character = UnicodeArray [| Char  '+'; Char '+'|];  
+              glyph = "++";  
+              name="multiple character operator: ++";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let multipleCharacterOperatorDoubleVerticalLineInfix = 
+             {character = UnicodeArray [| Char  '|'; Char '|'|];  
+              glyph = "||";  
+              name="multiple character operator: ||";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let multipleCharacterOperatorEqualsEqualsInfix = 
+             {character = UnicodeArray [| Char  '='; Char '='|];  
+              glyph = "==";  
+              name="multiple character operator: ==";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorExclamationEqualsInfix = 
+             {character = UnicodeArray [| Char  '!'; Char '='|];  
+              glyph = "!=";  
+              name="multiple character operator: !=";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorForwardSlashEqualsInfix = 
+             {character = UnicodeArray [| Char  '/'; Char '='|];  
+              glyph = "/=";  
+              name="multiple character operator: /=";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorGreaterThanOrEqualsInfix = 
+             {character = UnicodeArray [| Char  '>'; Char '='|];  
+              glyph = ">=";  
+              name="multiple character operator: >=";  
+              form = Infix;  
+              priority = 243;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorLessThanEqualToInfix = 
+             {character = UnicodeArray [| Char  '<'; Char '='|];  
+              glyph = "<=";  
+              name="multiple character operator: <=";  
+              form = Infix;  
+              priority = 241;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorLessThanOrGreaterThanInfix = 
+             {character = UnicodeArray [| Char  '<'; Char '>'|];  
+              glyph = "<>";  
+              name="multiple character operator: <>";  
+              form = Infix;  
+              priority = 780;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorMinusEqualsInfix = 
+             {character = UnicodeArray [| Char  '-'; Char '='|];  
+              glyph = "-=";  
+              name="multiple character operator: -=";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorMinusGreaterThanInfix = 
+             {character = UnicodeArray [| Char  '-'; Char '>'|];  
+              glyph = "->";  
+              name="multiple character operator: ->";  
+              form = Infix;  
+              priority = 90;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorPlusEqualsInfix = 
+             {character = UnicodeArray [| Char  '+'; Char '='|];  
+              glyph = "+=";  
+              name="multiple character operator: +=";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorSemiColonEqualsInfix = 
+             {character = UnicodeArray [| Char  ':'; Char '='|];  
+              glyph = ":=";  
+              name="multiple character operator: :=";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorStarEqualsInfix = 
+             {character = UnicodeArray [| Char  '*'; Char '='|];  
+              glyph = "*=";  
+              name="multiple character operator: *=";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorThreeDotPostfix = 
+             {character = UnicodeArray [| Char  '.'; Char '.'; Char '.'|];  
+              glyph = "...";  
+              name="multiple character operator: ...";  
+              form = Postfix;  
+              priority = 100;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let multipleCharacterOperatorTripleVerticalLineInfix = 
+             {character = UnicodeArray [| Char  '|'; Char '|'; Char '|'|];  
+              glyph = "|||";  
+              name="multiple character operator: |||";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let multipleCharacterOperatorTwoAmpersandInfix = 
+             {character = UnicodeArray [| Char  '&'; Char '&'|];  
+              glyph = "&&";  
+              name="multiple character operator: &&";  
+              form = Infix;  
+              priority = 200;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multipleCharacterOperatorTwoDotPostfix = 
+             {character = UnicodeArray [| Char  '.'; Char '.'|];  
+              glyph = "..";  
+              name="multiple character operator: ..";  
+              form = Postfix;  
+              priority = 100;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let multipleCharacterOperatorTwoStarInfix = 
+             {character = UnicodeArray [| Char  '*'; Char '*'|];  
+              glyph = "**";  
+              name="multiple character operator: **";  
+              form = Infix;  
+              priority = 780;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let multipleCharacterThreeVerticalLineOperatorPostfix = 
+             {character = UnicodeArray [| Char  '|'; Char '|'; Char '|'|];  
+              glyph = "|||";  
+              name="multiple character operator: |||";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let multipleCharacterThreeVerticalLineOperatorPrefix = 
+             {character = UnicodeArray [| Char  '|'; Char '|'; Char '|'|];  
+              glyph = "|||";  
+              name="multiple character operator: |||";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let multipleCharacterTwoVerticalLineOperatorPostfix = 
+             {character = UnicodeArray [| Char  '|'; Char '|'|];  
+              glyph = "||";  
+              name="multiple character operator: ||";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let multipleCharacterTwoVerticalLineOperatorPrefix = 
+             {character = UnicodeArray [| Char  '|'; Char '|'|];  
+              glyph = "||";  
+              name="multiple character operator: ||";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let multiplicationSignInDoubleCircleInfix = 
+             {character = Unicode 0x2A37;  
+              glyph = "⨷";  
+              name="multiplication sign in double circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multiplicationSignInfix = 
+             {character = Unicode 0xD7;  
+              glyph = "×";  
+              name="multiplication sign";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multiplicationSignInLeftHalfCircleInfix = 
+             {character = Unicode 0x2A34;  
+              glyph = "⨴";  
+              name="multiplication sign in left half circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multiplicationSignInRightHalfCircleInfix = 
+             {character = Unicode 0x2A35;  
+              glyph = "⨵";  
+              name="multiplication sign in right half circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multiplicationSignInTriangleInfix = 
+             {character = Unicode 0x2A3B;  
+              glyph = "⨻";  
+              name="multiplication sign in triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multiplicationSignWithDotAboveInfix = 
+             {character = Unicode 0x2A30;  
+              glyph = "⨰";  
+              name="multiplication sign with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multiplicationSignWithUnderbarInfix = 
+             {character = Unicode 0x2A31;  
+              glyph = "⨱";  
+              name="multiplication sign with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multisetInfix = 
+             {character = Unicode 0x228C;  
+              glyph = "⊌";  
+              name="multiset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multisetMultiplicationInfix = 
+             {character = Unicode 0x228D;  
+              glyph = "⊍";  
+              name="multiset multiplication";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let multisetUnionInfix = 
+             {character = Unicode 0x228E;  
+              glyph = "⊎";  
+              name="multiset union";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let musicFlatSignPostfix = 
+             {character = Unicode 0x266D;  
+              glyph = "♭";  
+              name="music flat sign";  
+              form = Postfix;  
+              priority = 800;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=[]}
+        let musicNaturalSignPostfix = 
+             {character = Unicode 0x266E;  
+              glyph = "♮";  
+              name="music natural sign";  
+              form = Postfix;  
+              priority = 800;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=[]}
+        let musicSharpSignPostfix = 
+             {character = Unicode 0x266F;  
+              glyph = "♯";  
+              name="music sharp sign";  
+              form = Postfix;  
+              priority = 800;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=[]}
+        let nablaPrefix = 
+             {character = Unicode 0x2207;  
+              glyph = "∇";  
+              name="nabla";  
+              form = Prefix;  
+              priority = 740;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let nandInfix = 
+             {character = Unicode 0x22BC;  
+              glyph = "⊼";  
+              name="nand";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let nAryCircledDotOperatorPrefix = 
+             {character = Unicode 0x2A00;  
+              glyph = "⨀";  
+              name="n-ary circled dot operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryCircledPlusOperatorPrefix = 
+             {character = Unicode 0x2A01;  
+              glyph = "⨁";  
+              name="n-ary circled plus operator";  
+              form = Prefix;  
+              priority = 300;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryCircledTimesOperatorPrefix = 
+             {character = Unicode 0x2A02;  
+              glyph = "⨂";  
+              name="n-ary circled times operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryCoproductPrefix = 
+             {character = Unicode 0x2210;  
+              glyph = "∐";  
+              name="n-ary coproduct";  
+              form = Prefix;  
+              priority = 350;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryIntersectionPrefix = 
+             {character = Unicode 0x22C2;  
+              glyph = "⋂";  
+              name="n-ary intersection";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryLogicalAndPrefix = 
+             {character = Unicode 0x22C0;  
+              glyph = "⋀";  
+              name="n-ary logical and";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryLogicalOrPrefix = 
+             {character = Unicode 0x22C1;  
+              glyph = "⋁";  
+              name="n-ary logical or";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryProductPrefix = 
+             {character = Unicode 0x220F;  
+              glyph = "∏";  
+              name="n-ary product";  
+              form = Prefix;  
+              priority = 350;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nArySquareIntersectionOperatorPrefix = 
+             {character = Unicode 0x2A05;  
+              glyph = "⨅";  
+              name="n-ary square intersection operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nArySquareUnionOperatorPrefix = 
+             {character = Unicode 0x2A06;  
+              glyph = "⨆";  
+              name="n-ary square union operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nArySummationPrefix = 
+             {character = Unicode 0x2211;  
+              glyph = "∑";  
+              name="n-ary summation";  
+              form = Prefix;  
+              priority = 290;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryTimesOperatorPrefix = 
+             {character = Unicode 0x2A09;  
+              glyph = "⨉";  
+              name="n-ary times operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryUnionOperatorWithDotPrefix = 
+             {character = Unicode 0x2A03;  
+              glyph = "⨃";  
+              name="n-ary union operator with dot";  
+              form = Prefix;  
+              priority = 320;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryUnionOperatorWithPlusPrefix = 
+             {character = Unicode 0x2A04;  
+              glyph = "⨄";  
+              name="n-ary union operator with plus";  
+              form = Prefix;  
+              priority = 320;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryUnionPrefix = 
+             {character = Unicode 0x22C3;  
+              glyph = "⋃";  
+              name="n-ary union";  
+              form = Prefix;  
+              priority = 320;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let nAryWhiteVerticalBarPrefix = 
+             {character = Unicode 0x2AFF;  
+              glyph = "⫿";  
+              name="n-ary white vertical bar";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let negatedDoubleVerticalBarDoubleRightTurnstileInfix = 
+             {character = Unicode 0x22AF;  
+              glyph = "⊯";  
+              name="negated double vertical bar double right turnstile";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherApproximatelyNorActuallyEqualToInfix = 
+             {character = Unicode 0x2247;  
+              glyph = "≇";  
+              name="neither approximately nor actually equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherASubsetOfNorEqualToInfix = 
+             {character = Unicode 0x2288;  
+              glyph = "⊈";  
+              name="neither a subset of nor equal to";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherASupersetOfNorEqualToInfix = 
+             {character = Unicode 0x2289;  
+              glyph = "⊉";  
+              name="neither a superset of nor equal to";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherGreaterThanNorEqualToInfix = 
+             {character = Unicode 0x2271;  
+              glyph = "≱";  
+              name="neither greater-than nor equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherGreaterThanNorEquivalentToInfix = 
+             {character = Unicode 0x2275;  
+              glyph = "≵";  
+              name="neither greater-than nor equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherGreaterThanNorLessThanInfix = 
+             {character = Unicode 0x2279;  
+              glyph = "≹";  
+              name="neither greater-than nor less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherLessThanNorEqualToInfix = 
+             {character = Unicode 0x2270;  
+              glyph = "≰";  
+              name="neither less-than nor equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherLessThanNorEquivalentToInfix = 
+             {character = Unicode 0x2274;  
+              glyph = "≴";  
+              name="neither less-than nor equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let neitherLessThanNorGreaterThanInfix = 
+             {character = Unicode 0x2278;  
+              glyph = "≸";  
+              name="neither less-than nor greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let nonforkingInfix = 
+             {character = Unicode 0x2ADD;  
+              glyph = "⫝";  
+              name="nonforking";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let nonforkingWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2ADD;Unicode 0x338|];  
+              glyph = "⫝̸";  
+              name="nonforking with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let norInfix = 
+             {character = Unicode 0x22BD;  
+              glyph = "⊽";  
+              name="nor";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let normalSubgroupOfInfix = 
+             {character = Unicode 0x22B2;  
+              glyph = "⊲";  
+              name="normal subgroup of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let normalSubgroupOfOrEqualToInfix = 
+             {character = Unicode 0x22B4;  
+              glyph = "⊴";  
+              name="normal subgroup of or equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northEastAndSouthWestArrowInfix = 
+             {character = Unicode 0x2922;  
+              glyph = "⤢";  
+              name="north east and south west arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let northEastArrowAndSouthEastArrowInfix = 
+             {character = Unicode 0x2928;  
+              glyph = "⤨";  
+              name="north east arrow and south east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northEastArrowCrossingNorthWestArrowInfix = 
+             {character = Unicode 0x2931;  
+              glyph = "⤱";  
+              name="north east arrow crossing north west arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northEastArrowCrossingSouthEastArrowInfix = 
+             {character = Unicode 0x292E;  
+              glyph = "⤮";  
+              name="north east arrow crossing south east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northEastArrowInfix = 
+             {character = Unicode 0x2197;  
+              glyph = "↗";  
+              name="north east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let northEastArrowWithHookInfix = 
+             {character = Unicode 0x2924;  
+              glyph = "⤤";  
+              name="north east arrow with hook";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northEastDoubleArrowInfix = 
+             {character = Unicode 0x21D7;  
+              glyph = "⇗";  
+              name="north east double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let northWestAndSouthEastArrowInfix = 
+             {character = Unicode 0x2921;  
+              glyph = "⤡";  
+              name="north west and south east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let northWestArrowAndNorthEastArrowInfix = 
+             {character = Unicode 0x2927;  
+              glyph = "⤧";  
+              name="north west arrow and north east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northWestArrowCrossingNorthEastArrowInfix = 
+             {character = Unicode 0x2932;  
+              glyph = "⤲";  
+              name="north west arrow crossing north east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northWestArrowInfix = 
+             {character = Unicode 0x2196;  
+              glyph = "↖";  
+              name="north west arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let northWestArrowToCornerInfix = 
+             {character = Unicode 0x21F1;  
+              glyph = "⇱";  
+              name="north west arrow to corner";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northWestArrowToLongBarInfix = 
+             {character = Unicode 0x21B8;  
+              glyph = "↸";  
+              name="north west arrow to long bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northWestArrowWithHookInfix = 
+             {character = Unicode 0x2923;  
+              glyph = "⤣";  
+              name="north west arrow with hook";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let northWestDoubleArrowInfix = 
+             {character = Unicode 0x21D6;  
+              glyph = "⇖";  
+              name="north west double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let notAlmostEqualToInfix = 
+             {character = Unicode 0x2249;  
+              glyph = "≉";  
+              name="not almost equal to";  
+              form = Infix;  
+              priority = 250;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notAnElementOfInfix = 
+             {character = Unicode 0x2209;  
+              glyph = "∉";  
+              name="not an element of";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notASubsetOfInfix = 
+             {character = Unicode 0x2284;  
+              glyph = "⊄";  
+              name="not a subset of";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notASupersetOfInfix = 
+             {character = Unicode 0x2285;  
+              glyph = "⊅";  
+              name="not a superset of";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notAsymptoticallyEqualToInfix = 
+             {character = Unicode 0x2244;  
+              glyph = "≄";  
+              name="not asymptotically equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notEqualToInfix = 
+             {character = Unicode 0x2260;  
+              glyph = "≠";  
+              name="not equal to";  
+              form = Infix;  
+              priority = 255;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notEquivalentToInfix = 
+             {character = Unicode 0x226D;  
+              glyph = "≭";  
+              name="not equivalent to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notGreaterThanInfix = 
+             {character = Unicode 0x226F;  
+              glyph = "≯";  
+              name="not greater-than";  
+              form = Infix;  
+              priority = 244;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notIdenticalToInfix = 
+             {character = Unicode 0x2262;  
+              glyph = "≢";  
+              name="not identical to";  
+              form = Infix;  
+              priority = 252;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notLessThanInfix = 
+             {character = Unicode 0x226E;  
+              glyph = "≮";  
+              name="not less-than";  
+              form = Infix;  
+              priority = 246;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notNormalSubgroupOfInfix = 
+             {character = Unicode 0x22EA;  
+              glyph = "⋪";  
+              name="not normal subgroup of";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notNormalSubgroupOfOrEqualToInfix = 
+             {character = Unicode 0x22EC;  
+              glyph = "⋬";  
+              name="not normal subgroup of or equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notParallelToInfix = 
+             {character = Unicode 0x2226;  
+              glyph = "∦";  
+              name="not parallel to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notSignPrefix = 
+             {character = Unicode 0xAC;  
+              glyph = "¬";  
+              name="not sign";  
+              form = Prefix;  
+              priority = 680;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let notSquareImageOfOrEqualToInfix = 
+             {character = Unicode 0x22E2;  
+              glyph = "⋢";  
+              name="not square image of or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notSquareOriginalOfOrEqualToInfix = 
+             {character = Unicode 0x22E3;  
+              glyph = "⋣";  
+              name="not square original of or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notTildeInfix = 
+             {character = Unicode 0x2241;  
+              glyph = "≁";  
+              name="not tilde";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let notTrueInfix = 
+             {character = Unicode 0x22AD;  
+              glyph = "⊭";  
+              name="not true";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let obliqueAngleOpeningDownInfix = 
+             {character = Unicode 0x29A7;  
+              glyph = "⦧";  
+              name="oblique angle opening down";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let obliqueAngleOpeningUpInfix = 
+             {character = Unicode 0x29A6;  
+              glyph = "⦦";  
+              name="oblique angle opening up";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let originalOfInfix = 
+             {character = Unicode 0x22B6;  
+              glyph = "⊶";  
+              name="original of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let overlinePostfix = 
+             {character = Unicode 0x203E;  
+              glyph = "‾";  
+              name="overline";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let parallelToInfix = 
+             {character = Unicode 0x2225;  
+              glyph = "∥";  
+              name="parallel to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let parallelWithHorizontalStrokeInfix = 
+             {character = Unicode 0x2AF2;  
+              glyph = "⫲";  
+              name="parallel with horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let parallelWithTildeOperatorInfix = 
+             {character = Unicode 0x2AF3;  
+              glyph = "⫳";  
+              name="parallel with tilde operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let partialDifferentialPrefix = 
+             {character = Unicode 0x2202;  
+              glyph = "∂";  
+              name="partial differential";  
+              form = Prefix;  
+              priority = 740;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let percentSignInfix = 
+             {character = Char  '%';  
+              glyph = "%";  
+              name="percent sign";  
+              form = Infix;  
+              priority = 640;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let perpendicularWithSInfix = 
+             {character = Unicode 0x2AE1;  
+              glyph = "⫡";  
+              name="perpendicular with s";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let pitchforkInfix = 
+             {character = Unicode 0x22D4;  
+              glyph = "⋔";  
+              name="pitchfork";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let pitchforkWithTeeTopInfix = 
+             {character = Unicode 0x2ADA;  
+              glyph = "⫚";  
+              name="pitchfork with tee top";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let plusMinusSignInfix = 
+             {character = Unicode 0xB1;  
+              glyph = "±";  
+              name="plus-minus sign";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusMinusSignPrefix = 
+             {character = Unicode 0xB1;  
+              glyph = "±";  
+              name="plus-minus sign";  
+              form = Prefix;  
+              priority = 275;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let plusSignAboveEqualsSignInfix = 
+             {character = Unicode 0x2A72;  
+              glyph = "⩲";  
+              name="plus sign above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignInfix = 
+             {character = Char  '+';  
+              glyph = "+";  
+              name="plus sign";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignInLeftHalfCircleInfix = 
+             {character = Unicode 0x2A2D;  
+              glyph = "⨭";  
+              name="plus sign in left half circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignInRightHalfCircleInfix = 
+             {character = Unicode 0x2A2E;  
+              glyph = "⨮";  
+              name="plus sign in right half circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignInTriangleInfix = 
+             {character = Unicode 0x2A39;  
+              glyph = "⨹";  
+              name="plus sign in triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignPrefix = 
+             {character = Char  '+';  
+              glyph = "+";  
+              name="plus sign";  
+              form = Prefix;  
+              priority = 275;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let plusSignWithBlackTriangleInfix = 
+             {character = Unicode 0x2A28;  
+              glyph = "⨨";  
+              name="plus sign with black triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignWithCircumflexAccentAboveInfix = 
+             {character = Unicode 0x2A23;  
+              glyph = "⨣";  
+              name="plus sign with circumflex accent above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignWithDotBelowInfix = 
+             {character = Unicode 0x2A25;  
+              glyph = "⨥";  
+              name="plus sign with dot below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignWithSmallCircleAboveInfix = 
+             {character = Unicode 0x2A22;  
+              glyph = "⨢";  
+              name="plus sign with small circle above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignWithSubscriptTwoInfix = 
+             {character = Unicode 0x2A27;  
+              glyph = "⨧";  
+              name="plus sign with subscript two";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignWithTildeAboveInfix = 
+             {character = Unicode 0x2A24;  
+              glyph = "⨤";  
+              name="plus sign with tilde above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let plusSignWithTildeBelowInfix = 
+             {character = Unicode 0x2A26;  
+              glyph = "⨦";  
+              name="plus sign with tilde below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let precedesAboveAlmostEqualToInfix = 
+             {character = Unicode 0x2AB7;  
+              glyph = "⪷";  
+              name="precedes above almost equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesAboveEqualsSignInfix = 
+             {character = Unicode 0x2AB3;  
+              glyph = "⪳";  
+              name="precedes above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesAboveNotAlmostEqualToInfix = 
+             {character = Unicode 0x2AB9;  
+              glyph = "⪹";  
+              name="precedes above not almost equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesAboveNotEqualToInfix = 
+             {character = Unicode 0x2AB5;  
+              glyph = "⪵";  
+              name="precedes above not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesAboveSingleLineEqualsSignInfix = 
+             {character = Unicode 0x2AAF;  
+              glyph = "⪯";  
+              name="precedes above single-line equals sign";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesAboveSingleLineEqualsSignWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2AAF;Unicode 0x338|];  
+              glyph = "⪯̸";  
+              name="precedes above single-line equals sign with slash";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesAboveSingleLineNotEqualToInfix = 
+             {character = Unicode 0x2AB1;  
+              glyph = "⪱";  
+              name="precedes above single-line not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesButNotEquivalentToInfix = 
+             {character = Unicode 0x22E8;  
+              glyph = "⋨";  
+              name="precedes but not equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesInfix = 
+             {character = Unicode 0x227A;  
+              glyph = "≺";  
+              name="precedes";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesOrEqualToInfix = 
+             {character = Unicode 0x227C;  
+              glyph = "≼";  
+              name="precedes or equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesOrEquivalentToInfix = 
+             {character = Unicode 0x227E;  
+              glyph = "≾";  
+              name="precedes or equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let precedesUnderRelationInfix = 
+             {character = Unicode 0x22B0;  
+              glyph = "⊰";  
+              name="precedes under relation";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let primePostfix = 
+             {character = Unicode 0x2032;  
+              glyph = "′";  
+              name="prime";  
+              form = Postfix;  
+              priority = 800;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let proportionalToInfix = 
+             {character = Unicode 0x221D;  
+              glyph = "∝";  
+              name="proportional to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let proportionInfix = 
+             {character = Unicode 0x2237;  
+              glyph = "∷";  
+              name="proportion";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let quadrupleIntegralOperatorPrefix = 
+             {character = Unicode 0x2A0C;  
+              glyph = "⨌";  
+              name="quadruple integral operator";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let quadruplePrimePostfix = 
+             {character = Unicode 0x2057;  
+              glyph = "⁗";  
+              name="quadruple prime";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let quaternionIntegralOperatorPrefix = 
+             {character = Unicode 0x2A16;  
+              glyph = "⨖";  
+              name="quaternion integral operator";  
+              form = Prefix;  
+              priority = 310;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let questionedEqualToInfix = 
+             {character = Unicode 0x225F;  
+              glyph = "≟";  
+              name="questioned equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let questionMarkInfix = 
+             {character = Char  '?';  
+              glyph = "?";  
+              name="question mark";  
+              form = Infix;  
+              priority = 835;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let quotationMarkPostfix = 
+             {character = Char  '\"';  
+              glyph = "\"";  
+              name="quotation mark";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let ratioInfix = 
+             {character = Unicode 0x2236;  
+              glyph = "∶";  
+              name="ratio";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let reversedAngleInfix = 
+             {character = Unicode 0x29A3;  
+              glyph = "⦣";  
+              name="reversed angle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let reversedAngleWithUnderbarInfix = 
+             {character = Unicode 0x29A5;  
+              glyph = "⦥";  
+              name="reversed angle with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let reversedDoublePrimePostfix = 
+             {character = Unicode 0x2036;  
+              glyph = "‶";  
+              name="reversed double prime";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let reversedDoubleStrokeNotSignInfix = 
+             {character = Unicode 0x2AED;  
+              glyph = "⫭";  
+              name="reversed double stroke not sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let reversedEmptySetInfix = 
+             {character = Unicode 0x29B0;  
+              glyph = "⦰";  
+              name="reversed empty set";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let reversedPrimePostfix = 
+             {character = Unicode 0x2035;  
+              glyph = "‵";  
+              name="reversed prime";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let reversedTildeEqualsInfix = 
+             {character = Unicode 0x22CD;  
+              glyph = "⋍";  
+              name="reversed tilde equals";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let reversedTildeInfix = 
+             {character = Unicode 0x223D;  
+              glyph = "∽";  
+              name="reversed tilde";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let reversedTildeWithUnderlineInfix = 
+             {character = UnicodeArray [|Unicode 0x223D;Unicode 0x331|];  
+              glyph = "∽̱";  
+              name="reversed tilde with underline";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let reversedTriplePrimePostfix = 
+             {character = Unicode 0x2037;  
+              glyph = "‷";  
+              name="reversed triple prime";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let reverseSolidusInfix = 
+             {character = Char '\\';  
+              glyph = @"\";  
+              name="reverse solidus";  
+              form = Infix;  
+              priority = 650;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let reverseSolidusOperatorInfix = 
+             {character = Unicode 0x29F5;  
+              glyph = "⧵";  
+              name="reverse solidus operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let reverseSolidusWithHorizontalStrokeInfix = 
+             {character = Unicode 0x29F7;  
+              glyph = "⧷";  
+              name="reverse solidus with horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let rightAngleBracketWithDotPostfix = 
+             {character = Unicode 0x2992;  
+              glyph = "⦒";  
+              name="right angle bracket with dot";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightAngleInfix = 
+             {character = Unicode 0x221F;  
+              glyph = "∟";  
+              name="right angle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let rightAngleVariantWithSquareInfix = 
+             {character = Unicode 0x299C;  
+              glyph = "⦜";  
+              name="right angle variant with square";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let rightAngleWithArcInfix = 
+             {character = Unicode 0x22BE;  
+              glyph = "⊾";  
+              name="right angle with arc";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let rightArcGreaterThanBracketPostfix = 
+             {character = Unicode 0x2994;  
+              glyph = "⦔";  
+              name="right arc greater-than bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightArrowWithSmallCircleInfix = 
+             {character = Unicode 0x21F4;  
+              glyph = "⇴";  
+              name="right arrow with small circle";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightBlackTortoiseShellBracketPostfix = 
+             {character = Unicode 0x2998;  
+              glyph = "⦘";  
+              name="right black tortoise shell bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightCeilingPostfix = 
+             {character = Unicode 0x2309;  
+              glyph = "⌉";  
+              name="right ceiling";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightCurlyBracketPostfix = 
+             {character = Char  '}';  
+              glyph = "}";  
+              name="right curly bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightDoubleArrowWithRoundedHeadInfix = 
+             {character = Unicode 0x2970;  
+              glyph = "⥰";  
+              name="right double arrow with rounded head";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightDoubleQuotationMarkPostfix = 
+             {character = Unicode 0x201D;  
+              glyph = "”";  
+              name="right double quotation mark";  
+              form = Postfix;  
+              priority = 10;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"]}
+        let rightDoubleWigglyFenceInfix = 
+             {character = Unicode 0x29DB;  
+              glyph = "⧛";  
+              name="right double wiggly fence";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let rightFishTailInfix = 
+             {character = Unicode 0x297D;  
+              glyph = "⥽";  
+              name="right fish tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightFloorPostfix = 
+             {character = Unicode 0x230B;  
+              glyph = "⌋";  
+              name="right floor";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightHalfBlackCircleInfix = 
+             {character = Unicode 0x25D7;  
+              glyph = "◗";  
+              name="right half black circle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let righthandInteriorProductInfix = 
+             {character = Unicode 0x2A3D;  
+              glyph = "⨽";  
+              name="righthand interior product";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let rightNormalFactorSemidirectProductInfix = 
+             {character = Unicode 0x22CA;  
+              glyph = "⋊";  
+              name="right normal factor semidirect product";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let rightParenthesisPostfix = 
+             {character = Char  ')';  
+              glyph = ")";  
+              name="right parenthesis";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightPointingAngleBracketPostfix = 
+             {character = Unicode 0x232A;  
+              glyph = "〉";  
+              name="right-pointing angle bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightPointingCurvedAngleBracketPostfix = 
+             {character = Unicode 0x29FD;  
+              glyph = "⧽";  
+              name="right-pointing curved angle bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightSemidirectProductInfix = 
+             {character = Unicode 0x22CC;  
+              glyph = "⋌";  
+              name="right semidirect product";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let rightSideArcClockwiseArrowInfix = 
+             {character = Unicode 0x2938;  
+              glyph = "⤸";  
+              name="right-side arc clockwise arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let rightSingleQuotationMarkPostfix = 
+             {character = Unicode 0x2019;  
+              glyph = "’";  
+              name="right single quotation mark";  
+              form = Postfix;  
+              priority = 10;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"]}
+        let rightSquareBracketPostfix = 
+             {character = Char  ']';  
+              glyph = "]";  
+              name="right square bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightSquareBracketWithTickInBottomCornerPostfix = 
+             {character = Unicode 0x298E;  
+              glyph = "⦎";  
+              name="right square bracket with tick in bottom corner";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightSquareBracketWithTickInTopCornerPostfix = 
+             {character = Unicode 0x2990;  
+              glyph = "⦐";  
+              name="right square bracket with tick in top corner";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightSquareBracketWithUnderbarPostfix = 
+             {character = Unicode 0x298C;  
+              glyph = "⦌";  
+              name="right square bracket with underbar";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightTackInfix = 
+             {character = Unicode 0x22A2;  
+              glyph = "⊢";  
+              name="right tack";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let rightTriangleAboveLeftTriangleInfix = 
+             {character = Unicode 0x29CE;  
+              glyph = "⧎";  
+              name="right triangle above left triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let rightTriangleInfix = 
+             {character = Unicode 0x22BF;  
+              glyph = "⊿";  
+              name="right triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let rightwardsArrowAboveAlmostEqualToInfix = 
+             {character = Unicode 0x2975;  
+              glyph = "⥵";  
+              name="rightwards arrow above almost equal to";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowAboveShortLeftwardsArrowInfix = 
+             {character = Unicode 0x2942;  
+              glyph = "⥂";  
+              name="rightwards arrow above short leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowAboveTildeOperatorInfix = 
+             {character = Unicode 0x2974;  
+              glyph = "⥴";  
+              name="rightwards arrow above tilde operator";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowFromBarInfix = 
+             {character = Unicode 0x21A6;  
+              glyph = "↦";  
+              name="rightwards arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowFromBarToBlackDiamondInfix = 
+             {character = Unicode 0x2920;  
+              glyph = "⤠";  
+              name="rightwards arrow from bar to black diamond";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowInfix = 
+             {character = Unicode 0x2192;  
+              glyph = "→";  
+              name="rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowOverLeftwardsArrowInfix = 
+             {character = Unicode 0x21C4;  
+              glyph = "⇄";  
+              name="rightwards arrow over leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowTailInfix = 
+             {character = Unicode 0x291A;  
+              glyph = "⤚";  
+              name="rightwards arrow-tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowThroughXInfix = 
+             {character = Unicode 0x2947;  
+              glyph = "⥇";  
+              name="rightwards arrow through x";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowToBarInfix = 
+             {character = Unicode 0x21E5;  
+              glyph = "⇥";  
+              name="rightwards arrow to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowToBlackDiamondInfix = 
+             {character = Unicode 0x291E;  
+              glyph = "⤞";  
+              name="rightwards arrow to black diamond";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithCornerDownwardsInfix = 
+             {character = Unicode 0x21B4;  
+              glyph = "↴";  
+              name="rightwards arrow with corner downwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let rightwardsArrowWithDottedStemInfix = 
+             {character = Unicode 0x2911;  
+              glyph = "⤑";  
+              name="rightwards arrow with dotted stem";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x21FB;  
+              glyph = "⇻";  
+              name="rightwards arrow with double vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithHookInfix = 
+             {character = Unicode 0x21AA;  
+              glyph = "↪";  
+              name="rightwards arrow with hook";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowWithLoopInfix = 
+             {character = Unicode 0x21AC;  
+              glyph = "↬";  
+              name="rightwards arrow with loop";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowWithPlusBelowInfix = 
+             {character = Unicode 0x2945;  
+              glyph = "⥅";  
+              name="rightwards arrow with plus below";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithStrokeInfix = 
+             {character = Unicode 0x219B;  
+              glyph = "↛";  
+              name="rightwards arrow with stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithTailInfix = 
+             {character = Unicode 0x21A3;  
+              glyph = "↣";  
+              name="rightwards arrow with tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsArrowWithTailWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x2915;  
+              glyph = "⤕";  
+              name="rightwards arrow with tail with double vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithTailWithVerticalStrokeInfix = 
+             {character = Unicode 0x2914;  
+              glyph = "⤔";  
+              name="rightwards arrow with tail with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x21F8;  
+              glyph = "⇸";  
+              name="rightwards arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsDashedArrowInfix = 
+             {character = Unicode 0x21E2;  
+              glyph = "⇢";  
+              name="rightwards dashed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsDoubleArrowFromBarInfix = 
+             {character = Unicode 0x2907;  
+              glyph = "⤇";  
+              name="rightwards double arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsDoubleArrowInfix = 
+             {character = Unicode 0x21D2;  
+              glyph = "⇒";  
+              name="rightwards double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsDoubleArrowTailInfix = 
+             {character = Unicode 0x291C;  
+              glyph = "⤜";  
+              name="rightwards double arrow-tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsDoubleArrowWithStrokeInfix = 
+             {character = Unicode 0x21CF;  
+              glyph = "⇏";  
+              name="rightwards double arrow with stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsDoubleArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x2903;  
+              glyph = "⤃";  
+              name="rightwards double arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsDoubleDashArrowInfix = 
+             {character = Unicode 0x290D;  
+              glyph = "⤍";  
+              name="rightwards double dash arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsHarpoonOverLeftwardsHarpoonInfix = 
+             {character = Unicode 0x21CC;  
+              glyph = "⇌";  
+              name="rightwards harpoon over leftwards harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsHarpoonWithBarbDownAboveLeftwardsHarpoonWithBarbDownInfix = 
+             {character = Unicode 0x2969;  
+              glyph = "⥩";  
+              name="rightwards harpoon with barb down above leftwards harpoon with barb down";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsHarpoonWithBarbDownBelowLongDashInfix = 
+             {character = Unicode 0x296D;  
+              glyph = "⥭";  
+              name="rightwards harpoon with barb down below long dash";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsHarpoonWithBarbDownFromBarInfix = 
+             {character = Unicode 0x295F;  
+              glyph = "⥟";  
+              name="rightwards harpoon with barb down from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsHarpoonWithBarbDownToBarInfix = 
+             {character = Unicode 0x2957;  
+              glyph = "⥗";  
+              name="rightwards harpoon with barb down to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let rightwardsHarpoonWithBarbDownwardsInfix = 
+             {character = Unicode 0x21C1;  
+              glyph = "⇁";  
+              name="rightwards harpoon with barb downwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsHarpoonWithBarbUpAboveLeftwardsHarpoonWithBarbUpInfix = 
+             {character = Unicode 0x2968;  
+              glyph = "⥨";  
+              name="rightwards harpoon with barb up above leftwards harpoon with barb up";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsHarpoonWithBarbUpAboveLongDashInfix = 
+             {character = Unicode 0x296C;  
+              glyph = "⥬";  
+              name="rightwards harpoon with barb up above long dash";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsHarpoonWithBarbUpAboveRightwardsHarpoonWithBarbDownInfix = 
+             {character = Unicode 0x2964;  
+              glyph = "⥤";  
+              name="rightwards harpoon with barb up above rightwards harpoon with barb down";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsHarpoonWithBarbUpFromBarInfix = 
+             {character = Unicode 0x295B;  
+              glyph = "⥛";  
+              name="rightwards harpoon with barb up from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsHarpoonWithBarbUpToBarInfix = 
+             {character = Unicode 0x2953;  
+              glyph = "⥓";  
+              name="rightwards harpoon with barb up to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsHarpoonWithBarbUpwardsInfix = 
+             {character = Unicode 0x21C0;  
+              glyph = "⇀";  
+              name="rightwards harpoon with barb upwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsOpenHeadedArrowInfix = 
+             {character = Unicode 0x21FE;  
+              glyph = "⇾";  
+              name="rightwards open-headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsPairedArrowsInfix = 
+             {character = Unicode 0x21C9;  
+              glyph = "⇉";  
+              name="rightwards paired arrows";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsQuadrupleArrowInfix = 
+             {character = Unicode 0x2B46;  
+              glyph = "⭆";  
+              name="rightwards quadruple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let rightwardsSquiggleArrowInfix = 
+             {character = Unicode 0x21DD;  
+              glyph = "⇝";  
+              name="rightwards squiggle arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsTripleArrowInfix = 
+             {character = Unicode 0x21DB;  
+              glyph = "⇛";  
+              name="rightwards triple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsTripleDashArrowInfix = 
+             {character = Unicode 0x290F;  
+              glyph = "⤏";  
+              name="rightwards triple dash arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsTwoHeadedArrowFromBarInfix = 
+             {character = Unicode 0x2905;  
+              glyph = "⤅";  
+              name="rightwards two-headed arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsTwoHeadedArrowInfix = 
+             {character = Unicode 0x21A0;  
+              glyph = "↠";  
+              name="rightwards two headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsTwoHeadedArrowWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x2901;  
+              glyph = "⤁";  
+              name="rightwards two-headed arrow with double vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsTwoHeadedArrowWithTailInfix = 
+             {character = Unicode 0x2916;  
+              glyph = "⤖";  
+              name="rightwards two-headed arrow with tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsTwoHeadedArrowWithTailWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x2918;  
+              glyph = "⤘";  
+              name="rightwards two-headed arrow with tail with double vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsTwoHeadedArrowWithTailWithVerticalStrokeInfix = 
+             {character = Unicode 0x2917;  
+              glyph = "⤗";  
+              name="rightwards two-headed arrow with tail with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsTwoHeadedArrowWithVerticalStrokeInfix = 
+             {character = Unicode 0x2900;  
+              glyph = "⤀";  
+              name="rightwards two-headed arrow with vertical stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let rightwardsTwoHeadedTripleDashArrowInfix = 
+             {character = Unicode 0x2910;  
+              glyph = "⤐";  
+              name="rightwards two-headed triple dash arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsWaveArrowInfix = 
+             {character = Unicode 0x219D;  
+              glyph = "↝";  
+              name="rightwards wave arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsWhiteArrowFromWallInfix = 
+             {character = Unicode 0x21F0;  
+              glyph = "⇰";  
+              name="rightwards white arrow from wall";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightwardsWhiteArrowInfix = 
+             {character = Unicode 0x21E8;  
+              glyph = "⇨";  
+              name="rightwards white arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let rightWhiteCurlyBracketPostfix = 
+             {character = Unicode 0x2984;  
+              glyph = "⦄";  
+              name="right white curly bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightWhiteParenthesisPostfix = 
+             {character = Unicode 0x2986;  
+              glyph = "⦆";  
+              name="right white parenthesis";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let rightWigglyFenceInfix = 
+             {character = Unicode 0x29D9;  
+              glyph = "⧙";  
+              name="right wiggly fence";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let ringAbovePostfix = 
+             {character = Unicode 0x2DA;  
+              glyph = "˚";  
+              name="ring above";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let ringEqualToInfix = 
+             {character = Unicode 0x2257;  
+              glyph = "≗";  
+              name="ring equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let ringInEqualToInfix = 
+             {character = Unicode 0x2256;  
+              glyph = "≖";  
+              name="ring in equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let ringOperatorInfix = 
+             {character = Unicode 0x2218;  
+              glyph = "∘";  
+              name="ring operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let risingDiagonalCrossingFallingDiagonalInfix = 
+             {character = Unicode 0x292B;  
+              glyph = "⤫";  
+              name="rising diagonal crossing falling diagonal";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let risingDiagonalCrossingSouthEastArrowInfix = 
+             {character = Unicode 0x2930;  
+              glyph = "⤰";  
+              name="rising diagonal crossing south east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let ruleDelayedInfix = 
+             {character = Unicode 0x29F4;  
+              glyph = "⧴";  
+              name="rule-delayed";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let semicolonInfix = 
+             {character = Char  ';';  
+              glyph = ";";  
+              name="semicolon";  
+              form = Infix;  
+              priority = 30;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=["separator"; "linebreakstyle=after"]}
+        let semidirectProductWithBottomClosedInfix = 
+             {character = Unicode 0x2A32;  
+              glyph = "⨲";  
+              name="semidirect product with bottom closed";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let setMinusInfix = 
+             {character = Unicode 0x2216;  
+              glyph = "∖";  
+              name="set minus";  
+              form = Infix;  
+              priority = 650;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let shortDownTackInfix = 
+             {character = Unicode 0x2ADF;  
+              glyph = "⫟";  
+              name="short down tack";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let shortDownTackWithOverbarInfix = 
+             {character = Unicode 0x2AE7;  
+              glyph = "⫧";  
+              name="short down tack with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let shortLeftTackInfix = 
+             {character = Unicode 0x2ADE;  
+              glyph = "⫞";  
+              name="short left tack";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let shortRightwardsArrowAboveLeftwardsArrowInfix = 
+             {character = Unicode 0x2944;  
+              glyph = "⥄";  
+              name="short rightwards arrow above leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let shortUpTackAboveShortDownTackInfix = 
+             {character = Unicode 0x2AE9;  
+              glyph = "⫩";  
+              name="short up tack above short down tack";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let shortUpTackInfix = 
+             {character = Unicode 0x2AE0;  
+              glyph = "⫠";  
+              name="short up tack";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let shortUpTackWithUnderbarInfix = 
+             {character = Unicode 0x2AE8;  
+              glyph = "⫨";  
+              name="short up tack with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let shuffleProductInfix = 
+             {character = Unicode 0x29E2;  
+              glyph = "⧢";  
+              name="shuffle product";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let similarAboveGreaterThanAboveEqualsSignInfix = 
+             {character = Unicode 0x2AA0;  
+              glyph = "⪠";  
+              name="similar above greater-than above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let similarAboveLessThanAboveEqualsSignInfix = 
+             {character = Unicode 0x2A9F;  
+              glyph = "⪟";  
+              name="similar above less-than above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let similarMinusSimilarInfix = 
+             {character = Unicode 0x2A6C;  
+              glyph = "⩬";  
+              name="similar minus similar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let similarOrGreaterThanInfix = 
+             {character = Unicode 0x2A9E;  
+              glyph = "⪞";  
+              name="similar or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let similarOrLessThanInfix = 
+             {character = Unicode 0x2A9D;  
+              glyph = "⪝";  
+              name="similar or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let sineWaveInfix = 
+             {character = Unicode 0x223F;  
+              glyph = "∿";  
+              name="sine wave";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let singleHighReversed9QuotationMarkPostfix = 
+             {character = Unicode 0x201B;  
+              glyph = "‛";  
+              name="single high-reversed-9 quotation mark";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let singleLow9QuotationMarkPostfix = 
+             {character = Unicode 0x201A;  
+              glyph = "‚";  
+              name="single low-9 quotation mark";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let sInTriangleInfix = 
+             {character = Unicode 0x29CC;  
+              glyph = "⧌";  
+              name="s in triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let slantedEqualToOrGreaterThanInfix = 
+             {character = Unicode 0x2A96;  
+              glyph = "⪖";  
+              name="slanted equal to or greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let slantedEqualToOrGreaterThanWithDotInsideInfix = 
+             {character = Unicode 0x2A98;  
+              glyph = "⪘";  
+              name="slanted equal to or greater-than with dot inside";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let slantedEqualToOrLessThanInfix = 
+             {character = Unicode 0x2A95;  
+              glyph = "⪕";  
+              name="slanted equal to or less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let slantedEqualToOrLessThanWithDotInsideInfix = 
+             {character = Unicode 0x2A97;  
+              glyph = "⪗";  
+              name="slanted equal to or less-than with dot inside";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let slopingLargeAndInfix = 
+             {character = Unicode 0x2A58;  
+              glyph = "⩘";  
+              name="sloping large and";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let slopingLargeOrInfix = 
+             {character = Unicode 0x2A57;  
+              glyph = "⩗";  
+              name="sloping large or";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let smallContainsAsMemberInfix = 
+             {character = Unicode 0x220D;  
+              glyph = "∍";  
+              name="small contains as member";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallContainsWithOverbarInfix = 
+             {character = Unicode 0x22FE;  
+              glyph = "⋾";  
+              name="small contains with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallContainsWithVerticalBarAtEndOfHorizontalStrokeInfix = 
+             {character = Unicode 0x22FC;  
+              glyph = "⋼";  
+              name="small contains with vertical bar at end of horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallElementOfInfix = 
+             {character = Unicode 0x220A;  
+              glyph = "∊";  
+              name="small element of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallElementOfWithOverbarInfix = 
+             {character = Unicode 0x22F7;  
+              glyph = "⋷";  
+              name="small element of with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallElementOfWithVerticalBarAtEndOfHorizontalStrokeInfix = 
+             {character = Unicode 0x22F4;  
+              glyph = "⋴";  
+              name="small element of with vertical bar at end of horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallerThanInfix = 
+             {character = Unicode 0x2AAA;  
+              glyph = "⪪";  
+              name="smaller than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallerThanOrEqualToInfix = 
+             {character = Unicode 0x2AAC;  
+              glyph = "⪬";  
+              name="smaller than or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let smallTildePostfix = 
+             {character = Unicode 0x2DC;  
+              glyph = "˜";  
+              name="small tilde";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let smallVeeWithUnderbarInfix = 
+             {character = Unicode 0x2A61;  
+              glyph = "⩡";  
+              name="small vee with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let smashProductInfix = 
+             {character = Unicode 0x2A33;  
+              glyph = "⨳";  
+              name="smash product";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let solidusInfix = 
+             {character = Char  '/';  
+              glyph = "/";  
+              name="solidus";  
+              form = Infix;  
+              priority = 660;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let solidusWithOverbarInfix = 
+             {character = Unicode 0x29F6;  
+              glyph = "⧶";  
+              name="solidus with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let southEastArrowAndSouthWestArrowInfix = 
+             {character = Unicode 0x2929;  
+              glyph = "⤩";  
+              name="south east arrow and south west arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let southEastArrowCrossingNorthEastArrowInfix = 
+             {character = Unicode 0x292D;  
+              glyph = "⤭";  
+              name="south east arrow crossing north east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let southEastArrowInfix = 
+             {character = Unicode 0x2198;  
+              glyph = "↘";  
+              name="south east arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let southEastArrowToCornerInfix = 
+             {character = Unicode 0x21F2;  
+              glyph = "⇲";  
+              name="south east arrow to corner";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let southEastArrowWithHookInfix = 
+             {character = Unicode 0x2925;  
+              glyph = "⤥";  
+              name="south east arrow with hook";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let southEastDoubleArrowInfix = 
+             {character = Unicode 0x21D8;  
+              glyph = "⇘";  
+              name="south east double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let southWestArrowAndNorthWestArrowInfix = 
+             {character = Unicode 0x292A;  
+              glyph = "⤪";  
+              name="south west arrow and north west arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let southWestArrowInfix = 
+             {character = Unicode 0x2199;  
+              glyph = "↙";  
+              name="south west arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let southWestArrowWithHookInfix = 
+             {character = Unicode 0x2926;  
+              glyph = "⤦";  
+              name="south west arrow with hook";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let southWestDoubleArrowInfix = 
+             {character = Unicode 0x21D9;  
+              glyph = "⇙";  
+              name="south west double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let sphericalAngleOpeningLeftInfix = 
+             {character = Unicode 0x29A0;  
+              glyph = "⦠";  
+              name="spherical angle opening left";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let sphericalAngleOpeningUpInfix = 
+             {character = Unicode 0x29A1;  
+              glyph = "⦡";  
+              name="spherical angle opening up";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let sphericalAnglePrefix = 
+             {character = Unicode 0x2222;  
+              glyph = "∢";  
+              name="spherical angle";  
+              form = Prefix;  
+              priority = 670;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=[]}
+        let squareCapInfix = 
+             {character = Unicode 0x2293;  
+              glyph = "⊓";  
+              name="square cap";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squareCupInfix = 
+             {character = Unicode 0x2294;  
+              glyph = "⊔";  
+              name="square cup";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredAsteriskInfix = 
+             {character = Unicode 0x29C6;  
+              glyph = "⧆";  
+              name="squared asterisk";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredDotOperatorInfix = 
+             {character = Unicode 0x22A1;  
+              glyph = "⊡";  
+              name="squared dot operator";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredFallingDiagonalSlashInfix = 
+             {character = Unicode 0x29C5;  
+              glyph = "⧅";  
+              name="squared falling diagonal slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredMinusInfix = 
+             {character = Unicode 0x229F;  
+              glyph = "⊟";  
+              name="squared minus";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredPlusInfix = 
+             {character = Unicode 0x229E;  
+              glyph = "⊞";  
+              name="squared plus";  
+              form = Infix;  
+              priority = 275;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredRisingDiagonalSlashInfix = 
+             {character = Unicode 0x29C4;  
+              glyph = "⧄";  
+              name="squared rising diagonal slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredSmallCircleInfix = 
+             {character = Unicode 0x29C7;  
+              glyph = "⧇";  
+              name="squared small circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredSquareInfix = 
+             {character = Unicode 0x29C8;  
+              glyph = "⧈";  
+              name="squared square";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squaredTimesInfix = 
+             {character = Unicode 0x22A0;  
+              glyph = "⊠";  
+              name="squared times";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let squareImageOfInfix = 
+             {character = Unicode 0x228F;  
+              glyph = "⊏";  
+              name="square image of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareImageOfOrEqualToInfix = 
+             {character = Unicode 0x2291;  
+              glyph = "⊑";  
+              name="square image of or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareImageOfOrNotEqualToInfix = 
+             {character = Unicode 0x22E4;  
+              glyph = "⋤";  
+              name="square image of or not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareImageOfWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x228F;Unicode 0x338|];  
+              glyph = "⊏̸";  
+              name="square image of with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareLeftOpenBoxOperatorInfix = 
+             {character = Unicode 0x2ACD;  
+              glyph = "⫍";  
+              name="square left open box operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareOriginalOfInfix = 
+             {character = Unicode 0x2290;  
+              glyph = "⊐";  
+              name="square original of";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareOriginalOfOrEqualToInfix = 
+             {character = Unicode 0x2292;  
+              glyph = "⊒";  
+              name="square original of or equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareOriginalOfOrNotEqualToInfix = 
+             {character = Unicode 0x22E5;  
+              glyph = "⋥";  
+              name="square original of or not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareOriginalOfWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2290;Unicode 0x338|];  
+              glyph = "⊐̸";  
+              name="square original of with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareRightOpenBoxOperatorInfix = 
+             {character = Unicode 0x2ACE;  
+              glyph = "⫎";  
+              name="square right open box operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let squareRootPrefix = 
+             {character = Unicode 0x221A;  
+              glyph = "√";  
+              name="square root";  
+              form = Prefix;  
+              priority = 845;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["stretchy"]}
+        let squareWithContouredOutlineInfix = 
+             {character = Unicode 0x29E0;  
+              glyph = "⧠";  
+              name="square with contoured outline";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let starEqualsInfix = 
+             {character = Unicode 0x225B;  
+              glyph = "≛";  
+              name="star equals";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let starOperatorInfix = 
+             {character = Unicode 0x22C6;  
+              glyph = "⋆";  
+              name="star operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let strictlyEquivalentToInfix = 
+             {character = Unicode 0x2263;  
+              glyph = "≣";  
+              name="strictly equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetAboveRightwardsArrowInfix = 
+             {character = Unicode 0x2979;  
+              glyph = "⥹";  
+              name="subset above rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let subsetAboveSubsetInfix = 
+             {character = Unicode 0x2AD5;  
+              glyph = "⫕";  
+              name="subset above subset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetAboveSupersetInfix = 
+             {character = Unicode 0x2AD3;  
+              glyph = "⫓";  
+              name="subset above superset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfAboveAlmostEqualToInfix = 
+             {character = Unicode 0x2AC9;  
+              glyph = "⫉";  
+              name="subset of above almost equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfAboveEqualsSignInfix = 
+             {character = Unicode 0x2AC5;  
+              glyph = "⫅";  
+              name="subset of above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfAboveNotEqualToInfix = 
+             {character = Unicode 0x2ACB;  
+              glyph = "⫋";  
+              name="subset of above not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfAboveTildeOperatorInfix = 
+             {character = Unicode 0x2AC7;  
+              glyph = "⫇";  
+              name="subset of above tilde operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfInfix = 
+             {character = Unicode 0x2282;  
+              glyph = "⊂";  
+              name="subset of";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfOrEqualToInfix = 
+             {character = Unicode 0x2286;  
+              glyph = "⊆";  
+              name="subset of or equal to";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfOrEqualToWithDotAboveInfix = 
+             {character = Unicode 0x2AC3;  
+              glyph = "⫃";  
+              name="subset of or equal to with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfWithNotEqualToInfix = 
+             {character = Unicode 0x228A;  
+              glyph = "⊊";  
+              name="subset of with not equal to";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetOfWithVerticalLineInfix = 
+             {character = UnicodeArray [|Unicode 0x2282;Unicode 0x20D2|];  
+              glyph = "⊂⃒";  
+              name="subset of with vertical line";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetWithDotInfix = 
+             {character = Unicode 0x2ABD;  
+              glyph = "⪽";  
+              name="subset with dot";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetWithMultiplicationSignBelowInfix = 
+             {character = Unicode 0x2AC1;  
+              glyph = "⫁";  
+              name="subset with multiplication sign below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let subsetWithPlusSignBelowInfix = 
+             {character = Unicode 0x2ABF;  
+              glyph = "⪿";  
+              name="subset with plus sign below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveAlmostEqualToInfix = 
+             {character = Unicode 0x2AB8;  
+              glyph = "⪸";  
+              name="succeeds above almost equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveEqualsSignInfix = 
+             {character = Unicode 0x2AB4;  
+              glyph = "⪴";  
+              name="succeeds above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveNotAlmostEqualToInfix = 
+             {character = Unicode 0x2ABA;  
+              glyph = "⪺";  
+              name="succeeds above not almost equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveNotEqualToInfix = 
+             {character = Unicode 0x2AB6;  
+              glyph = "⪶";  
+              name="succeeds above not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveSingleLineEqualsSignInfix = 
+             {character = Unicode 0x2AB0;  
+              glyph = "⪰";  
+              name="succeeds above single-line equals sign";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveSingleLineEqualsSignWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x2AB0;Unicode 0x338|];  
+              glyph = "⪰̸";  
+              name="succeeds above single-line equals sign with slash";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsAboveSingleLineNotEqualToInfix = 
+             {character = Unicode 0x2AB2;  
+              glyph = "⪲";  
+              name="succeeds above single-line not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsButNotEquivalentToInfix = 
+             {character = Unicode 0x22E9;  
+              glyph = "⋩";  
+              name="succeeds but not equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsInfix = 
+             {character = Unicode 0x227B;  
+              glyph = "≻";  
+              name="succeeds";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsOrEqualToInfix = 
+             {character = Unicode 0x227D;  
+              glyph = "≽";  
+              name="succeeds or equal to";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsOrEquivalentToInfix = 
+             {character = Unicode 0x227F;  
+              glyph = "≿";  
+              name="succeeds or equivalent to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsOrEquivalentToWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x227F;Unicode 0x338|];  
+              glyph = "≿̸";  
+              name="succeeds or equivalent to with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let succeedsUnderRelationInfix = 
+             {character = Unicode 0x22B1;  
+              glyph = "⊱";  
+              name="succeeds under relation";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let summationWithIntegralPrefix = 
+             {character = Unicode 0x2A0B;  
+              glyph = "⨋";  
+              name="summation with integral";  
+              form = Prefix;  
+              priority = 290;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let superscriptOnePostfix = 
+             {character = Unicode 0xB9;  
+              glyph = "¹";  
+              name="superscript one";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let superscriptThreePostfix = 
+             {character = Unicode 0xB3;  
+              glyph = "³";  
+              name="superscript three";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let superscriptTwoPostfix = 
+             {character = Unicode 0xB2;  
+              glyph = "²";  
+              name="superscript two";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let supersetAboveLeftwardsArrowInfix = 
+             {character = Unicode 0x297B;  
+              glyph = "⥻";  
+              name="superset above leftwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let supersetAboveSubsetInfix = 
+             {character = Unicode 0x2AD4;  
+              glyph = "⫔";  
+              name="superset above subset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetAboveSupersetInfix = 
+             {character = Unicode 0x2AD6;  
+              glyph = "⫖";  
+              name="superset above superset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetBesideAndJoinedByDashWithSubsetInfix = 
+             {character = Unicode 0x2AD8;  
+              glyph = "⫘";  
+              name="superset beside and joined by dash with subset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetBesideSubsetInfix = 
+             {character = Unicode 0x2AD7;  
+              glyph = "⫗";  
+              name="superset beside subset";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfAboveAlmostEqualToInfix = 
+             {character = Unicode 0x2ACA;  
+              glyph = "⫊";  
+              name="superset of above almost equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfAboveEqualsSignInfix = 
+             {character = Unicode 0x2AC6;  
+              glyph = "⫆";  
+              name="superset of above equals sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfAboveNotEqualToInfix = 
+             {character = Unicode 0x2ACC;  
+              glyph = "⫌";  
+              name="superset of above not equal to";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfAboveTildeOperatorInfix = 
+             {character = Unicode 0x2AC8;  
+              glyph = "⫈";  
+              name="superset of above tilde operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfInfix = 
+             {character = Unicode 0x2283;  
+              glyph = "⊃";  
+              name="superset of";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfOrEqualToInfix = 
+             {character = Unicode 0x2287;  
+              glyph = "⊇";  
+              name="superset of or equal to";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfOrEqualToWithDotAboveInfix = 
+             {character = Unicode 0x2AC4;  
+              glyph = "⫄";  
+              name="superset of or equal to with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfWithNotEqualToInfix = 
+             {character = Unicode 0x228B;  
+              glyph = "⊋";  
+              name="superset of with not equal to";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetOfWithVerticalLineInfix = 
+             {character = UnicodeArray [|Unicode 0x2283;Unicode 0x20D2|];  
+              glyph = "⊃⃒";  
+              name="superset of with vertical line";  
+              form = Infix;  
+              priority = 240;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetWithDotInfix = 
+             {character = Unicode 0x2ABE;  
+              glyph = "⪾";  
+              name="superset with dot";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetWithMultiplicationSignBelowInfix = 
+             {character = Unicode 0x2AC2;  
+              glyph = "⫂";  
+              name="superset with multiplication sign below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let supersetWithPlusSignBelowInfix = 
+             {character = Unicode 0x2AC0;  
+              glyph = "⫀";  
+              name="superset with plus sign below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let surfaceIntegralPrefix = 
+             {character = Unicode 0x222F;  
+              glyph = "∯";  
+              name="surface integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let thereDoesNotExistPrefix = 
+             {character = Unicode 0x2204;  
+              glyph = "∄";  
+              name="there does not exist";  
+              form = Prefix;  
+              priority = 230;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let thereExistsPrefix = 
+             {character = Unicode 0x2203;  
+              glyph = "∃";  
+              name="there exists";  
+              form = Prefix;  
+              priority = 230;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=[]}
+        let thereforeInfix = 
+             {character = Unicode 0x2234;  
+              glyph = "∴";  
+              name="therefore";  
+              form = Infix;  
+              priority = 70;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let thermodynamicInfix = 
+             {character = Unicode 0x29E7;  
+              glyph = "⧧";  
+              name="thermodynamic";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let threeConsecutiveEqualsSignsInfix = 
+             {character = Unicode 0x2A76;  
+              glyph = "⩶";  
+              name="three consecutive equals signs";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let threeRightwardsArrowsInfix = 
+             {character = Unicode 0x21F6;  
+              glyph = "⇶";  
+              name="three rightwards arrows";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let tieOverInfinityInfix = 
+             {character = Unicode 0x29DD;  
+              glyph = "⧝";  
+              name="tie over infinity";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let tildeOperatorAboveRightwardsArrowInfix = 
+             {character = Unicode 0x2972;  
+              glyph = "⥲";  
+              name="tilde operator above rightwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let tildeOperatorInfix = 
+             {character = Unicode 0x223C;  
+              glyph = "∼";  
+              name="tilde operator";  
+              form = Infix;  
+              priority = 250;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tildeOperatorWithDotAboveInfix = 
+             {character = Unicode 0x2A6A;  
+              glyph = "⩪";  
+              name="tilde operator with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tildeOperatorWithRisingDotsInfix = 
+             {character = Unicode 0x2A6B;  
+              glyph = "⩫";  
+              name="tilde operator with rising dots";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tildePostfix = 
+             {character = Char  '~';  
+              glyph = "~";  
+              name="tilde";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let timesWithLeftHalfBlackInfix = 
+             {character = Unicode 0x29D4;  
+              glyph = "⧔";  
+              name="times with left half black";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let timesWithRightHalfBlackInfix = 
+             {character = Unicode 0x29D5;  
+              glyph = "⧕";  
+              name="times with right half black";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tinyInfix = 
+             {character = Unicode 0x29FE;  
+              glyph = "⧾";  
+              name="tiny";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let topArcAnticlockwiseArrowInfix = 
+             {character = Unicode 0x293A;  
+              glyph = "⤺";  
+              name="top arc anticlockwise arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let topArcAnticlockwiseArrowWithPlusInfix = 
+             {character = Unicode 0x293D;  
+              glyph = "⤽";  
+              name="top arc anticlockwise arrow with plus";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let topArcClockwiseArrowWithMinusInfix = 
+             {character = Unicode 0x293C;  
+              glyph = "⤼";  
+              name="top arc clockwise arrow with minus";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let topCurlyBracketPostfix = 
+             {character = Unicode 0x23DE;  
+              glyph = "⏞";  
+              name="top curly bracket";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let topParenthesisPostfix = 
+             {character = Unicode 0x23DC;  
+              glyph = "⏜";  
+              name="top parenthesis";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let topSquareBracketPostfix = 
+             {character = Unicode 0x23B4;  
+              glyph = "⎴";  
+              name="top square bracket";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let topTortoiseShellBracketPostfix = 
+             {character = Unicode 0x23E0;  
+              glyph = "⏠";  
+              name="top tortoise shell bracket";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["stretchy"; "accent"]}
+        let transversalIntersectionInfix = 
+             {character = Unicode 0x2ADB;  
+              glyph = "⫛";  
+              name="transversal intersection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let triangleWithDotAboveInfix = 
+             {character = Unicode 0x29CA;  
+              glyph = "⧊";  
+              name="triangle with dot above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let triangleWithSerifsAtBottomInfix = 
+             {character = Unicode 0x29CD;  
+              glyph = "⧍";  
+              name="triangle with serifs at bottom";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let triangleWithUnderbarInfix = 
+             {character = Unicode 0x29CB;  
+              glyph = "⧋";  
+              name="triangle with underbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let tripleColonOperatorInfix = 
+             {character = Unicode 0x2AF6;  
+              glyph = "⫶";  
+              name="triple colon operator";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let tripleHorizontalBarWithDoubleVerticalStrokeInfix = 
+             {character = Unicode 0x2A68;  
+              glyph = "⩨";  
+              name="triple horizontal bar with double vertical stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tripleHorizontalBarWithTripleVerticalStrokeInfix = 
+             {character = Unicode 0x2A69;  
+              glyph = "⩩";  
+              name="triple horizontal bar with triple vertical stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tripleIntegralPrefix = 
+             {character = Unicode 0x222D;  
+              glyph = "∭";  
+              name="triple integral";  
+              form = Prefix;  
+              priority = 300;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let tripleNestedGreaterThanInfix = 
+             {character = Unicode 0x2AF8;  
+              glyph = "⫸";  
+              name="triple nested greater-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tripleNestedLessThanInfix = 
+             {character = Unicode 0x2AF7;  
+              glyph = "⫷";  
+              name="triple nested less-than";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let triplePlusInfix = 
+             {character = Unicode 0x29FB;  
+              glyph = "⧻";  
+              name="triple plus";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let triplePrimePostfix = 
+             {character = Unicode 0x2034;  
+              glyph = "‴";  
+              name="triple prime";  
+              form = Postfix;  
+              priority = 880;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["accent"]}
+        let tripleSolidusBinaryRelationInfix = 
+             {character = Unicode 0x2AFB;  
+              glyph = "⫻";  
+              name="triple solidus binary relation";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let tripleTildeInfix = 
+             {character = Unicode 0x224B;  
+              glyph = "≋";  
+              name="triple tilde";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tripleVerticalBarBinaryRelationInfix = 
+             {character = Unicode 0x2AF4;  
+              glyph = "⫴";  
+              name="triple vertical bar binary relation";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let tripleVerticalBarDelimiterPostfix = 
+             {character = Unicode 0x2980;  
+              glyph = "⦀";  
+              name="triple vertical bar delimiter";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"]}
+        let tripleVerticalBarDelimiterPrefix = 
+             {character = Unicode 0x2980;  
+              glyph = "⦀";  
+              name="triple vertical bar delimiter";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"]}
+        let tripleVerticalBarRightTurnstileInfix = 
+             {character = Unicode 0x22AA;  
+              glyph = "⊪";  
+              name="triple vertical bar right turnstile";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let tripleVerticalBarWithHorizontalStrokeInfix = 
+             {character = Unicode 0x2AF5;  
+              glyph = "⫵";  
+              name="triple vertical bar with horizontal stroke";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let trueInfix = 
+             {character = Unicode 0x22A8;  
+              glyph = "⊨";  
+              name="TRUE";  
+              form = Infix;  
+              priority = 170;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let turnedAngleInfix = 
+             {character = Unicode 0x29A2;  
+              glyph = "⦢";  
+              name="turned angle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let twoConsecutiveEqualsSignsInfix = 
+             {character = Unicode 0x2A75;  
+              glyph = "⩵";  
+              name="two consecutive equals signs";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let twoIntersectingLogicalAndInfix = 
+             {character = Unicode 0x2A55;  
+              glyph = "⩕";  
+              name="two intersecting logical and";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let twoIntersectingLogicalOrInfix = 
+             {character = Unicode 0x2A56;  
+              glyph = "⩖";  
+              name="two intersecting logical or";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let twoJoinedSquaresInfix = 
+             {character = Unicode 0x29C9;  
+              glyph = "⧉";  
+              name="two joined squares";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let twoLogicalAndOperatorPrefix = 
+             {character = Unicode 0x2A07;  
+              glyph = "⨇";  
+              name="two logical and operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let twoLogicalOrOperatorPrefix = 
+             {character = Unicode 0x2A08;  
+              glyph = "⨈";  
+              name="two logical or operator";  
+              form = Prefix;  
+              priority = 330;  
+              lspace = NamedLength VeryVeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["largeop"; "movablelimits"; "symmetric"]}
+        let unionAboveBarAboveIntersectionInfix = 
+             {character = Unicode 0x2A48;  
+              glyph = "⩈";  
+              name="union above bar above intersection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let unionAboveIntersectionInfix = 
+             {character = Unicode 0x2A46;  
+              glyph = "⩆";  
+              name="union above intersection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let unionBesideAndJoinedWithUnionInfix = 
+             {character = Unicode 0x2A4A;  
+              glyph = "⩊";  
+              name="union beside and joined with union";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let unionInfix = 
+             {character = Unicode 0x222A;  
+              glyph = "∪";  
+              name="union";  
+              form = Infix;  
+              priority = 350;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let unionWithLogicalOrInfix = 
+             {character = Unicode 0x2A45;  
+              glyph = "⩅";  
+              name="union with logical or";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let unionWithMinusSignInfix = 
+             {character = Unicode 0x2A41;  
+              glyph = "⩁";  
+              name="union with minus sign";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let unionWithOverbarInfix = 
+             {character = Unicode 0x2A42;  
+              glyph = "⩂";  
+              name="union with overbar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let upArrowThroughCircleInfix = 
+             {character = Unicode 0x29BD;  
+              glyph = "⦽";  
+              name="up arrow through circle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let upBarbLeftDownBarbLeftHarpoonInfix = 
+             {character = Unicode 0x2951;  
+              glyph = "⥑";  
+              name="up barb left down barb left harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upBarbLeftDownBarbRightHarpoonInfix = 
+             {character = Unicode 0x294D;  
+              glyph = "⥍";  
+              name="up barb left down barb right harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upBarbRightDownBarbLeftHarpoonInfix = 
+             {character = Unicode 0x294C;  
+              glyph = "⥌";  
+              name="up barb right down barb left harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upBarbRightDownBarbRightHarpoonInfix = 
+             {character = Unicode 0x294F;  
+              glyph = "⥏";  
+              name="up barb right down barb right harpoon";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upDownArrowInfix = 
+             {character = Unicode 0x2195;  
+              glyph = "↕";  
+              name="up down arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upDownArrowWithBaseInfix = 
+             {character = Unicode 0x21A8;  
+              glyph = "↨";  
+              name="up down arrow with base";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upDownDoubleArrowInfix = 
+             {character = Unicode 0x21D5;  
+              glyph = "⇕";  
+              name="up down double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upDownWhiteArrowInfix = 
+             {character = Unicode 0x21F3;  
+              glyph = "⇳";  
+              name="up down white arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upFishTailInfix = 
+             {character = Unicode 0x297E;  
+              glyph = "⥾";  
+              name="up fish tail";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upRightDiagonalEllipsisInfix = 
+             {character = Unicode 0x22F0;  
+              glyph = "⋰";  
+              name="up right diagonal ellipsis";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upTackInfix = 
+             {character = Unicode 0x22A5;  
+              glyph = "⊥";  
+              name="up tack";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upwardsArrowFromBarInfix = 
+             {character = Unicode 0x21A5;  
+              glyph = "↥";  
+              name="upwards arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsArrowInfix = 
+             {character = Unicode 0x2191;  
+              glyph = "↑";  
+              name="upwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsArrowLeftwardsOfDownwardsArrowInfix = 
+             {character = Unicode 0x21C5;  
+              glyph = "⇅";  
+              name="upwards arrow leftwards of downwards arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsArrowToBarInfix = 
+             {character = Unicode 0x2912;  
+              glyph = "⤒";  
+              name="upwards arrow to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsArrowWithDoubleStrokeInfix = 
+             {character = Unicode 0x21DE;  
+              glyph = "⇞";  
+              name="upwards arrow with double stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upwardsArrowWithHorizontalStrokeInfix = 
+             {character = Unicode 0x2909;  
+              glyph = "⤉";  
+              name="upwards arrow with horizontal stroke";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upwardsArrowWithTipLeftwardsInfix = 
+             {character = Unicode 0x21B0;  
+              glyph = "↰";  
+              name="upwards arrow with tip leftwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsArrowWithTipRightwardsInfix = 
+             {character = Unicode 0x21B1;  
+              glyph = "↱";  
+              name="upwards arrow with tip rightwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsDashedArrowInfix = 
+             {character = Unicode 0x21E1;  
+              glyph = "⇡";  
+              name="upwards dashed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsDoubleArrowInfix = 
+             {character = Unicode 0x21D1;  
+              glyph = "⇑";  
+              name="upwards double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbLeftBesideDownwardsHarpoonWithBarbRightInfix = 
+             {character = Unicode 0x296E;  
+              glyph = "⥮";  
+              name="upwards harpoon with barb left beside downwards harpoon with barb right";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbLeftBesideUpwardsHarpoonWithBarbRightInfix = 
+             {character = Unicode 0x2963;  
+              glyph = "⥣";  
+              name="upwards harpoon with barb left beside upwards harpoon with barb right";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upwardsHarpoonWithBarbLeftFromBarInfix = 
+             {character = Unicode 0x2960;  
+              glyph = "⥠";  
+              name="upwards harpoon with barb left from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbLeftToBarInfix = 
+             {character = Unicode 0x2958;  
+              glyph = "⥘";  
+              name="upwards harpoon with barb left to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbLeftwardsInfix = 
+             {character = Unicode 0x21BF;  
+              glyph = "↿";  
+              name="upwards harpoon with barb leftwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbRightFromBarInfix = 
+             {character = Unicode 0x295C;  
+              glyph = "⥜";  
+              name="upwards harpoon with barb right from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbRightToBarInfix = 
+             {character = Unicode 0x2954;  
+              glyph = "⥔";  
+              name="upwards harpoon with barb right to bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsHarpoonWithBarbRightwardsInfix = 
+             {character = Unicode 0x21BE;  
+              glyph = "↾";  
+              name="upwards harpoon with barb rightwards";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsPairedArrowsInfix = 
+             {character = Unicode 0x21C8;  
+              glyph = "⇈";  
+              name="upwards paired arrows";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsQuadrupleArrowInfix = 
+             {character = Unicode 0x27F0;  
+              glyph = "⟰";  
+              name="upwards quadruple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsTripleArrowInfix = 
+             {character = Unicode 0x290A;  
+              glyph = "⤊";  
+              name="upwards triple arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsTwoHeadedArrowFromSmallCircleInfix = 
+             {character = Unicode 0x2949;  
+              glyph = "⥉";  
+              name="upwards two-headed arrow from small circle";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let upwardsTwoHeadedArrowInfix = 
+             {character = Unicode 0x219F;  
+              glyph = "↟";  
+              name="upwards two headed arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"; "accent"]}
+        let upwardsWhiteArrowFromBarInfix = 
+             {character = Unicode 0x21EA;  
+              glyph = "⇪";  
+              name="upwards white arrow from bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsWhiteArrowInfix = 
+             {character = Unicode 0x21E7;  
+              glyph = "⇧";  
+              name="upwards white arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsWhiteArrowOnPedestalInfix = 
+             {character = Unicode 0x21EB;  
+              glyph = "⇫";  
+              name="upwards white arrow on pedestal";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsWhiteArrowOnPedestalWithHorizontalBarInfix = 
+             {character = Unicode 0x21EC;  
+              glyph = "⇬";  
+              name="upwards white arrow on pedestal with horizontal bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsWhiteArrowOnPedestalWithVerticalBarInfix = 
+             {character = Unicode 0x21ED;  
+              glyph = "⇭";  
+              name="upwards white arrow on pedestal with vertical bar";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsWhiteDoubleArrowInfix = 
+             {character = Unicode 0x21EE;  
+              glyph = "⇮";  
+              name="upwards white double arrow";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let upwardsWhiteDoubleArrowOnPedestalInfix = 
+             {character = Unicode 0x21EF;  
+              glyph = "⇯";  
+              name="upwards white double arrow on pedestal";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["stretchy"]}
+        let vectorOrCrossProductInfix = 
+             {character = Unicode 0x2A2F;  
+              glyph = "⨯";  
+              name="vector or cross product";  
+              form = Infix;  
+              priority = 390;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let verticalBarBesideRightTriangleInfix = 
+             {character = Unicode 0x29D0;  
+              glyph = "⧐";  
+              name="vertical bar beside right triangle";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalBarBesideRightTriangleWithSlashInfix = 
+             {character = UnicodeArray [|Unicode 0x29D0;Unicode 0x338|];  
+              glyph = "⧐̸";  
+              name="vertical bar beside right triangle with slash";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalBarDoubleLeftTurnstileInfix = 
+             {character = Unicode 0x2AE4;  
+              glyph = "⫤";  
+              name="vertical bar double left turnstile";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalBarTripleRightTurnstileInfix = 
+             {character = Unicode 0x2AE2;  
+              glyph = "⫢";  
+              name="vertical bar triple right turnstile";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalEllipsisInfix = 
+             {character = Unicode 0x22EE;  
+              glyph = "⋮";  
+              name="vertical ellipsis";  
+              form = Infix;  
+              priority = 150;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalLineInfix = 
+             {character = Char  '|';  
+              glyph = "|";  
+              name="vertical line";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength VeryThinMathSpace;  
+              rspace = NamedLength VeryThinMathSpace;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let verticalLinePostfix = 
+             {character = Char  '|';  
+              glyph = "|";  
+              name="vertical line";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let verticalLinePrefix = 
+             {character = Char  '|';  
+              glyph = "|";  
+              name="vertical line";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let verticalLineWithCircleAboveInfix = 
+             {character = Unicode 0x2AEF;  
+              glyph = "⫯";  
+              name="vertical line with circle above";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalLineWithCircleBelowInfix = 
+             {character = Unicode 0x2AF0;  
+              glyph = "⫰";  
+              name="vertical line with circle below";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let verticalZigzagLineInfix = 
+             {character = Unicode 0x299A;  
+              glyph = "⦚";  
+              name="vertical zigzag line";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let veryMuchGreaterThanInfix = 
+             {character = Unicode 0x22D9;  
+              glyph = "⋙";  
+              name="very much greater-than";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let veryMuchLessThanInfix = 
+             {character = Unicode 0x22D8;  
+              glyph = "⋘";  
+              name="very much less-than";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let volumeIntegralPrefix = 
+             {character = Unicode 0x2230;  
+              glyph = "∰";  
+              name="volume integral";  
+              form = Prefix;  
+              priority = 310;  
+              lspace= EM 0.<em>;  
+              rspace = NamedLength VeryVeryThinMathSpace;  
+              properties=["largeop"; "symmetric"]}
+        let waveArrowPointingDirectlyRightInfix = 
+             {character = Unicode 0x2933;  
+              glyph = "⤳";  
+              name="wave arrow pointing directly right";  
+              form = Infix;  
+              priority = 270;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=["accent"]}
+        let whiteBulletInfix = 
+             {character = Unicode 0x25E6;  
+              glyph = "◦";  
+              name="white bullet";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteCircleWithDownArrowInfix = 
+             {character = Unicode 0x29EC;  
+              glyph = "⧬";  
+              name="white circle with down arrow";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let whiteDiamondContainingBlackSmallDiamondInfix = 
+             {character = Unicode 0x25C8;  
+              glyph = "◈";  
+              name="white diamond containing black small diamond";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteDiamondInfix = 
+             {character = Unicode 0x25C7;  
+              glyph = "◇";  
+              name="white diamond";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteDownPointingSmallTriangleInfix = 
+             {character = Unicode 0x25BF;  
+              glyph = "▿";  
+              name="white down-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteDownPointingTriangleInfix = 
+             {character = Unicode 0x25BD;  
+              glyph = "▽";  
+              name="white down-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteHourglassInfix = 
+             {character = Unicode 0x29D6;  
+              glyph = "⧖";  
+              name="white hourglass";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteLeftPointingPointerInfix = 
+             {character = Unicode 0x25C5;  
+              glyph = "◅";  
+              name="white left-pointing pointer";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteLeftPointingSmallTriangleInfix = 
+             {character = Unicode 0x25C3;  
+              glyph = "◃";  
+              name="white left-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteLeftPointingTriangleInfix = 
+             {character = Unicode 0x25C1;  
+              glyph = "◁";  
+              name="white left-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteParallelogramInfix = 
+             {character = Unicode 0x25B1;  
+              glyph = "▱";  
+              name="white parallelogram";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let whiteRectangleInfix = 
+             {character = Unicode 0x25AD;  
+              glyph = "▭";  
+              name="white rectangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let whiteRightPointingSmallTriangleInfix = 
+             {character = Unicode 0x25B9;  
+              glyph = "▹";  
+              name="white right-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteRightPointingTriangleInfix = 
+             {character = Unicode 0x25B7;  
+              glyph = "▷";  
+              name="white right-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteSmallSquareInfix = 
+             {character = Unicode 0x25AB;  
+              glyph = "▫";  
+              name="white small square";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let whiteSquareInfix = 
+             {character = Unicode 0x25A1;  
+              glyph = "□";  
+              name="white square";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let whiteUpPointingSmallTriangleInfix = 
+             {character = Unicode 0x25B5;  
+              glyph = "▵";  
+              name="white up-pointing small triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteUpPointingTriangleInfix = 
+             {character = Unicode 0x25B3;  
+              glyph = "△";  
+              name="white up-pointing triangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let whiteVerticalBarInfix = 
+             {character = Unicode 0x2AFE;  
+              glyph = "⫾";  
+              name="white vertical bar";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let whiteVerticalRectangleInfix = 
+             {character = Unicode 0x25AF;  
+              glyph = "▯";  
+              name="white vertical rectangle";  
+              form = Infix;  
+              priority = 260;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let wreathProductInfix = 
+             {character = Unicode 0x2240;  
+              glyph = "≀";  
+              name="wreath product";  
+              form = Infix;  
+              priority = 340;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let xorInfix = 
+             {character = Unicode 0x22BB;  
+              glyph = "⊻";  
+              name="xor";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let zNotationBagMembershipInfix = 
+             {character = Unicode 0x22FF;  
+              glyph = "⋿";  
+              name="z notation bag membership";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThickMathSpace;  
+              rspace = NamedLength ThickMathSpace;  
+              properties=[]}
+        let zNotationDomainAntirestrictionInfix = 
+             {character = Unicode 0x2A64;  
+              glyph = "⩤";  
+              name="z notation domain antirestriction";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let zNotationLeftBindingBracketPrefix = 
+             {character = Unicode 0x2989;  
+              glyph = "⦉";  
+              name="z notation left binding bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let zNotationLeftImageBracketPrefix = 
+             {character = Unicode 0x2987;  
+              glyph = "⦇";  
+              name="z notation left image bracket";  
+              form = Prefix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let zNotationRangeAntirestrictionInfix = 
+             {character = Unicode 0x2A65;  
+              glyph = "⩥";  
+              name="z notation range antirestriction";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let zNotationRelationalCompositionInfix = 
+             {character = Unicode 0x2A3E;  
+              glyph = "⨾";  
+              name="z notation relational composition";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength MediumMathSpace;  
+              rspace = NamedLength MediumMathSpace;  
+              properties=[]}
+        let zNotationRightBindingBracketPostfix = 
+             {character = Unicode 0x298A;  
+              glyph = "⦊";  
+              name="z notation right binding bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let zNotationRightImageBracketPostfix = 
+             {character = Unicode 0x2988;  
+              glyph = "⦈";  
+              name="z notation right image bracket";  
+              form = Postfix;  
+              priority = 20;  
+              lspace= EM 0.<em>;  
+              rspace= EM 0.<em>;  
+              properties=["fence"; "stretchy"; "symmetric"]}
+        let zNotationSchemaCompositionInfix = 
+             {character = Unicode 0x2A1F;  
+              glyph = "⨟";  
+              name="z notation schema composition";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let zNotationSchemaPipingInfix = 
+             {character = Unicode 0x2A20;  
+              glyph = "⨠";  
+              name="z notation schema piping";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let zNotationSchemaProjectionInfix = 
+             {character = Unicode 0x2A21;  
+              glyph = "⨡";  
+              name="z notation schema projection";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let zNotationSpotInfix = 
+             {character = Unicode 0x2981;  
+              glyph = "⦁";  
+              name="z notation spot";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}
+        let zNotationTypeColonInfix = 
+             {character = Unicode 0x2982;  
+              glyph = "⦂";  
+              name="z notation type colon";  
+              form = Infix;  
+              priority = 265;  
+              lspace = NamedLength ThinMathSpace;  
+              rspace = NamedLength ThinMathSpace;  
+              properties=[]}

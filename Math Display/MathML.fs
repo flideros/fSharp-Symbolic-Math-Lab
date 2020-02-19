@@ -10,7 +10,6 @@
 [<Measure>] type pc /// picas (1 pica = 12 points)
 [<Measure>] type pct /// percentage of the default value
 
-
 type NamedSpace = 
     | VeryVeryThinMathSpace /// 1/18em
     | VeryThinMathSpace /// 2/18em
@@ -79,6 +78,22 @@ type _RowAlign = | Top | Bottom | Center | Baseline | Axis
 type _RowLines = | None | Solid | Dashed
 type _Side = | Left | Right | LeftOverlap | RightOerlap
 type _StackAlign = | Left | Center | Right | DecimalPoint
+
+type CharacterCode = 
+    | Unicode of int
+    | Char of char
+    | UnicodeArray of CharacterCode array
+
+type Operator = 
+    { character : CharacterCode
+      glyph : string
+      name : string
+      form : _Form 
+      priority : int //Significance for the proper grouping of sub-expressions
+      lspace : Length
+      rspace : Length
+      properties: string list // ToDo: implement properties   
+    } 
 
 type MathMLAttribute =
     | Accent of bool

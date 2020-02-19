@@ -43,26 +43,26 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="OperatorDictionary.fs" />
     <Compile Include="MathML.fs" />
+    <Compile Include="OperatorDictionary.fs" />
     <Compile Include="Glyphs.fs" />
     <Compile Include="TypeSetting.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
-    <Resource Include="STIX2Math.otf">  
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>  
+    <Resource Include="STIX2Math.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="STIX2Text-Bold.otf">  
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>  
+    <Resource Include="STIX2Text-Bold.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="STIX2Text-BoldItalic.otf">  
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>  
+    <Resource Include="STIX2Text-BoldItalic.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="STIX2Text-Italic.otf">  
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>  
+    <Resource Include="STIX2Text-Italic.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="STIX2Text-Regular.otf">  
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>  
+    <Resource Include="STIX2Text-Regular.otf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
   <ItemGroup>

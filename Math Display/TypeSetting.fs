@@ -48,7 +48,7 @@ module TypeSetting =
     let getGlyph :GlyphBuilder = 
         fun t font -> 
             let ft = formatText t font 
-            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
+            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Azure)
             let geometry = ft.BuildGeometry(Point(0.,-ft.Baseline))//1.*(formattedText.Extent-formattedText.Baseline))) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()
             {path=p;leftBearing=(System.Math.Abs(ft.OverhangLeading));rightBearing=(ft.OverhangTrailing)}
@@ -92,7 +92,7 @@ module TypeSetting =
             do  g.RowDefinitions.Add(row0)
                 g.RowDefinitions.Add(row1)
                 g.RowDefinitions.Add(row2)
-                g.Children.Add(getGlyphFromFont "Testing 1 2") |> ignore
+                g.Children.Add(getGlyphFromFont (new string([|((char)(System.Convert.ToInt32("0x2AB0",16)));((char)(System.Convert.ToInt32("0x338",16)))|]))) |> ignore
             g
         let em0_Border = 
             let b = Border(BorderThickness=Thickness(1.),BorderBrush=Brushes.Green,Child=em0_Grid)
