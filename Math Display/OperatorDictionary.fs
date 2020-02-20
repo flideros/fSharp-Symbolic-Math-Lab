@@ -1223,7 +1223,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let differenceBetweenWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x224F; Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x224F; Unicode 0x0020; Unicode 0x338|];  
               glyph = "≏̸";  
               name="difference between with slash";  
               form = Infix;  
@@ -1583,7 +1583,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let doubleNestedGreaterThanWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2AA2;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2AA2;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⪢̸";  
               name="double nested greater-than with slash";  
               form = Infix;  
@@ -1601,7 +1601,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let doubleNestedLessThanWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2AA1;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2AA1;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⪡̸";  
               name="double nested less-than with slash";  
               form = Infix;  
@@ -2573,7 +2573,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let geometricallyEquivalentToWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x224E;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x224E;Unicode 0x0020;Unicode 0x338|];  
               glyph = "≎̸";  
               name="geometrically equivalent to with slash";  
               form = Infix;  
@@ -2798,7 +2798,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let greaterThanOrSlantedEqualToWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2A7E;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2A7E;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⩾̸";  
               name="greater-than or slanted equal to with slash";  
               form = Infix;  
@@ -3590,7 +3590,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let leftTriangleBesideVerticalBarWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x29CF;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x29CF;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⧏̸";  
               name="left triangle beside vertical bar with slash";  
               form = Infix;  
@@ -4238,7 +4238,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let lessThanOrSlantedEqualToWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2A7D;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2A7D;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⩽̸";  
               name="less-than or slanted equal to with slash";  
               form = Infix;  
@@ -4256,7 +4256,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let lessThanOverEqualToWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2266;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2266;Unicode 0x0020;Unicode 0x338|];  
               glyph = "≦̸";  
               name="less-than over equal to with slash";  
               form = Infix;  
@@ -4949,7 +4949,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let minusTildeWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2242;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2242;Unicode 0x0020;Unicode 0x338|];  
               glyph = "≂̸";  
               name="minus tilde with slash";  
               form = Infix;  
@@ -5048,7 +5048,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let muchGreaterThanWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x226B;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x226B;Unicode 0x0020;Unicode 0x338|];  
               glyph = "≫̸";  
               name="much greater than with slash";  
               form = Infix;  
@@ -5066,7 +5066,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let muchLessThanWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x226A;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x226A;Unicode 0x0020;Unicode 0x338|];  
               glyph = "≪̸";  
               name="much less than with slash";  
               form = Infix;  
@@ -5687,7 +5687,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let nonforkingWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2ADD;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2ADD;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⫝̸";  
               name="nonforking with slash";  
               form = Infix;  
@@ -6308,7 +6308,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let precedesAboveSingleLineEqualsSignWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2AAF;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2AAF;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⪯̸";  
               name="precedes above single-line equals sign with slash";  
               form = Infix;  
@@ -6533,7 +6533,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let reversedTildeWithUnderlineInfix = 
-             {character = UnicodeArray [|Unicode 0x223D;Unicode 0x331|];  
+             {character = UnicodeArray [|Unicode 0x223D;Unicode 0x0020;Unicode 0x331|];  
               glyph = "∽̱";  
               name="reversed tilde with underline";  
               form = Infix;  
@@ -8054,7 +8054,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let squareImageOfWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x228F;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x228F;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⊏̸";  
               name="square image of with slash";  
               form = Infix;  
@@ -8099,7 +8099,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let squareOriginalOfWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2290;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2290;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⊐̸";  
               name="square original of with slash";  
               form = Infix;  
@@ -8261,7 +8261,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let subsetOfWithVerticalLineInfix = 
-             {character = UnicodeArray [|Unicode 0x2282;Unicode 0x20D2|];  
+             {character = UnicodeArray [|Unicode 0x2282;Unicode 0x0020;Unicode 0x20D2|];  
               glyph = "⊂⃒";  
               name="subset of with vertical line";  
               form = Infix;  
@@ -8342,7 +8342,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let succeedsAboveSingleLineEqualsSignWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x2AB0;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x2AB0;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⪰̸";  
               name="succeeds above single-line equals sign with slash";  
               form = Infix;  
@@ -8396,7 +8396,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let succeedsOrEquivalentToWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x227F;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x227F;Unicode 0x0020;Unicode 0x338|];  
               glyph = "≿̸";  
               name="succeeds or equivalent to with slash";  
               form = Infix;  
@@ -8567,7 +8567,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let supersetOfWithVerticalLineInfix = 
-             {character = UnicodeArray [|Unicode 0x2283;Unicode 0x20D2|];  
+             {character = UnicodeArray [|Unicode 0x2283;Unicode 0x0020;Unicode 0x20D2|];  
               glyph = "⊃⃒";  
               name="superset of with vertical line";  
               form = Infix;  
@@ -9512,7 +9512,7 @@
               rspace = NamedLength ThickMathSpace;  
               properties=[]}
         let verticalBarBesideRightTriangleWithSlashInfix = 
-             {character = UnicodeArray [|Unicode 0x29D0;Unicode 0x338|];  
+             {character = UnicodeArray [|Unicode 0x29D0;Unicode 0x0020;Unicode 0x338|];  
               glyph = "⧐̸";  
               name="vertical bar beside right triangle with slash";  
               form = Infix;  

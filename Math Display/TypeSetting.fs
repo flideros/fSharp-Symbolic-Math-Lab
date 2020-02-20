@@ -19,7 +19,8 @@ type GlyphBuilder = string -> Font -> Glyph
 
 
 module TypeSetting = 
-    
+    open MathML
+    open MathML.OperatorDictionary
     //  Font Families
     let STIX2Math_FontFamily =           FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),            "./#STIX Two Math")
     let STIX2TextBold_FontFamily =       FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Bold"),       "./#STIX Two Text Bold")
@@ -48,10 +49,20 @@ module TypeSetting =
     let getGlyph :GlyphBuilder = 
         fun t font -> 
             let ft = formatText t font 
-            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Azure)
-            let geometry = ft.BuildGeometry(Point(0.,-ft.Baseline))//1.*(formattedText.Extent-formattedText.Baseline))) 
+            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Purple)
+            let geometry = ft.BuildGeometry(Point(0.,0.)) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()
-            {path=p;leftBearing=(System.Math.Abs(ft.OverhangLeading));rightBearing=(ft.OverhangTrailing)}
+            {path=p;leftBearing = 0.; rightBearing = ft.OverhangTrailing}
+
+    let getOperatorString (operator : Operator) = 
+        let rec loop oc =
+            match oc with
+            | Unicode u -> (char u).ToString()
+            | Char c -> c.ToString()
+            | UnicodeArray a -> 
+                let chars = Array.map (fun oc -> (char)(loop oc)) a
+                new string (chars)
+        loop operator.character
 
     // Type setting controls
     type GlyphBox (glyph) as glyphBox =
@@ -80,62 +91,9 @@ module TypeSetting =
             }
         let getGlyphFromFont text = GlyphBox(getGlyph text font)
 
-        let sigma_GlyphBox = GlyphBox({path=testGlyphs.[0];rightBearing=30.;leftBearing=28.})
-        let p_GlyphBox = GlyphBox({path=testGlyphs.[1];rightBearing=22.;leftBearing=35.})
-    
-        let em0_Grid =
-            let g = Grid(Height = 1000.)
-            let row0 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
-            let row1 = RowDefinition(Height = GridLength.Auto)
-            let row2 = RowDefinition(Height = GridLength.Auto)
+        let operator_GlyphBox = getGlyphFromFont(getOperatorString blackLeftPointingSmallTriangleInfix)
             
-            do  g.RowDefinitions.Add(row0)
-                g.RowDefinitions.Add(row1)
-                g.RowDefinitions.Add(row2)
-                g.Children.Add(getGlyphFromFont (new string([|((char)(System.Convert.ToInt32("0x2AB0",16)));((char)(System.Convert.ToInt32("0x338",16)))|]))) |> ignore
-            g
-        let em0_Border = 
-            let b = Border(BorderThickness=Thickness(1.),BorderBrush=Brushes.Green,Child=em0_Grid)
-            do  b.SetValue(Grid.RowProperty,1)
-            b
-
-        let em_Grid =
-            let g = Grid(Height = 1000.)
-            let row0 = RowDefinition(Height = GridLength(1., GridUnitType.Star))
-            let row1 = RowDefinition(Height = GridLength.Auto)
-            let row2 = RowDefinition(Height = GridLength.Auto)
-            
-            do  g.RowDefinitions.Add(row0)
-                g.RowDefinitions.Add(row1)
-                g.RowDefinitions.Add(row2)
-                g.Children.Add(p_GlyphBox) |> ignore
-            g
-        let em_Border = 
-            let b = Border(BorderThickness=Thickness(1.),BorderBrush=Brushes.Green,Child=em_Grid)
-            do  b.SetValue(Grid.RowProperty,1)
-            b
-    
-        let font_Grid = 
-            let g = Grid(MaxHeight = 3900.)
-
-            let sp = StackPanel(Orientation=Orientation.Horizontal)
-
-            let row0 = RowDefinition(Height = GridLength(0., GridUnitType.Star))
-            let row1 = RowDefinition(Height = GridLength.Auto)
-            let row2 = RowDefinition(Height = GridLength(250.))
-            
-            do  g.RowDefinitions.Add(row0)
-                g.RowDefinitions.Add(row1)
-                g.RowDefinitions.Add(row2)
-                sp.SetValue(Grid.RowProperty,1)
-                sp.Children.Add(em0_Border) |> ignore
-                sp.Children.Add(em_Border) |> ignore
-                g.Children.Add(sp) |> ignore
-            g
-        let font_Border = Border(BorderThickness=Thickness(1.),BorderBrush=Brushes.Black,Child=font_Grid)
-    
         let canvas = Canvas(ClipToBounds = true)
-    
     
         let scale_Slider =
             let s = 
@@ -149,7 +107,7 @@ module TypeSetting =
                     IsEnabled = true)        
             do s.SetValue(Grid.RowProperty, 0)
             let handleValueChanged (s)= 
-                font_Border.RenderTransform <- ScaleTransform(ScaleX = 5./s,ScaleY=5./s)
+                operator_GlyphBox.RenderTransform <- ScaleTransform(ScaleX = 5./s,ScaleY=5./s)
             s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
             s
         let scaleSlider_Grid =
@@ -170,6 +128,6 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
  
-        do  canvas.Children.Add(font_Border) |> ignore //font_Border) |> ignore
+        do  canvas.Children.Add(operator_GlyphBox) |> ignore //font_Border) |> ignore
 
             this.Content <- screen_Grid
