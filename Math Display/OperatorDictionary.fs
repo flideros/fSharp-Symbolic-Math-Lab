@@ -1,10 +1,5 @@
 ﻿namespace MathML
-///\/-------------------------------------Notes------------------------------------\/
 
-/// 1..When an operator is expanded vertically, it is implemented in a function elsewhere 
-///    in subsequent code.
-
-///\-------------------------------------Notes-------------------------------------/\ 
     module OperatorDictionary =
 
         let acuteAccentPostfix =            
@@ -15,7 +10,7 @@
               form = Postfix;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]} 
+              properties=[Accent true]} 
         let acuteAngleInfix = 
              {character = Unicode 0x299F;  
               glyph = "⦟";  
@@ -123,7 +118,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let anticlockwiseIntegrationPrefix = 
              {character = Unicode 0x2A11;  
               glyph = "⨑";  
@@ -132,7 +127,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let anticlockwiseOpenCircleArrowInfix = 
              {character = Unicode 0x21BA;  
               glyph = "↺";  
@@ -150,7 +145,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let apostrophePostfix = 
              {character = Char ''';  
               glyph = "'";  
@@ -159,7 +154,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let approachesTheLimitInfix = 
              {character = Unicode 0x2250;  
               glyph = "≐";  
@@ -501,7 +496,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let bottomCurlyBracketPostfix = 
              {character = Unicode 0x23DF;  
               glyph = "⏟";  
@@ -510,7 +505,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let bottomParenthesisPostfix = 
              {character = Unicode 0x23DD;  
               glyph = "⏝";  
@@ -519,7 +514,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let bottomSquareBracketPostfix = 
              {character = Unicode 0x23B5;  
               glyph = "⎵";  
@@ -528,7 +523,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let bottomTortoiseShellBracketPostfix = 
              {character = Unicode 0x23E1;  
               glyph = "⏡";  
@@ -537,7 +532,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let bowtieInfix = 
              {character = Unicode 0x22C8;  
               glyph = "⋈";  
@@ -573,7 +568,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let bulletInfix = 
              {character = Unicode 0x2022;  
               glyph = "•";  
@@ -609,7 +604,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let cedillaPostfix = 
              {character = Unicode 0xB8;  
               glyph = "¸";  
@@ -618,7 +613,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let circledAnticlockwiseRotatedDivisionSignInfix = 
              {character = Unicode 0x29BC;  
               glyph = "⦼";  
@@ -861,7 +856,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let circumflexAccentInfix = 
              {character = Char '^';  
               glyph = "^";  
@@ -879,7 +874,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let clockwiseClosedCircleArrowInfix = 
              {character = Unicode 0x2941;  
               glyph = "⥁";  
@@ -897,7 +892,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let clockwiseIntegralPrefix = 
              {character = Unicode 0x2231;  
               glyph = "∱";  
@@ -906,7 +901,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let clockwiseOpenCircleArrowInfix = 
              {character = Unicode 0x21BB;  
               glyph = "↻";  
@@ -924,7 +919,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let closedIntersectionWithSerifsInfix = 
              {character = Unicode 0x2A4D;  
               glyph = "⩍";  
@@ -1014,7 +1009,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let combiningFourDotsAbovePostfix = 
              {character = Unicode 0x20DC;  
               glyph = "⃜";  
@@ -1023,7 +1018,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let combiningInvertedBrevePostfix = 
              {character = Unicode 0x311;  
               glyph = "̑";  
@@ -1032,7 +1027,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let combiningThreeDotsAbovePostfix = 
              {character = Unicode 0x20DB;  
               glyph = "⃛";  
@@ -1041,7 +1036,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let commaInfix = 
              {character = Char ',';  
               glyph = ",";  
@@ -1050,7 +1045,7 @@
               priority = 40;  
               lspace= EM 0.<em>;  
               rspace = NamedLength ThinMathSpace;  
-              properties=["separator"; "linebreakstyle=after"]}
+              properties=[Separator true; LineBreakStyle  After]}
         let commercialAtInfix = 
              {character = Char '@';  
               glyph = "@";  
@@ -1140,7 +1135,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let correspondsToInfix = 
              {character = Unicode 0x2258;  
               glyph = "≘";  
@@ -1203,7 +1198,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let diamondOperatorInfix = 
              {character = Unicode 0x22C4;  
               glyph = "⋄";  
@@ -1257,7 +1252,7 @@
               priority = 265;  
               lspace = NamedLength MediumMathSpace;  
               rspace = NamedLength MediumMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let divisionTimesInfix = 
              {character = Unicode 0x22C7;  
               glyph = "⋇";  
@@ -1374,7 +1369,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let dotMinusInfix = 
              {character = Unicode 0x2238;  
               glyph = "∸";  
@@ -1428,7 +1423,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let doubleColonEqualInfix = 
              {character = Unicode 0x2A74;  
               glyph = "⩴";  
@@ -1464,7 +1459,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let doubleIntegralPrefix = 
              {character = Unicode 0x222C;  
               glyph = "∬";  
@@ -1473,7 +1468,7 @@
               priority = 300;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let doubleIntersectionInfix = 
              {character = Unicode 0x22D2;  
               glyph = "⋒";  
@@ -1491,7 +1486,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let doubleLineEqualToOrGreaterThanInfix = 
              {character = Unicode 0x2A9A;  
               glyph = "⪚";  
@@ -1572,7 +1567,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let doubleNestedGreaterThanInfix = 
              {character = Unicode 0x2AA2;  
               glyph = "⪢";  
@@ -1644,7 +1639,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let doubleRightArcLessThanBracketPostfix = 
              {character = Unicode 0x2996;  
               glyph = "⦖";  
@@ -1653,7 +1648,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let doubleSolidusOperatorInfix = 
              {character = Unicode 0x2AFD;  
               glyph = "⫽";  
@@ -1788,7 +1783,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"]}
+              properties=[Fence true; Stretchy true]}
         let doubleVerticalLinePrefix = 
              {character = Unicode 0x2016;  
               glyph = "‖";  
@@ -1797,7 +1792,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"]}
+              properties=[Fence true; Stretchy true]}
         let downFishTailInfix = 
              {character = Unicode 0x297F;  
               glyph = "⥿";  
@@ -1860,7 +1855,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsArrowInfix = 
              {character = Unicode 0x2193;  
               glyph = "↓";  
@@ -1869,7 +1864,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsArrowLeftwardsOfUpwardsArrowInfix = 
              {character = Unicode 0x21F5;  
               glyph = "⇵";  
@@ -1878,7 +1873,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsArrowToBarInfix = 
              {character = Unicode 0x2913;  
               glyph = "⤓";  
@@ -1887,7 +1882,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsArrowWithCornerLeftwardsInfix = 
              {character = Unicode 0x21B5;  
               glyph = "↵";  
@@ -1896,7 +1891,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsArrowWithDoubleStrokeInfix = 
              {character = Unicode 0x21DF;  
               glyph = "⇟";  
@@ -1923,7 +1918,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsArrowWithTipRightwardsInfix = 
              {character = Unicode 0x21B3;  
               glyph = "↳";  
@@ -1932,7 +1927,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsDashedArrowInfix = 
              {character = Unicode 0x21E3;  
               glyph = "⇣";  
@@ -1941,7 +1936,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsDoubleArrowInfix = 
              {character = Unicode 0x21D3;  
               glyph = "⇓";  
@@ -1950,7 +1945,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbLeftBesideDownwardsHarpoonWithBarbRightInfix = 
              {character = Unicode 0x2965;  
               glyph = "⥥";  
@@ -1968,7 +1963,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbLeftFromBarInfix = 
              {character = Unicode 0x2961;  
               glyph = "⥡";  
@@ -1977,7 +1972,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbLeftToBarInfix = 
              {character = Unicode 0x2959;  
               glyph = "⥙";  
@@ -1986,7 +1981,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbLeftwardsInfix = 
              {character = Unicode 0x21C3;  
               glyph = "⇃";  
@@ -1995,7 +1990,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbRightFromBarInfix = 
              {character = Unicode 0x295D;  
               glyph = "⥝";  
@@ -2004,7 +1999,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbRightToBarInfix = 
              {character = Unicode 0x2955;  
               glyph = "⥕";  
@@ -2013,7 +2008,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsHarpoonWithBarbRightwardsInfix = 
              {character = Unicode 0x21C2;  
               glyph = "⇂";  
@@ -2022,7 +2017,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsPairedArrowsInfix = 
              {character = Unicode 0x21CA;  
               glyph = "⇊";  
@@ -2031,7 +2026,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsQuadrupleArrowInfix = 
              {character = Unicode 0x27F1;  
               glyph = "⟱";  
@@ -2040,7 +2035,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsTripleArrowInfix = 
              {character = Unicode 0x290B;  
               glyph = "⤋";  
@@ -2049,7 +2044,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsTwoHeadedArrowInfix = 
              {character = Unicode 0x21A1;  
               glyph = "↡";  
@@ -2058,7 +2053,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsWhiteArrowInfix = 
              {character = Unicode 0x21E9;  
               glyph = "⇩";  
@@ -2067,7 +2062,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let downwardsZigzagArrowInfix = 
              {character = Unicode 0x21AF;  
               glyph = "↯";  
@@ -2076,7 +2071,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let elementOfInfix = 
              {character = Unicode 0x2208;  
               glyph = "∈";  
@@ -2229,7 +2224,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let equalsSignAboveTildeOperatorInfix = 
              {character = Unicode 0x2A73;  
               glyph = "⩳";  
@@ -2481,7 +2476,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let finitePartIntegralPrefix = 
              {character = Unicode 0x2A0D;  
               glyph = "⨍";  
@@ -2490,7 +2485,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let fisheyeInfix = 
              {character = Unicode 0x25C9;  
               glyph = "◉";  
@@ -2535,7 +2530,7 @@
               priority = 265;  
               lspace = NamedLength MediumMathSpace;  
               rspace = NamedLength MediumMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let fullStopInfix = 
              {character = Char  '.';  
               glyph = ".";  
@@ -2607,7 +2602,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let greaterThanAboveDoubleLineEqualAboveLessThanInfix = 
              {character = Unicode 0x2A8C;  
               glyph = "⪌";  
@@ -2634,7 +2629,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let greaterThanAboveSimilarAboveLessThanInfix = 
              {character = Unicode 0x2A90;  
               glyph = "⪐";  
@@ -3021,7 +3016,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralAverageWithSlashPrefix = 
              {character = Unicode 0x2A0F;  
               glyph = "⨏";  
@@ -3030,7 +3025,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralPrefix = 
              {character = Unicode 0x222B;  
               glyph = "∫";  
@@ -3039,7 +3034,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithDoubleStrokePrefix = 
              {character = Unicode 0x2A0E;  
               glyph = "⨎";  
@@ -3048,7 +3043,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithIntersectionPrefix = 
              {character = Unicode 0x2A19;  
               glyph = "⨙";  
@@ -3057,7 +3052,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithLeftwardsArrowWithHookPrefix = 
              {character = Unicode 0x2A17;  
               glyph = "⨗";  
@@ -3066,7 +3061,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithOverbarPrefix = 
              {character = Unicode 0x2A1B;  
               glyph = "⨛";  
@@ -3075,7 +3070,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithTimesSignPrefix = 
              {character = Unicode 0x2A18;  
               glyph = "⨘";  
@@ -3084,7 +3079,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithUnderbarPrefix = 
              {character = Unicode 0x2A1C;  
               glyph = "⨜";  
@@ -3093,7 +3088,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let integralWithUnionPrefix = 
              {character = Unicode 0x2A1A;  
               glyph = "⨚";  
@@ -3102,7 +3097,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let intercalateInfix = 
              {character = Unicode 0x22BA;  
               glyph = "⊺";  
@@ -3210,7 +3205,7 @@
               priority = 40;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["separator"; "linebreakstyle=after"]}
+              properties=[Separator true; LineBreakStyle  After]}
         let invisibleTimesInfix = 
              {character = Unicode 0x2062;  
               glyph = "⁢";  
@@ -3264,7 +3259,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let leftAngleBracketWithDotPrefix = 
              {character = Unicode 0x2991;  
               glyph = "⦑";  
@@ -3273,7 +3268,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftArcLessThanBracketPrefix = 
              {character = Unicode 0x2993;  
               glyph = "⦓";  
@@ -3282,7 +3277,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftBarbDownRightBarbDownHarpoonInfix = 
              {character = Unicode 0x2950;  
               glyph = "⥐";  
@@ -3291,7 +3286,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftBarbDownRightBarbUpHarpoonInfix = 
              {character = Unicode 0x294B;  
               glyph = "⥋";  
@@ -3300,7 +3295,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftBarbUpRightBarbDownHarpoonInfix = 
              {character = Unicode 0x294A;  
               glyph = "⥊";  
@@ -3309,7 +3304,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftBarbUpRightBarbUpHarpoonInfix = 
              {character = Unicode 0x294E;  
               glyph = "⥎";  
@@ -3318,7 +3313,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftBlackTortoiseShellBracketPrefix = 
              {character = Unicode 0x2997;  
               glyph = "⦗";  
@@ -3327,7 +3322,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftCeilingPrefix = 
              {character = Unicode 0x2308;  
               glyph = "⌈";  
@@ -3336,7 +3331,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftCurlyBracketPrefix = 
              {character = Char  '{';  
               glyph = "{";  
@@ -3345,7 +3340,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftDoubleQuotationMarkPrefix = 
              {character = Unicode 0x201C;  
               glyph = "“";  
@@ -3354,7 +3349,7 @@
               priority = 10;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"]}
+              properties=[Fence true]}
         let leftFishTailInfix = 
              {character = Unicode 0x297C;  
               glyph = "⥼";  
@@ -3363,7 +3358,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftFloorPrefix = 
              {character = Unicode 0x230A;  
               glyph = "⌊";  
@@ -3372,7 +3367,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftHalfBlackCircleInfix = 
              {character = Unicode 0x25D6;  
               glyph = "◖";  
@@ -3399,7 +3394,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftPointingAngleBracketPrefix = 
              {character = Unicode 0x2329;  
               glyph = "〈";  
@@ -3408,7 +3403,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftPointingCurvedAngleBracketPrefix = 
              {character = Unicode 0x29FC;  
               glyph = "⧼";  
@@ -3417,7 +3412,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftRightArrowInfix = 
              {character = Unicode 0x2194;  
               glyph = "↔";  
@@ -3426,7 +3421,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftRightArrowThroughSmallCircleInfix = 
              {character = Unicode 0x2948;  
               glyph = "⥈";  
@@ -3435,7 +3430,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftRightArrowWithDoubleVerticalStrokeInfix = 
              {character = Unicode 0x21FC;  
               glyph = "⇼";  
@@ -3444,7 +3439,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftRightArrowWithStrokeInfix = 
              {character = Unicode 0x21AE;  
               glyph = "↮";  
@@ -3453,7 +3448,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftRightArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x21F9;  
               glyph = "⇹";  
@@ -3462,7 +3457,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftRightDoubleArrowInfix = 
              {character = Unicode 0x21D4;  
               glyph = "⇔";  
@@ -3471,7 +3466,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftRightDoubleArrowWithStrokeInfix = 
              {character = Unicode 0x21CE;  
               glyph = "⇎";  
@@ -3480,7 +3475,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftRightDoubleArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x2904;  
               glyph = "⤄";  
@@ -3489,7 +3484,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftRightOpenHeadedArrowInfix = 
              {character = Unicode 0x21FF;  
               glyph = "⇿";  
@@ -3498,7 +3493,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftRightWaveArrowInfix = 
              {character = Unicode 0x21AD;  
               glyph = "↭";  
@@ -3507,7 +3502,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftSemidirectProductInfix = 
              {character = Unicode 0x22CB;  
               glyph = "⋋";  
@@ -3534,7 +3529,7 @@
               priority = 10;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"]}
+              properties=[Fence true]}
         let leftSquareBracketPrefix = 
              {character = Char  '[';  
               glyph = "[";  
@@ -3543,7 +3538,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftSquareBracketWithTickInBottomCornerPrefix = 
              {character = Unicode 0x298F;  
               glyph = "⦏";  
@@ -3552,7 +3547,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftSquareBracketWithTickInTopCornerPrefix = 
              {character = Unicode 0x298D;  
               glyph = "⦍";  
@@ -3561,7 +3556,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftSquareBracketWithUnderbarPrefix = 
              {character = Unicode 0x298B;  
               glyph = "⦋";  
@@ -3570,7 +3565,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftTackInfix = 
              {character = Unicode 0x22A3;  
               glyph = "⊣";  
@@ -3606,7 +3601,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowAboveTildeOperatorInfix = 
              {character = Unicode 0x2973;  
               glyph = "⥳";  
@@ -3615,7 +3610,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowFromBarInfix = 
              {character = Unicode 0x21A4;  
               glyph = "↤";  
@@ -3624,7 +3619,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowFromBarToBlackDiamondInfix = 
              {character = Unicode 0x291F;  
               glyph = "⤟";  
@@ -3633,7 +3628,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowInfix = 
              {character = Unicode 0x2190;  
               glyph = "←";  
@@ -3642,7 +3637,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowOverRightwardsArrowInfix = 
              {character = Unicode 0x21C6;  
               glyph = "⇆";  
@@ -3651,7 +3646,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowTailInfix = 
              {character = Unicode 0x2919;  
               glyph = "⤙";  
@@ -3660,7 +3655,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowThroughLessThanInfix = 
              {character = Unicode 0x2977;  
               glyph = "⥷";  
@@ -3669,7 +3664,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowThroughSubsetInfix = 
              {character = Unicode 0x297A;  
               glyph = "⥺";  
@@ -3678,7 +3673,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowToBarInfix = 
              {character = Unicode 0x21E4;  
               glyph = "⇤";  
@@ -3687,7 +3682,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowToBarOverRightwardsArrowToBarInfix = 
              {character = Unicode 0x21B9;  
               glyph = "↹";  
@@ -3696,7 +3691,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowToBlackDiamondInfix = 
              {character = Unicode 0x291D;  
               glyph = "⤝";  
@@ -3705,7 +3700,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowWithDoubleVerticalStrokeInfix = 
              {character = Unicode 0x21FA;  
               glyph = "⇺";  
@@ -3714,7 +3709,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowWithHookInfix = 
              {character = Unicode 0x21A9;  
               glyph = "↩";  
@@ -3723,7 +3718,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowWithLoopInfix = 
              {character = Unicode 0x21AB;  
               glyph = "↫";  
@@ -3732,7 +3727,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowWithPlusBelowInfix = 
              {character = Unicode 0x2946;  
               glyph = "⥆";  
@@ -3741,7 +3736,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowWithStrokeInfix = 
              {character = Unicode 0x219A;  
               glyph = "↚";  
@@ -3750,7 +3745,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsArrowWithTailInfix = 
              {character = Unicode 0x21A2;  
               glyph = "↢";  
@@ -3759,7 +3754,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x21F7;  
               glyph = "⇷";  
@@ -3768,7 +3763,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsDashedArrowInfix = 
              {character = Unicode 0x21E0;  
               glyph = "⇠";  
@@ -3777,7 +3772,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsDoubleArrowFromBarInfix = 
              {character = Unicode 0x2906;  
               glyph = "⤆";  
@@ -3786,7 +3781,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsDoubleArrowInfix = 
              {character = Unicode 0x21D0;  
               glyph = "⇐";  
@@ -3795,7 +3790,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsDoubleArrowTailInfix = 
              {character = Unicode 0x291B;  
               glyph = "⤛";  
@@ -3804,7 +3799,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsDoubleArrowWithStrokeInfix = 
              {character = Unicode 0x21CD;  
               glyph = "⇍";  
@@ -3813,7 +3808,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsDoubleArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x2902;  
               glyph = "⤂";  
@@ -3822,7 +3817,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsDoubleDashArrowInfix = 
              {character = Unicode 0x290C;  
               glyph = "⤌";  
@@ -3831,7 +3826,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsHarpoonOverRightwardsHarpoonInfix = 
              {character = Unicode 0x21CB;  
               glyph = "⇋";  
@@ -3840,7 +3835,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsHarpoonWithBarbDownAboveRightwardsHarpoonWithBarbDownInfix = 
              {character = Unicode 0x2967;  
               glyph = "⥧";  
@@ -3849,7 +3844,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsHarpoonWithBarbDownBelowLongDashInfix = 
              {character = Unicode 0x296B;  
               glyph = "⥫";  
@@ -3858,7 +3853,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsHarpoonWithBarbDownFromBarInfix = 
              {character = Unicode 0x295E;  
               glyph = "⥞";  
@@ -3867,7 +3862,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsHarpoonWithBarbDownToBarInfix = 
              {character = Unicode 0x2956;  
               glyph = "⥖";  
@@ -3876,7 +3871,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let leftwardsHarpoonWithBarbDownwardsInfix = 
              {character = Unicode 0x21BD;  
               glyph = "↽";  
@@ -3885,7 +3880,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsHarpoonWithBarbUpAboveLeftwardsHarpoonWithBarbDownInfix = 
              {character = Unicode 0x2962;  
               glyph = "⥢";  
@@ -3894,7 +3889,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsHarpoonWithBarbUpAboveLongDashInfix = 
              {character = Unicode 0x296A;  
               glyph = "⥪";  
@@ -3903,7 +3898,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsHarpoonWithBarbUpAboveRightwardsHarpoonWithBarbUpInfix = 
              {character = Unicode 0x2966;  
               glyph = "⥦";  
@@ -3912,7 +3907,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let leftwardsHarpoonWithBarbUpFromBarInfix = 
              {character = Unicode 0x295A;  
               glyph = "⥚";  
@@ -3921,7 +3916,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsHarpoonWithBarbUpToBarInfix = 
              {character = Unicode 0x2952;  
               glyph = "⥒";  
@@ -3930,7 +3925,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsHarpoonWithBarbUpwardsInfix = 
              {character = Unicode 0x21BC;  
               glyph = "↼";  
@@ -3939,7 +3934,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsOpenHeadedArrowInfix = 
              {character = Unicode 0x21FD;  
               glyph = "⇽";  
@@ -3948,7 +3943,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsPairedArrowsInfix = 
              {character = Unicode 0x21C7;  
               glyph = "⇇";  
@@ -3957,7 +3952,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsQuadrupleArrowInfix = 
              {character = Unicode 0x2B45;  
               glyph = "⭅";  
@@ -3966,7 +3961,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let leftwardsSquiggleArrowInfix = 
              {character = Unicode 0x21DC;  
               glyph = "⇜";  
@@ -3975,7 +3970,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsTripleArrowInfix = 
              {character = Unicode 0x21DA;  
               glyph = "⇚";  
@@ -3984,7 +3979,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsTripleDashArrowInfix = 
              {character = Unicode 0x290E;  
               glyph = "⤎";  
@@ -3993,7 +3988,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsTwoHeadedArrowInfix = 
              {character = Unicode 0x219E;  
               glyph = "↞";  
@@ -4002,7 +3997,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsWaveArrowInfix = 
              {character = Unicode 0x219C;  
               glyph = "↜";  
@@ -4011,7 +4006,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftwardsWhiteArrowInfix = 
              {character = Unicode 0x21E6;  
               glyph = "⇦";  
@@ -4020,7 +4015,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let leftWhiteCurlyBracketPrefix = 
              {character = Unicode 0x2983;  
               glyph = "⦃";  
@@ -4029,7 +4024,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftWhiteParenthesisPrefix = 
              {character = Unicode 0x2985;  
               glyph = "⦅";  
@@ -4038,7 +4033,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let leftWigglyFenceInfix = 
              {character = Unicode 0x29D8;  
               glyph = "⧘";  
@@ -4074,7 +4069,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let lessThanAboveSimilarAboveGreaterThanInfix = 
              {character = Unicode 0x2A8F;  
               glyph = "⪏";  
@@ -4308,7 +4303,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let lightRightTortoiseShellBracketOrnamentPostfix = 
              {character = Unicode 0x2773;  
               glyph = "❳";  
@@ -4317,7 +4312,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let lightVerticalBarInfix = 
              {character = Unicode 0x2758;  
               glyph = "❘";  
@@ -4335,7 +4330,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let lineIntegrationWithRectangularPathAroundPolePrefix = 
              {character = Unicode 0x2A12;  
               glyph = "⨒";  
@@ -4344,7 +4339,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let lineIntegrationWithSemicircularPathAroundPolePrefix = 
              {character = Unicode 0x2A13;  
               glyph = "⨓";  
@@ -4353,7 +4348,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let logicalAndInfix = 
              {character = Unicode 0x2227;  
               glyph = "∧";  
@@ -4497,7 +4492,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longLeftRightDoubleArrowInfix = 
              {character = Unicode 0x27FA;  
               glyph = "⟺";  
@@ -4506,7 +4501,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longLeftwardsArrowFromBarInfix = 
              {character = Unicode 0x27FB;  
               glyph = "⟻";  
@@ -4515,7 +4510,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longLeftwardsArrowInfix = 
              {character = Unicode 0x27F5;  
               glyph = "⟵";  
@@ -4524,7 +4519,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longLeftwardsDoubleArrowFromBarInfix = 
              {character = Unicode 0x27FD;  
               glyph = "⟽";  
@@ -4533,7 +4528,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longLeftwardsDoubleArrowInfix = 
              {character = Unicode 0x27F8;  
               glyph = "⟸";  
@@ -4542,7 +4537,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longRightwardsArrowFromBarInfix = 
              {character = Unicode 0x27FC;  
               glyph = "⟼";  
@@ -4551,7 +4546,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longRightwardsArrowInfix = 
              {character = Unicode 0x27F6;  
               glyph = "⟶";  
@@ -4560,7 +4555,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longRightwardsDoubleArrowFromBarInfix = 
              {character = Unicode 0x27FE;  
               glyph = "⟾";  
@@ -4569,7 +4564,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longRightwardsDoubleArrowInfix = 
              {character = Unicode 0x27F9;  
               glyph = "⟹";  
@@ -4578,7 +4573,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let longRightwardsSquiggleArrowInfix = 
              {character = Unicode 0x27FF;  
               glyph = "⟿";  
@@ -4587,7 +4582,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let lowerLeftSemicircularAnticlockwiseArrowInfix = 
              {character = Unicode 0x293F;  
               glyph = "⤿";  
@@ -4623,7 +4618,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let macronPostfix = 
              {character = Unicode 0xAF;  
               glyph = "¯";  
@@ -4632,7 +4627,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let masculineOrdinalIndicatorPostfix = 
              {character = Unicode 0xBA;  
               glyph = "º";  
@@ -4641,7 +4636,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let mathematicalLeftAngleBracketPrefix = 
              {character = Unicode 0x27E8;  
               glyph = "⟨";  
@@ -4650,7 +4645,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalLeftDoubleAngleBracketPrefix = 
              {character = Unicode 0x27EA;  
               glyph = "⟪";  
@@ -4659,7 +4654,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalLeftFlattenedParenthesisPrefix = 
              {character = Unicode 0x27EE;  
               glyph = "⟮";  
@@ -4668,7 +4663,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalLeftWhiteSquareBracketPrefix = 
              {character = Unicode 0x27E6;  
               glyph = "⟦";  
@@ -4677,7 +4672,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalLeftWhiteTortoiseShellBracketPrefix = 
              {character = Unicode 0x27EC;  
               glyph = "⟬";  
@@ -4686,7 +4681,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalRightAngleBracketPostfix = 
              {character = Unicode 0x27E9;  
               glyph = "⟩";  
@@ -4695,7 +4690,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalRightDoubleAngleBracketPostfix = 
              {character = Unicode 0x27EB;  
               glyph = "⟫";  
@@ -4704,7 +4699,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalRightFlattenedParenthesisPostfix = 
              {character = Unicode 0x27EF;  
               glyph = "⟯";  
@@ -4713,7 +4708,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalRightWhiteSquareBracketPostfix = 
              {character = Unicode 0x27E7;  
               glyph = "⟧";  
@@ -4722,7 +4717,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let mathematicalRightWhiteTortoiseShellBracketPostfix = 
              {character = Unicode 0x27ED;  
               glyph = "⟭";  
@@ -4731,7 +4726,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let measuredAngleOpeningLeftInfix = 
              {character = Unicode 0x299B;  
               glyph = "⦛";  
@@ -4983,7 +4978,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let modifierLetterCircumflexAccentPostfix = 
              {character = Unicode 0x2C6;  
               glyph = "ˆ";  
@@ -4992,7 +4987,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let modifierLetterGraveAccentPostfix = 
              {character = Unicode 0x2CB;  
               glyph = "ˋ";  
@@ -5001,7 +4996,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let modifierLetterLowMacronPostfix = 
              {character = Unicode 0x2CD;  
               glyph = "ˍ";  
@@ -5010,7 +5005,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let modifierLetterLowTildePostfix = 
              {character = Unicode 0x2F7;  
               glyph = "˷";  
@@ -5019,7 +5014,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let modifierLetterMacronPostfix = 
              {character = Unicode 0x2C9;  
               glyph = "ˉ";  
@@ -5028,7 +5023,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let moduloTwoSumPrefix = 
              {character = Unicode 0x2A0A;  
               glyph = "⨊";  
@@ -5037,7 +5032,7 @@
               priority = 290;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let muchGreaterThanInfix = 
              {character = Unicode 0x226B;  
               glyph = "≫";  
@@ -5127,7 +5122,7 @@
               priority = 270;  
               lspace = NamedLength VeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let multipleCharacterOperatorEqualsEqualsInfix = 
              {character = UnicodeArray [| Char  '='; Char '='|];  
               glyph = "==";  
@@ -5244,7 +5239,7 @@
               priority = 270;  
               lspace = NamedLength VeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let multipleCharacterOperatorTwoAmpersandInfix = 
              {character = UnicodeArray [| Char  '&'; Char '&'|];  
               glyph = "&&";  
@@ -5280,7 +5275,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let multipleCharacterThreeVerticalLineOperatorPrefix = 
              {character = UnicodeArray [| Char  '|'; Char '|'; Char '|'|];  
               glyph = "|||";  
@@ -5289,7 +5284,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let multipleCharacterTwoVerticalLineOperatorPostfix = 
              {character = UnicodeArray [| Char  '|'; Char '|'|];  
               glyph = "||";  
@@ -5298,7 +5293,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let multipleCharacterTwoVerticalLineOperatorPrefix = 
              {character = UnicodeArray [| Char  '|'; Char '|'|];  
               glyph = "||";  
@@ -5307,7 +5302,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let multiplicationSignInDoubleCircleInfix = 
              {character = Unicode 0x2A37;  
               glyph = "⨷";  
@@ -5451,7 +5446,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryCircledPlusOperatorPrefix = 
              {character = Unicode 0x2A01;  
               glyph = "⨁";  
@@ -5460,7 +5455,7 @@
               priority = 300;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryCircledTimesOperatorPrefix = 
              {character = Unicode 0x2A02;  
               glyph = "⨂";  
@@ -5469,7 +5464,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryCoproductPrefix = 
              {character = Unicode 0x2210;  
               glyph = "∐";  
@@ -5478,7 +5473,7 @@
               priority = 350;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryIntersectionPrefix = 
              {character = Unicode 0x22C2;  
               glyph = "⋂";  
@@ -5487,7 +5482,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryLogicalAndPrefix = 
              {character = Unicode 0x22C0;  
               glyph = "⋀";  
@@ -5496,7 +5491,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryLogicalOrPrefix = 
              {character = Unicode 0x22C1;  
               glyph = "⋁";  
@@ -5505,7 +5500,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryProductPrefix = 
              {character = Unicode 0x220F;  
               glyph = "∏";  
@@ -5514,7 +5509,7 @@
               priority = 350;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nArySquareIntersectionOperatorPrefix = 
              {character = Unicode 0x2A05;  
               glyph = "⨅";  
@@ -5523,7 +5518,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nArySquareUnionOperatorPrefix = 
              {character = Unicode 0x2A06;  
               glyph = "⨆";  
@@ -5532,7 +5527,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nArySummationPrefix = 
              {character = Unicode 0x2211;  
               glyph = "∑";  
@@ -5541,7 +5536,7 @@
               priority = 290;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryTimesOperatorPrefix = 
              {character = Unicode 0x2A09;  
               glyph = "⨉";  
@@ -5550,7 +5545,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryUnionOperatorWithDotPrefix = 
              {character = Unicode 0x2A03;  
               glyph = "⨃";  
@@ -5559,7 +5554,7 @@
               priority = 320;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryUnionOperatorWithPlusPrefix = 
              {character = Unicode 0x2A04;  
               glyph = "⨄";  
@@ -5568,7 +5563,7 @@
               priority = 320;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryUnionPrefix = 
              {character = Unicode 0x22C3;  
               glyph = "⋃";  
@@ -5577,7 +5572,7 @@
               priority = 320;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let nAryWhiteVerticalBarPrefix = 
              {character = Unicode 0x2AFF;  
               glyph = "⫿";  
@@ -5586,7 +5581,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let negatedDoubleVerticalBarDoubleRightTurnstileInfix = 
              {character = Unicode 0x22AF;  
               glyph = "⊯";  
@@ -5730,7 +5725,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let northEastArrowAndSouthEastArrowInfix = 
              {character = Unicode 0x2928;  
               glyph = "⤨";  
@@ -5766,7 +5761,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let northEastArrowWithHookInfix = 
              {character = Unicode 0x2924;  
               glyph = "⤤";  
@@ -5784,7 +5779,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let northWestAndSouthEastArrowInfix = 
              {character = Unicode 0x2921;  
               glyph = "⤡";  
@@ -5793,7 +5788,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let northWestArrowAndNorthEastArrowInfix = 
              {character = Unicode 0x2927;  
               glyph = "⤧";  
@@ -5820,7 +5815,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let northWestArrowToCornerInfix = 
              {character = Unicode 0x21F1;  
               glyph = "⇱";  
@@ -5856,7 +5851,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let notAlmostEqualToInfix = 
              {character = Unicode 0x2249;  
               glyph = "≉";  
@@ -6054,7 +6049,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let parallelToInfix = 
              {character = Unicode 0x2225;  
               glyph = "∥";  
@@ -6405,7 +6400,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let quadruplePrimePostfix = 
              {character = Unicode 0x2057;  
               glyph = "⁗";  
@@ -6414,7 +6409,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let quaternionIntegralOperatorPrefix = 
              {character = Unicode 0x2A16;  
               glyph = "⨖";  
@@ -6423,7 +6418,7 @@
               priority = 310;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let questionedEqualToInfix = 
              {character = Unicode 0x225F;  
               glyph = "≟";  
@@ -6450,7 +6445,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let ratioInfix = 
              {character = Unicode 0x2236;  
               glyph = "∶";  
@@ -6486,7 +6481,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let reversedDoubleStrokeNotSignInfix = 
              {character = Unicode 0x2AED;  
               glyph = "⫭";  
@@ -6513,7 +6508,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let reversedTildeEqualsInfix = 
              {character = Unicode 0x22CD;  
               glyph = "⋍";  
@@ -6549,7 +6544,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let reverseSolidusInfix = 
              {character = Char '\\';  
               glyph = @"\";  
@@ -6585,7 +6580,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightAngleInfix = 
              {character = Unicode 0x221F;  
               glyph = "∟";  
@@ -6621,7 +6616,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightArrowWithSmallCircleInfix = 
              {character = Unicode 0x21F4;  
               glyph = "⇴";  
@@ -6630,7 +6625,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightBlackTortoiseShellBracketPostfix = 
              {character = Unicode 0x2998;  
               glyph = "⦘";  
@@ -6639,7 +6634,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightCeilingPostfix = 
              {character = Unicode 0x2309;  
               glyph = "⌉";  
@@ -6648,7 +6643,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightCurlyBracketPostfix = 
              {character = Char  '}';  
               glyph = "}";  
@@ -6657,7 +6652,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightDoubleArrowWithRoundedHeadInfix = 
              {character = Unicode 0x2970;  
               glyph = "⥰";  
@@ -6666,7 +6661,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightDoubleQuotationMarkPostfix = 
              {character = Unicode 0x201D;  
               glyph = "”";  
@@ -6675,7 +6670,7 @@
               priority = 10;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"]}
+              properties=[Fence true]}
         let rightDoubleWigglyFenceInfix = 
              {character = Unicode 0x29DB;  
               glyph = "⧛";  
@@ -6693,7 +6688,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightFloorPostfix = 
              {character = Unicode 0x230B;  
               glyph = "⌋";  
@@ -6702,7 +6697,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightHalfBlackCircleInfix = 
              {character = Unicode 0x25D7;  
               glyph = "◗";  
@@ -6738,7 +6733,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightPointingAngleBracketPostfix = 
              {character = Unicode 0x232A;  
               glyph = "〉";  
@@ -6747,7 +6742,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightPointingCurvedAngleBracketPostfix = 
              {character = Unicode 0x29FD;  
               glyph = "⧽";  
@@ -6756,7 +6751,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightSemidirectProductInfix = 
              {character = Unicode 0x22CC;  
               glyph = "⋌";  
@@ -6783,7 +6778,7 @@
               priority = 10;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"]}
+              properties=[Fence true]}
         let rightSquareBracketPostfix = 
              {character = Char  ']';  
               glyph = "]";  
@@ -6792,7 +6787,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightSquareBracketWithTickInBottomCornerPostfix = 
              {character = Unicode 0x298E;  
               glyph = "⦎";  
@@ -6801,7 +6796,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightSquareBracketWithTickInTopCornerPostfix = 
              {character = Unicode 0x2990;  
               glyph = "⦐";  
@@ -6810,7 +6805,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightSquareBracketWithUnderbarPostfix = 
              {character = Unicode 0x298C;  
               glyph = "⦌";  
@@ -6819,7 +6814,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightTackInfix = 
              {character = Unicode 0x22A2;  
               glyph = "⊢";  
@@ -6855,7 +6850,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowAboveShortLeftwardsArrowInfix = 
              {character = Unicode 0x2942;  
               glyph = "⥂";  
@@ -6864,7 +6859,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowAboveTildeOperatorInfix = 
              {character = Unicode 0x2974;  
               glyph = "⥴";  
@@ -6873,7 +6868,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowFromBarInfix = 
              {character = Unicode 0x21A6;  
               glyph = "↦";  
@@ -6882,7 +6877,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowFromBarToBlackDiamondInfix = 
              {character = Unicode 0x2920;  
               glyph = "⤠";  
@@ -6891,7 +6886,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowInfix = 
              {character = Unicode 0x2192;  
               glyph = "→";  
@@ -6900,7 +6895,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowOverLeftwardsArrowInfix = 
              {character = Unicode 0x21C4;  
               glyph = "⇄";  
@@ -6909,7 +6904,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowTailInfix = 
              {character = Unicode 0x291A;  
               glyph = "⤚";  
@@ -6918,7 +6913,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowThroughXInfix = 
              {character = Unicode 0x2947;  
               glyph = "⥇";  
@@ -6927,7 +6922,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowToBarInfix = 
              {character = Unicode 0x21E5;  
               glyph = "⇥";  
@@ -6936,7 +6931,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowToBlackDiamondInfix = 
              {character = Unicode 0x291E;  
               glyph = "⤞";  
@@ -6945,7 +6940,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithCornerDownwardsInfix = 
              {character = Unicode 0x21B4;  
               glyph = "↴";  
@@ -6954,7 +6949,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let rightwardsArrowWithDottedStemInfix = 
              {character = Unicode 0x2911;  
               glyph = "⤑";  
@@ -6963,7 +6958,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithDoubleVerticalStrokeInfix = 
              {character = Unicode 0x21FB;  
               glyph = "⇻";  
@@ -6972,7 +6967,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithHookInfix = 
              {character = Unicode 0x21AA;  
               glyph = "↪";  
@@ -6981,7 +6976,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowWithLoopInfix = 
              {character = Unicode 0x21AC;  
               glyph = "↬";  
@@ -6990,7 +6985,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowWithPlusBelowInfix = 
              {character = Unicode 0x2945;  
               glyph = "⥅";  
@@ -6999,7 +6994,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithStrokeInfix = 
              {character = Unicode 0x219B;  
               glyph = "↛";  
@@ -7008,7 +7003,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithTailInfix = 
              {character = Unicode 0x21A3;  
               glyph = "↣";  
@@ -7017,7 +7012,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsArrowWithTailWithDoubleVerticalStrokeInfix = 
              {character = Unicode 0x2915;  
               glyph = "⤕";  
@@ -7026,7 +7021,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithTailWithVerticalStrokeInfix = 
              {character = Unicode 0x2914;  
               glyph = "⤔";  
@@ -7035,7 +7030,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x21F8;  
               glyph = "⇸";  
@@ -7044,7 +7039,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsDashedArrowInfix = 
              {character = Unicode 0x21E2;  
               glyph = "⇢";  
@@ -7053,7 +7048,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsDoubleArrowFromBarInfix = 
              {character = Unicode 0x2907;  
               glyph = "⤇";  
@@ -7062,7 +7057,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsDoubleArrowInfix = 
              {character = Unicode 0x21D2;  
               glyph = "⇒";  
@@ -7071,7 +7066,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsDoubleArrowTailInfix = 
              {character = Unicode 0x291C;  
               glyph = "⤜";  
@@ -7080,7 +7075,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsDoubleArrowWithStrokeInfix = 
              {character = Unicode 0x21CF;  
               glyph = "⇏";  
@@ -7089,7 +7084,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsDoubleArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x2903;  
               glyph = "⤃";  
@@ -7098,7 +7093,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsDoubleDashArrowInfix = 
              {character = Unicode 0x290D;  
               glyph = "⤍";  
@@ -7107,7 +7102,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsHarpoonOverLeftwardsHarpoonInfix = 
              {character = Unicode 0x21CC;  
               glyph = "⇌";  
@@ -7116,7 +7111,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsHarpoonWithBarbDownAboveLeftwardsHarpoonWithBarbDownInfix = 
              {character = Unicode 0x2969;  
               glyph = "⥩";  
@@ -7125,7 +7120,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsHarpoonWithBarbDownBelowLongDashInfix = 
              {character = Unicode 0x296D;  
               glyph = "⥭";  
@@ -7134,7 +7129,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsHarpoonWithBarbDownFromBarInfix = 
              {character = Unicode 0x295F;  
               glyph = "⥟";  
@@ -7143,7 +7138,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsHarpoonWithBarbDownToBarInfix = 
              {character = Unicode 0x2957;  
               glyph = "⥗";  
@@ -7152,7 +7147,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let rightwardsHarpoonWithBarbDownwardsInfix = 
              {character = Unicode 0x21C1;  
               glyph = "⇁";  
@@ -7161,7 +7156,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsHarpoonWithBarbUpAboveLeftwardsHarpoonWithBarbUpInfix = 
              {character = Unicode 0x2968;  
               glyph = "⥨";  
@@ -7170,7 +7165,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsHarpoonWithBarbUpAboveLongDashInfix = 
              {character = Unicode 0x296C;  
               glyph = "⥬";  
@@ -7179,7 +7174,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsHarpoonWithBarbUpAboveRightwardsHarpoonWithBarbDownInfix = 
              {character = Unicode 0x2964;  
               glyph = "⥤";  
@@ -7188,7 +7183,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsHarpoonWithBarbUpFromBarInfix = 
              {character = Unicode 0x295B;  
               glyph = "⥛";  
@@ -7197,7 +7192,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsHarpoonWithBarbUpToBarInfix = 
              {character = Unicode 0x2953;  
               glyph = "⥓";  
@@ -7206,7 +7201,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsHarpoonWithBarbUpwardsInfix = 
              {character = Unicode 0x21C0;  
               glyph = "⇀";  
@@ -7215,7 +7210,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsOpenHeadedArrowInfix = 
              {character = Unicode 0x21FE;  
               glyph = "⇾";  
@@ -7224,7 +7219,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsPairedArrowsInfix = 
              {character = Unicode 0x21C9;  
               glyph = "⇉";  
@@ -7233,7 +7228,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsQuadrupleArrowInfix = 
              {character = Unicode 0x2B46;  
               glyph = "⭆";  
@@ -7242,7 +7237,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let rightwardsSquiggleArrowInfix = 
              {character = Unicode 0x21DD;  
               glyph = "⇝";  
@@ -7251,7 +7246,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsTripleArrowInfix = 
              {character = Unicode 0x21DB;  
               glyph = "⇛";  
@@ -7260,7 +7255,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsTripleDashArrowInfix = 
              {character = Unicode 0x290F;  
               glyph = "⤏";  
@@ -7269,7 +7264,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsTwoHeadedArrowFromBarInfix = 
              {character = Unicode 0x2905;  
               glyph = "⤅";  
@@ -7278,7 +7273,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsTwoHeadedArrowInfix = 
              {character = Unicode 0x21A0;  
               glyph = "↠";  
@@ -7287,7 +7282,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsTwoHeadedArrowWithDoubleVerticalStrokeInfix = 
              {character = Unicode 0x2901;  
               glyph = "⤁";  
@@ -7296,7 +7291,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsTwoHeadedArrowWithTailInfix = 
              {character = Unicode 0x2916;  
               glyph = "⤖";  
@@ -7305,7 +7300,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsTwoHeadedArrowWithTailWithDoubleVerticalStrokeInfix = 
              {character = Unicode 0x2918;  
               glyph = "⤘";  
@@ -7314,7 +7309,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsTwoHeadedArrowWithTailWithVerticalStrokeInfix = 
              {character = Unicode 0x2917;  
               glyph = "⤗";  
@@ -7323,7 +7318,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsTwoHeadedArrowWithVerticalStrokeInfix = 
              {character = Unicode 0x2900;  
               glyph = "⤀";  
@@ -7332,7 +7327,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let rightwardsTwoHeadedTripleDashArrowInfix = 
              {character = Unicode 0x2910;  
               glyph = "⤐";  
@@ -7341,7 +7336,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsWaveArrowInfix = 
              {character = Unicode 0x219D;  
               glyph = "↝";  
@@ -7350,7 +7345,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsWhiteArrowFromWallInfix = 
              {character = Unicode 0x21F0;  
               glyph = "⇰";  
@@ -7359,7 +7354,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightwardsWhiteArrowInfix = 
              {character = Unicode 0x21E8;  
               glyph = "⇨";  
@@ -7368,7 +7363,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let rightWhiteCurlyBracketPostfix = 
              {character = Unicode 0x2984;  
               glyph = "⦄";  
@@ -7377,7 +7372,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightWhiteParenthesisPostfix = 
              {character = Unicode 0x2986;  
               glyph = "⦆";  
@@ -7386,7 +7381,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let rightWigglyFenceInfix = 
              {character = Unicode 0x29D9;  
               glyph = "⧙";  
@@ -7404,7 +7399,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let ringEqualToInfix = 
              {character = Unicode 0x2257;  
               glyph = "≗";  
@@ -7467,7 +7462,7 @@
               priority = 30;  
               lspace= EM 0.<em>;  
               rspace = NamedLength ThinMathSpace;  
-              properties=["separator"; "linebreakstyle=after"]}
+              properties=[Separator true; LineBreakStyle  After]}
         let semidirectProductWithBottomClosedInfix = 
              {character = Unicode 0x2A32;  
               glyph = "⨲";  
@@ -7521,7 +7516,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let shortUpTackAboveShortDownTackInfix = 
              {character = Unicode 0x2AE9;  
               glyph = "⫩";  
@@ -7620,7 +7615,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let singleLow9QuotationMarkPostfix = 
              {character = Unicode 0x201A;  
               glyph = "‚";  
@@ -7629,7 +7624,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let sInTriangleInfix = 
              {character = Unicode 0x29CC;  
               glyph = "⧌";  
@@ -7773,7 +7768,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let smallVeeWithUnderbarInfix = 
              {character = Unicode 0x2A61;  
               glyph = "⩡";  
@@ -7836,7 +7831,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let southEastArrowToCornerInfix = 
              {character = Unicode 0x21F2;  
               glyph = "⇲";  
@@ -7863,7 +7858,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let southWestArrowAndNorthWestArrowInfix = 
              {character = Unicode 0x292A;  
               glyph = "⤪";  
@@ -7881,7 +7876,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let southWestArrowWithHookInfix = 
              {character = Unicode 0x2926;  
               glyph = "⤦";  
@@ -7899,7 +7894,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let sphericalAngleOpeningLeftInfix = 
              {character = Unicode 0x29A0;  
               glyph = "⦠";  
@@ -8124,7 +8119,7 @@
               priority = 845;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let squareWithContouredOutlineInfix = 
              {character = Unicode 0x29E0;  
               glyph = "⧠";  
@@ -8169,7 +8164,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let subsetAboveSubsetInfix = 
              {character = Unicode 0x2AD5;  
               glyph = "⫕";  
@@ -8421,7 +8416,7 @@
               priority = 290;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let superscriptOnePostfix = 
              {character = Unicode 0xB9;  
               glyph = "¹";  
@@ -8430,7 +8425,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let superscriptThreePostfix = 
              {character = Unicode 0xB3;  
               glyph = "³";  
@@ -8439,7 +8434,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let superscriptTwoPostfix = 
              {character = Unicode 0xB2;  
               glyph = "²";  
@@ -8448,7 +8443,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let supersetAboveLeftwardsArrowInfix = 
              {character = Unicode 0x297B;  
               glyph = "⥻";  
@@ -8457,7 +8452,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let supersetAboveSubsetInfix = 
              {character = Unicode 0x2AD4;  
               glyph = "⫔";  
@@ -8610,7 +8605,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let thereDoesNotExistPrefix = 
              {character = Unicode 0x2204;  
               glyph = "∄";  
@@ -8664,7 +8659,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let tieOverInfinityInfix = 
              {character = Unicode 0x29DD;  
               glyph = "⧝";  
@@ -8682,7 +8677,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let tildeOperatorInfix = 
              {character = Unicode 0x223C;  
               glyph = "∼";  
@@ -8718,7 +8713,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let timesWithLeftHalfBlackInfix = 
              {character = Unicode 0x29D4;  
               glyph = "⧔";  
@@ -8754,7 +8749,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let topArcAnticlockwiseArrowWithPlusInfix = 
              {character = Unicode 0x293D;  
               glyph = "⤽";  
@@ -8763,7 +8758,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let topArcClockwiseArrowWithMinusInfix = 
              {character = Unicode 0x293C;  
               glyph = "⤼";  
@@ -8772,7 +8767,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let topCurlyBracketPostfix = 
              {character = Unicode 0x23DE;  
               glyph = "⏞";  
@@ -8781,7 +8776,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let topParenthesisPostfix = 
              {character = Unicode 0x23DC;  
               glyph = "⏜";  
@@ -8790,7 +8785,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let topSquareBracketPostfix = 
              {character = Unicode 0x23B4;  
               glyph = "⎴";  
@@ -8799,7 +8794,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let topTortoiseShellBracketPostfix = 
              {character = Unicode 0x23E0;  
               glyph = "⏠";  
@@ -8808,7 +8803,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let transversalIntersectionInfix = 
              {character = Unicode 0x2ADB;  
               glyph = "⫛";  
@@ -8880,7 +8875,7 @@
               priority = 300;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let tripleNestedGreaterThanInfix = 
              {character = Unicode 0x2AF8;  
               glyph = "⫸";  
@@ -8916,7 +8911,7 @@
               priority = 880;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let tripleSolidusBinaryRelationInfix = 
              {character = Unicode 0x2AFB;  
               glyph = "⫻";  
@@ -8952,7 +8947,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"]}
+              properties=[Fence true; Stretchy true]}
         let tripleVerticalBarDelimiterPrefix = 
              {character = Unicode 0x2980;  
               glyph = "⦀";  
@@ -8961,7 +8956,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"]}
+              properties=[Fence true; Stretchy true]}
         let tripleVerticalBarRightTurnstileInfix = 
              {character = Unicode 0x22AA;  
               glyph = "⊪";  
@@ -9042,7 +9037,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let twoLogicalOrOperatorPrefix = 
              {character = Unicode 0x2A08;  
               glyph = "⨈";  
@@ -9051,7 +9046,7 @@
               priority = 330;  
               lspace = NamedLength VeryVeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["largeop"; "movablelimits"; "symmetric"]}
+              properties=[LargeOp true; MovableLimits true; Symmetric true]}
         let unionAboveBarAboveIntersectionInfix = 
              {character = Unicode 0x2A48;  
               glyph = "⩈";  
@@ -9132,7 +9127,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upBarbLeftDownBarbRightHarpoonInfix = 
              {character = Unicode 0x294D;  
               glyph = "⥍";  
@@ -9159,7 +9154,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upDownArrowInfix = 
              {character = Unicode 0x2195;  
               glyph = "↕";  
@@ -9168,7 +9163,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upDownArrowWithBaseInfix = 
              {character = Unicode 0x21A8;  
               glyph = "↨";  
@@ -9177,7 +9172,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upDownDoubleArrowInfix = 
              {character = Unicode 0x21D5;  
               glyph = "⇕";  
@@ -9186,7 +9181,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upDownWhiteArrowInfix = 
              {character = Unicode 0x21F3;  
               glyph = "⇳";  
@@ -9195,7 +9190,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upFishTailInfix = 
              {character = Unicode 0x297E;  
               glyph = "⥾";  
@@ -9231,7 +9226,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsArrowInfix = 
              {character = Unicode 0x2191;  
               glyph = "↑";  
@@ -9240,7 +9235,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsArrowLeftwardsOfDownwardsArrowInfix = 
              {character = Unicode 0x21C5;  
               glyph = "⇅";  
@@ -9249,7 +9244,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsArrowToBarInfix = 
              {character = Unicode 0x2912;  
               glyph = "⤒";  
@@ -9258,7 +9253,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsArrowWithDoubleStrokeInfix = 
              {character = Unicode 0x21DE;  
               glyph = "⇞";  
@@ -9285,7 +9280,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsArrowWithTipRightwardsInfix = 
              {character = Unicode 0x21B1;  
               glyph = "↱";  
@@ -9294,7 +9289,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsDashedArrowInfix = 
              {character = Unicode 0x21E1;  
               glyph = "⇡";  
@@ -9303,7 +9298,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsDoubleArrowInfix = 
              {character = Unicode 0x21D1;  
               glyph = "⇑";  
@@ -9312,7 +9307,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbLeftBesideDownwardsHarpoonWithBarbRightInfix = 
              {character = Unicode 0x296E;  
               glyph = "⥮";  
@@ -9321,7 +9316,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbLeftBesideUpwardsHarpoonWithBarbRightInfix = 
              {character = Unicode 0x2963;  
               glyph = "⥣";  
@@ -9339,7 +9334,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbLeftToBarInfix = 
              {character = Unicode 0x2958;  
               glyph = "⥘";  
@@ -9348,7 +9343,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbLeftwardsInfix = 
              {character = Unicode 0x21BF;  
               glyph = "↿";  
@@ -9357,7 +9352,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbRightFromBarInfix = 
              {character = Unicode 0x295C;  
               glyph = "⥜";  
@@ -9366,7 +9361,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbRightToBarInfix = 
              {character = Unicode 0x2954;  
               glyph = "⥔";  
@@ -9375,7 +9370,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsHarpoonWithBarbRightwardsInfix = 
              {character = Unicode 0x21BE;  
               glyph = "↾";  
@@ -9384,7 +9379,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsPairedArrowsInfix = 
              {character = Unicode 0x21C8;  
               glyph = "⇈";  
@@ -9393,7 +9388,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsQuadrupleArrowInfix = 
              {character = Unicode 0x27F0;  
               glyph = "⟰";  
@@ -9402,7 +9397,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsTripleArrowInfix = 
              {character = Unicode 0x290A;  
               glyph = "⤊";  
@@ -9411,7 +9406,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsTwoHeadedArrowFromSmallCircleInfix = 
              {character = Unicode 0x2949;  
               glyph = "⥉";  
@@ -9429,7 +9424,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"; "accent"]}
+              properties=[Stretchy true; Accent true]}
         let upwardsWhiteArrowFromBarInfix = 
              {character = Unicode 0x21EA;  
               glyph = "⇪";  
@@ -9438,7 +9433,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsWhiteArrowInfix = 
              {character = Unicode 0x21E7;  
               glyph = "⇧";  
@@ -9447,7 +9442,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsWhiteArrowOnPedestalInfix = 
              {character = Unicode 0x21EB;  
               glyph = "⇫";  
@@ -9456,7 +9451,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsWhiteArrowOnPedestalWithHorizontalBarInfix = 
              {character = Unicode 0x21EC;  
               glyph = "⇬";  
@@ -9465,7 +9460,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsWhiteArrowOnPedestalWithVerticalBarInfix = 
              {character = Unicode 0x21ED;  
               glyph = "⇭";  
@@ -9474,7 +9469,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsWhiteDoubleArrowInfix = 
              {character = Unicode 0x21EE;  
               glyph = "⇮";  
@@ -9483,7 +9478,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let upwardsWhiteDoubleArrowOnPedestalInfix = 
              {character = Unicode 0x21EF;  
               glyph = "⇯";  
@@ -9492,7 +9487,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["stretchy"]}
+              properties=[Stretchy true]}
         let vectorOrCrossProductInfix = 
              {character = Unicode 0x2A2F;  
               glyph = "⨯";  
@@ -9555,7 +9550,7 @@
               priority = 270;  
               lspace = NamedLength VeryThinMathSpace;  
               rspace = NamedLength VeryThinMathSpace;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let verticalLinePostfix = 
              {character = Char  '|';  
               glyph = "|";  
@@ -9564,7 +9559,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let verticalLinePrefix = 
              {character = Char  '|';  
               glyph = "|";  
@@ -9573,7 +9568,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let verticalLineWithCircleAboveInfix = 
              {character = Unicode 0x2AEF;  
               glyph = "⫯";  
@@ -9627,7 +9622,7 @@
               priority = 310;  
               lspace= EM 0.<em>;  
               rspace = NamedLength VeryVeryThinMathSpace;  
-              properties=["largeop"; "symmetric"]}
+              properties=[LargeOp true; Symmetric true]}
         let waveArrowPointingDirectlyRightInfix = 
              {character = Unicode 0x2933;  
               glyph = "⤳";  
@@ -9636,7 +9631,7 @@
               priority = 270;  
               lspace = NamedLength ThickMathSpace;  
               rspace = NamedLength ThickMathSpace;  
-              properties=["accent"]}
+              properties=[Accent true]}
         let whiteBulletInfix = 
              {character = Unicode 0x25E6;  
               glyph = "◦";  
@@ -9861,7 +9856,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let zNotationLeftImageBracketPrefix = 
              {character = Unicode 0x2987;  
               glyph = "⦇";  
@@ -9870,7 +9865,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let zNotationRangeAntirestrictionInfix = 
              {character = Unicode 0x2A65;  
               glyph = "⩥";  
@@ -9897,7 +9892,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let zNotationRightImageBracketPostfix = 
              {character = Unicode 0x2988;  
               glyph = "⦈";  
@@ -9906,7 +9901,7 @@
               priority = 20;  
               lspace= EM 0.<em>;  
               rspace= EM 0.<em>;  
-              properties=["fence"; "stretchy"; "symmetric"]}
+              properties=[Fence true; Stretchy true; Symmetric true]}
         let zNotationSchemaCompositionInfix = 
              {character = Unicode 0x2A1F;  
               glyph = "⨟";  

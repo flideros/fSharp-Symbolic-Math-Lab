@@ -26,19 +26,19 @@ module Style =
     //Materials
     let genericMaterial =        
         // Define material that will use the gradient.
-        let diffuseMaterial = DiffuseMaterial(ControlLibrary.CustomBrushes.checkerBrush)
+        let diffuseMaterial = DiffuseMaterial(Brushes.LightGray)//ControlLibrary.CustomBrushes.checkerBrush)
         // Add this gradient to a MaterialGroup.
         let materialGroup = MaterialGroup()
         do  materialGroup.Children.Add(diffuseMaterial)
-        // Define an Emissive Material with a blue brush.
-        let emissiveMaterial c = 
+        // Define an Emissive Material.
+        let emissiveMaterial = 
             let c = selectedColor.Get              
             EmissiveMaterial(SolidColorBrush(c))                
-        let handleColorChange c = 
+        let handleColorChange c =             
             do  materialGroup.Children.Clear()
                 materialGroup.Children.Add(diffuseMaterial)
                 materialGroup.Children.Add(EmissiveMaterial(SolidColorBrush(c)))
-        do  materialGroup.Children.Add(emissiveMaterial selectedColor.Get)
+        do  materialGroup.Children.Add(emissiveMaterial)
             selectedColor.Changed.Add(handleColorChange)
 
         materialGroup

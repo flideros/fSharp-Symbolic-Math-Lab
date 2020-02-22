@@ -79,22 +79,6 @@ type _RowLines = | None | Solid | Dashed
 type _Side = | Left | Right | LeftOverlap | RightOerlap
 type _StackAlign = | Left | Center | Right | DecimalPoint
 
-type CharacterCode = 
-    | Unicode of int
-    | Char of char
-    | UnicodeArray of CharacterCode array
-
-type Operator = 
-    { character : CharacterCode
-      glyph : string
-      name : string
-      form : _Form 
-      priority : int //Significance for the proper grouping of sub-expressions
-      lspace : Length
-      rspace : Length
-      properties: string list // ToDo: implement properties   
-    } 
-
 type MathMLAttribute =
     | Accent of bool
     | AccentUnder of bool
@@ -198,6 +182,22 @@ type MathMLAttribute =
     | Width of Length
     | Xmlns of Uri
     | Xref of Idref
+
+type CharacterCode = 
+    | Unicode of int
+    | Char of char
+    | UnicodeArray of CharacterCode array
+
+type Operator = 
+    { character : CharacterCode
+      glyph : string
+      name : string
+      form : _Form 
+      priority : int //Significance for the proper grouping of sub-expressions
+      lspace : Length
+      rspace : Length
+      properties: MathMLAttribute list 
+    } 
 
 type TokenElement = | Mi | Mn | Mo | Mtext | Mspace | Ms | Mglyph
 type GeneralLayoutElement = | Mrow | Mfrac | Msqrt | Mroot | Mstyle | Merror | Mpadded | Mphantom | Mfenced | Menclose

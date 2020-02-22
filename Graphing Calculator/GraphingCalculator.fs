@@ -613,7 +613,8 @@ type GraphingCalculator() as graphingCalculator =
             camera.FieldOfView <- 80.
                 //camera.FarPlaneDistance <- 20.
         camera
-    
+    let colorPicker = ControlLibrary.HsvColorPicker(Style.selectedColor)
+
     do // Assemble the pieces            
        //model3DGroup.Children.Add(Models.surface)            
 
@@ -1336,18 +1337,18 @@ type GraphingCalculator() as graphingCalculator =
     let enter =         CalcButton(Name = "enter", Content = "Enter")
     let rpnButtons = [drop; duplicate; swap; clearStack; enter]    
 
-    //-----Graph Buttons
-    let colorPicker = 
+    //-----Graph Buttons    
+    let color = 
         let b = CalcButton(Content = "Color Picker")
         let handleClick () =
             let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
-            let picker = ControlLibrary.HsvColorPicker(Style.selectedColor)
-            do  w.Content <- picker
+            
+            do  w.Content <- colorPicker
             w.Topmost <- true
             w.Show() 
         b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
-    let graphButtons = [colorPicker]
+    let graphButtons = [color]
 
     do // Place buttons in a grid
         List.iter ( fun x -> calcButton_Grid.Children.Add(x) |> ignore) calcButtons         
@@ -1399,7 +1400,7 @@ type GraphingCalculator() as graphingCalculator =
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
 
         //-----Graph Buttons
-        colorPicker         .SetValue(Grid.RowProperty,0); colorPicker          .SetValue(Grid.ColumnProperty,0);
+        color               .SetValue(Grid.RowProperty,0); color                .SetValue(Grid.ColumnProperty,0);
 
     //----- Gridlines
     let xInterval = 5

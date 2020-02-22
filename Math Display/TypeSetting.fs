@@ -14,7 +14,9 @@ type Font =
 type Glyph = 
     {path:Path;
      leftBearing:float;
-     rightBearing:float}
+     rightBearing:float;
+     baseline:float;
+     width:float}
 type GlyphBuilder = string -> Font -> Glyph
 
 
@@ -51,8 +53,8 @@ module TypeSetting =
             let ft = formatText t font 
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Purple)
             let geometry = ft.BuildGeometry(Point(0.,0.)) 
-            do  p.Data <- geometry.GetFlattenedPathGeometry()
-            {path=p;leftBearing = 0.; rightBearing = ft.OverhangTrailing}
+            do  p.Data <- geometry.GetFlattenedPathGeometry()          
+            {path=p;leftBearing = 0.; rightBearing = ft.OverhangTrailing; baseline = ft.Baseline; width = ft.Width}
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -67,6 +69,15 @@ module TypeSetting =
     // Type setting controls
     type GlyphBox (glyph) as glyphBox =
         inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
+        let bLine = 
+            let p = Path(Stroke = Brushes.Black, StrokeThickness = 2.,Fill = Brushes.Black)
+            let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
+            do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
+            let pg = PathGeometry() 
+            do  pg.Figures.Add(pf)
+                p.Data <- pg
+                p.SetValue(Grid.ColumnSpanProperty,3)
+            p
         let g = Grid()
         let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
         let column1 = ColumnDefinition(Width = GridLength.Auto)
@@ -76,6 +87,7 @@ module TypeSetting =
             g.ColumnDefinitions.Add(column0)
             g.ColumnDefinitions.Add(column1)
             g.ColumnDefinitions.Add(column2)
+            g.Children.Add(bLine) |> ignore
             g.Children.Add(glyph.path) |> ignore
             glyphBox.SetValue(Grid.RowProperty,1)
             glyphBox.SetValue(Grid.RowSpanProperty,3)
@@ -91,7 +103,7 @@ module TypeSetting =
             }
         let getGlyphFromFont text = GlyphBox(getGlyph text font)
 
-        let operator_GlyphBox = getGlyphFromFont(getOperatorString blackLeftPointingSmallTriangleInfix)
+        let operator_GlyphBox = getGlyphFromFont (getOperatorString zNotationDomainAntirestrictionInfix)
             
         let canvas = Canvas(ClipToBounds = true)
     
@@ -128,6 +140,6 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
  
-        do  canvas.Children.Add(operator_GlyphBox) |> ignore //font_Border) |> ignore
+        do  canvas.Children.Add(operator_GlyphBox) |> ignore 
 
             this.Content <- screen_Grid
