@@ -5,20 +5,80 @@ open System.Windows.Controls
 open System.Windows.Shapes  
 open System.Windows.Media
 
-type Font = 
-    {emSquare : float<MathML.em>
-     typeFace : Typeface
-     size : float<MathML.px>
-    }
-
 type Glyph = 
     {path:Path;
      leftBearing:float;
      rightBearing:float;
      baseline:float;
      width:float}
-type GlyphBuilder = string -> Font -> Glyph
 
+type ControlSequence =
+    | ControlSymbol 
+    | ControlWord
+
+type Token =
+    | Char of Glyph
+    | ControlSequence of ControlSequence
+
+type Font = 
+    {emSquare : float<MathML.em>
+     typeFace : Typeface
+     size : float<MathML.px>                                                                                                                                                                                                                                                                                                                                                                                                                                    
+    }
+
+
+type GlyphBuilder = string -> Font -> Glyph
+type GlyphBox (glyph) as glyphBox =
+    inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
+    let bLine = 
+        let p = Path(Stroke = Brushes.Black, StrokeThickness = 2.,Fill = Brushes.Black)
+        let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
+        do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
+        let pg = PathGeometry() 
+        do  pg.Figures.Add(pf)
+            p.Data <- pg
+            p.SetValue(Grid.ColumnSpanProperty,3)
+        p
+    let g = Grid()
+    let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
+    let column1 = ColumnDefinition(Width = GridLength.Auto)
+    let column2 = ColumnDefinition(Width = GridLength(glyph.rightBearing))
+        
+    do  glyph.path.SetValue(Grid.ColumnProperty,1)
+        g.ColumnDefinitions.Add(column0)
+        g.ColumnDefinitions.Add(column1)
+        g.ColumnDefinitions.Add(column2)
+        g.Children.Add(bLine) |> ignore
+        g.Children.Add(glyph.path) |> ignore
+        glyphBox.SetValue(Grid.RowProperty,1)
+        glyphBox.SetValue(Grid.RowSpanProperty,3)
+        glyphBox.Child <- g
+
+type HBox (glyph) as hBox =
+    inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
+    let bLine = 
+        let p = Path(Stroke = Brushes.Black, StrokeThickness = 2.,Fill = Brushes.Black)
+        let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
+        do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
+        let pg = PathGeometry() 
+        do  pg.Figures.Add(pf)
+            p.Data <- pg
+            p.SetValue(Grid.ColumnSpanProperty,3)
+        p
+    let g = Grid()
+    let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
+    let column1 = ColumnDefinition(Width = GridLength.Auto)
+    let column2 = ColumnDefinition(Width = GridLength(glyph.rightBearing))
+        
+    do  glyph.path.SetValue(Grid.ColumnProperty,1)
+        g.ColumnDefinitions.Add(column0)
+        g.ColumnDefinitions.Add(column1)
+        g.ColumnDefinitions.Add(column2)
+        g.Children.Add(bLine) |> ignore
+        g.Children.Add(glyph.path) |> ignore
+        hBox.SetValue(Grid.RowProperty,1)
+        hBox.SetValue(Grid.RowSpanProperty,3)
+        hBox.Child <- g
 
 module TypeSetting = 
     open MathML
@@ -54,7 +114,7 @@ module TypeSetting =
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Purple)
             let geometry = ft.BuildGeometry(Point(0.,0.)) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()          
-            {path=p;leftBearing = 0.; rightBearing = ft.OverhangTrailing; baseline = ft.Baseline; width = ft.Width}
+            {path=p;leftBearing = 0.; rightBearing = System.Math.Abs ft.OverhangTrailing; baseline = ft.Baseline; width = ft.Width}
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -66,33 +126,11 @@ module TypeSetting =
                 new string (chars)
         loop operator.character
 
-    // Type setting controls
-    type GlyphBox (glyph) as glyphBox =
-        inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
-        let bLine = 
-            let p = Path(Stroke = Brushes.Black, StrokeThickness = 2.,Fill = Brushes.Black)
-            let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
-            do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
-            let pg = PathGeometry() 
-            do  pg.Figures.Add(pf)
-                p.Data <- pg
-                p.SetValue(Grid.ColumnSpanProperty,3)
-            p
-        let g = Grid()
-        let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
-        let column1 = ColumnDefinition(Width = GridLength.Auto)
-        let column2 = ColumnDefinition(Width = GridLength(glyph.rightBearing))
-        
-        do  glyph.path.SetValue(Grid.ColumnProperty,1)
-            g.ColumnDefinitions.Add(column0)
-            g.ColumnDefinitions.Add(column1)
-            g.ColumnDefinitions.Add(column2)
-            g.Children.Add(bLine) |> ignore
-            g.Children.Add(glyph.path) |> ignore
-            glyphBox.SetValue(Grid.RowProperty,1)
-            glyphBox.SetValue(Grid.RowSpanProperty,3)
-            glyphBox.Child <- g
-    
+    let scaleGlyphBox (glyphBox :GlyphBox) scale = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scale,ScaleY = scale)
+
+
+
+    (*Test Area*)
     type TestCanvas(testGlyphs:Path list) as this  =  
         inherit UserControl()       
         
@@ -103,8 +141,11 @@ module TypeSetting =
             }
         let getGlyphFromFont text = GlyphBox(getGlyph text font)
 
-        let operator_GlyphBox = getGlyphFromFont (getOperatorString zNotationDomainAntirestrictionInfix)
-            
+        let operator_GlyphBox = getGlyphFromFont (getOperatorString squareRootPrefix)//"p"//        
+        do  operator_GlyphBox.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> scaleGlyphBox operator_GlyphBox (0.2)))
+
+
+
         let canvas = Canvas(ClipToBounds = true)
     
         let scale_Slider =
@@ -119,7 +160,7 @@ module TypeSetting =
                     IsEnabled = true)        
             do s.SetValue(Grid.RowProperty, 0)
             let handleValueChanged (s)= 
-                operator_GlyphBox.RenderTransform <- ScaleTransform(ScaleX = 5./s,ScaleY=5./s)
+                ()//operator_GlyphBox.RenderTransform <- ScaleTransform(ScaleX = 5./s,ScaleY=5./s)
             s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
             s
         let scaleSlider_Grid =

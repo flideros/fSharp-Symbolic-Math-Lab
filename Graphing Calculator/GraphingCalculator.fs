@@ -1398,7 +1398,6 @@ type GraphingCalculator() as graphingCalculator =
         swap                .SetValue(Grid.RowProperty,0); swap                 .SetValue(Grid.ColumnProperty,2);
         clearStack          .SetValue(Grid.RowProperty,0); clearStack           .SetValue(Grid.ColumnProperty,0);
         enter               .SetValue(Grid.RowProperty,0); enter                .SetValue(Grid.ColumnProperty,4);
-
         //-----Graph Buttons
         color               .SetValue(Grid.RowProperty,0); color                .SetValue(Grid.ColumnProperty,0);
 
