@@ -31,7 +31,7 @@ type GlyphBuilder = string -> Font -> Glyph
 type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
     let bLine = 
-        let p = Path(Stroke = Brushes.Black, StrokeThickness = 2.,Fill = Brushes.Black)
+        let p = Path(Stroke = Brushes.Black, StrokeThickness = 3.,Fill = Brushes.Black)
         let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
         do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
         let pg = PathGeometry() 
@@ -92,10 +92,10 @@ module TypeSetting =
     
     //  Typefaces
     let STIX2Math_Typeface =           Typeface(STIX2Math_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextBold_Typeface =       Typeface(STIX2Math_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextBoldItalic_Typeface = Typeface(STIX2Math_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextItalic_Typeface =     Typeface(STIX2Math_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextRegular_Typeface =    Typeface(STIX2Math_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
+    let STIX2TextBold_Typeface =       Typeface(STIX2TextBold_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
+    let STIX2TextBoldItalic_Typeface = Typeface(STIX2TextBoldItalic_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
+    let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
+    let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
     
     let formatText = 
         fun t font   -> 
@@ -111,10 +111,10 @@ module TypeSetting =
     let getGlyph :GlyphBuilder = 
         fun t font -> 
             let ft = formatText t font 
-            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Purple)
+            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             let geometry = ft.BuildGeometry(Point(0.,0.)) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()          
-            {path=p;leftBearing = 0.; rightBearing = System.Math.Abs ft.OverhangTrailing; baseline = ft.Baseline; width = ft.Width}
+            {path=p;leftBearing = 0.; rightBearing = 0.; baseline = ft.Baseline; width = ft.Width}
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -126,7 +126,7 @@ module TypeSetting =
                 new string (chars)
         loop operator.character
 
-    let scaleGlyphBox (glyphBox :GlyphBox) scale = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scale,ScaleY = scale)
+    let scaleGlyphBox (glyphBox :GlyphBox) (scaleX, scaleY) = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scaleX,ScaleY = scaleY)
 
 
 
@@ -137,12 +137,12 @@ module TypeSetting =
         let font = 
             {emSquare = 1000.<MathML.em>;
              typeFace = STIX2Math_Typeface;
-             size = 100.<MathML.px>
+             size = 30.<MathML.px>
             }
         let getGlyphFromFont text = GlyphBox(getGlyph text font)
 
-        let operator_GlyphBox = getGlyphFromFont (getOperatorString squareRootPrefix)//"p"//        
-        do  operator_GlyphBox.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> scaleGlyphBox operator_GlyphBox (0.2)))
+        let operator_GlyphBox = getGlyphFromFont "30 + Lmnop"//(getOperatorString squareLeftOpenBoxOperatorInfix)//       
+        do  operator_GlyphBox.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> scaleGlyphBox operator_GlyphBox (font.size / 960.<MathML.px>, font.size / 960.<MathML.px>)))
 
 
 
@@ -160,7 +160,7 @@ module TypeSetting =
                     IsEnabled = true)        
             do s.SetValue(Grid.RowProperty, 0)
             let handleValueChanged (s)= 
-                ()//operator_GlyphBox.RenderTransform <- ScaleTransform(ScaleX = 5./s,ScaleY=5./s)
+                ()//operator_GlyphBox.RenderTransform <- ScaleTransform(ScaleX = 50./s,ScaleY = 50./s)
             s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
             s
         let scaleSlider_Grid =
