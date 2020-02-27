@@ -1,5 +1,6 @@
 ﻿namespace Math.Presentation
 
+open System
 open System.Windows       
 open System.Windows.Controls  
 open System.Windows.Shapes  
@@ -10,7 +11,8 @@ type Glyph =
      leftBearing:float;
      rightBearing:float;
      baseline:float;
-     width:float}
+     width:float
+     height:float}
 
 type ControlSequence =
     | ControlSymbol 
@@ -30,6 +32,7 @@ type Font =
 type GlyphBuilder = string -> Font -> Glyph
 type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
+    let g = Grid()
     let bLine = 
         let p = Path(Stroke = Brushes.Black, StrokeThickness = 3.,Fill = Brushes.Black)
         let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
@@ -39,16 +42,34 @@ type GlyphBox (glyph) as glyphBox =
             p.Data <- pg
             p.SetValue(Grid.ColumnSpanProperty,3)
         p
-    let g = Grid()
-    let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
-    let column1 = ColumnDefinition(Width = GridLength.Auto)
-    let column2 = ColumnDefinition(Width = GridLength(glyph.rightBearing))
-        
+    
+    let column0 = 
+        match glyph.leftBearing < 0. with
+        | true -> ColumnDefinition(Width = GridLength(Math.Abs glyph.leftBearing))
+        | false -> ColumnDefinition(Width = GridLength(glyph.leftBearing))
+    let column1 = 
+        match glyph.leftBearing < 0. with
+        | true -> ColumnDefinition(Width = GridLength(glyph.width))
+        | false -> ColumnDefinition(Width = GridLength.Auto)    
+    let column2 = 
+        match glyph.rightBearing < 0. with
+        | true -> ColumnDefinition(Width =  GridLength(0.))
+        | false -> ColumnDefinition(Width = GridLength(glyph.rightBearing))
+      
     do  glyph.path.SetValue(Grid.ColumnProperty,1)
         g.ColumnDefinitions.Add(column0)
         g.ColumnDefinitions.Add(column1)
         g.ColumnDefinitions.Add(column2)
-        g.Children.Add(bLine) |> ignore
+    
+    let row0 = RowDefinition(Height = GridLength(67.))
+    let row1 = RowDefinition(Height = GridLength.Auto)
+            
+    do  glyph.path.SetValue(Grid.RowProperty,1)
+        bLine.SetValue(Grid.RowProperty,1)
+        g.RowDefinitions.Add(row0)
+        g.RowDefinitions.Add(row1)
+        
+        g.Children.Add(bLine) |> ignore    
         g.Children.Add(glyph.path) |> ignore
         glyphBox.SetValue(Grid.RowProperty,1)
         glyphBox.SetValue(Grid.RowSpanProperty,3)
@@ -83,6 +104,7 @@ type HBox (glyph) as hBox =
 module TypeSetting = 
     open MathML
     open MathML.OperatorDictionary
+    
     //  Font Families
     let STIX2Math_FontFamily =           FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),            "./#STIX Two Math")
     let STIX2TextBold_FontFamily =       FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Bold"),       "./#STIX Two Text Bold")
@@ -113,8 +135,8 @@ module TypeSetting =
             let ft = formatText t font 
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             let geometry = ft.BuildGeometry(Point(0.,0.)) 
-            do  p.Data <- geometry.GetFlattenedPathGeometry()          
-            {path=p;leftBearing = 0.; rightBearing = 0.; baseline = ft.Baseline; width = ft.Width}
+            do  p.Data <- geometry.GetFlattenedPathGeometry()            
+            {path=p;leftBearing = 0.; rightBearing = ft.OverhangTrailing; baseline = ft.Baseline; width = ft.Width; height = ft.Height}
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -125,6 +147,9 @@ module TypeSetting =
                 let chars = Array.map (fun oc -> (char)(loop oc)) a
                 new string (chars)
         loop operator.character
+
+    let getStringAtUnicode u = (char u).ToString()
+        
 
     let scaleGlyphBox (glyphBox :GlyphBox) (scaleX, scaleY) = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scaleX,ScaleY = scaleY)
 
@@ -137,11 +162,11 @@ module TypeSetting =
         let font = 
             {emSquare = 1000.<MathML.em>;
              typeFace = STIX2Math_Typeface;
-             size = 30.<MathML.px>
+             size = 300.<MathML.px>
             }
         let getGlyphFromFont text = GlyphBox(getGlyph text font)
 
-        let operator_GlyphBox = getGlyphFromFont "30 + Lmnop"//(getOperatorString squareLeftOpenBoxOperatorInfix)//       
+        let operator_GlyphBox = getGlyphFromFont ((getStringAtUnicode 0x221b))//"Hp"+//(getOperatorString superscriptThreePostfix)
         do  operator_GlyphBox.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> scaleGlyphBox operator_GlyphBox (font.size / 960.<MathML.px>, font.size / 960.<MathML.px>)))
 
 

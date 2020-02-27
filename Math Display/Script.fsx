@@ -6,20 +6,21 @@
 #r @"System.Windows"       
 //#r @"D:\MyFolders\Desktop\SymbolicMath\Math Display\bin\Debug\Math_Display.dll"
 #load "MathML.fs"
+#load "OperatorDictionary.fs"
 #load "TypeSetting.fs"
 open System.Windows       
 open System.Windows.Controls  
 open System.Windows.Shapes  
 open System.Windows.Media
 
-let fontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Bold"), "./#STIX Two Text Bold")
+let fontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"), "./#STIX Two Math")
 let tf = Typeface(fontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
 
-let tf2= Typeface("Times New Roman")
+let tf2= Typeface((char 0x221b).ToString())
 
 let formattedText = 
     FormattedText(
-        textToFormat = "Liderosp",
+        textToFormat = "H",//(char 0x221b).ToString(),
         culture = System.Globalization.CultureInfo.GetCultureInfo("en-US"),
         flowDirection = FlowDirection.LeftToRight,
         typeface = tf,
