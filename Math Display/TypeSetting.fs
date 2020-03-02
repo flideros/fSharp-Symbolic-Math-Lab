@@ -1,5 +1,6 @@
 ﻿namespace Math.Presentation
 
+open MathML
 open System
 open System.Windows       
 open System.Windows.Controls  
@@ -8,18 +9,22 @@ open System.Windows.Media
 
 type Glyph = 
     {path:Path;
+     overHangBefore:float;
+     extent:float;
+     baseline:float;
+     overHangAfter:float;
+     height:float;
      leftBearing:float;
      rightBearing:float;
-     baseline:float;
      width:float
-     height:float}
+     }
 
 type ControlSequence =
     | ControlSymbol 
     | ControlWord
 
 type Token =
-    | Char of Glyph
+    | Char of TokenElement * Glyph
     | ControlSequence of ControlSequence
 
 type Font = 
@@ -28,13 +33,15 @@ type Font =
      size : float<MathML.px>                                                                                                                                                                                                                                                                                                                                                                                                                                    
     }
 
-
 type GlyphBuilder = string -> Font -> Glyph
+
 type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
-    let g = Grid()
+    let g = Grid()//Height = glyph.height)
+    (*do  g.Children.Add(glyph.path) |> ignore*)
+    
     let bLine = 
-        let p = Path(Stroke = Brushes.Black, StrokeThickness = 3.,Fill = Brushes.Black)
+        let p = Path(Stroke = Brushes.White, StrokeThickness = 4.)
         let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
         do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
         let pg = PathGeometry() 
@@ -61,50 +68,31 @@ type GlyphBox (glyph) as glyphBox =
         g.ColumnDefinitions.Add(column1)
         g.ColumnDefinitions.Add(column2)
     
-    let row0 = RowDefinition(Height = GridLength(67.))
+    let row0 = 
+        RowDefinition(
+            Height = GridLength(match glyph.overHangBefore > 0. with 
+                                | false -> 0.
+                                | true -> glyph.overHangBefore))
     let row1 = RowDefinition(Height = GridLength.Auto)
-            
+           
     do  glyph.path.SetValue(Grid.RowProperty,1)
         bLine.SetValue(Grid.RowProperty,1)
         g.RowDefinitions.Add(row0)
         g.RowDefinitions.Add(row1)
         
-        g.Children.Add(bLine) |> ignore    
         g.Children.Add(glyph.path) |> ignore
+        g.Children.Add(bLine) |> ignore 
+        
+           
+    do  //glyph.path.
         glyphBox.SetValue(Grid.RowProperty,1)
         glyphBox.SetValue(Grid.RowSpanProperty,3)
         glyphBox.Child <- g
 
-type HBox (glyph) as hBox =
-    inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
-    let bLine = 
-        let p = Path(Stroke = Brushes.Black, StrokeThickness = 2.,Fill = Brushes.Black)
-        let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
-        do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline), true ))
-        let pg = PathGeometry() 
-        do  pg.Figures.Add(pf)
-            p.Data <- pg
-            p.SetValue(Grid.ColumnSpanProperty,3)
-        p
-    let g = Grid()
-    let column0 = ColumnDefinition(Width = GridLength(glyph.leftBearing))
-    let column1 = ColumnDefinition(Width = GridLength.Auto)
-    let column2 = ColumnDefinition(Width = GridLength(glyph.rightBearing))
-        
-    do  glyph.path.SetValue(Grid.ColumnProperty,1)
-        g.ColumnDefinitions.Add(column0)
-        g.ColumnDefinitions.Add(column1)
-        g.ColumnDefinitions.Add(column2)
-        g.Children.Add(bLine) |> ignore
-        g.Children.Add(glyph.path) |> ignore
-        hBox.SetValue(Grid.RowProperty,1)
-        hBox.SetValue(Grid.RowSpanProperty,3)
-        hBox.Child <- g
-
 module TypeSetting = 
     open MathML
     open MathML.OperatorDictionary
-    
+
     //  Font Families
     let STIX2Math_FontFamily =           FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),            "./#STIX Two Math")
     let STIX2TextBold_FontFamily =       FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Bold"),       "./#STIX Two Text Bold")
@@ -136,7 +124,14 @@ module TypeSetting =
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             let geometry = ft.BuildGeometry(Point(0.,0.)) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()            
-            {path=p;leftBearing = 0.; rightBearing = ft.OverhangTrailing; baseline = ft.Baseline; width = ft.Width; height = ft.Height}
+            {path=p;leftBearing = 0.; 
+             extent = ft.Extent;
+             overHangAfter = ft.OverhangAfter;
+             overHangBefore = ft.Extent - ft.OverhangAfter - ft.Height;
+             rightBearing = ft.OverhangTrailing; 
+             baseline = ft.Baseline; 
+             width = ft.Width; 
+             height = ft.Height}
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -149,11 +144,8 @@ module TypeSetting =
         loop operator.character
 
     let getStringAtUnicode u = (char u).ToString()
-        
 
     let scaleGlyphBox (glyphBox :GlyphBox) (scaleX, scaleY) = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scaleX,ScaleY = scaleY)
-
-
 
     (*Test Area*)
     type TestCanvas(testGlyphs:Path list) as this  =  
@@ -166,10 +158,8 @@ module TypeSetting =
             }
         let getGlyphFromFont text = GlyphBox(getGlyph text font)
 
-        let operator_GlyphBox = getGlyphFromFont ((getStringAtUnicode 0x221b))//"Hp"+//(getOperatorString superscriptThreePostfix)
+        let operator_GlyphBox = getGlyphFromFont ((getStringAtUnicode 0x25db))//+(getStringAtUnicode 0x221c)+"Hp")//"M"////(getOperatorString superscriptThreePostfix)
         do  operator_GlyphBox.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> scaleGlyphBox operator_GlyphBox (font.size / 960.<MathML.px>, font.size / 960.<MathML.px>)))
-
-
 
         let canvas = Canvas(ClipToBounds = true)
     

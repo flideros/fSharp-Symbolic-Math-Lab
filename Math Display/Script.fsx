@@ -20,7 +20,7 @@ let tf2= Typeface((char 0x221b).ToString())
 
 let formattedText = 
     FormattedText(
-        textToFormat = "H",//(char 0x221b).ToString(),
+        textToFormat = (char 0x23b3).ToString(),//"H",//
         culture = System.Globalization.CultureInfo.GetCultureInfo("en-US"),
         flowDirection = FlowDirection.LeftToRight,
         typeface = tf,
@@ -28,13 +28,19 @@ let formattedText =
         foreground = Brushes.Red,
         pixelsPerDip = 1.25)//dpiInfo.PixelsPerDip)
 
+let glyph = Math.Presentation.TypeSetting.getGlyph ((Math.Presentation.TypeSetting.getStringAtUnicode 0x221c)) {emSquare = 1000.<MathML.em>;typeFace = tf;size = 300.<MathML.px>}
+
+
+printf "Glyph Height    : %f \n" glyph.path.Data.Bounds.Height
 printf "Height          : %f \n" formattedText.Height
-printf "Baseline        : %f \n" formattedText.Baseline
+printf "Baseline        : %f  %f \n" formattedText.Baseline (1000. - formattedText.Baseline)
 printf "Extent          : %f \n" formattedText.Extent
 printf "LineHeight      : %f \n" formattedText.LineHeight
 printf "OverhangAfter   : %f \n" formattedText.OverhangAfter
 printf "OverhangLeading : %f \n" formattedText.OverhangLeading
 printf "OverhangTrailing: %f \n" formattedText.OverhangTrailing
+
+
 
 printf "XHeight         : %f \n" (tf.XHeight * 1000.)
 printf "CapsHeight      : %f \n" (tf.CapsHeight * 1000.)
