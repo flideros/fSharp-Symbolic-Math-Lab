@@ -37,8 +37,7 @@ type GlyphBuilder = string -> Font -> Glyph
 
 type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
-    let g = Grid()//Height = glyph.height)
-    (*do  g.Children.Add(glyph.path) |> ignore*)
+    let g = Grid()
     
     let bLine = 
         let p = Path(Stroke = Brushes.White, StrokeThickness = 4.)
@@ -52,21 +51,17 @@ type GlyphBox (glyph) as glyphBox =
     
     let column0 = 
         match glyph.leftBearing < 0. with
-        | true -> ColumnDefinition(Width = GridLength(Math.Abs glyph.leftBearing))
-        | false -> ColumnDefinition(Width = GridLength(glyph.leftBearing))
-    let column1 = 
-        match glyph.leftBearing < 0. with
         | true -> ColumnDefinition(Width = GridLength(glyph.width))
         | false -> ColumnDefinition(Width = GridLength.Auto)    
-    let column2 = 
+    let column1 = 
         match glyph.rightBearing < 0. with
-        | true -> ColumnDefinition(Width =  GridLength(0.))
+        | true -> ColumnDefinition(Width =  GridLength.Auto)
         | false -> ColumnDefinition(Width = GridLength(glyph.rightBearing))
       
-    do  glyph.path.SetValue(Grid.ColumnProperty,1)
+    do  glyph.path.SetValue(Grid.ColumnProperty,0)
+        glyph.path.SetValue(Grid.ColumnSpanProperty,2)
         g.ColumnDefinitions.Add(column0)
         g.ColumnDefinitions.Add(column1)
-        g.ColumnDefinitions.Add(column2)
     
     let row0 = 
         RowDefinition(
@@ -122,9 +117,12 @@ module TypeSetting =
         fun t font -> 
             let ft = formatText t font 
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
-            let geometry = ft.BuildGeometry(Point(0.,0.)) 
+            // move glyph right when it hangs over the left side
+            let x = match ft.OverhangLeading > 0. with |true -> 0. | false -> Math.Abs ft.OverhangLeading
+            let geometry = ft.BuildGeometry(Point(x,0.)) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()            
-            {path=p;leftBearing = 0.; 
+            {path=p;
+             leftBearing = ft.OverhangLeading; 
              extent = ft.Extent;
              overHangAfter = ft.OverhangAfter;
              overHangBefore = ft.Extent - ft.OverhangAfter - ft.Height;
@@ -147,20 +145,36 @@ module TypeSetting =
 
     let scaleGlyphBox (glyphBox :GlyphBox) (scaleX, scaleY) = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scaleX,ScaleY = scaleY)
 
+    let placeGlyphBox (glyphBox :GlyphBox) (x, y) = do glyphBox.RenderTransform <- TranslateTransform(X = x,Y = y)
+
+    let transformGlyphBox (glyphBox :GlyphBox) (x, y) (scaleX, scaleY) = 
+        let tranforms = TransformGroup()
+        do  tranforms.Children.Add(TranslateTransform(X = x,Y = y))
+            tranforms.Children.Add(ScaleTransform(ScaleX = scaleX,ScaleY = scaleY))
+            glyphBox.RenderTransform <- tranforms
+        
+
     (*Test Area*)
     type TestCanvas(testGlyphs:Path list) as this  =  
-        inherit UserControl()       
+        inherit UserControl()
         
         let font = 
             {emSquare = 1000.<MathML.em>;
              typeFace = STIX2Math_Typeface;
-             size = 300.<MathML.px>
+             size = 200.<MathML.px>
             }
-        let getGlyphFromFont text = GlyphBox(getGlyph text font)
+        let getGlyphBox text font (position:float*float) = 
+            let gb = GlyphBox(getGlyph text font)
+            do  gb.Width <- gb.Width * (font.size / 960.<MathML.px>)
+                gb.Height <- gb.Height * (font.size / 960.<MathML.px>)
+            do  gb.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> transformGlyphBox gb position (font.size / 960.<MathML.px>, font.size / 960.<MathML.px>)))
+          
+            gb
 
-        let operator_GlyphBox = getGlyphFromFont ((getStringAtUnicode 0x25db))//+(getStringAtUnicode 0x221c)+"Hp")//"M"////(getOperatorString superscriptThreePostfix)
-        do  operator_GlyphBox.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> scaleGlyphBox operator_GlyphBox (font.size / 960.<MathML.px>, font.size / 960.<MathML.px>)))
-
+        let operator_GlyphBox = getGlyphBox (getOperatorString mathematicalRightFlattenedParenthesisPostfix) font (1000., 1000.) 
+        
+        let unicode_GlyphBox = getGlyphBox (getStringAtUnicode 0x20db) font (500., 300.)
+  
         let canvas = Canvas(ClipToBounds = true)
     
         let scale_Slider =
@@ -197,5 +211,6 @@ module TypeSetting =
             g
  
         do  canvas.Children.Add(operator_GlyphBox) |> ignore 
+            canvas.Children.Add(unicode_GlyphBox) |> ignore
 
             this.Content <- screen_Grid
