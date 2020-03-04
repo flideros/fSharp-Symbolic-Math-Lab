@@ -7,6 +7,9 @@ open System.Windows.Controls
 open System.Windows.Shapes  
 open System.Windows.Media
 
+type Position = {x:float;y:float}
+type Size = {scaleX :float; scaleY :float}
+
 type Glyph = 
     {path:Path;
      overHangBefore:float;
@@ -102,6 +105,10 @@ module TypeSetting =
     let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
     let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
     
+    // Font Sizes
+    let math100px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface;size = 100.<MathML.px>}
+    let math200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface;size = 200.<MathML.px>}
+
     let formatText = 
         fun t font   -> 
             FormattedText(
@@ -143,38 +150,46 @@ module TypeSetting =
 
     let getStringAtUnicode u = (char u).ToString()
 
-    let scaleGlyphBox (glyphBox :GlyphBox) (scaleX, scaleY) = do glyphBox.RenderTransform <- ScaleTransform(ScaleX = scaleX,ScaleY = scaleY)
+    let scaleGlyphBox (glyphBox :GlyphBox) (s:Size) = 
+        do glyphBox.RenderTransform <- ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY)
 
-    let placeGlyphBox (glyphBox :GlyphBox) (x, y) = do glyphBox.RenderTransform <- TranslateTransform(X = x,Y = y)
+    let placeGlyphBox (glyphBox :GlyphBox) (p:Position) = 
+        do glyphBox.RenderTransform <- TranslateTransform(X = p.x, Y = p.y)
 
-    let transformGlyphBox (glyphBox :GlyphBox) (x, y) (scaleX, scaleY) = 
+    let transformGlyphBox (glyphBox :GlyphBox) (p:Position) (s:Size) = 
         let tranforms = TransformGroup()
-        do  tranforms.Children.Add(TranslateTransform(X = x,Y = y))
-            tranforms.Children.Add(ScaleTransform(ScaleX = scaleX,ScaleY = scaleY))
+        do  tranforms.Children.Add(TranslateTransform(X = p.x, Y = p.y))
+            tranforms.Children.Add(ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY))            
             glyphBox.RenderTransform <- tranforms
         
 
     (*Test Area*)
-    type TestCanvas(testGlyphs:Path list) as this  =  
+    type TestCanvas() as this  =  
         inherit UserControl()
         
-        let font = 
-            {emSquare = 1000.<MathML.em>;
-             typeFace = STIX2Math_Typeface;
-             size = 200.<MathML.px>
-            }
-        let getGlyphBox text font (position:float*float) = 
-            let gb = GlyphBox(getGlyph text font)
+        let getGlyphBox text font (p:Position) = 
+            let x,y = p.x, p.y
+            let glyph = getGlyph text font
+            let y' = y - (match glyph.overHangBefore > 0. with | true -> glyph.overHangBefore | false -> 0.)
+            let gb = GlyphBox(glyph)
             do  gb.Width <- gb.Width * (font.size / 960.<MathML.px>)
                 gb.Height <- gb.Height * (font.size / 960.<MathML.px>)
-            do  gb.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> transformGlyphBox gb position (font.size / 960.<MathML.px>, font.size / 960.<MathML.px>)))
-          
+            do  gb.Loaded.AddHandler(
+                    RoutedEventHandler(
+                        fun _ _ -> 
+                            transformGlyphBox 
+                                gb // glyph box
+                                {x = x; y = y'} // position
+                                {scaleX = font.size / 960.<MathML.px>; scaleY = font.size / 960.<MathML.px>} )) // font size          
             gb
 
-        let operator_GlyphBox = getGlyphBox (getOperatorString mathematicalRightFlattenedParenthesisPostfix) font (1000., 1000.) 
+        let operator = getOperatorString mathematicalLeftFlattenedParenthesisPrefix
+        let unicode = getStringAtUnicode 0x221c
+
+        let operator_GlyphBox = getGlyphBox (operator) math200px {x=825.;y=0.}         
+        let unicode_GlyphBox = getGlyphBox unicode math200px {x=0.;y=0.}
+        let a_GlyphBox = getGlyphBox "a" math200px {x=1250.;y=0.}
         
-        let unicode_GlyphBox = getGlyphBox (getStringAtUnicode 0x20db) font (500., 300.)
-  
         let canvas = Canvas(ClipToBounds = true)
     
         let scale_Slider =
@@ -210,7 +225,17 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
  
-        do  canvas.Children.Add(operator_GlyphBox) |> ignore 
-            canvas.Children.Add(unicode_GlyphBox) |> ignore
+        let line = 
+            let g = Grid()
+            let row0 = RowDefinition(Height = GridLength.Auto)
+            let row1 = RowDefinition(Height = GridLength.Auto)
+            do  g.RowDefinitions.Add(row0)
+                g.RowDefinitions.Add(row1)
+            g
 
+        do  line.Children.Add(operator_GlyphBox) |> ignore 
+            line.Children.Add(unicode_GlyphBox) |> ignore
+            line.Children.Add(a_GlyphBox) |> ignore
+            line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
+            canvas.Children.Add(line) |> ignore
             this.Content <- screen_Grid

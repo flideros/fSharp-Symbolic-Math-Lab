@@ -20,7 +20,7 @@ let tf2= Typeface((char 0x221b).ToString())
 
 let formattedText = 
     FormattedText(
-        textToFormat = (char 0x23b3).ToString(),//"H",//
+        textToFormat = (Math.Presentation.TypeSetting.getOperatorString MathML.OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix),//(char 0x23b3).ToString(),//"H",//
         culture = System.Globalization.CultureInfo.GetCultureInfo("en-US"),
         flowDirection = FlowDirection.LeftToRight,
         typeface = tf,
@@ -28,7 +28,7 @@ let formattedText =
         foreground = Brushes.Red,
         pixelsPerDip = 1.25)//dpiInfo.PixelsPerDip)
 
-let glyph = Math.Presentation.TypeSetting.getGlyph ((Math.Presentation.TypeSetting.getStringAtUnicode 0x221c)) {emSquare = 1000.<MathML.em>;typeFace = tf;size = 300.<MathML.px>}
+let glyph = Math.Presentation.TypeSetting.getGlyph ((Math.Presentation.TypeSetting.getOperatorString MathML.OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix)) {emSquare = 1000.<MathML.em>;typeFace = tf;size = 300.<MathML.px>}
 
 
 printf "Glyph Height    : %f \n" glyph.path.Data.Bounds.Height
