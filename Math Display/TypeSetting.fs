@@ -10,6 +10,12 @@ open System.Windows.Media
 type Position = {x:float;y:float}
 type Size = {scaleX :float; scaleY :float}
 
+type Font = 
+    {emSquare : float<MathML.em>
+     typeFace : Typeface
+     size : float<MathML.px>               
+    }
+
 type Glyph = 
     {path:Path;
      overHangBefore:float;
@@ -19,7 +25,8 @@ type Glyph =
      height:float;
      leftBearing:float;
      rightBearing:float;
-     width:float
+     width:float;
+     font:Font
      }
 
 type ControlSequence =
@@ -29,12 +36,6 @@ type ControlSequence =
 type Token =
     | Char of TokenElement * Glyph
     | ControlSequence of ControlSequence
-
-type Font = 
-    {emSquare : float<MathML.em>
-     typeFace : Typeface
-     size : float<MathML.px>                                                                                                                                                                                                                                                                                                                                                                                                                                    
-    }
 
 type GlyphBuilder = string -> Font -> Glyph
 
@@ -106,8 +107,8 @@ module TypeSetting =
     let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
     
     // Font Sizes
-    let math100px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface;size = 100.<MathML.px>}
-    let math200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface;size = 200.<MathML.px>}
+    let math100px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 100.<MathML.px>}
+    let math200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 200.<MathML.px>}
 
     let formatText = 
         fun t font   -> 
@@ -136,7 +137,8 @@ module TypeSetting =
              rightBearing = ft.OverhangTrailing; 
              baseline = ft.Baseline; 
              width = ft.Width; 
-             height = ft.Height}
+             height = ft.Height;
+             font = font}
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -167,28 +169,43 @@ module TypeSetting =
     type TestCanvas() as this  =  
         inherit UserControl()
         
-        let getGlyphBox text font (p:Position) = 
+        let getGlyphBox glyph (p:Position) = 
             let x,y = p.x, p.y
-            let glyph = getGlyph text font
+            //let glyph = getGlyph text font
             let y' = y - (match glyph.overHangBefore > 0. with | true -> glyph.overHangBefore | false -> 0.)
             let gb = GlyphBox(glyph)
-            do  gb.Width <- gb.Width * (font.size / 960.<MathML.px>)
-                gb.Height <- gb.Height * (font.size / 960.<MathML.px>)
+            do  gb.Width <- gb.Width * (glyph.font.size / 960.<MathML.px>)
+                gb.Height <- gb.Height * (glyph.font.size / 960.<MathML.px>)
             do  gb.Loaded.AddHandler(
                     RoutedEventHandler(
                         fun _ _ -> 
                             transformGlyphBox 
                                 gb // glyph box
                                 {x = x; y = y'} // position
-                                {scaleX = font.size / 960.<MathML.px>; scaleY = font.size / 960.<MathML.px>} )) // font size          
+                                {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
+        
+        let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) math200px
+        let unicode =  getGlyph (getStringAtUnicode 0x221c) math200px
+        let a = getGlyph "W" math200px
+        let plus = getGlyph "A" math200px //(getOperatorString plusSignInfix)
+        let two = getGlyph "2" math200px
+        let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) math200px
 
-        let operator = getOperatorString mathematicalLeftFlattenedParenthesisPrefix
-        let unicode = getStringAtUnicode 0x221c
-
-        let operator_GlyphBox = getGlyphBox (operator) math200px {x=825.;y=0.}         
-        let unicode_GlyphBox = getGlyphBox unicode math200px {x=0.;y=0.}
-        let a_GlyphBox = getGlyphBox "a" math200px {x=1250.;y=0.}
+        let unicode_GlyphBox = getGlyphBox unicode {x=0.;y=0.}
+        let operator_GlyphBox = getGlyphBox operator {x=unicode.width;y=0.}
+        let a_GlyphBox = getGlyphBox a {x= operator.width + unicode.width;y=0.}
+        let plus_GlyphBox = getGlyphBox plus {x = operator.width + unicode.width + a.width - 105.;y=0.}
+        let two_GlyphBox =  getGlyphBox two  {x = operator.width + unicode.width + a.width + plus.width - 105.;y=0.}
+        let closeParen_GlyphBox =  getGlyphBox closeParen  {x = operator.width + unicode.width + a.width + plus.width + two.width - 105.;y=0.}
+        
+        let line = 
+            let g = Grid()
+            let row0 = RowDefinition(Height = GridLength.Auto)
+            let row1 = RowDefinition(Height = GridLength.Auto)
+            do  g.RowDefinitions.Add(row0)
+                g.RowDefinitions.Add(row1)
+            g
         
         let canvas = Canvas(ClipToBounds = true)
     
@@ -203,8 +220,13 @@ module TypeSetting =
                     IsSnapToTickEnabled = true,
                     IsEnabled = true)        
             do s.SetValue(Grid.RowProperty, 0)
-            let handleValueChanged (s)= 
-                ()//operator_GlyphBox.RenderTransform <- ScaleTransform(ScaleX = 50./s,ScaleY = 50./s)
+            let handleValueChanged (s) = 
+                line.RenderTransform <- 
+                    let tranforms = TransformGroup()
+                    do  tranforms.Children.Add(TranslateTransform(X = 100., Y = 100.))
+                        tranforms.Children.Add(ScaleTransform(ScaleX = 5.0/s,ScaleY = 5.0/s))            
+                    tranforms
+                    //
             s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
             s
         let scaleSlider_Grid =
@@ -224,18 +246,22 @@ module TypeSetting =
             do g.SetValue(Grid.RowProperty, 1)        
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
- 
-        let line = 
-            let g = Grid()
-            let row0 = RowDefinition(Height = GridLength.Auto)
-            let row1 = RowDefinition(Height = GridLength.Auto)
-            do  g.RowDefinitions.Add(row0)
-                g.RowDefinitions.Add(row1)
-            g
 
-        do  line.Children.Add(operator_GlyphBox) |> ignore 
-            line.Children.Add(unicode_GlyphBox) |> ignore
+        let textBlock = 
+            let tb = TextBlock()
+            do  tb.Text <- "WA2"
+            tb.FontSize <- 38.
+            tb.FontFamily <- STIX2Math_FontFamily
+            tb
+
+        do  line.Children.Add(unicode_GlyphBox) |> ignore 
+            line.Children.Add(operator_GlyphBox) |> ignore            
             line.Children.Add(a_GlyphBox) |> ignore
+            line.Children.Add(plus_GlyphBox) |> ignore
+            line.Children.Add(two_GlyphBox) |> ignore
+            line.Children.Add(closeParen_GlyphBox) |> ignore
+
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
             canvas.Children.Add(line) |> ignore
+            canvas.Children.Add(textBlock) |> ignore
             this.Content <- screen_Grid

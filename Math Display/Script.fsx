@@ -20,7 +20,7 @@ let tf2= Typeface((char 0x221b).ToString())
 
 let formattedText = 
     FormattedText(
-        textToFormat = (Math.Presentation.TypeSetting.getOperatorString MathML.OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix),//(char 0x23b3).ToString(),//"H",//
+        textToFormat = "W",//(Math.Presentation.TypeSetting.getOperatorString MathML.OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix),//(char 0x23b3).ToString(),//"H",//
         culture = System.Globalization.CultureInfo.GetCultureInfo("en-US"),
         flowDirection = FlowDirection.LeftToRight,
         typeface = tf,
@@ -47,7 +47,5 @@ printf "CapsHeight      : %f \n" (tf.CapsHeight * 1000.)
 
 tf.FontFamily
 tf.Weight
-
-
 
 (new string([|((char)(System.Convert.ToInt32("0x2AB0",16)));((char)(System.Convert.ToInt32("0x338",16)))|]))
