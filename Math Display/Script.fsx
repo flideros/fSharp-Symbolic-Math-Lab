@@ -7,6 +7,7 @@
 //#r @"D:\MyFolders\Desktop\SymbolicMath\Math Display\bin\Debug\Math_Display.dll"
 #load "MathML.fs"
 #load "OperatorDictionary.fs"
+#load "MathematicalAlphanumericSymbols.fs"
 #load "TypeSetting.fs"
 open System.Windows       
 open System.Windows.Controls  
@@ -49,3 +50,5 @@ tf.FontFamily
 tf.Weight
 
 (new string([|((char)(System.Convert.ToInt32("0x2AB0",16)));((char)(System.Convert.ToInt32("0x338",16)))|]))
+
+

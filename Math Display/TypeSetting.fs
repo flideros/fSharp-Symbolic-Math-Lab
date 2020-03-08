@@ -26,6 +26,7 @@ type Glyph =
      leftBearing:float;
      rightBearing:float;
      width:float;
+     string:string
      font:Font
      }
 
@@ -100,15 +101,19 @@ module TypeSetting =
     let STIX2TextRegular_FontFamily =    FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Regular"),    "./#STIX Two Text")
     
     //  Typefaces
-    let STIX2Math_Typeface =           Typeface(STIX2Math_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextBold_Typeface =       Typeface(STIX2TextBold_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextBoldItalic_Typeface = Typeface(STIX2TextBoldItalic_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
-    let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
+    let STIX2Math_Typeface =           Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2MathItalic_Typeface =     Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Italic,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    
+    
+    let STIX2TextBold_Typeface =       Typeface(STIX2TextBold_FontFamily,      System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextBoldItalic_Typeface = Typeface(STIX2TextBoldItalic_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,    System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,   System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
     
     // Font Sizes
     let math100px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 100.<MathML.px>}
     let math200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 200.<MathML.px>}
+    let mathItalic200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2MathItalic_Typeface; size = 200.<MathML.px>}
 
     let formatText = 
         fun t font   -> 
@@ -138,7 +143,12 @@ module TypeSetting =
              baseline = ft.Baseline; 
              width = ft.Width; 
              height = ft.Height;
-             font = font}
+             font = font;
+             string = t}
+
+    let getHorizontalKern leftGlyph rightGlyph = 
+        let pairWidth = formatText (leftGlyph.string + rightGlyph.string) leftGlyph.font        
+        pairWidth.Width - leftGlyph.width - rightGlyph.width
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -163,7 +173,9 @@ module TypeSetting =
         do  tranforms.Children.Add(TranslateTransform(X = p.x, Y = p.y))
             tranforms.Children.Add(ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY))            
             glyphBox.RenderTransform <- tranforms
-        
+       
+       
+
 
     (*Test Area*)
     type TestCanvas() as this  =  
@@ -187,17 +199,18 @@ module TypeSetting =
         
         let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) math200px
         let unicode =  getGlyph (getStringAtUnicode 0x221c) math200px
-        let a = getGlyph "W" math200px
-        let plus = getGlyph "A" math200px //(getOperatorString plusSignInfix)
+        
+        let a = getGlyph MathematicalAlphanumericSymbols.LatinScript.Normal .A math200px
+        let plus = getGlyph (getOperatorString plusSignInfix) math200px
         let two = getGlyph "2" math200px
         let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) math200px
 
         let unicode_GlyphBox = getGlyphBox unicode {x=0.;y=0.}
-        let operator_GlyphBox = getGlyphBox operator {x=unicode.width;y=0.}
-        let a_GlyphBox = getGlyphBox a {x= operator.width + unicode.width;y=0.}
-        let plus_GlyphBox = getGlyphBox plus {x = operator.width + unicode.width + a.width - 105.;y=0.}
-        let two_GlyphBox =  getGlyphBox two  {x = operator.width + unicode.width + a.width + plus.width - 105.;y=0.}
-        let closeParen_GlyphBox =  getGlyphBox closeParen  {x = operator.width + unicode.width + a.width + plus.width + two.width - 105.;y=0.}
+        let operator_GlyphBox = getGlyphBox operator {x=unicode.width - (getHorizontalKern unicode operator);y=0.}
+        let a_GlyphBox = getGlyphBox a {x = operator.width + unicode.width;y=0.}
+        let plus_GlyphBox = getGlyphBox plus {x = operator.width + unicode.width + a.width + (getHorizontalKern a plus);y=0.}
+        let two_GlyphBox =  getGlyphBox two  {x = operator.width + unicode.width + a.width + plus.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
+        let closeParen_GlyphBox =  getGlyphBox closeParen  {x = operator.width + unicode.width + a.width + plus.width + two.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
         
         let line = 
             let g = Grid()
@@ -249,8 +262,9 @@ module TypeSetting =
 
         let textBlock = 
             let tb = TextBlock()
-            do  tb.Text <- "WA2"
-            tb.FontSize <- 38.
+            tb.Text <-  "\ue0f2" 
+            tb.FontStyle <- FontStyles.Normal
+            tb.FontSize <- 100.
             tb.FontFamily <- STIX2Math_FontFamily
             tb
 
