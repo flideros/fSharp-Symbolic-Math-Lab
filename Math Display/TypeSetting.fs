@@ -2,6 +2,7 @@
 
 open MathML
 open System
+
 open System.Windows       
 open System.Windows.Controls  
 open System.Windows.Shapes  
@@ -131,7 +132,7 @@ module TypeSetting =
             let ft = formatText t font 
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             // move glyph right when it hangs over the left side
-            let x = match ft.OverhangLeading > 0. with |true -> 0. | false -> Math.Abs ft.OverhangLeading
+            let x = match ft.OverhangLeading > 0. with | true -> 0. | false -> Math.Abs ft.OverhangLeading
             let geometry = ft.BuildGeometry(Point(x,0.)) 
             do  p.Data <- geometry.GetFlattenedPathGeometry()            
             {path=p;
@@ -173,14 +174,20 @@ module TypeSetting =
         do  tranforms.Children.Add(TranslateTransform(X = p.x, Y = p.y))
             tranforms.Children.Add(ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY))            
             glyphBox.RenderTransform <- tranforms
-       
-       
-
 
     (*Test Area*)
     type TestCanvas() as this  =  
         inherit UserControl()
         
+        let textBlock =                    
+                   let tb = TextBlock()
+                   tb.Text <-  "\U0001D434.ss01"//"\ue0f2" 
+                   tb.FontStyle <- FontStyles.Normal
+                   tb.FontSize <- 100.
+                   tb.FontFamily <- STIX2Math_FontFamily
+                   tb.Typography.StylisticSet1 <- true
+                   tb
+
         let getGlyphBox glyph (p:Position) = 
             let x,y = p.x, p.y
             //let glyph = getGlyph text font
@@ -200,7 +207,7 @@ module TypeSetting =
         let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) math200px
         let unicode =  getGlyph (getStringAtUnicode 0x221c) math200px
         
-        let a = getGlyph MathematicalAlphanumericSymbols.LatinScript.Normal .A math200px
+        let a = getGlyph MathematicalAlphanumericSymbols.LatinScript.Bold.A math200px
         let plus = getGlyph (getOperatorString plusSignInfix) math200px
         let two = getGlyph "2" math200px
         let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) math200px
@@ -260,13 +267,6 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
 
-        let textBlock = 
-            let tb = TextBlock()
-            tb.Text <-  "\ue0f2" 
-            tb.FontStyle <- FontStyles.Normal
-            tb.FontSize <- 100.
-            tb.FontFamily <- STIX2Math_FontFamily
-            tb
 
         do  line.Children.Add(unicode_GlyphBox) |> ignore 
             line.Children.Add(operator_GlyphBox) |> ignore            

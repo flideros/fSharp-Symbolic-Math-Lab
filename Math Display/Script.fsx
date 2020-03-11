@@ -47,7 +47,9 @@ printf "XHeight         : %f \n" (tf.XHeight * 1000.)
 printf "CapsHeight      : %f \n" (tf.CapsHeight * 1000.)
 
 tf.FontFamily
-tf.Weight
+tf
+
+fontFamily.Source
 
 (new string([|((char)(System.Convert.ToInt32("0x2AB0",16)));((char)(System.Convert.ToInt32("0x338",16)))|]))
 
