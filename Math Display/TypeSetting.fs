@@ -181,7 +181,7 @@ module TypeSetting =
         
         let textBlock =                    
                    let tb = TextBlock()
-                   tb.Text <-  "\U0001D434.ss01"//"\ue0f2" 
+                   tb.Text <-  "\ue0f2" 
                    tb.FontStyle <- FontStyles.Normal
                    tb.FontSize <- 100.
                    tb.FontFamily <- STIX2Math_FontFamily
