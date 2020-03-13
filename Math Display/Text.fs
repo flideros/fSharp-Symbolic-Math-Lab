@@ -176,11 +176,11 @@ module Text =
     let  defaultRunProperties = 
         let STIX2Math_FontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),"./#STIX Two Math")
         let STIX2Math_Typeface = Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-        {BackgroundBrush  =  Brushes.Black;
+        {BackgroundBrush  =  Brushes.Transparent;
          BaselineAlignment  =  BaselineAlignment.Baseline;
          CultureInfo  =  System.Globalization.CultureInfo("es-ES", false);
-         FontHintingEmSize  = 12.;
-         FontRenderingEmSize  = 12.;
+         FontHintingEmSize  = 10.;
+         FontRenderingEmSize  = 10.;
          ForegroundBrush  =  Brushes.Black;
          NumberSubstitution  =  NumberSubstitution();
          TextDecorations  =  TextDecorationCollection();
@@ -188,12 +188,7 @@ module Text =
          Typeface  =  STIX2Math_Typeface;
          TypographyProperties  =  TypographyProperties(defaultTypographyProperties);
         }
-
-    type MarkerProperties(source) = 
-        inherit TextMarkerProperties()
-        default properties.Offset = 1.
-        default properties.TextSource = source
-
+ 
     type ParagraphPropertiesRecord = 
         {
          AlwaysCollapsible : bool; 
@@ -239,8 +234,6 @@ module Text =
          TextMarkerProperties = null;
          TextWrapping = TextWrapping.NoWrap
         }
-    
-
 
     type Store(text:string) = 
         inherit TextSource()
@@ -262,12 +255,16 @@ module Text =
                 (textSourceCharacterIndexLimit,
                  CultureSpecificCharacterBufferRange(System.Globalization.CultureInfo.CurrentUICulture, characterBufferRange))
         override store.GetTextEffectCharacterIndexFromTextSourceCharacterIndex(_textSourceCharacterIndex) = 0
-            
-    
-    
-    
-    let drawingGroup = DrawingGroup()
-    let drawingContext = drawingGroup.Open()
-    let tf = TextFormatter.Create()
-    
-    
+
+    let format t =         
+        let textStore = Store(t)        
+        let tf = TextFormatting.TextFormatter.Create()
+        let textLine = 
+            tf.FormatLine
+                (textStore,
+                    0,
+                    96.*6.,
+                    ParagraphProperties(defaultParagraphProperties),
+                    null)
+        textLine
+

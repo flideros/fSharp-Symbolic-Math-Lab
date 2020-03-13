@@ -116,7 +116,18 @@ module TypeSetting =
     let math200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 200.<MathML.px>}
     let mathItalic200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2MathItalic_Typeface; size = 200.<MathML.px>}
 
-    let formatText = 
+    
+    let drawText t = 
+        let drawingGroup = DrawingGroup()
+        let drawingContext = drawingGroup.Open()
+        let textLine = Text.format t
+        do  textLine.Draw(drawingContext,Point(0.,0.),TextFormatting.InvertAxes.None)
+            drawingContext.Close()            
+        drawingGroup
+    
+    
+    
+    let formatTextWithFont = 
         fun t font   -> 
             FormattedText(
                 textToFormat = t,
@@ -127,13 +138,14 @@ module TypeSetting =
                 foreground = Brushes.Black,
                 pixelsPerDip = 1.25)
 
+
     let getGlyph :GlyphBuilder = 
         fun t font -> 
-            let ft = formatText t font 
+            let ft = formatTextWithFont t font //Text.format t //
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             // move glyph right when it hangs over the left side
             let x = match ft.OverhangLeading > 0. with | true -> 0. | false -> Math.Abs ft.OverhangLeading
-            let geometry = ft.BuildGeometry(Point(x,0.)) 
+            let geometry = ft.BuildGeometry(Point(x,0.)) //drawText t //
             do  p.Data <- geometry.GetFlattenedPathGeometry()            
             {path=p;
              leftBearing = ft.OverhangLeading; 
@@ -148,7 +160,7 @@ module TypeSetting =
              string = t}
 
     let getHorizontalKern leftGlyph rightGlyph = 
-        let pairWidth = formatText (leftGlyph.string + rightGlyph.string) leftGlyph.font        
+        let pairWidth = formatTextWithFont (leftGlyph.string + rightGlyph.string) leftGlyph.font        
         pairWidth.Width - leftGlyph.width - rightGlyph.width
 
     let getOperatorString (operator : Operator) = 
@@ -181,12 +193,22 @@ module TypeSetting =
         
         let textBlock =                    
                    let tb = TextBlock()
-                   tb.Text <-  "\ue0f2" 
+                   tb.Text <-  "\u212c"//"\U0001D49C"//"\ue0f2" 
                    tb.FontStyle <- FontStyles.Normal
                    tb.FontSize <- 100.
                    tb.FontFamily <- STIX2Math_FontFamily
                    tb.Typography.StylisticSet1 <- true
                    tb
+
+        
+        let testDrawing = 
+            let d = DrawingBrush()
+            do  d.Drawing <- drawText "\u212c"//"\U0001D49C"
+            let rectangle = Rectangle (Width=200., Height=200., Stroke=Brushes.Black, StrokeThickness=0.)
+            do  rectangle.Fill <- d
+            let g = Grid()
+            do  g.Children.Add(rectangle) |> ignore
+            g
 
         let getGlyphBox glyph (p:Position) = 
             let x,y = p.x, p.y
@@ -276,6 +298,7 @@ module TypeSetting =
             line.Children.Add(closeParen_GlyphBox) |> ignore
 
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
-            canvas.Children.Add(line) |> ignore
-            canvas.Children.Add(textBlock) |> ignore
+            //canvas.Children.Add(line) |> ignore
+            //canvas.Children.Add(textBlock) |> ignore
+            canvas.Children.Add(testDrawing) |> ignore
             this.Content <- screen_Grid
