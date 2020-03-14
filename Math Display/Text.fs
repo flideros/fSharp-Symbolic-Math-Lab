@@ -10,6 +10,21 @@ open System.Windows.Media.TextFormatting
 
 module Text =
 
+    //  Font Families
+    let STIX2Math_FontFamily =           FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),            "./#STIX Two Math")
+    let STIX2TextBold_FontFamily =       FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Bold"),       "./#STIX Two Text Bold")
+    let STIX2TextBoldItalic_FontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-BoldItalic"), "./#STIX Two Text Bold Italic")
+    let STIX2TextItalic_FontFamily =     FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Italic"),     "./#STIX Two Text Italic")
+    let STIX2TextRegular_FontFamily =    FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Regular"),    "./#STIX Two Text")
+    
+    //  Typefaces
+    let STIX2Math_Typeface =           Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextBold_Typeface =       Typeface(STIX2TextBold_FontFamily,      System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextBoldItalic_Typeface = Typeface(STIX2TextBoldItalic_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,    System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,   System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    
+    
     type TypographyPropertiesRecord =     
         {   AnnotationAlternates : int;
             Capitals : FontCapitals;
@@ -173,14 +188,12 @@ module Text =
         override properties.TextEffects = runPropertiesRecord.TextEffects
         override properties.Typeface = runPropertiesRecord.Typeface
         override properties.TypographyProperties = upcast runPropertiesRecord.TypographyProperties
-    let  defaultRunProperties = 
-        let STIX2Math_FontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),"./#STIX Two Math")
-        let STIX2Math_Typeface = Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
+    let  defaultRunProperties =         
         {BackgroundBrush  =  Brushes.Transparent;
          BaselineAlignment  =  BaselineAlignment.Baseline;
          CultureInfo  =  System.Globalization.CultureInfo("es-ES", false);
-         FontHintingEmSize  = 10.;
-         FontRenderingEmSize  = 10.;
+         FontHintingEmSize  = 1000.;
+         FontRenderingEmSize  = 1000.;
          ForegroundBrush  =  Brushes.Black;
          NumberSubstitution  =  NumberSubstitution();
          TextDecorations  =  TextDecorationCollection();
@@ -235,9 +248,15 @@ module Text =
          TextWrapping = TextWrapping.NoWrap
         }
 
-    type Store(text:string) = 
+    type Store(text:string,typeface:Typeface,emSize:float<MathML.em>) = 
         inherit TextSource()
-           
+        
+        let runProperties = 
+            {defaultRunProperties with 
+                FontHintingEmSize = (emSize/1.<MathML.em>);
+                FontRenderingEmSize = (emSize/1.<MathML.em>);
+                Typeface  = typeface}
+
         override store.GetTextRun(textSourceCharacterIndex) : TextRun = 
             match textSourceCharacterIndex with
             | i when i < 0 -> failwith "textSourceCharacterIndex, Value must be greater than 0."
@@ -246,7 +265,7 @@ module Text =
                 upcast TextFormatting.TextCharacters
                     (text,textSourceCharacterIndex,
                      text.Length - textSourceCharacterIndex,
-                     RunProperties(defaultRunProperties))
+                     RunProperties(runProperties))
             | _ -> upcast TextEndOfParagraph(1)
         override store.GetPrecedingText(textSourceCharacterIndexLimit) : TextSpan<CultureSpecificCharacterBufferRange> =
             let characterBufferRange = 
@@ -256,15 +275,25 @@ module Text =
                  CultureSpecificCharacterBufferRange(System.Globalization.CultureInfo.CurrentUICulture, characterBufferRange))
         override store.GetTextEffectCharacterIndexFromTextSourceCharacterIndex(_textSourceCharacterIndex) = 0
 
-    let format t =         
-        let textStore = Store(t)        
+    let format (text:string) (typeface:Typeface) (emSize:float<MathML.em>)  =         
+        
+        let runProperties = 
+            {defaultRunProperties with 
+                FontHintingEmSize = (emSize/1.<MathML.em>);
+                FontRenderingEmSize = (emSize/1.<MathML.em>);
+                Typeface  = typeface}
+        let paragraphProperties = 
+            {defaultParagraphProperties with
+                DefaultTextRunProperties = RunProperties(runProperties)}
+        
+        let textStore = Store(text,typeface,emSize)              
         let tf = TextFormatting.TextFormatter.Create()
-        let textLine = 
+        let textLine =             
             tf.FormatLine
                 (textStore,
                     0,
                     96.*6.,
-                    ParagraphProperties(defaultParagraphProperties),
+                    ParagraphProperties(paragraphProperties),
                     null)
         textLine
 

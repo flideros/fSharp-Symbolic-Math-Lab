@@ -94,59 +94,58 @@ module TypeSetting =
     open MathML
     open MathML.OperatorDictionary
 
-    //  Font Families
-    let STIX2Math_FontFamily =           FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"),            "./#STIX Two Math")
-    let STIX2TextBold_FontFamily =       FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Bold"),       "./#STIX Two Text Bold")
-    let STIX2TextBoldItalic_FontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-BoldItalic"), "./#STIX Two Text Bold Italic")
-    let STIX2TextItalic_FontFamily =     FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Italic"),     "./#STIX Two Text Italic")
-    let STIX2TextRegular_FontFamily =    FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Text-Regular"),    "./#STIX Two Text")
-    
-    //  Typefaces
-    let STIX2Math_Typeface =           Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-    let STIX2MathItalic_Typeface =     Typeface(STIX2Math_FontFamily,System.Windows.FontStyles.Italic,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-    
-    
-    let STIX2TextBold_Typeface =       Typeface(STIX2TextBold_FontFamily,      System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-    let STIX2TextBoldItalic_Typeface = Typeface(STIX2TextBoldItalic_FontFamily,System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-    let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,    System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-    let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,   System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
-    
     // Font Sizes
-    let math100px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 100.<MathML.px>}
-    let math200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2Math_Typeface; size = 200.<MathML.px>}
-    let mathItalic200px = {emSquare = 1000.<MathML.em>; typeFace = STIX2MathItalic_Typeface; size = 200.<MathML.px>}
-
-    
-    let drawText t = 
-        let drawingGroup = DrawingGroup()
-        let drawingContext = drawingGroup.Open()
-        let textLine = Text.format t
-        do  textLine.Draw(drawingContext,Point(0.,0.),TextFormatting.InvertAxes.None)
-            drawingContext.Close()            
-        drawingGroup
-    
+    let math100px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 100.<MathML.px>}
+    let math200px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
+  
     
     
     let formatTextWithFont = 
         fun t font   -> 
-            FormattedText(
+            Text.format t font.typeFace font.emSquare
+            (*FormattedText(
                 textToFormat = t,
                 culture = System.Globalization.CultureInfo.GetCultureInfo("en-US"),
                 flowDirection = FlowDirection.LeftToRight,
                 typeface = font.typeFace,
                 emSize = float font.emSquare,
                 foreground = Brushes.Black,
-                pixelsPerDip = 1.25)
-
+                pixelsPerDip = 1.25)*)
 
     let getGlyph :GlyphBuilder = 
         fun t font -> 
-            let ft = formatTextWithFont t font //Text.format t //
+            let drawText t x = 
+                let drawingGroup = DrawingGroup()
+                let drawingContext = drawingGroup.Open()
+                let textLine = Text.format t font.typeFace font.emSquare
+                do  textLine.Draw(drawingContext,Point(x,0.),TextFormatting.InvertAxes.None)
+                    drawingContext.Close()             
+                drawingGroup
+            let rec createGeometry (dg :DrawingGroup) = 
+                let items = dg.Children.Count
+                let gg = GeometryGroup()
+                let rec getDrawing i = 
+                    match i > 0 with
+                    | false -> gg
+                    | true -> 
+                        match dg.Children.Item(i-1) with
+                        | :? GeometryDrawing as gd -> 
+                            //do  gg.Children.Add(gd.Geometry)
+                            getDrawing (i-1)
+                        | :? GlyphRunDrawing as gr -> 
+                            do  gg.Children.Add(gr.GlyphRun.BuildGeometry())
+                            getDrawing (i-1)
+                        | :? DrawingGroup as dg -> 
+                            do  gg.Children.Add(createGeometry dg)
+                            getDrawing (i-1)
+                        | _ -> gg
+                getDrawing items            
+            let ft = Text.format t font.typeFace font.emSquare//formatTextWithFont t font //
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             // move glyph right when it hangs over the left side
             let x = match ft.OverhangLeading > 0. with | true -> 0. | false -> Math.Abs ft.OverhangLeading
-            let geometry = ft.BuildGeometry(Point(x,0.)) //drawText t //
-            do  p.Data <- geometry.GetFlattenedPathGeometry()            
+            let geometry = drawText t x //ft.BuildGeometry(Point(x,0.)) //
+            do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry() //geometry.GetFlattenedPathGeometry()            
             {path=p;
              leftBearing = ft.OverhangLeading; 
              extent = ft.Extent;
@@ -196,20 +195,10 @@ module TypeSetting =
                    tb.Text <-  "\u212c"//"\U0001D49C"//"\ue0f2" 
                    tb.FontStyle <- FontStyles.Normal
                    tb.FontSize <- 100.
-                   tb.FontFamily <- STIX2Math_FontFamily
+                   tb.FontFamily <- Text.STIX2Math_FontFamily
                    tb.Typography.StylisticSet1 <- true
                    tb
-
         
-        let testDrawing = 
-            let d = DrawingBrush()
-            do  d.Drawing <- drawText "\u212c"//"\U0001D49C"
-            let rectangle = Rectangle (Width=200., Height=200., Stroke=Brushes.Black, StrokeThickness=0.)
-            do  rectangle.Fill <- d
-            let g = Grid()
-            do  g.Children.Add(rectangle) |> ignore
-            g
-
         let getGlyphBox glyph (p:Position) = 
             let x,y = p.x, p.y
             //let glyph = getGlyph text font
@@ -229,7 +218,7 @@ module TypeSetting =
         let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) math200px
         let unicode =  getGlyph (getStringAtUnicode 0x221c) math200px
         
-        let a = getGlyph MathematicalAlphanumericSymbols.LatinScript.Bold.A math200px
+        let a = getGlyph MathematicalAlphanumericSymbols.LatinScript.Normal.A math200px
         let plus = getGlyph (getOperatorString plusSignInfix) math200px
         let two = getGlyph "2" math200px
         let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) math200px
@@ -289,7 +278,6 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
 
-
         do  line.Children.Add(unicode_GlyphBox) |> ignore 
             line.Children.Add(operator_GlyphBox) |> ignore            
             line.Children.Add(a_GlyphBox) |> ignore
@@ -298,7 +286,7 @@ module TypeSetting =
             line.Children.Add(closeParen_GlyphBox) |> ignore
 
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
-            //canvas.Children.Add(line) |> ignore
-            //canvas.Children.Add(textBlock) |> ignore
-            canvas.Children.Add(testDrawing) |> ignore
+            canvas.Children.Add(line) |> ignore
+            canvas.Children.Add(textBlock) |> ignore
+            
             this.Content <- screen_Grid
