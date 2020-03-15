@@ -95,22 +95,10 @@ module TypeSetting =
     open MathML.OperatorDictionary
 
     // Font Sizes
-    let math100px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 100.<MathML.px>}
+    let mathX00px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 300.<MathML.px>}
     let math200px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
-  
     
-    
-    let formatTextWithFont = 
-        fun t font   -> 
-            Text.format t font.typeFace font.emSquare
-            (*FormattedText(
-                textToFormat = t,
-                culture = System.Globalization.CultureInfo.GetCultureInfo("en-US"),
-                flowDirection = FlowDirection.LeftToRight,
-                typeface = font.typeFace,
-                emSize = float font.emSquare,
-                foreground = Brushes.Black,
-                pixelsPerDip = 1.25)*)
+    let formatTextWithFont = fun t font   ->  Text.format t font.typeFace font.emSquare
 
     let getGlyph :GlyphBuilder = 
         fun t font -> 
@@ -140,12 +128,12 @@ module TypeSetting =
                             getDrawing (i-1)
                         | _ -> gg
                 getDrawing items            
-            let ft = Text.format t font.typeFace font.emSquare//formatTextWithFont t font //
+            let ft = Text.format t font.typeFace font.emSquare
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
             // move glyph right when it hangs over the left side
             let x = match ft.OverhangLeading > 0. with | true -> 0. | false -> Math.Abs ft.OverhangLeading
-            let geometry = drawText t x //ft.BuildGeometry(Point(x,0.)) //
-            do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry() //geometry.GetFlattenedPathGeometry()            
+            let geometry = drawText t x 
+            do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry()
             {path=p;
              leftBearing = ft.OverhangLeading; 
              extent = ft.Extent;
@@ -192,7 +180,7 @@ module TypeSetting =
         
         let textBlock =                    
                    let tb = TextBlock()
-                   tb.Text <-  "\u212c"//"\U0001D49C"//"\ue0f2" 
+                   tb.Text <-  "\u2205"//"\U0001D49C"//"\ue0f2" 
                    tb.FontStyle <- FontStyles.Normal
                    tb.FontSize <- 100.
                    tb.FontFamily <- Text.STIX2Math_FontFamily
@@ -215,13 +203,13 @@ module TypeSetting =
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
         
-        let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) math200px
-        let unicode =  getGlyph (getStringAtUnicode 0x221c) math200px
+        let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
+        let unicode =  getGlyph (getStringAtUnicode 0x221c) mathX00px
         
-        let a = getGlyph MathematicalAlphanumericSymbols.LatinScript.Normal.A math200px
-        let plus = getGlyph (getOperatorString plusSignInfix) math200px
-        let two = getGlyph "2" math200px
-        let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) math200px
+        let a = getGlyph MathematicalAlphanumericSymbols.Greek.Capital.BoldItalicSansSerif.theta mathX00px
+        let plus = getGlyph (getOperatorString plusSignInfix) mathX00px
+        let two = getGlyph "\u0030\ufe00" mathX00px
+        let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
 
         let unicode_GlyphBox = getGlyphBox unicode {x=0.;y=0.}
         let operator_GlyphBox = getGlyphBox operator {x=unicode.width - (getHorizontalKern unicode operator);y=0.}
@@ -287,6 +275,6 @@ module TypeSetting =
 
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
             canvas.Children.Add(line) |> ignore
-            canvas.Children.Add(textBlock) |> ignore
+            //canvas.Children.Add(textBlock) |> ignore
             
             this.Content <- screen_Grid

@@ -24,7 +24,6 @@ module Text =
     let STIX2TextItalic_Typeface =     Typeface(STIX2TextItalic_FontFamily,    System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
     let STIX2TextRegular_Typeface =    Typeface(STIX2TextRegular_FontFamily,   System.Windows.FontStyles.Normal,System.Windows.FontWeights.Normal,System.Windows.FontStretches.Normal)
     
-    
     type TypographyPropertiesRecord =     
         {   AnnotationAlternates : int;
             Capitals : FontCapitals;
@@ -138,7 +137,7 @@ module Text =
          StandardLigatures = true;
          StandardSwashes = 0;
          StylisticAlternates = 0;
-         StylisticSet1 = true;
+         StylisticSet1 = false;
          StylisticSet10 = false;
          StylisticSet11 = false;
          StylisticSet12 = false;
@@ -287,9 +286,9 @@ module Text =
                 DefaultTextRunProperties = RunProperties(runProperties)}
         
         let textStore = Store(text,typeface,emSize)              
-        let tf = TextFormatting.TextFormatter.Create()
+        let textFormatter = TextFormatting.TextFormatter.Create()
         let textLine =             
-            tf.FormatLine
+            textFormatter.FormatLine
                 (textStore,
                     0,
                     96.*6.,
