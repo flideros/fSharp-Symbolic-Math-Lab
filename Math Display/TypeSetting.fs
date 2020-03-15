@@ -180,7 +180,7 @@ module TypeSetting =
         
         let textBlock =                    
                    let tb = TextBlock()
-                   tb.Text <-  "\u2205"//"\U0001D49C"//"\ue0f2" 
+                   tb.Text <-  "\U0001D7CA"//"\U0001D49C"//"\ue0f2" 
                    tb.FontStyle <- FontStyles.Normal
                    tb.FontSize <- 100.
                    tb.FontFamily <- Text.STIX2Math_FontFamily
@@ -203,20 +203,20 @@ module TypeSetting =
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
         
-        let operator = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
+        let openParen = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
         let unicode =  getGlyph (getStringAtUnicode 0x221c) mathX00px
         
-        let a = getGlyph MathematicalAlphanumericSymbols.Greek.Capital.BoldItalicSansSerif.theta mathX00px
+        let a = getGlyph MathematicalAlphanumericSymbols.Greek.Small.Bold.alpha mathX00px
         let plus = getGlyph (getOperatorString plusSignInfix) mathX00px
         let two = getGlyph "\u0030\ufe00" mathX00px
         let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
 
         let unicode_GlyphBox = getGlyphBox unicode {x=0.;y=0.}
-        let operator_GlyphBox = getGlyphBox operator {x=unicode.width - (getHorizontalKern unicode operator);y=0.}
-        let a_GlyphBox = getGlyphBox a {x = operator.width + unicode.width;y=0.}
-        let plus_GlyphBox = getGlyphBox plus {x = operator.width + unicode.width + a.width + (getHorizontalKern a plus);y=0.}
-        let two_GlyphBox =  getGlyphBox two  {x = operator.width + unicode.width + a.width + plus.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
-        let closeParen_GlyphBox =  getGlyphBox closeParen  {x = operator.width + unicode.width + a.width + plus.width + two.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
+        let operator_GlyphBox = getGlyphBox openParen {x=unicode.width - (getHorizontalKern unicode openParen);y=0.}
+        let a_GlyphBox = getGlyphBox a {x = openParen.width + unicode.width;y=0.}
+        let plus_GlyphBox = getGlyphBox plus {x = openParen.width + unicode.width + a.width + (getHorizontalKern a plus);y=0.}
+        let two_GlyphBox =  getGlyphBox two  {x = openParen.width + unicode.width + a.width + plus.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
+        let closeParen_GlyphBox =  getGlyphBox closeParen  {x = openParen.width + unicode.width + a.width + plus.width + two.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
         
         let line = 
             let g = Grid()
@@ -275,6 +275,6 @@ module TypeSetting =
 
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
             canvas.Children.Add(line) |> ignore
-            //canvas.Children.Add(textBlock) |> ignore
+            canvas.Children.Add(textBlock) |> ignore
             
             this.Content <- screen_Grid
