@@ -2312,7 +2312,7 @@ type GraphingCalculator() as graphingCalculator =
             setQuaternion (Quaternion(new Vector3D(0., 0., 1.), 0.))
             rotateTransform3D.Rotation <- QuaternionRotation3D(state.quaternion)
             model3DGroup.Transform <- rotateTransform3D
-    //  3D Parametric
+        //  3D Parametric
     let handleParameterRadioButtons_Checked () =         
         setInputMode Graph3DParametric
     let handleTextBoxFxPreviewMouseDown () =

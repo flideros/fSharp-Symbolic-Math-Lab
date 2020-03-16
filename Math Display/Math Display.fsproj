@@ -44,8 +44,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="MathML.fs" />
-    <Compile Include="OperatorDictionary.fs" />
     <Compile Include="MathematicalAlphanumericSymbols.fs" />
+    <Compile Include="MathematicalStandardizedVariants.fs" />
+    <Compile Include="OperatorDictionary.fs" />
     <Compile Include="Glyphs.fs" />
     <Compile Include="Text.fs" />
     <Compile Include="TypeSetting.fs" />

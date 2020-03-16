@@ -206,7 +206,7 @@ module TypeSetting =
         let openParen = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
         let unicode =  getGlyph (getStringAtUnicode 0x221c) mathX00px
         
-        let a = getGlyph MathematicalAlphanumericSymbols.Greek.Small.Bold.alpha mathX00px
+        let a = getGlyph MathematicalStandardizedVariants.squareCap mathX00px
         let plus = getGlyph (getOperatorString plusSignInfix) mathX00px
         let two = getGlyph "\u0030\ufe00" mathX00px
         let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
@@ -275,6 +275,6 @@ module TypeSetting =
 
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
             canvas.Children.Add(line) |> ignore
-            canvas.Children.Add(textBlock) |> ignore
+            //canvas.Children.Add(textBlock) |> ignore
             
             this.Content <- screen_Grid

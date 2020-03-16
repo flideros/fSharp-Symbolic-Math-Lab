@@ -23,31 +23,62 @@ let resource = new Uri("app.xaml",System.UriKind.Relative)
 let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
-let dataLab = DataLab(RenderTransformOrigin = Point(0.,0.))
-let calculator = Calculator(OverridesDefaultStyle = true) 
-let graphingCalc = GraphingCalculator.GraphingCalculator()
-let colorPicker = HsvColorPicker(selectedColor=SharedValue(Colors.Transparent))
+
 let testCanvas = Math.Presentation.TypeSetting.TestCanvas()
+let stack = 
+    let sp = StackPanel()
+    let dataLab = 
+        let b = Button(Content = "Data Lab")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- DataLab(RenderTransformOrigin = Point(0.,0.))
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b    
+    let colorPicker = 
+        let b = Button(Content = "Color Picker")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- HsvColorPicker(selectedColor=SharedValue(Colors.Transparent))
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b    
+    let basicCalculator = 
+        let b = Button(Content = "Basic Calculator")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- BasicCalculator.Calculator()
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b    
+    let graphingCalculator = 
+        let b = Button(Content = "Graphing Calculator")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- GraphingCalculator.GraphingCalculator()
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b    
+    do  sp.Children.Add(dataLab) |> ignore
+        sp.Children.Add(graphingCalculator) |> ignore
+        sp.Children.Add(basicCalculator) |> ignore
+        sp.Children.Add(colorPicker) |> ignore 
+    sp
 
 // Tab Control 
 let tabs = TabControl()
 
 let item0 = TabItem(Header = "Test Canvas")
 do  item0.Content <- testCanvas
-let item1 = TabItem(Header = "Graphing Calculator")
-do  item1.Content <- graphingCalc
-let item2 = TabItem(Header = "SQL Pad")
-do  item2.Content <- dataLab
-let item3 = TabItem(Header = "Calculator")
-do  item3.Content <- calculator
-let item4 = TabItem(Header = "ColorPicker")
-do  item4.Content <- colorPicker
+let item1 = TabItem(Header = "Stack")
+do  item1.Content <- stack
 
 do  tabs.Items.Add(item0) |> ignore
     tabs.Items.Add(item1) |> ignore
-    tabs.Items.Add(item2) |> ignore
-    tabs.Items.Add(item4) |> ignore
-
 (**)
 // Make a window and add content
 let window = new Window(RenderTransformOrigin = Point(0.,0.))
