@@ -203,20 +203,19 @@ module TypeSetting =
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
         
-        let openParen = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
-        let unicode =  getGlyph (getStringAtUnicode 0x221c) mathX00px
-        
-        let a = getGlyph MathematicalStandardizedVariants.squareCap mathX00px
-        let plus = getGlyph (getOperatorString plusSignInfix) mathX00px
-        let two = getGlyph "\u0030\ufe00" mathX00px
-        let closeParen = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
+        let c0=  getGlyph MathematicalAlphanumericSymbols.Digit.Normal.eight mathX00px
+        let c1 = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
+        let c2 = getGlyph MathematicalStandardizedVariants.emptySet mathX00px
+        let c3 = getGlyph MathematicalAlphanumericSymbols.LatinSerif.Normal.W mathX00px
+        let c4 = getGlyph MathematicalAlphanumericSymbols.LatinSerif.Normal.A mathX00px
+        let c5 = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
 
-        let unicode_GlyphBox = getGlyphBox unicode {x=0.;y=0.}
-        let operator_GlyphBox = getGlyphBox openParen {x=unicode.width - (getHorizontalKern unicode openParen);y=0.}
-        let a_GlyphBox = getGlyphBox a {x = openParen.width + unicode.width;y=0.}
-        let plus_GlyphBox = getGlyphBox plus {x = openParen.width + unicode.width + a.width + (getHorizontalKern a plus);y=0.}
-        let two_GlyphBox =  getGlyphBox two  {x = openParen.width + unicode.width + a.width + plus.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
-        let closeParen_GlyphBox =  getGlyphBox closeParen  {x = openParen.width + unicode.width + a.width + plus.width + two.width + (getHorizontalKern a plus) + (getHorizontalKern plus two);y=0.}
+        let c0_GlyphBox = getGlyphBox c0{x=0.;y=0.}
+        let c1_GlyphBox = getGlyphBox c1 {x = c0.width - (getHorizontalKern c0 c1); y=0.}
+        let c2_GlyphBox = getGlyphBox c2 {x = c1.width + c0.width;y=0.}
+        let c3_GlyphBox = getGlyphBox c3 {x = c1.width + c0.width + c2.width + (getHorizontalKern c2 c3); y=0.}
+        let c4_GlyphBox = getGlyphBox c4 {x = c1.width + c0.width + c2.width + c3.width + (getHorizontalKern c2 c3) + (getHorizontalKern c3 c4); y=0.}
+        let c5_GlyphBox = getGlyphBox c5 {x = c1.width + c0.width + c2.width + c3.width + c4.width + (getHorizontalKern c2 c3) + (getHorizontalKern c3 c4); y=0.}
         
         let line = 
             let g = Grid()
@@ -266,12 +265,12 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
 
-        do  line.Children.Add(unicode_GlyphBox) |> ignore 
-            line.Children.Add(operator_GlyphBox) |> ignore            
-            line.Children.Add(a_GlyphBox) |> ignore
-            line.Children.Add(plus_GlyphBox) |> ignore
-            line.Children.Add(two_GlyphBox) |> ignore
-            line.Children.Add(closeParen_GlyphBox) |> ignore
+        do  line.Children.Add(c0_GlyphBox) |> ignore 
+            line.Children.Add(c1_GlyphBox) |> ignore            
+            line.Children.Add(c2_GlyphBox) |> ignore
+            line.Children.Add(c3_GlyphBox) |> ignore
+            line.Children.Add(c4_GlyphBox) |> ignore
+            line.Children.Add(c5_GlyphBox) |> ignore
 
             line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
             canvas.Children.Add(line) |> ignore

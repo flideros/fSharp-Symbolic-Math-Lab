@@ -60,7 +60,7 @@ let stack =
             let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
             do  w.Content <- GraphingCalculator.GraphingCalculator()
             w.Topmost <- true
-            w.Show() 
+            w.Show() |> ignore
         b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b    
     do  sp.Children.Add(dataLab) |> ignore
