@@ -95,18 +95,18 @@ module TypeSetting =
     open MathML.OperatorDictionary
 
     // Font Sizes
-    let mathX00px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 300.<MathML.px>}
+    let mathX00px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 400.<MathML.px>}
     let math200px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
     
     let formatTextWithFont = fun t font   ->  Text.format t font.typeFace font.emSquare
-
+    
     let getGlyph :GlyphBuilder = 
         fun t font -> 
-            let drawText t x = 
+            let drawText t = 
                 let drawingGroup = DrawingGroup()
                 let drawingContext = drawingGroup.Open()
                 let textLine = Text.format t font.typeFace font.emSquare
-                do  textLine.Draw(drawingContext,Point(x,0.),TextFormatting.InvertAxes.None)
+                do  textLine.Draw(drawingContext,Point(0.,0.),TextFormatting.InvertAxes.None)
                     drawingContext.Close()             
                 drawingGroup
             let rec createGeometry (dg :DrawingGroup) = 
@@ -129,10 +129,8 @@ module TypeSetting =
                         | _ -> gg
                 getDrawing items            
             let ft = Text.format t font.typeFace font.emSquare
-            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)
-            // move glyph right when it hangs over the left side
-            let x = match ft.OverhangLeading > 0. with | true -> 0. | false -> Math.Abs ft.OverhangLeading
-            let geometry = drawText t x 
+            let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)            
+            let geometry = drawText t 
             do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry()
             {path=p;
              leftBearing = ft.OverhangLeading; 
@@ -146,9 +144,9 @@ module TypeSetting =
              font = font;
              string = t}
 
-    let getHorizontalKern leftGlyph rightGlyph = 
-        let pairWidth = formatTextWithFont (leftGlyph.string + rightGlyph.string) leftGlyph.font        
-        pairWidth.Width - leftGlyph.width - rightGlyph.width
+    let getHorizontalKern leftGlyph rightGlyph =
+        let typeSetPair = formatTextWithFont (leftGlyph.string + rightGlyph.string) leftGlyph.font        
+        typeSetPair.Width - leftGlyph.width - rightGlyph.width
 
     let getOperatorString (operator : Operator) = 
         let rec loop oc =
@@ -174,22 +172,8 @@ module TypeSetting =
             tranforms.Children.Add(ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY))            
             glyphBox.RenderTransform <- tranforms
 
-    (*Test Area*)
-    type TestCanvas() as this  =  
-        inherit UserControl()
-        
-        let textBlock =                    
-                   let tb = TextBlock()
-                   tb.Text <-  "\U0001D7CA"//"\U0001D49C"//"\ue0f2" 
-                   tb.FontStyle <- FontStyles.Normal
-                   tb.FontSize <- 100.
-                   tb.FontFamily <- Text.STIX2Math_FontFamily
-                   tb.Typography.StylisticSet1 <- true
-                   tb
-        
-        let getGlyphBox glyph (p:Position) = 
+    let getGlyphBox glyph (p:Position) = 
             let x,y = p.x, p.y
-            //let glyph = getGlyph text font
             let y' = y - (match glyph.overHangBefore > 0. with | true -> glyph.overHangBefore | false -> 0.)
             let gb = GlyphBox(glyph)
             do  gb.Width <- gb.Width * (glyph.font.size / 960.<MathML.px>)
@@ -202,29 +186,69 @@ module TypeSetting =
                                 {x = x; y = y'} // position
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
-        
-        let c0=  getGlyph MathematicalAlphanumericSymbols.Digit.Normal.eight mathX00px
-        let c1 = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
-        let c2 = getGlyph MathematicalStandardizedVariants.emptySet mathX00px
-        let c3 = getGlyph MathematicalAlphanumericSymbols.LatinSerif.Normal.W mathX00px
-        let c4 = getGlyph MathematicalAlphanumericSymbols.LatinSerif.Normal.A mathX00px
-        let c5 = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
-
-        let c0_GlyphBox = getGlyphBox c0{x=0.;y=0.}
-        let c1_GlyphBox = getGlyphBox c1 {x = c0.width - (getHorizontalKern c0 c1); y=0.}
-        let c2_GlyphBox = getGlyphBox c2 {x = c1.width + c0.width;y=0.}
-        let c3_GlyphBox = getGlyphBox c3 {x = c1.width + c0.width + c2.width + (getHorizontalKern c2 c3); y=0.}
-        let c4_GlyphBox = getGlyphBox c4 {x = c1.width + c0.width + c2.width + c3.width + (getHorizontalKern c2 c3) + (getHorizontalKern c3 c4); y=0.}
-        let c5_GlyphBox = getGlyphBox c5 {x = c1.width + c0.width + c2.width + c3.width + c4.width + (getHorizontalKern c2 c3) + (getHorizontalKern c3 c4); y=0.}
-        
-        let line = 
+    
+    let makeLineFrom (glyphs:Glyph list) =
             let g = Grid()
             let row0 = RowDefinition(Height = GridLength.Auto)
             let row1 = RowDefinition(Height = GridLength.Auto)
             do  g.RowDefinitions.Add(row0)
                 g.RowDefinitions.Add(row1)
+            
+            let kerns = 
+            // compare adjacent glyph widths to the typeset width of the pair.
+                let leftGlyphs = List.truncate (glyphs.Length-1) glyphs
+                let rightGlyphs = glyphs.Tail
+                let glyphPairs = List.zip leftGlyphs rightGlyphs
+                let kerns = List.scan (fun acc (l,r) -> acc + (getHorizontalKern l r)) 0. glyphPairs
+                kerns
+            let positions = 
+                let initialPosition = {x=0.;y=0.}
+                
+                let _positions = 
+                    let p = List.scan (fun acc (x : Glyph) -> {x = (acc.x + x.width); y = 0.}) initialPosition glyphs
+                    List.truncate glyphs.Length p
+                
+                let positionsWithKernApplied = 
+                    List.mapi (fun i (p:Position) -> {x = p.x + kerns.[i]; y = p.y}) _positions
+
+                positionsWithKernApplied
+            let glyphBoxes = List.map2 (fun g p -> getGlyphBox g p) glyphs positions
+            do  List.iter (fun x -> g.Children.Add(x) |> ignore) glyphBoxes
             g
+    
+    (*Test Area*)
+    type TestCanvas() as this  =  
+        inherit UserControl()
         
+        let c0=  getGlyph (getOperatorString OperatorDictionary.cubeRootPrefix) mathX00px
+        let c1 = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
+        let c2 = getGlyph MathematicalStandardizedVariants.emptySet mathX00px
+        let c3 = getGlyph (MathematicalAlphanumericSymbols.LatinSerif.Normal.W) mathX00px
+        let c4 = getGlyph (MathematicalAlphanumericSymbols.LatinSerif.Normal.A) mathX00px
+        let c5 = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
+
+        let glyphs = [c0;c1;c2;c3;c4;c5]
+        //let glyphs = [c3;c4]  
+
+        let line = makeLineFrom glyphs
+        
+        let kerns = 
+            // compare adjacent glyph widths to the typeset width of the pair.
+                let leftGlyphs = List.truncate (glyphs.Length-1) glyphs
+                let rightGlyphs = glyphs.Tail
+                let glyphPairs = List.zip leftGlyphs rightGlyphs
+                let kerns = List.scan (fun acc (l,r) -> acc + (getHorizontalKern l r)) 0. glyphPairs
+                kerns
+
+        let textBlock =                    
+            let tb = TextBlock()
+            tb.Text <- kerns.ToString()//(MathematicalAlphanumericSymbols.LatinSerif.Normal.W) //"FA"//"\U0001D49C"//"\ue0f2" 
+            tb.FontStyle <- FontStyles.Normal
+            tb.FontSize <- 60.
+            tb.FontFamily <- Text.STIX2Math_FontFamily
+            tb.Typography.StylisticSet1 <- true
+            tb
+
         let canvas = Canvas(ClipToBounds = true)
     
         let scale_Slider =
@@ -244,7 +268,7 @@ module TypeSetting =
                     do  tranforms.Children.Add(TranslateTransform(X = 100., Y = 100.))
                         tranforms.Children.Add(ScaleTransform(ScaleX = 5.0/s,ScaleY = 5.0/s))            
                     tranforms
-                    //
+                    
             s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
             s
         let scaleSlider_Grid =
@@ -265,15 +289,8 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
 
-        do  line.Children.Add(c0_GlyphBox) |> ignore 
-            line.Children.Add(c1_GlyphBox) |> ignore            
-            line.Children.Add(c2_GlyphBox) |> ignore
-            line.Children.Add(c3_GlyphBox) |> ignore
-            line.Children.Add(c4_GlyphBox) |> ignore
-            line.Children.Add(c5_GlyphBox) |> ignore
-
-            line.RenderTransform <- TranslateTransform(X = 100., Y = 100.)
+        do  line.RenderTransform <- TranslateTransform(X = 0., Y = 200.)
             canvas.Children.Add(line) |> ignore
-            //canvas.Children.Add(textBlock) |> ignore
+            canvas.Children.Add(textBlock) |> ignore
             
             this.Content <- screen_Grid

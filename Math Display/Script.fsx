@@ -8,6 +8,8 @@
 #load "MathML.fs"
 #load "OperatorDictionary.fs"
 #load "MathematicalAlphanumericSymbols.fs"
+#load "MathematicalStandardizedVariants.fs"
+#load "Text.fs"
 #load "TypeSetting.fs"
 open System.Windows       
 open System.Windows.Controls  
@@ -54,3 +56,7 @@ fontFamily.Source
 (new string([|((char)(System.Convert.ToInt32("0x2AB0",16)));((char)(System.Convert.ToInt32("0x338",16)))|]))
 
 
+let testList   = [1.;2.;3.;4.;5.]
+let testListoo = [0.1;0.01;0.001;0.0001;0.00001]
+
+List.scan (fun acc x -> acc + x) 0. testList
