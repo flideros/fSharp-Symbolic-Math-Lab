@@ -4,7 +4,18 @@ module MathPositioningConstants =
     // ref. https://docs.microsoft.com/en-us/typography/opentype/spec/math
     // Suggested values are from the microsoft documentation, the used
     // values are from the STIX 2 Math font.
+
+    (*
+    The following naming convention are used for fields in the MathConstants table:
     
+    Height — Specifies a distance from the main baseline.
+    Kern — Represents a fixed amount of empty space to be introduced.
+    Gap — Represents an amount of empty space that may need to be increased to meet certain criteria.
+    Drop and Rise — Specifies the relationship between measurements of two elements to be positioned relative to each other (but not necessarily in a stack-like manner) that must meet certain criteria. For a Drop, one of the positioned elements has to be moved down to satisfy those criteria; for a Rise, the movement is upwards.
+    Shift — Defines a vertical shift applied to an element sitting on a baseline.
+    Dist — Defines a distance between baselines of two elements.
+    *)
+// CONSTANTS    
     /// Percentage of scaling down for level 1 superscripts and subscripts. 
     /// Suggested value: 80%.
     let scriptPercentScaleDown = 70.
@@ -45,7 +56,7 @@ module MathPositioningConstants =
     /// Maximum (ink) height of accent base that does not require flattening the accents. 
     /// Suggested: cap height of the font (os2.sCapHeight).
     let flattenedAccentBaseHeight = 656.
-    
+// SUB/SUPERSCRIPT   
     /// The standard shift down applied to subscript elements. Positive for moving in 
     /// the downward direction. Suggested: os2.ySubscriptYOffset.
     let subscriptShiftDown = 210.
@@ -87,7 +98,7 @@ module MathPositioningConstants =
     /// Extra white space to be added after each subscript and superscript. 
     /// Suggested: 0.5 pt for a 12 pt font.
     let spaceAfterScript = 40.
-    
+// LIMITS    
     /// Minimum gap between the (ink) bottom of the upper limit, and the (ink) 
     /// top of the base operator.
     let upperLimitGapMin = 135.
@@ -103,7 +114,7 @@ module MathPositioningConstants =
     /// Minimum distance between baseline of the lower limit and 
     /// (ink) bottom of the base operator.
     let lowerLimitBaselineDropMin = 670.
-    
+// STACKS
     /// Standard shift up applied to the top element of a stack.
     let stackTopShiftUp = 470.
     
@@ -141,7 +152,7 @@ module MathPositioningConstants =
     /// Minimum gap between the ink of the stretched element, and the (ink) top of 
     /// the element below. Suggested: same value as lowerLimitGapMin.
     let stretchStackGapBelowMin = 68.
-    
+// FRACTIONS    
     /// Standard shift up applied to the numerator.
     let fractionNumeratorShiftUp = 585.
     
@@ -184,7 +195,7 @@ module MathPositioningConstants =
     /// Vertical distance between the ink of the top and bottom elements of 
     /// a skewed fraction.
     let skewedFractionVerticalGap = 68.
-    
+// OVER/UNDERBARS    
     /// Distance between the overbar and the (ink) top of he base. 
     /// Suggested: 3 × default rule thickness.
     let overbarVerticalGap = 175.
@@ -206,7 +217,7 @@ module MathPositioningConstants =
     /// Extra white space reserved below the underbar. Always positive. 
     /// Suggested: default rule thickness.
     let underbarExtraDescender = 68.
-    
+// RADICALS   
     /// Space between the (ink) top of the expression and the bar over it. 
     /// Suggested: 1¼ default rule thickness.
     let radicalVerticalGap = 85.
@@ -234,6 +245,6 @@ module MathPositioningConstants =
     /// Height of the bottom of the radical degree, if such is present, 
     /// in proportion to the ascender of the radical sign. Suggested: 60%.
     let radicalDegreeBottomRaisePercent = 55.
-    
+// CONNECTORS    
     /// Minimum overlap of connecting glyphs during glyph construction, in design units.
     let minConnectorOverlap = 100.
