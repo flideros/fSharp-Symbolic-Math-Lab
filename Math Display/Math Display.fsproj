@@ -47,6 +47,7 @@
     <Compile Include="MathematicalAlphanumericSymbols.fs" />
     <Compile Include="MathematicalStandardizedVariants.fs" />
     <Compile Include="OperatorDictionary.fs" />
+    <Compile Include="MathPositioningConstants.fs" />
     <Compile Include="Glyphs.fs" />
     <Compile Include="Text.fs" />
     <Compile Include="TypeSetting.fs" />
