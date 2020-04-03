@@ -208,7 +208,12 @@ type EnliveningExpressionElement = | Maction
 
 type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
 
-type Element = { element : MathMLElement; attributes : MathMLAttribute list; openTag : string; closeTag : string }
+type Element = 
+    { element : MathMLElement; 
+      attributes : MathMLAttribute list; 
+      openTag : string; 
+      closeTag : string 
+      symbol : string}
 
 module Element =
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
@@ -247,7 +252,7 @@ module Element =
         |> addOrRemoveSpace            
     
   
-    let element (elem : MathMLElement) (attr : MathMLAttribute list)  =                 
+    let element (elem : MathMLElement) (attr : MathMLAttribute list) (symbol : string) =                 
         
         let openTag attrString = 
             match elem with
@@ -385,7 +390,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
 
         | Token Mi -> 
             let defaultAttributes = 
@@ -410,7 +416,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Token Mn ->
             let defaultAttributes =  
@@ -435,7 +442,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Token Mo ->
             let defaultAttributes =  
@@ -489,7 +497,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Token Mtext ->
             let defaultAttributes =  
@@ -514,7 +523,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Token Mspace ->
             let defaultAttributes =  
@@ -554,7 +564,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Token Ms ->
             let defaultAttributes =  
@@ -583,7 +594,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Token Mglyph ->
             let defaultAttributes =  
@@ -610,7 +622,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -632,7 +645,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mfrac ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -656,7 +670,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Msqrt ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -675,7 +690,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mroot ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -694,7 +710,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mstyle ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -795,7 +812,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Merror ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -816,7 +834,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mpadded ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -842,7 +861,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mphantom ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -861,7 +881,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Mfenced ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -885,7 +906,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | GeneralLayout Menclose ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -907,7 +929,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Msub ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -929,7 +952,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Msup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -951,7 +975,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Msubsup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -974,7 +999,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Munde ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -997,7 +1023,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Mover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1020,7 +1047,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Munderover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1044,7 +1072,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Script Mmultiscripts ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1067,7 +1096,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Table Mtable ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1106,7 +1136,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Table Mlabeledtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1130,7 +1161,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Table Mtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1154,7 +1186,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Table Mtd ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1180,7 +1213,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Table Maligngroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1202,7 +1236,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Table Malignmark ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1224,7 +1259,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Mstack ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1249,7 +1285,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Mlongdiv ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1271,7 +1308,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Msgroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1294,7 +1332,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Msrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1316,7 +1355,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Mscarries ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1341,7 +1381,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Mscarry ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1364,7 +1405,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | MathLayout Msline ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1390,7 +1432,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
         
         | Enlivening Maction ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1413,7 +1456,8 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag }
+              closeTag = closeTag 
+              symbol = symbol}
 
     //Top-Level Constructor
     let math a = (element (Math) a)

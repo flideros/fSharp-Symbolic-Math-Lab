@@ -27,10 +27,11 @@ type Glyph =
      leftBearing:float;
      rightBearing:float;
      width:float;
-     string:string
-     font:Font
+     string:string;
+     font:Font;
+     mathElement:Element
      }
-type GlyphBuilder = string -> Font -> Glyph
+type GlyphBuilder = Font -> Element -> Glyph 
 type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
     let g = Grid()
@@ -80,62 +81,30 @@ type GlyphBox (glyph) as glyphBox =
         glyphBox.SetValue(Grid.RowSpanProperty,3)
         glyphBox.Child <- g
 
-
-type MathStyle =
-    (*
-      • Superscripts and subscripts are taken from the next smaller font unless in display mode they are taken in script font.
-      • Subscripts are always in the cramped variant. 
-      • Superscripts are only cramped if the original style was cramped.
-      • In a fraction, the numerator and denominator are taken from the next smaller font.
-      • The denominator is always in cramped variant
-      • The numerator is only in the cramped variant if the original style is cramped.
-      • Formulas under a radical or overline are in cramped variant.
-    *)
-    | Display
-    | Text
-    | Script
-    | ScriptScript
-    | DisplayCramped
-    | TextCramped
-    | ScriptCramped
-    | ScriptScriptCramped
-type MathObjectClassification =   
-    | Ordinary  // Lowercase Greek characters and those symbols that are just symbols.
-    | LargeOperator // Integral and sum signs, and big objects such as big cup for example.
-    | BinaryOperator
-    | BinaryRelation
-    | OpeningSymbol
-    | ClosingSymbol
-    | Punctuation
-    | Variable // Uppercase Greek letters and ordinary letters and digits.
-    | InnerSubformula
-
-type Token =
-    | Char of TokenElement * Glyph
-    | ControlSequence 
-
-
+type LineData = {element:MathMLElement;inkWidth:float;leftBearing:float;rightBearing:float}
+type MathLine = {grid:Grid;lineData:LineData}
 
 module TypeSetting = 
     open MathML
     open MathML.OperatorDictionary
 
+    let basisSize = 100.<MathML.px> 
+
+
     // Font Sizes
-    let mathX00px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 100.<MathML.px>}
-    let math30px = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 100.<MathML.px>}
-    let math200px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
-    
-    let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
-    let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
-    let scriptScriptSizeFont = {emSquare = 500.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = 200.<MathML.px>}
-    
-    
+    let mathX00px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+    let mathX0px = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}        
+    let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+    let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+    let scriptScriptSizeFont = {emSquare = 500.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
 
-
-    let formatTextWithFont = fun t font   ->  Text.format t font.typeFace font.emSquare
     
+    // Format Text
+    let formatTextWithFont = fun t font   ->  Text.format t font.typeFace font.emSquare    
+    
+    // Getters
     let getGlyph :GlyphBuilder = 
-        fun t font -> 
+        fun font elem -> 
             let drawText t = 
                 let drawingGroup = DrawingGroup()
                 let drawingContext = drawingGroup.Open()
@@ -162,9 +131,9 @@ module TypeSetting =
                             getDrawing (i-1)
                         | _ -> gg
                 getDrawing items            
-            let ft = Text.format t font.typeFace font.emSquare
+            let ft = Text.format elem.symbol font.typeFace font.emSquare
             let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)            
-            let geometry = drawText t 
+            let geometry = drawText elem.symbol 
             do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry()
             {path=p;
              leftBearing = ft.OverhangLeading; 
@@ -176,7 +145,8 @@ module TypeSetting =
              width = ft.Width; 
              height = ft.Height;
              font = font;
-             string = t}
+             string = elem.symbol
+             mathElement = elem}    
 
     let getHorizontalKern leftGlyph rightGlyph =
         let typeSetPair = formatTextWithFont (leftGlyph.string + rightGlyph.string) leftGlyph.font        
@@ -194,6 +164,7 @@ module TypeSetting =
 
     let getStringAtUnicode u = (char u).ToString()
     
+    // Transfomations
     let scaleGlyphBox (glyphBox :GlyphBox) (s:Size) = 
         do glyphBox.RenderTransform <- ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY)
 
@@ -220,7 +191,7 @@ module TypeSetting =
                                 {x = x; y = y'} // position
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
-    
+         
     let makeLineFrom (glyphs:Glyph list) =
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
@@ -254,31 +225,32 @@ module TypeSetting =
     type TestCanvas() as this  =  
         inherit UserControl()
         
-        let c0=  getGlyph (getOperatorString OperatorDictionary.cubeRootPrefix) mathX00px
-        let c1 = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) mathX00px
-        let c2 = getGlyph (MathematicalAlphanumericSymbols.Digit.Normal.two) mathX00px
-        let c3 = getGlyph (getOperatorString plusSignInfix) mathX00px
-        let c4 = getGlyph (MathematicalAlphanumericSymbols.LatinSerif.Italic.x) mathX00px
-        let c5 = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) mathX00px
+        let c0=  getGlyph textSizeFont (Element.element (MathMLElement.GeneralLayout Mroot) [] (getOperatorString OperatorDictionary.cubeRootPrefix))
+        let c1 = getGlyph textSizeFont (Element.element (MathMLElement.GeneralLayout Mfenced) [] (getOperatorString mathematicalLeftFlattenedParenthesisPrefix))
+        let c2 = getGlyph textSizeFont (Element.element (MathMLElement.Token Mi) [] (MathematicalAlphanumericSymbols.LatinSerif.Italic.C))
+        let c3 = getGlyph textSizeFont (Element.element (MathMLElement.Token Mo) [] (getOperatorString plusSignInfix))
+        let c4 = getGlyph textSizeFont (Element.element (MathMLElement.Token Mi) [] (MathematicalAlphanumericSymbols.LatinSerif.Italic.x))
+        let c5 = getGlyph textSizeFont (Element.element (MathMLElement.GeneralLayout Mfenced) [] (getOperatorString mathematicalRightFlattenedParenthesisPostfix))
 
-        let glyphs1 = [c0;c1;c2;c3;c4;c5]
-        let line1 = makeLineFrom glyphs1
+        let glyphs1 = [c2;c3;c4]//c4;c2]//
+        let line1 = makeLineFrom glyphs1 
         let line1_Width = List.fold (fun acc x -> x.width + acc) 0. glyphs1
 
-        let s0=  getGlyph (getOperatorString OperatorDictionary.cubeRootPrefix) math30px
-        let s1 = getGlyph (getOperatorString mathematicalLeftFlattenedParenthesisPrefix) math30px
-        let s2 = getGlyph (MathematicalAlphanumericSymbols.Digit.Normal.two) math30px
-        let s3 = getGlyph (getOperatorString plusSignInfix) math30px
-        let s4 = getGlyph (MathematicalAlphanumericSymbols.LatinSerif.Italic.x) math30px
-        let s5 = getGlyph (getOperatorString mathematicalRightFlattenedParenthesisPostfix) math30px
+        let s0=  getGlyph scriptSizeFont (Element.element (MathMLElement.GeneralLayout Mroot) [] (getOperatorString OperatorDictionary.cubeRootPrefix))
+        let s1 = getGlyph scriptSizeFont (Element.element (MathMLElement.GeneralLayout Mfenced) [] (getOperatorString mathematicalLeftFlattenedParenthesisPrefix))
+        let s2 = getGlyph scriptSizeFont (Element.element (MathMLElement.Token Mi) [] (MathematicalAlphanumericSymbols.LatinSerif.Italic.x))
+        let s3 = getGlyph scriptSizeFont (Element.element (MathMLElement.Token Mo) [] (getOperatorString plusSignInfix))
+        let s4 = getGlyph scriptSizeFont (Element.element (MathMLElement.Token Mi) [] (MathematicalAlphanumericSymbols.LatinSerif.Italic.x))
+        let s5 = getGlyph scriptSizeFont (Element.element (MathMLElement.GeneralLayout Mfenced) [] (getOperatorString mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs2 = [s2]//s0;s1;s2;s3;s4;s5]
         let line2 = makeLineFrom glyphs2
         
+        
        
         let textBlock =                    
             let tb = TextBlock()
-            tb.Text <- line1_Width .ToString()
+            tb.Text <- (*line1_Width  + c4.rightBearing + c2.leftBearing).ToString() *) s2.height.ToString() + " " + c4.baseline .ToString()
             tb.FontStyle <- FontStyles.Normal
             tb.FontSize <- 60.
             tb.FontFamily <- Text.STIX2Math_FontFamily
@@ -323,7 +295,7 @@ module TypeSetting =
             g
 
         do  line1.RenderTransform <- TranslateTransform(X = 0., Y = 200.)
-            line2.RenderTransform <- TranslateTransform(X = 317.8, Y = -30.)
+            line2.RenderTransform <- TranslateTransform(X = 200.5, Y = 27.8 - 36.)
             line2.SetValue(Grid.RowProperty,1)
 
             line1.Children.Add(line2) |> ignore

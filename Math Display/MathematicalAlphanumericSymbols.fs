@@ -838,4 +838,4 @@ module MathematicalAlphanumericSymbols =
             let seven = "\U0001D7FD"
             let eight = "\U0001D7FE"
             let nine = "\U0001D7FF"
-            
+    

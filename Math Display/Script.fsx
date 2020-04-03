@@ -19,7 +19,7 @@ open System.Windows.Media
 let fontFamily = FontFamily(System.Uri("file:///" + __SOURCE_DIRECTORY__ + "\\#STIX2Math"), "./#STIX Two Math")
 let tf = Typeface(fontFamily,System.Windows.FontStyle(),System.Windows.FontWeight(),System.Windows.FontStretch())
 
-let tf2= Typeface((char 0x221b).ToString())
+let tf2 = Typeface((char 0x221b).ToString())
 
 let formattedText = 
     FormattedText(
@@ -60,3 +60,7 @@ let testList   = [1.;2.;3.;4.;5.]
 let testListoo = [0.1;0.01;0.001;0.0001;0.00001]
 
 List.scan (fun acc x -> acc + x) 0. testList
+
+
+
+(char 0x221b).ToString()
