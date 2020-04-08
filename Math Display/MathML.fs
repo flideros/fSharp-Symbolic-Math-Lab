@@ -198,22 +198,69 @@ type Operator =
       rspace : Length
       properties: MathMLAttribute list 
     } 
+ 
+type TokenElement = 
+    | Mi       /// identifier
+    | Mn       /// number
+    | Mo       /// operator, fence, or separator
+    | Mtext    /// text
+    | Mspace   /// space
+    | Ms       /// string literal
+    | Mglyph   /// non-standard symbol as image
+// Layout schemata
+type GeneralLayoutElement = 
+    | Mrow     /// group any number of sub-expressions horizontally
+    | Mfrac    /// form a fraction from two sub-expressions
+    | Msqrt    /// form a square root (radical without an index)
+    | Mroot    /// form a radical with specified index
+    | Mstyle   /// style change
+    | Merror   /// enclose a syntax error message from a preprocessor
+    | Mpadded  /// adjust space around content
+    | Mphantom /// make content invisible but preserve its size
+    | Mfenced  /// surround content with a pair of fences
+    | Menclose /// enclose content with a stretching symbol such as a long division sign.
+type ScriptElement = 
+    | Msub         /// attach a subscript to a base
+    | Msup         /// attach a superscript to a base
+    | Msubsup      /// attach a subscript-superscript pair to a base
+    | Munde        /// attach an underscript to a base
+    | Mover        /// attach an overscript to a base
+    | Munderover   /// attach an underscript-overscript pair to a base
+    | Mmultiscripts/// attach prescripts and tensor indices to a base
+type TableElement = 
+    | Mtable      /// table or matrix
+    | Mlabeledtr  /// row in a table or matrix with a label or equation number
+    | Mtr         /// row in a table or matrix
+    | Mtd         /// one entry in a table or matrix
+    | Maligngroup /// alignment marker
+    | Malignmark  /// alignment marker
+type MathLayoutElement = 
+    | Mstack    /// columns of aligned characters
+    | Mlongdiv  /// similar to msgroup, with the addition of a divisor and result
+    | Msgroup   /// a group of rows in an mstack that are shifted by similar amounts
+    | Msrow     ///	a row in an mstack
+    | Mscarries /// row in an mstack that whose contents represent carries or borrows
+    | Mscarry   /// one entry in an mscarries
+    | Msline    /// horizontal line inside of mstack
+type EnliveningExpressionElement = 
+    | Maction   /// bind actions to a sub-expression
 
-type TokenElement = | Mi | Mn | Mo | Mtext | Mspace | Ms | Mglyph
-type GeneralLayoutElement = | Mrow | Mfrac | Msqrt | Mroot | Mstyle | Merror | Mpadded | Mphantom | Mfenced | Menclose
-type ScriptElement = | Msub | Msup | Msubsup | Munde | Mover | Munderover | Mmultiscripts
-type TableElement = | Mtable | Mlabeledtr | Mtr | Mtd | Maligngroup | Malignmark
-type MathLayoutElement = | Mstack | Mlongdiv | Msgroup | Msrow | Mscarries  | Mscarry | Msline
-type EnliveningExpressionElement = | Maction
-
-type MathMLElement = | Math | Token of TokenElement | GeneralLayout of GeneralLayoutElement | Script of ScriptElement | Table of TableElement | MathLayout of MathLayoutElement | Enlivening of EnliveningExpressionElement
+type MathMLElement = 
+    | Math 
+    | Token of TokenElement 
+    | GeneralLayout of GeneralLayoutElement 
+    | Script of ScriptElement 
+    | Table of TableElement 
+    | MathLayout of MathLayoutElement 
+    | Enlivening of EnliveningExpressionElement
 
 type Element = 
     { element : MathMLElement; 
       attributes : MathMLAttribute list; 
       openTag : string; 
       closeTag : string 
-      symbol : string}
+      symbol : string
+      arguments: Element list}
 
 module Element =
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
@@ -249,11 +296,11 @@ module Element =
         (x.GetType().Name.ToLowerInvariant() 
          + convertLength (x.ToString().Replace(x.GetType().Name + " ","=\""))
          + "\"").ToString().Replace("\"\"", "\"")
-        |> addOrRemoveSpace            
-    
-  
-    let element (elem : MathMLElement) (attr : MathMLAttribute list) (symbol : string) =                 
-        
+        |> addOrRemoveSpace
+    let private validateArgs (arguments : Element list) (elem : MathMLElement) =
+        ()
+      
+    let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) =                 
         let openTag attrString = 
             match elem with
             | Math -> "<math" + attrString + ">"
@@ -263,7 +310,6 @@ module Element =
             | Table x -> "<" + (x.ToString().ToLower()) + attrString + ">"
             | MathLayout x -> "<" + (x.ToString().ToLower()) + attrString + ">"
             | Enlivening x -> "<" + (x.ToString().ToLower()) + attrString + ">"
-
         let closeTag = 
             match elem with
             | Math -> "</math>"
@@ -273,125 +319,125 @@ module Element =
             | Table x -> "</" + x.ToString().ToLower() + ">"
             | MathLayout x -> "</" + x.ToString().ToLower() + ">"
             | Enlivening x -> "</" + x.ToString().ToLower() + ">"
-
         match elem with
         | Math ->                     
             let defaultAttributes = 
-                                    [//2.2 Top-Level <math> Element
-                                     Display Inline;
-                                     MaxWidth (KeyWord "available width");
-                                     Overflow Linebreak; 
-                                     AltImg "none";                                      
-                                     AltImgWidth (KeyWord "altimg width"); 
-                                     AltImgHeight (KeyWord "altimg height");
-                                     AltImgValign (EM 0.0<em>); 
-                                     AltText ""; 
-                                     CdGroup ""; 
+                [//2.2 Top-Level <math> Element
+                Display Inline;
+                MaxWidth (KeyWord "available width");
+                Overflow Linebreak; 
+                AltImg "none";                                      
+                AltImgWidth (KeyWord "altimg width"); 
+                AltImgHeight (KeyWord "altimg height");
+                AltImgValign (EM 0.0<em>); 
+                AltText ""; 
+                CdGroup ""; 
                                      
-                                     //3.3.4 Style Change <mstyle>
-                                     ScriptLevel ('+',0u)
-                                     DisplayStyle false ///When display="block", displaystyle is initialized to "true" when display="inline", displaystyle is initialized to "false"
-                                     ScriptSizeMultiplier 0.71
-                                     ScriptMinSize (PT 8.0<pt>)
-                                     InfixLineBreakStyle Before;
-                                     DecimalPoint '.'
+                //3.3.4 Style Change <mstyle>
+                ScriptLevel ('+',0u)
+                DisplayStyle false ///When display="block", displaystyle is initialized to "true" when display="inline", displaystyle is initialized to "false"
+                ScriptSizeMultiplier 0.71
+                ScriptMinSize (PT 8.0<pt>)
+                InfixLineBreakStyle Before;
+                DecimalPoint '.'
                                      
-                                     //2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+                //2.1.6 Attributes Shared by all MathML Elements 
+                Id "none"; 
+                Xref "none"; 
+                Class "none"; 
+                Style "none"; 
+                Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                //3.1.10 Mathematics style attributes common to presentation elements 
+                MathColor "black"; 
+                MathBackground "transparent"; 
 
-                                     //3.2.2 Mathematics style attributes common to token elements 
-                                     MathVariant Normal;
-                                     MathSize (EM 1.0<em>);
-                                     Dir Ltr;
+                //3.2.2 Mathematics style attributes common to token elements 
+                MathVariant Normal;
+                MathSize (EM 1.0<em>);
+                Dir Ltr;
                                      
-                                     //The rest after I compared this to the MathML schema
-                                     Accent false;
-                                     AccentUnder false;
-                                     Align _Align.Center;
-                                     AlignmentScope true;
-                                     Bevelled false;
-                                     CharAlign _CharAlign.Center;
-                                     CharSpacing (KeyWord _CharSpacing.Medium);
-                                     Close ")";
-                                     ColumnAlign _ColumnAlign.Center;
-                                     ColumnLines _ColumnLines.None;
-                                     ColumnSpacing (EM 0.8<em>);
-                                     ColumnSpan 1u;
-                                     ColumnWidth (KeyWord _ColumnWidth.Auto);
-                                     Crossout _Crossout.None;
-                                     DenomAlign _DenomAlign.Center;
-                                     Depth (EX 0.0<ex>);
-                                     Edge _Edge.Left;
-                                     EqualColumns false;
-                                     EqualRows false;
-                                     Fence false;
-                                     Form _Form.Infix;
-                                     Frame _Frame.None;
-                                     FrameSpacing (EM 0.4<em>,EX 0.5<ex>);
-                                     GroupAlign _GroupAlign.Left;
-                                     Height (KeyWord "fromimage");
-                                     IndentAlign _IndentAlign.Auto;
-                                     IndentAlignFirst _IndentAlignFirst.IndentAlign;
-                                     IndentAlignLast _IndentAlignLast.IndentAlign;
-                                     IndentShift (Numb 0.0);
-                                     IndentShiftFirst (KeyWord "indentshift");
-                                     IndentShiftLast (KeyWord "indentshift");
-                                     IndentTarget "none";
-                                     LargeOp false;
-                                     LeftOverhang (Numb 0.0);
-                                     Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
-                                     LineBreak _LineBreak.Auto;
-                                     LineBreakMultChar "02062";//&InvisibleTimes;
-                                     LineBreakStyle _LineBreakStyle.Before;
-                                     LineLeading (Pct 100.0<pct>);
-                                     LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
-                                     Location N;
-                                     LongDivStyle LeftTop;
-                                     LQuote "&quot;";
-                                     LSpace (NamedLength ThickMathSpace);
-                                     MaxSize (KeyWord "infinity");
-                                     MinLabelSpacing (EM 0.8<em>);
-                                     MinSize (Pct 100.0<pct>);
-                                     MovableLimits false;
-                                     MsLineThickness (KeyWord "medium");
-                                     Notation LongDiv;
-                                     NumAlign _NumAlign.Center;
-                                     Open ")";
-                                     Position 0;
-                                     RightOverhang (Numb 0.0);
-                                     RowAlign _RowAlign.Baseline;
-                                     RowLines _RowLines.None;
-                                     RowSpacing (EX 1.0<ex>);
-                                     RowSpan 1u;
-                                     RQuote "&quot;";
-                                     RSpace (NamedLength ThickMathSpace);
-                                     Selection 1u;
-                                     Separator false;
-                                     Separators ",";
-                                     Shift 0;
-                                     Side _Side.Right;
-                                     StackAlign _StackAlign.DecimalPoint;
-                                     Stretchy false;
-                                     SubScriptShift (KeyWord "automatic");
-                                     SuperScriptShift (KeyWord "automatic");
-                                     Symmetric false;
-                                     VAlign (EX 0.0<ex>);
-                                     Width (KeyWord "automatic");
-                                     ]
+                //The rest after I compared this to the MathML schema
+                Accent false;
+                AccentUnder false;
+                Align _Align.Center;
+                AlignmentScope true;
+                Bevelled false;
+                CharAlign _CharAlign.Center;
+                CharSpacing (KeyWord _CharSpacing.Medium);
+                Close ")";
+                ColumnAlign _ColumnAlign.Center;
+                ColumnLines _ColumnLines.None;
+                ColumnSpacing (EM 0.8<em>);
+                ColumnSpan 1u;
+                ColumnWidth (KeyWord _ColumnWidth.Auto);
+                Crossout _Crossout.None;
+                DenomAlign _DenomAlign.Center;
+                Depth (EX 0.0<ex>);
+                Edge _Edge.Left;
+                EqualColumns false;
+                EqualRows false;
+                Fence false;
+                Form _Form.Infix;
+                Frame _Frame.None;
+                FrameSpacing (EM 0.4<em>,EX 0.5<ex>);
+                GroupAlign _GroupAlign.Left;
+                Height (KeyWord "fromimage");
+                IndentAlign _IndentAlign.Auto;
+                IndentAlignFirst _IndentAlignFirst.IndentAlign;
+                IndentAlignLast _IndentAlignLast.IndentAlign;
+                IndentShift (Numb 0.0);
+                IndentShiftFirst (KeyWord "indentshift");
+                IndentShiftLast (KeyWord "indentshift");
+                IndentTarget "none";
+                LargeOp false;
+                LeftOverhang (Numb 0.0);
+                Length 0u; //<msline/> Specifies the the number of columns that should be spanned by the line.
+                LineBreak _LineBreak.Auto;
+                LineBreakMultChar "02062";//&InvisibleTimes;
+                LineBreakStyle _LineBreakStyle.Before;
+                LineLeading (Pct 100.0<pct>);
+                LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
+                Location N;
+                LongDivStyle LeftTop;
+                LQuote "&quot;";
+                LSpace (NamedLength ThickMathSpace);
+                MaxSize (KeyWord "infinity");
+                MinLabelSpacing (EM 0.8<em>);
+                MinSize (Pct 100.0<pct>);
+                MovableLimits false;
+                MsLineThickness (KeyWord "medium");
+                Notation LongDiv;
+                NumAlign _NumAlign.Center;
+                Open ")";
+                Position 0;
+                RightOverhang (Numb 0.0);
+                RowAlign _RowAlign.Baseline;
+                RowLines _RowLines.None;
+                RowSpacing (EX 1.0<ex>);
+                RowSpan 1u;
+                RQuote "&quot;";
+                RSpace (NamedLength ThickMathSpace);
+                Selection 1u;
+                Separator false;
+                Separators ",";
+                Shift 0;
+                Side _Side.Right;
+                StackAlign _StackAlign.DecimalPoint;
+                Stretchy false;
+                SubScriptShift (KeyWord "automatic");
+                SuperScriptShift (KeyWord "automatic");
+                Symmetric false;
+                VAlign (EX 0.0<ex>);
+                Width (KeyWord "automatic");
+                ]
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
 
         | Token Mi -> 
             let defaultAttributes = 
@@ -416,34 +462,36 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | Token Mn ->
             let defaultAttributes =  
-                                    [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+                [//2.1.6 Attributes Shared by all MathML Elements 
+                    Id "none"; 
+                    Xref "none"; 
+                    Class "none"; 
+                    Style "none"; 
+                    Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                    //3.1.10 Mathematics style attributes common to presentation elements 
+                    MathColor "black"; 
+                    MathBackground "transparent"; 
 
-                                     //3.2.2 Mathematics style attributes common to token elements 
-                                     MathVariant Normal;
-                                     MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
-                                     ]
+                    //3.2.2 Mathematics style attributes common to token elements 
+                    MathVariant Normal;
+                    MathSize (EM 1.0<em>);
+                    Dir Ltr;                                     
+                    ]
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | Token Mo ->
             let defaultAttributes =  
@@ -497,8 +545,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | Token Mtext ->
             let defaultAttributes =  
@@ -523,8 +572,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | Token Mspace ->
             let defaultAttributes =  
@@ -564,8 +614,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | Token Ms ->
             let defaultAttributes =  
@@ -594,8 +645,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | Token Mglyph ->
             let defaultAttributes =  
@@ -622,31 +674,33 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = []}
         
         | GeneralLayout Mrow ->
-            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+            let defaultAttributes = 
+                [//2.1.6 Attributes Shared by all MathML Elements 
+                    Id "none"; 
+                    Xref "none"; 
+                    Class "none"; 
+                    Style "none"; 
+                    Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                    //3.1.10 Mathematics style attributes common to presentation elements 
+                    MathColor "black"; 
+                    MathBackground "transparent";
 
-                                     //3.3.1.2 Attributes
-                                     Dir Ltr
-                                    ]
-
+                    //3.3.1.2 Attributes
+                    Dir Ltr
+                ]
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Mfrac ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -670,8 +724,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Msqrt ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -690,8 +745,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Mroot ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -710,8 +766,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Mstyle ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -812,30 +869,33 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Merror ->
-            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+            let defaultAttributes = 
+                [//2.1.6 Attributes Shared by all MathML Elements 
+                 Id "none"; 
+                 Xref "none"; 
+                 Class "none"; 
+                 Style "none"; 
+                 Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                 //3.1.10 Mathematics style attributes common to presentation elements 
+                 MathColor "black"; 
+                 MathBackground "transparent";
 
-                                     //
-                                     ]
+                //
+                ]
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Mpadded ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -861,8 +921,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Mphantom ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -881,8 +942,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Mfenced ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -906,8 +968,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | GeneralLayout Menclose ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -929,8 +992,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Msub ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -952,8 +1016,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Msup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -975,8 +1040,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Msubsup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -999,8 +1065,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Munde ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1023,8 +1090,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Mover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1047,8 +1115,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Munderover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1072,8 +1141,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Script Mmultiscripts ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1096,8 +1166,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Table Mtable ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1136,8 +1207,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Table Mlabeledtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1161,8 +1233,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Table Mtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1186,8 +1259,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Table Mtd ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1213,8 +1287,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Table Maligngroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1236,8 +1311,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Table Malignmark ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1259,8 +1335,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Mstack ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1285,8 +1362,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Mlongdiv ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1308,8 +1386,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Msgroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1332,8 +1411,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Msrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1355,8 +1435,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Mscarries ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1381,8 +1462,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Mscarry ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1405,8 +1487,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | MathLayout Msline ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1432,8 +1515,9 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
         
         | Enlivening Maction ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1456,58 +1540,59 @@ module Element =
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
               openTag = openTag aString;
-              closeTag = closeTag 
-              symbol = symbol}
+              closeTag = closeTag;
+              symbol = symbol;
+              arguments = arguments}
 
     //Top-Level Constructor
-    let math a = (element (Math) a)
+    let math a = (build (Math) a)
     
     //Token Constructors
-    let mi a = (element (Token Mi) a)
-    let mn a = (element (Token Mn) a)
-    let mo a = (element (Token Mo) a)
-    let mtext a = (element (Token Mtext) a)
-    let mspace a = (element (Token Mspace) a)
-    let ms a = (element (Token Ms) a)
+    let mi a = (build (Token Mi) a)
+    let mn a = (build (Token Mn) a)
+    let mo a = (build (Token Mo) a)
+    let mtext a = (build (Token Mtext) a)
+    let mspace a = (build (Token Mspace) a)
+    let ms a = (build (Token Ms) a)
 
     //General Layout Constructors
-    let mrow a = (element (GeneralLayout Mrow) a)
-    let mfrac a = (element (GeneralLayout Mfrac) a)
-    let msqrt a = (element (GeneralLayout Msqrt) a)
-    let mroot a = (element (GeneralLayout Mroot) a)
-    let mstyle a = (element (GeneralLayout Mstyle) a)
-    let merror a = (element (GeneralLayout Merror) a)        
-    let mpadded a = (element (GeneralLayout Mpadded) a)
-    let mphantom a = (element (GeneralLayout Mphantom) a)
-    let mfenced a = (element (GeneralLayout Mfenced) a) 
-    let menclose a = (element (GeneralLayout Menclose) a)
+    let mrow a = (build (GeneralLayout Mrow) a)
+    let mfrac a = (build (GeneralLayout Mfrac) a)
+    let msqrt a = (build (GeneralLayout Msqrt) a)
+    let mroot a = (build (GeneralLayout Mroot) a)
+    let mstyle a = (build (GeneralLayout Mstyle) a)
+    let merror a = (build (GeneralLayout Merror) a)        
+    let mpadded a = (build (GeneralLayout Mpadded) a)
+    let mphantom a = (build (GeneralLayout Mphantom) a)
+    let mfenced a = (build (GeneralLayout Mfenced) a) 
+    let menclose a = (build (GeneralLayout Menclose) a)
 
     //Script Constructors
-    let msub a = (element (Script Msub) a)
-    let msup a = (element (Script Msup) a)
-    let msubsup a = (element (Script Msubsup) a)
-    let munde a = (element (Script Munde) a)
-    let mover a = (element (Script Mover) a)
-    let munderover a = (element (Script Munderover) a)        
-    let mmultiscripts a = (element (Script Mmultiscripts) a)
+    let msub a = (build (Script Msub) a)
+    let msup a = (build (Script Msup) a)
+    let msubsup a = (build (Script Msubsup) a)
+    let munde a = (build (Script Munde) a)
+    let mover a = (build (Script Mover) a)
+    let munderover a = (build (Script Munderover) a)        
+    let mmultiscripts a = (build (Script Mmultiscripts) a)
 
     //Table Constructors
-    let mtable a = (element (Table Mtable) a)
-    let mlabeledtr a = (element (Table Mlabeledtr) a)
-    let mtr a = (element (Table Mtr) a)
-    let mtd a = (element (Table Mtd) a)
-    let maligngroup a = (element (Table Maligngroup) a)
-    let malignmark a = (element (Table Malignmark) a)
+    let mtable a = (build (Table Mtable) a)
+    let mlabeledtr a = (build (Table Mlabeledtr) a)
+    let mtr a = (build (Table Mtr) a)
+    let mtd a = (build (Table Mtd) a)
+    let maligngroup a = (build (Table Maligngroup) a)
+    let malignmark a = (build (Table Malignmark) a)
 
     //Math Layout Constructors
-    let mstack a = (element (MathLayout Mstack) a)
-    let mlongdiv a = (element (MathLayout Mlongdiv) a)
-    let msgroup a = (element (MathLayout Msgroup) a)
-    let msrow a = (element (MathLayout Msrow) a)
-    let mscarries a = (element (MathLayout Mscarries) a)
-    let mscarry a = (element (MathLayout Mscarry) a)        
-    let msline a = (element (MathLayout Msline) a)
+    let mstack a = (build (MathLayout Mstack) a)
+    let mlongdiv a = (build (MathLayout Mlongdiv) a)
+    let msgroup a = (build (MathLayout Msgroup) a)
+    let msrow a = (build (MathLayout Msrow) a)
+    let mscarries a = (build (MathLayout Mscarries) a)
+    let mscarry a = (build (MathLayout Mscarry) a)        
+    let msline a = (build (MathLayout Msline) a)
 
     //Math Layout Constructors EnliveningExpressionElement = | Maction
-    let menliveningExpression a = (element (Enlivening Maction) a)
+    let enliveningExpression a = (build (Enlivening Maction) a)
 

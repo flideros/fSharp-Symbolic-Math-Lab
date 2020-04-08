@@ -1,11 +1,16 @@
-﻿namespace Math.Presentation
-open System.Windows       
-open System.Windows.Controls  
-open System.Windows.Shapes  
-open System.Windows.Media
+﻿//namespace Math.Presentation
 
-module Glyphs =
+(*
+I'm not using this module in the implementation, but
+keeping it with the project for reference.
+*)
 
+module Glyphs 
+
+    open System.Windows       
+    open System.Windows.Controls  
+    open System.Windows.Shapes  
+    open System.Windows.Media
     let testGlyph = 
         let p = Path(Stroke = Brushes.Black, StrokeThickness = 1.,Fill=Brushes.Black)
         let pf = PathFigure(StartPoint = Point(487., 516.))
