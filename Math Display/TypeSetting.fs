@@ -140,6 +140,8 @@ module TypeSetting =
                                 {x = x; y = y'} // position
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
+    
+
 
     // Builders
     let makeGlyph :GlyphBuilder = 
@@ -170,9 +172,27 @@ module TypeSetting =
                                 getDrawing (i-1)
                             | _ -> gg
                     getDrawing items            
-                let ft = Text.format elem.symbol font.typeFace font.emSquare
-                let p = Path(Stroke = Brushes.Black, Fill = Brushes.Black)            
-                let geometry = drawText elem.symbol 
+                let text = 
+                    let mathVariant = 
+                        let variant = 
+                            List.tryFind (fun x -> match x with
+                                                   | MathVariant _ -> true 
+                                                   | _ -> false) elem.attributes
+                        match variant with
+                        | Some (MathVariant v) -> v 
+                        | _ -> Normal
+                    MathematicalAlphanumericSymbolMap.stringToVariant elem.symbol mathVariant
+                let ft = Text.format text font.typeFace font.emSquare
+                let mathColor = 
+                    let color = 
+                        List.tryFind (fun x -> match x with
+                                               | MathColor _ -> true 
+                                               | _ -> false) elem.attributes
+                    match color with
+                    | Some (MathColor m) -> m 
+                    | _ -> Brushes.Black :> Brush
+                let p = Path(Stroke = mathColor, Fill = mathColor)            
+                let geometry = drawText text                  
                 do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry()
                 {path=p;
                  leftBearing = ft.OverhangLeading; 
@@ -184,7 +204,7 @@ module TypeSetting =
                  width = ft.Width; 
                  height = ft.Height;
                  font = font;
-                 string = elem.symbol}    
+                 string = text}    
     let makeRowFrom (glyphs:Glyph list) =
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
@@ -221,8 +241,8 @@ module TypeSetting =
         let c0=  makeGlyph textSizeFont (Element.build (GeneralLayout Mroot) [] [] (getOperatorString OperatorDictionary .cubeRootPrefix) )
         let c1 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let c2 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] (LatinSerif.Italic.C))
-        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.plusSignInfix))
-        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] (LatinSerif.Italic.x))
+        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [MathColor Brushes.Blue] [] (getOperatorString OperatorDictionary.plusSignInfix))
+        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] ("x"))
         let c5 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs1 = [c2;c3;c4]//c4;c2]//

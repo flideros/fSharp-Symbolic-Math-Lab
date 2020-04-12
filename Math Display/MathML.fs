@@ -40,7 +40,6 @@ type Length =
     | NamedLength of NamedSpace
     | KeyWord of obj
 
-type Color = string
 type Idref = string
 type Uri = string
 
@@ -70,7 +69,26 @@ type _LineBreak = | Auto | NewLine | NoBreak | GoodBreak | BadBreak
 type _LineBreakStyle = | Before | After | Duplicate | InfixLinebBreakStyle
 type _Location = | W | NW | N | NE | E | SE | S | SW
 type _LongDivStyle = | LeftTop | StackedRightRight | MediumStackedRightRight | ShortStackedRightRight | RightTop | LeftRight1  | LeftRight2 | RightRight | StackedLeftLeft | StackedLeftLineTop//1 "left/\right" | "2 left)(right" | ":right=right"
-type _MathVariant = | Normal | Bold | Italic | BoldItalic | DoubleStruck | BoldFraktur | Script | BoldScript | Fraktur | SansSerif | BoldSansSerif | SansSerifItalic | SansSerifBoldItalic | MonoSpace | Initial | Tailed | Looped | Stretched
+type _MathVariant = 
+    | Normal 
+    | Bold 
+    | Italic 
+    | BoldItalic 
+    | DoubleStruck 
+    | LatinScript
+    | LatinScriptBold
+    | Fraktur
+    | FrakturBold 
+    | SansSerif 
+    | SansSerifBold 
+    | SansSerifItalic 
+    | SansSerifBoldItalic 
+    | MonoSpace 
+    
+    //| Initial 
+    //| Tailed 
+    //| Looped 
+    //| Stretched
 type _Notation = | LongDiv | Actuarial | PhasOrAngle | Radical | Box | RoundedBox | Circle | Left | Right | Top | Bottom | UpDiagonalStrike | DownDiagonalStrike | VerticalStrike | HorizontalStrike | NorthEastArrow | Madruwb | Text
 type _NumAlign = | Left | Right | Center
 type _Overflow = | Linebreak | Scroll | Elide | Truncate | Scale
@@ -140,8 +158,8 @@ type MathMLAttribute =
     | LongDivStyle of _LongDivStyle
     | LQuote of _LQuote
     | LSpace of Length
-    | MathBackground of Color
-    | MathColor of Color
+    | MathBackground of System.Windows.Media.Brush
+    | MathColor of System.Windows.Media.Brush
     | MathSize of Length
     | MathVariant of _MathVariant
     | MaxSize of Length
@@ -207,7 +225,6 @@ type TokenElement =
     | Mspace   /// space
     | Ms       /// string literal
     | Mglyph   /// non-standard symbol as image
-// Layout schemata
 type GeneralLayoutElement = 
     | Mrow     /// group any number of sub-expressions horizontally
     | Mfrac    /// form a fraction from two sub-expressions
@@ -226,7 +243,7 @@ type ScriptElement =
     | Munde        /// attach an underscript to a base
     | Mover        /// attach an overscript to a base
     | Munderover   /// attach an underscript-overscript pair to a base
-    | Mmultiscripts/// attach prescripts and tensor indices to a base
+    | Mmultiscripts /// attach prescripts and tensor indices to a base
 type TableElement = 
     | Mtable      /// table or matrix
     | Mlabeledtr  /// row in a table or matrix with a label or equation number
@@ -260,20 +277,23 @@ type Element =
       openTag : string; 
       closeTag : string 
       symbol : string
-      arguments: Element list}
+      arguments: Element list }
 
 module Element =
+    
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
     let private scrubAttributes attrList defaultAttr = 
-        List.choose (fun elem ->
-            match elem with
-            | elem when isValidElementAttributeOf defaultAttr elem -> Option.Some elem
-            | _ -> Option.None) attrList
-        |>
-        List.choose (fun elem ->
-            match elem with
-            | elem when List.exists (fun elem' -> elem' = elem) defaultAttr -> Option.None
-            | _ -> Option.Some elem)    
+        let newValidAttributes =
+            List.choose (fun elem ->
+                match elem with
+                | elem when isValidElementAttributeOf defaultAttr elem -> Option.Some elem
+                | _ -> Option.None) attrList
+        let remainingDefaultAttributes = 
+            List.choose (fun elem ->
+                match elem with
+                | elem when isValidElementAttributeOf newValidAttributes elem -> Option.None
+                | _ -> Option.Some elem) defaultAttr
+        List.concat [newValidAttributes;remainingDefaultAttributes]
     let private getAttrString (x:MathMLAttribute) = 
         let addOrRemoveSpace x = match x with | "" -> "" | _ -> " " + x
         let convertLength (l:string)=
@@ -297,9 +317,7 @@ module Element =
          + convertLength (x.ToString().Replace(x.GetType().Name + " ","=\""))
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
-    let private validateArgs (arguments : Element list) (elem : MathMLElement) =
-        ()
-      
+           
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) =                 
         let openTag attrString = 
             match elem with
@@ -349,8 +367,8 @@ module Element =
                 Href "none";
                                      
                 //3.1.10 Mathematics style attributes common to presentation elements 
-                MathColor "black"; 
-                MathBackground "transparent"; 
+                MathColor System.Windows.Media.Brushes.Black; 
+                MathBackground System.Windows.Media.Brushes.Transparent; 
 
                 //3.2.2 Mathematics style attributes common to token elements 
                 MathVariant Normal;
@@ -441,22 +459,22 @@ module Element =
 
         | Token Mi -> 
             let defaultAttributes = 
-                                    [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+                [//2.1.6 Attributes Shared by all MathML Elements 
+                Id "none"; 
+                Xref "none"; 
+                Class "none"; 
+                Style "none"; 
+                Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                //3.1.10 Mathematics style attributes common to presentation elements 
+                MathColor System.Windows.Media.Brushes.Black; 
+                MathBackground System.Windows.Media.Brushes.Transparent; 
 
-                                     //3.2.2 Mathematics style attributes common to token elements 
-                                     MathVariant Normal;
-                                     MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
-                                     ]         
+                //3.2.2 Mathematics style attributes common to token elements 
+                MathVariant Italic;
+                MathSize (EM 1.0<em>);
+                Dir Ltr;
+                ]         
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
@@ -476,8 +494,8 @@ module Element =
                     Href "none";
                                      
                     //3.1.10 Mathematics style attributes common to presentation elements 
-                    MathColor "black"; 
-                    MathBackground "transparent"; 
+                    MathColor System.Windows.Media.Brushes.Black; 
+                    MathBackground System.Windows.Media.Brushes.Transparent; 
 
                     //3.2.2 Mathematics style attributes common to token elements 
                     MathVariant Normal;
@@ -503,8 +521,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent; 
 
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
@@ -559,8 +577,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent; 
 
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
@@ -586,8 +604,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent; 
 
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
@@ -628,8 +646,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent; 
 
                                      //3.2.2 Mathematics style attributes common to token elements 
                                      MathVariant Normal;
@@ -659,8 +677,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent"; 
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent; 
 
                                      //3.2.1.2.2 Attributes 
                                      Src "required"
@@ -688,8 +706,8 @@ module Element =
                     Href "none";
                                      
                     //3.1.10 Mathematics style attributes common to presentation elements 
-                    MathColor "black"; 
-                    MathBackground "transparent";
+                    MathColor System.Windows.Media.Brushes.Black; 
+                    MathBackground System.Windows.Media.Brushes.Transparent;
 
                     //3.3.1.2 Attributes
                     Dir Ltr
@@ -711,8 +729,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.3.2.2 Attributes
                                      LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
@@ -737,8 +755,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
                                      ]
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
@@ -758,8 +776,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
                                      ]
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
@@ -779,8 +797,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.3.4.2 Attributes 
                                      ScriptLevel ('+',0u)
@@ -883,8 +901,8 @@ module Element =
                  Href "none";
                                      
                  //3.1.10 Mathematics style attributes common to presentation elements 
-                 MathColor "black"; 
-                 MathBackground "transparent";
+                 MathColor System.Windows.Media.Brushes.Black; 
+                 MathBackground System.Windows.Media.Brushes.Transparent;
 
                 //
                 ]
@@ -906,8 +924,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.3.6.2 Attributes
                                      Depth (KeyWord "same as content");                                   
@@ -934,8 +952,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
                                      ]
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
@@ -955,8 +973,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.3.8.2 Attributes
                                      Open ")";
@@ -981,8 +999,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.3.9.2 Attributes
                                      Notation LongDiv;
@@ -1005,8 +1023,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.1.2 Attributes 
                                      SubScriptShift (KeyWord "automatic");
@@ -1029,8 +1047,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.2.2 Attributes 
                                      SuperScriptShift (KeyWord "automatic");
@@ -1053,8 +1071,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.3.2 Attributes 
                                      SubScriptShift (KeyWord "automatic");
@@ -1078,8 +1096,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.4.2 Attributes
                                      AccentUnder false; //automatic
@@ -1103,8 +1121,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.5.2 Attributes
                                      Accent false; //automatic
@@ -1128,8 +1146,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.6.2 Attributes
                                      Accent false; //automatic
@@ -1154,8 +1172,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.4.7.2 Attributes 
                                      SubScriptShift (KeyWord "automatic");
@@ -1179,8 +1197,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.5.1.2 Attributes
                                      Align _Align.Axis;
@@ -1220,8 +1238,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.5.3.2 Attributes
                                      RowAlign _RowAlign.Baseline; //inherited
@@ -1246,8 +1264,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.5.2.2 Attributes
                                      RowAlign _RowAlign.Baseline; //inherited
@@ -1272,8 +1290,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.5.4.2 Attributes
                                      RowSpan 1u;
@@ -1300,8 +1318,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.5.5.6 <maligngroup/> Attributes 
                                      GroupAlign _GroupAlign.Left; //inherited
@@ -1324,8 +1342,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.5.5.5 <malignmark/> Attributes 
                                      Edge _Edge.Left;
@@ -1348,8 +1366,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.1.2 Attributes
                                      Align _Align.Baseline;
@@ -1375,8 +1393,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.2.2 Attributes 
                                      LongDivStyle LeftTop;
@@ -1399,8 +1417,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.3.2 Attributes
                                      Position 0;
@@ -1424,8 +1442,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.4.2 Attributes 
                                      Position 0;
@@ -1448,8 +1466,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.5.2 Attributes
                                      Position 0;
@@ -1475,8 +1493,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.6.2 Attributes
                                      Location N; //inherited
@@ -1500,8 +1518,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.6.7.2 Attributes
                                      Position 0;
@@ -1528,8 +1546,8 @@ module Element =
                                      Href "none";
                                      
                                      //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor "black"; 
-                                     MathBackground "transparent";
+                                     MathColor System.Windows.Media.Brushes.Black; 
+                                     MathBackground System.Windows.Media.Brushes.Transparent;
 
                                      //3.7.1.1 Attributes
                                      ActionType (Other "none")
@@ -1548,24 +1566,24 @@ module Element =
     let math a = (build (Math) a)
     
     //Token Constructors
-    let mi a = (build (Token Mi) a)
-    let mn a = (build (Token Mn) a)
-    let mo a = (build (Token Mo) a)
-    let mtext a = (build (Token Mtext) a)
-    let mspace a = (build (Token Mspace) a)
-    let ms a = (build (Token Ms) a)
+    let mi a = (build (Token Mi) a) // identifier
+    let mn a = (build (Token Mn) a) // number
+    let mo a = (build (Token Mo) a) // operator, fence, or separator
+    let mtext a = (build (Token Mtext) a) // text
+    let mspace a = (build (Token Mspace) a) // space
+    let ms a = (build (Token Ms) a) // string literal
 
     //General Layout Constructors
-    let mrow a = (build (GeneralLayout Mrow) a)
-    let mfrac a = (build (GeneralLayout Mfrac) a)
-    let msqrt a = (build (GeneralLayout Msqrt) a)
-    let mroot a = (build (GeneralLayout Mroot) a)
-    let mstyle a = (build (GeneralLayout Mstyle) a)
-    let merror a = (build (GeneralLayout Merror) a)        
-    let mpadded a = (build (GeneralLayout Mpadded) a)
-    let mphantom a = (build (GeneralLayout Mphantom) a)
-    let mfenced a = (build (GeneralLayout Mfenced) a) 
-    let menclose a = (build (GeneralLayout Menclose) a)
+    let mrow a = (build (GeneralLayout Mrow) a)   // group any number of sub-expressions horizontally
+    let mfrac a = (build (GeneralLayout Mfrac) a) // form a fraction from two sub-expressions
+    let msqrt a = (build (GeneralLayout Msqrt) a) // form a square root (radical without an index)
+    let mroot a = (build (GeneralLayout Mroot) a) // form a radical with specified index
+    let mstyle a = (build (GeneralLayout Mstyle) a) // style change
+    let merror a = (build (GeneralLayout Merror) a) // enclose a syntax error message from a preprocessor
+    let mpadded a = (build (GeneralLayout Mpadded) a) // adjust space around content
+    let mphantom a = (build (GeneralLayout Mphantom) a) // make content invisible but preserve its size
+    let mfenced a = (build (GeneralLayout Mfenced) a) // surround content with a pair of fences
+    let menclose a = (build (GeneralLayout Menclose) a) // enclose content with a stretching symbol such as a long division sign.
 
     //Script Constructors
     let msub a = (build (Script Msub) a)

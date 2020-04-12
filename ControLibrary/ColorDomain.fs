@@ -87,3 +87,8 @@ module ColorUtilities =
         match n with 
         | true, n when n >= 0. && n <= 1. -> true
         | _, _ -> false
+
+    let stringToColorBrush s = 
+        match s with
+        | "black" | "Black" -> Brushes.Black
+        | _ -> Brushes.Transparent
