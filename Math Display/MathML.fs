@@ -83,8 +83,7 @@ type _MathVariant =
     | SansSerifBold 
     | SansSerifItalic 
     | SansSerifBoldItalic 
-    | MonoSpace 
-    
+    | MonoSpace     
     //| Initial 
     //| Tailed 
     //| Looped 

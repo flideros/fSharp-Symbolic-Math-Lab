@@ -240,9 +240,9 @@ module TypeSetting =
         
         let c0=  makeGlyph textSizeFont (Element.build (GeneralLayout Mroot) [] [] (getOperatorString OperatorDictionary .cubeRootPrefix) )
         let c1 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let c2 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] (LatinSerif.Italic.C))
-        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [MathColor Brushes.Blue] [] (getOperatorString OperatorDictionary.plusSignInfix))
-        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] ("x"))
+        let c2 = makeGlyph textSizeFont (Element.build (Token Mn) [MathColor Brushes.Blue] [] "pi")
+        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.plusSignInfix))
+        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "pi")
         let c5 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs1 = [c2;c3;c4]//c4;c2]//
@@ -251,9 +251,9 @@ module TypeSetting =
 
         let s0=  makeGlyph scriptSizeFont (Element.build (GeneralLayout Mroot) [] [] (getOperatorString OperatorDictionary.cubeRootPrefix))
         let s1 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] (LatinSerif.Italic.x))
+        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] "x")
         let s3 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.plusSignInfix))
-        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] (LatinSerif.Italic.x))
+        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] "x")
         let s5 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs2 = [s2]//s0;s1;s2;s3;s4;s5]
