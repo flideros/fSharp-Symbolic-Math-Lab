@@ -140,20 +140,41 @@ module TypeSetting =
                                 {x = x; y = y'} // position
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
-    
-
 
     // Builders
     let makeGlyph :GlyphBuilder = 
             fun font elem -> 
-                let drawText t = 
+                
+                let text = 
+                    let variant = 
+                        List.tryFind (fun x -> 
+                            match x with
+                            | MathVariant _ -> true 
+                            | _ -> false) elem.attributes
+                    match variant with
+                    | Some (MathVariant v) -> v 
+                    | _ -> Normal
+                    |> MathematicalAlphanumericSymbolMap.stringToVariant elem.symbol
+                let formattedText = Text.format text font.typeFace font.emSquare
+                
+                let mathColor = 
+                    let color = 
+                        List.tryFind (fun x -> match x with
+                                               | MathColor _ -> true 
+                                               | _ -> false) elem.attributes
+                    match color with
+                    | Some (MathColor m) -> m 
+                    | _ -> Brushes.Black :> Brush
+                let p = Path(Stroke = mathColor, Fill = mathColor)            
+                
+                let geometry = 
                     let drawingGroup = DrawingGroup()
                     let drawingContext = drawingGroup.Open()
-                    let textLine = Text.format t font.typeFace font.emSquare
+                    let textLine = Text.format text font.typeFace font.emSquare
                     do  textLine.Draw(drawingContext,Point(0.,0.),TextFormatting.InvertAxes.None)
                         drawingContext.Close()             
                     drawingGroup
-                let rec createGeometry (dg :DrawingGroup) = 
+                let rec draw (dg :DrawingGroup) = 
                     let items = dg.Children.Count
                     let gg = GeometryGroup()
                     let rec getDrawing i = 
@@ -168,41 +189,21 @@ module TypeSetting =
                                 do  gg.Children.Add(gr.GlyphRun.BuildGeometry())
                                 getDrawing (i-1)
                             | :? DrawingGroup as dg -> 
-                                do  gg.Children.Add(createGeometry dg)
+                                do  gg.Children.Add(draw dg)
                                 getDrawing (i-1)
                             | _ -> gg
                     getDrawing items            
-                let text = 
-                    let mathVariant = 
-                        let variant = 
-                            List.tryFind (fun x -> match x with
-                                                   | MathVariant _ -> true 
-                                                   | _ -> false) elem.attributes
-                        match variant with
-                        | Some (MathVariant v) -> v 
-                        | _ -> Normal
-                    MathematicalAlphanumericSymbolMap.stringToVariant elem.symbol mathVariant
-                let ft = Text.format text font.typeFace font.emSquare
-                let mathColor = 
-                    let color = 
-                        List.tryFind (fun x -> match x with
-                                               | MathColor _ -> true 
-                                               | _ -> false) elem.attributes
-                    match color with
-                    | Some (MathColor m) -> m 
-                    | _ -> Brushes.Black :> Brush
-                let p = Path(Stroke = mathColor, Fill = mathColor)            
-                let geometry = drawText text                  
-                do  p.Data <- (createGeometry geometry).GetFlattenedPathGeometry()
+                
+                do  p.Data <- (draw geometry).GetFlattenedPathGeometry()
                 {path=p;
-                 leftBearing = ft.OverhangLeading; 
-                 extent = ft.Extent;
-                 overHangAfter = ft.OverhangAfter;
-                 overHangBefore = ft.Extent - ft.OverhangAfter - ft.Height;
-                 rightBearing = ft.OverhangTrailing; 
-                 baseline = ft.Baseline; 
-                 width = ft.Width; 
-                 height = ft.Height;
+                 leftBearing = formattedText.OverhangLeading; 
+                 extent = formattedText.Extent;
+                 overHangAfter = formattedText.OverhangAfter;
+                 overHangBefore = formattedText.Extent - formattedText.OverhangAfter - formattedText.Height;
+                 rightBearing = formattedText.OverhangTrailing; 
+                 baseline = formattedText.Baseline; 
+                 width = formattedText.Width; 
+                 height = formattedText.Height;
                  font = font;
                  string = text}    
     let makeRowFrom (glyphs:Glyph list) =
@@ -238,22 +239,22 @@ module TypeSetting =
     type TestCanvas() as this  =  
         inherit UserControl()
         
-        let c0=  makeGlyph textSizeFont (Element.build (GeneralLayout Mroot) [] [] (getOperatorString OperatorDictionary .cubeRootPrefix) )
+        let c0=  makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary .cubeRootPrefix) )
         let c1 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let c2 = makeGlyph textSizeFont (Element.build (Token Mn) [MathColor Brushes.Blue] [] "pi")
+        let c2 = makeGlyph textSizeFont (Element.build (Token Mi) [MathColor Brushes.Blue] [] "sigma")
         let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.plusSignInfix))
-        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "pi")
+        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "x")
         let c5 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs1 = [c2;c3;c4]//c4;c2]//
         let line1 = makeRowFrom glyphs1 
         let line1_Width = List.fold (fun acc x -> x.width + acc) 0. glyphs1
 
-        let s0=  makeGlyph scriptSizeFont (Element.build (GeneralLayout Mroot) [] [] (getOperatorString OperatorDictionary.cubeRootPrefix))
+        let s0=  makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.cubeRootPrefix))
         let s1 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] "x")
+        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "2")
         let s3 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.plusSignInfix))
-        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] "x")
+        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "2")
         let s5 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs2 = [s2]//s0;s1;s2;s3;s4;s5]
@@ -308,7 +309,7 @@ module TypeSetting =
             g
 
         do  line1.RenderTransform <- TranslateTransform(X = 0., Y = 200.)
-            line2.RenderTransform <- TranslateTransform(X = 201.2, Y = 27.8 - 36.)
+            line2.RenderTransform <- TranslateTransform(X = (line1_Width  + c4.leftBearing + c2.rightBearing + MathPositioningConstants.spaceAfterScript)*0.1, Y = 27.8 - 36.)
             line2.SetValue(Grid.RowProperty,1)
 
             line1.Children.Add(line2) |> ignore

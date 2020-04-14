@@ -292,7 +292,7 @@ module Element =
                 match elem with
                 | elem when isValidElementAttributeOf newValidAttributes elem -> Option.None
                 | _ -> Option.Some elem) defaultAttr
-        List.concat [newValidAttributes;remainingDefaultAttributes]
+        List.concat [newValidAttributes; remainingDefaultAttributes]
     let private getAttrString (x:MathMLAttribute) = 
         let addOrRemoveSpace x = match x with | "" -> "" | _ -> " " + x
         let convertLength (l:string)=
