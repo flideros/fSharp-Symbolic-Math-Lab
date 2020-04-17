@@ -1613,3 +1613,22 @@ module Element =
     //Math Layout Constructors EnliveningExpressionElement = | Maction
     let enliveningExpression a = (build (Enlivening Maction) a)
 
+module Operator =
+
+    let getValueFromLength (emSquare:float<em>) length =
+        match length with
+        | NamedLength l when l = VeryVeryThinMathSpace -> (1./18.<em>) * emSquare
+        | NamedLength l when l = VeryThinMathSpace -> (2./18.<em>) * emSquare
+        | NamedLength l when l = ThinMathSpace -> (3./18.<em>) * emSquare
+        | NamedLength l when l = MediumMathSpace -> (4./18.<em>) * emSquare
+        | NamedLength l when l = ThickMathSpace -> (5./18.<em>) * emSquare
+        | NamedLength l when l = VeryThickMathSpace -> (6./18.<em>) * emSquare
+        | NamedLength l when l = VeryVeryThickMathSpace -> (7./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryVeryThinMathSpace -> (-1./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryThinMathSpace -> (-2./18.<em>) * emSquare
+        | NamedLength l when l = NegativeThinMathSpace -> (-3./18.<em>) * emSquare
+        | NamedLength l when l = NegativeMediumMathSpace -> (-4./18.<em>) * emSquare
+        | NamedLength l when l = NegativeThickMathSpace -> (-5./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryThickMathSpace -> (-6./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryVeryThickMathSpace -> (-7./18.<em>) * emSquare
+        | _ -> 0.

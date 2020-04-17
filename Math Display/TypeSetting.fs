@@ -154,6 +154,9 @@ module TypeSetting =
                 
                 let operator = match op with | Operator o -> o | Element _ -> OperatorDictionary.functionApplicationInfix
 
+                let lSpace = Operator.getValueFromLength font.emSquare operator.lspace
+                let rSpace = Operator.getValueFromLength font.emSquare operator.rspace
+
                 let elem = (Element.build (Token Mo) [] [] (getOperatorString operator))
 
                 let text = 
@@ -217,8 +220,8 @@ module TypeSetting =
                  height = formattedText.Height;
                  font = font;
                  string = text
-                 lSpace = 0.;
-                 rSpace = 0.}
+                 lSpace = lSpace;
+                 rSpace = rSpace}
     let makeGlyph :GlyphBuilder = 
             fun font el -> 
                 
@@ -301,15 +304,25 @@ module TypeSetting =
             let glyphPairs = List.zip leftGlyphs rightGlyphs
             let kerns = List.scan (fun acc (l,r) -> acc + (getHorizontalKern l r)) 0. glyphPairs
             kerns
-        let positions = 
-            let initialPosition = {x=0.;y=0.}                
-            let _positions = 
-                let p = List.scan (fun acc (x : Glyph) -> {x = (acc.x + x.width); y = 0.}) initialPosition glyphs
-                List.truncate glyphs.Length p                
-            let positionsWithKernApplied = 
-                List.mapi (fun i (p:Position) -> {x = p.x + kerns.[i]; y = p.y}) _positions
-            positionsWithKernApplied
         
+        let mathSpaces = 
+            // compare adjacent glyph widths to the typeset width of the pair.
+            let leftGlyphs = List.truncate (glyphs.Length-1) glyphs
+            let rightGlyphs = glyphs.Tail
+            let glyphPairs = List.zip leftGlyphs rightGlyphs
+            let spaces = List.scan (fun acc (l,r) -> acc + l.rSpace + r.lSpace - l.rightBearing - r.leftBearing) 0. glyphPairs
+            spaces
+
+        let positions = 
+            let initialPosition = {x=0.;y=0.}
+            // positions = 
+            let p = List.scan (fun acc (x : Glyph) -> {x = (acc.x + x.width); y = 0.}) initialPosition glyphs
+            List.truncate glyphs.Length p  
+            // apply kerns
+            |> List.mapi (fun i (p:Position) -> {x = p.x + kerns.[i]; y = p.y})
+            // apply math spacees
+            |> List.mapi (fun i (p:Position) -> {x = p.x + mathSpaces.[i]; y = p.y})
+
         let glyphBoxes = List.map2 (fun g p -> getGlyphBox g p) glyphs positions
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) glyphBoxes
         g
@@ -320,26 +333,24 @@ module TypeSetting =
         
         let c0=  makeOperatorGlyph textSizeFont (Operator OperatorDictionary .cubeRootPrefix)
         let c1 = makeOperatorGlyph textSizeFont (Operator OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix)
-        let c2 = makeGlyph textSizeFont (Element (Element.build (Token Mi) [MathColor Brushes.Blue] [] "1"))
-        let c3 = makeOperatorGlyph textSizeFont (Operator(OperatorDictionary.minusSignInfix))
-        let c4 = makeGlyph textSizeFont (Element (Element.build (Token Mi) [] [] "q"))
+        let c2 = makeGlyph textSizeFont (Element (Element.build (Token Mi) [MathColor Brushes.BlueViolet] [] "2"))
+        let c3 = makeOperatorGlyph textSizeFont (Operator(OperatorDictionary.plusSignInfix))
+        let c4 = makeGlyph textSizeFont (Element (Element.build (Token Mi) [] [] "x"))
         let c5 = makeGlyph textSizeFont (Element (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix)))
 
         let glyphs1 = [c2;c3;c4]//c4;c2]//
         let line1 = makeRowFrom glyphs1 
         let line1_Width = List.fold (fun acc x -> x.width + acc) 0. glyphs1
 
-        let s0=  makeGlyph scriptSizeFont (Operator(OperatorDictionary.cubeRootPrefix))
-        let s1 = makeGlyph scriptSizeFont (Operator(OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
+        let s0=  makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.cubeRootPrefix))
+        let s1 = makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let s2 = makeGlyph scriptSizeFont (Element (Element.build (Token Mn) [] [] "2"))
-        let s3 = makeGlyph scriptSizeFont (Operator(OperatorDictionary.plusSignInfix))
+        let s3 = makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.timesWithLeftHalfBlackInfix))
         let s4 = makeGlyph scriptSizeFont (Element (Element.build (Token Mn) [] [] "2"))
-        let s5 = makeGlyph scriptSizeFont (Operator(OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
+        let s5 = makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs2 = [s2]//s0;s1;s2;s3;s4;s5]
         let line2 = makeRowFrom glyphs2
-        
-        
        
         let textBlock =                    
             let tb = TextBlock()
@@ -389,7 +400,16 @@ module TypeSetting =
             g
 
         do  line1.RenderTransform <- TranslateTransform(X = 0., Y = 200.)
-            line2.RenderTransform <- TranslateTransform(X = (line1_Width  + c4.leftBearing + c2.rightBearing + MathPositioningConstants.spaceAfterScript)*0.1, Y = 27.8 - 36.)
+            line2.RenderTransform <- 
+                TranslateTransform(
+                    X = (line1_Width  
+                        //+ c2.leftBearing
+                        - c2.rightBearing                        
+                        - c4.leftBearing 
+                        //+ c4.rightBearing 
+                        + MathPositioningConstants.spaceAfterScript 
+                        + 444.
+                        ) *0.1, Y = 27.8 - 36.)
             line2.SetValue(Grid.RowProperty,1)
 
             line1.Children.Add(line2) |> ignore
