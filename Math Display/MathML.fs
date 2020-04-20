@@ -83,11 +83,7 @@ type _MathVariant =
     | SansSerifBold 
     | SansSerifItalic 
     | SansSerifBoldItalic 
-    | MonoSpace     
-    //| Initial 
-    //| Tailed 
-    //| Looped 
-    //| Stretched
+    | MonoSpace   
 type _Notation = | LongDiv | Actuarial | PhasOrAngle | Radical | Box | RoundedBox | Circle | Left | Right | Top | Bottom | UpDiagonalStrike | DownDiagonalStrike | VerticalStrike | HorizontalStrike | NorthEastArrow | Madruwb | Text
 type _NumAlign = | Left | Right | Center
 type _Overflow = | Linebreak | Scroll | Elide | Truncate | Scale
@@ -205,17 +201,6 @@ type CharacterCode =
     | Char of char
     | UnicodeArray of CharacterCode array
 
-type Operator = 
-    { character : CharacterCode
-      glyph : string
-      name : string
-      form : _Form 
-      priority : int //Significance for the proper grouping of sub-expressions
-      lspace : Length
-      rspace : Length
-      properties: MathMLAttribute list 
-    } 
- 
 type TokenElement = 
     | Mi       /// identifier
     | Mn       /// number
@@ -270,13 +255,45 @@ type MathMLElement =
     | MathLayout of MathLayoutElement 
     | Enlivening of EnliveningExpressionElement
 
+type Operator = 
+    { character : CharacterCode
+      glyph : string
+      name : string
+      form : _Form 
+      priority : int //Significance for the proper grouping of sub-expressions
+      lspace : Length
+      rspace : Length
+      properties: MathMLAttribute list 
+    } 
 type Element = 
     { element : MathMLElement; 
       attributes : MathMLAttribute list; 
       openTag : string; 
-      closeTag : string 
-      symbol : string
-      arguments: Element list }
+      closeTag : string; 
+      symbol : string;
+      arguments: Element list;
+      operator: Operator option
+      }
+
+module Operator =
+
+    let getValueFromLength (emSquare:float<em>) length =
+        match length with
+        | NamedLength l when l = VeryVeryThinMathSpace -> (1./18.<em>) * emSquare
+        | NamedLength l when l = VeryThinMathSpace -> (2./18.<em>) * emSquare
+        | NamedLength l when l = ThinMathSpace -> (3./18.<em>) * emSquare
+        | NamedLength l when l = MediumMathSpace -> (4./18.<em>) * emSquare
+        | NamedLength l when l = ThickMathSpace -> (5./18.<em>) * emSquare
+        | NamedLength l when l = VeryThickMathSpace -> (6./18.<em>) * emSquare
+        | NamedLength l when l = VeryVeryThickMathSpace -> (7./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryVeryThinMathSpace -> (-1./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryThinMathSpace -> (-2./18.<em>) * emSquare
+        | NamedLength l when l = NegativeThinMathSpace -> (-3./18.<em>) * emSquare
+        | NamedLength l when l = NegativeMediumMathSpace -> (-4./18.<em>) * emSquare
+        | NamedLength l when l = NegativeThickMathSpace -> (-5./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryThickMathSpace -> (-6./18.<em>) * emSquare
+        | NamedLength l when l = NegativeVeryVeryThickMathSpace -> (-7./18.<em>) * emSquare
+        | _ -> 0.
 
 module Element =
     
@@ -317,7 +334,7 @@ module Element =
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
            
-    let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) =                 
+    let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
         let openTag attrString = 
             match elem with
             | Math -> "<math" + attrString + ">"
@@ -454,7 +471,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
 
         | Token Mi -> 
             let defaultAttributes = 
@@ -481,7 +499,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = []
+              operator = Option.None}
         
         | Token Mn ->
             let defaultAttributes =  
@@ -508,7 +527,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = []
+              operator = Option.None}
         
         | Token Mo ->
             let defaultAttributes =  
@@ -564,7 +584,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = arguments
+              operator = operator}
         
         | Token Mtext ->
             let defaultAttributes =  
@@ -591,7 +612,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = []
+              operator = Option.None}
         
         | Token Mspace ->
             let defaultAttributes =  
@@ -633,7 +655,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = []
+              operator = Option.None}
         
         | Token Ms ->
             let defaultAttributes =  
@@ -664,7 +687,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = []
+              operator = Option.None}
         
         | Token Mglyph ->
             let defaultAttributes =  
@@ -693,7 +717,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = []}
+              arguments = []
+              operator = Option.None}
         
         | GeneralLayout Mrow ->
             let defaultAttributes = 
@@ -717,7 +742,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Mfrac ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -743,7 +769,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Msqrt ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -764,7 +791,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Mroot ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -785,7 +813,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Mstyle ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -888,7 +917,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Merror ->
             let defaultAttributes = 
@@ -912,7 +942,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Mpadded ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -940,7 +971,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Mphantom ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -961,7 +993,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Mfenced ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -987,7 +1020,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | GeneralLayout Menclose ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1011,7 +1045,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Msub ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1035,7 +1070,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Msup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1059,7 +1095,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Msubsup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1084,7 +1121,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Munde ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1109,7 +1147,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Mover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1134,7 +1173,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Munderover ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1160,7 +1200,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Script Mmultiscripts ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1185,7 +1226,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Table Mtable ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1226,7 +1268,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Table Mlabeledtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1252,7 +1295,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Table Mtr ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1278,7 +1322,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Table Mtd ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1306,7 +1351,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Table Maligngroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1330,7 +1376,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Table Malignmark ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1354,7 +1401,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Mstack ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1381,7 +1429,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Mlongdiv ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1405,7 +1454,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Msgroup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1430,7 +1480,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Msrow ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1454,7 +1505,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Mscarries ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1481,7 +1533,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Mscarry ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1506,7 +1559,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | MathLayout Msline ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1534,7 +1588,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
         
         | Enlivening Maction ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
@@ -1559,7 +1614,8 @@ module Element =
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
-              arguments = arguments}
+              arguments = arguments
+              operator = Option.None}
 
     //Top-Level Constructor
     let math a = (build (Math) a)
@@ -1613,22 +1669,4 @@ module Element =
     //Math Layout Constructors EnliveningExpressionElement = | Maction
     let enliveningExpression a = (build (Enlivening Maction) a)
 
-module Operator =
 
-    let getValueFromLength (emSquare:float<em>) length =
-        match length with
-        | NamedLength l when l = VeryVeryThinMathSpace -> (1./18.<em>) * emSquare
-        | NamedLength l when l = VeryThinMathSpace -> (2./18.<em>) * emSquare
-        | NamedLength l when l = ThinMathSpace -> (3./18.<em>) * emSquare
-        | NamedLength l when l = MediumMathSpace -> (4./18.<em>) * emSquare
-        | NamedLength l when l = ThickMathSpace -> (5./18.<em>) * emSquare
-        | NamedLength l when l = VeryThickMathSpace -> (6./18.<em>) * emSquare
-        | NamedLength l when l = VeryVeryThickMathSpace -> (7./18.<em>) * emSquare
-        | NamedLength l when l = NegativeVeryVeryThinMathSpace -> (-1./18.<em>) * emSquare
-        | NamedLength l when l = NegativeVeryThinMathSpace -> (-2./18.<em>) * emSquare
-        | NamedLength l when l = NegativeThinMathSpace -> (-3./18.<em>) * emSquare
-        | NamedLength l when l = NegativeMediumMathSpace -> (-4./18.<em>) * emSquare
-        | NamedLength l when l = NegativeThickMathSpace -> (-5./18.<em>) * emSquare
-        | NamedLength l when l = NegativeVeryThickMathSpace -> (-6./18.<em>) * emSquare
-        | NamedLength l when l = NegativeVeryVeryThickMathSpace -> (-7./18.<em>) * emSquare
-        | _ -> 0.

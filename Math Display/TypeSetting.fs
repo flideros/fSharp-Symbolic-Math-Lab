@@ -33,14 +33,14 @@ type Glyph =
      font:Font;
      lSpace:float;
      rSpace:float
-     //mathElement:Element
      }
+type GlyphRow = 
+    {grid:Grid;
+     inkWidth:float;
+     leftBearing:float;
+     rightBearing:float}
 
-type Symbol =
-    | Element of Element
-    | Operator of Operator
-
-type GlyphBuilder = Font -> Symbol -> Glyph 
+type GlyphBuilder = Font -> Element -> Glyph 
 type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
     let g = Grid()
@@ -90,8 +90,7 @@ type GlyphBox (glyph) as glyphBox =
         glyphBox.SetValue(Grid.RowSpanProperty,3)
         glyphBox.Child <- g
 
-type RowData = {element:MathMLElement;inkWidth:float;leftBearing:float;rightBearing:float}
-type MathRow = {grid:Grid;rowData:RowData}
+
 
 module TypeSetting = 
     open MathML
@@ -149,33 +148,41 @@ module TypeSetting =
             gb
 
     // Builders
-    let makeOperatorGlyph :GlyphBuilder = 
-            fun font op -> 
+    let makeGlyph :GlyphBuilder = 
+            fun font el -> 
                 
-                let operator = match op with | Operator o -> o | Element _ -> OperatorDictionary.functionApplicationInfix
-
-                let lSpace = Operator.getValueFromLength font.emSquare operator.lspace
-                let rSpace = Operator.getValueFromLength font.emSquare operator.rspace
-
-                let elem = (Element.build (Token Mo) [] [] (getOperatorString operator))
+                let symbol = 
+                    match el.operator with 
+                    | Some o -> o.glyph 
+                    | Option.None -> el.symbol
+                let lSpace = 
+                    match el.operator with 
+                    | Some o -> Operator.getValueFromLength font.emSquare o.lspace
+                    | Option.None -> 0.
+                let rSpace = 
+                    match el.operator with 
+                    | Some o -> Operator.getValueFromLength font.emSquare o.rspace
+                    | Option.None -> 0.
+                
+                //let elem = (Element.build (Token Mo) [] [] symbol el.operator)
 
                 let text = 
                     let variant = 
                         List.tryFind (fun x -> 
                             match x with
                             | MathVariant _ -> true 
-                            | _ -> false) elem.attributes
+                            | _ -> false) el.attributes
                     match variant with
                     | Some (MathVariant v) -> v 
                     | _ -> Normal
-                    |> MathematicalAlphanumericSymbolMap.stringToVariant elem.symbol
+                    |> MathematicalAlphanumericSymbolMap.stringToVariant symbol
                 let formattedText = Text.format text font.typeFace font.emSquare
 
                 let mathColor = 
                     let color = 
                         List.tryFind (fun x -> match x with
                                                | MathColor _ -> true 
-                                               | _ -> false) elem.attributes
+                                               | _ -> false) el.attributes
                     match color with
                     | Some (MathColor m) -> m 
                     | _ -> Brushes.Black :> Brush
@@ -222,74 +229,6 @@ module TypeSetting =
                  string = text
                  lSpace = lSpace;
                  rSpace = rSpace}
-    let makeGlyph :GlyphBuilder = 
-            fun font el -> 
-                
-                let elem = match el with | Operator o -> (Element.build (Token Mo) [] [] (getOperatorString o)) | Element e -> e
-
-                let text = 
-                    let variant = 
-                        List.tryFind (fun x -> 
-                            match x with
-                            | MathVariant _ -> true 
-                            | _ -> false) elem.attributes
-                    match variant with
-                    | Some (MathVariant v) -> v 
-                    | _ -> Normal
-                    |> MathematicalAlphanumericSymbolMap.stringToVariant elem.symbol
-                let formattedText = Text.format text font.typeFace font.emSquare
-
-                let mathColor = 
-                    let color = 
-                        List.tryFind (fun x -> match x with
-                                               | MathColor _ -> true 
-                                               | _ -> false) elem.attributes
-                    match color with
-                    | Some (MathColor m) -> m 
-                    | _ -> Brushes.Black :> Brush
-                let p = Path(Stroke = mathColor, Fill = mathColor)            
-                
-                let geometry = 
-                    let drawingGroup = DrawingGroup()
-                    let drawingContext = drawingGroup.Open()
-                    let textLine = Text.format text font.typeFace font.emSquare
-                    do  textLine.Draw(drawingContext,Point(0.,0.),TextFormatting.InvertAxes.None)
-                        drawingContext.Close()             
-                    drawingGroup
-                let rec draw (dg :DrawingGroup) = 
-                    let items = dg.Children.Count
-                    let gg = GeometryGroup()
-                    let rec getDrawing i = 
-                        match i > 0 with
-                        | false -> gg
-                        | true -> 
-                            match dg.Children.Item(i-1) with
-                            | :? GeometryDrawing as gd -> 
-                                //do  gg.Children.Add(gd.Geometry)
-                                getDrawing (i-1)
-                            | :? GlyphRunDrawing as gr -> 
-                                do  gg.Children.Add(gr.GlyphRun.BuildGeometry())
-                                getDrawing (i-1)
-                            | :? DrawingGroup as dg -> 
-                                do  gg.Children.Add(draw dg)
-                                getDrawing (i-1)
-                            | _ -> gg
-                    getDrawing items            
-                
-                do  p.Data <- (draw geometry).GetFlattenedPathGeometry()
-                {path=p;
-                 leftBearing = formattedText.OverhangLeading; 
-                 extent = formattedText.Extent;
-                 overHangAfter = formattedText.OverhangAfter;
-                 overHangBefore = formattedText.Extent - formattedText.OverhangAfter - formattedText.Height;
-                 rightBearing = formattedText.OverhangTrailing; 
-                 baseline = formattedText.Baseline; 
-                 width = formattedText.Width; 
-                 height = formattedText.Height;
-                 font = font;
-                 string = text;
-                 lSpace = 0.;
-                 rSpace = 0.}    
     let makeRowFrom (glyphs:Glyph list) =
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
@@ -331,25 +270,29 @@ module TypeSetting =
     type TestCanvas() as this  =  
         inherit UserControl()
         
-        let c0=  makeOperatorGlyph textSizeFont (Operator OperatorDictionary .cubeRootPrefix)
-        let c1 = makeOperatorGlyph textSizeFont (Operator OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix)
-        let c2 = makeGlyph textSizeFont (Element (Element.build (Token Mi) [MathColor Brushes.BlueViolet] [] "2"))
-        let c3 = makeOperatorGlyph textSizeFont (Operator(OperatorDictionary.plusSignInfix))
-        let c4 = makeGlyph textSizeFont (Element (Element.build (Token Mi) [] [] "x"))
-        let c5 = makeGlyph textSizeFont (Element (Element.build (Token Mo) [] [] (getOperatorString OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix)))
+
+        let mathematicalRightFlattenedParenthesisPostfix = OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix
+        let invisibleTimesInfix = OperatorDictionary.invisibleTimesInfix
+
+        let c0=  makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
+        let c1 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
+        let c2 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "2" Option.None)
+        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [MathColor Brushes.BlanchedAlmond] [] "" (Some OperatorDictionary.multiplicationSignInfix))
+        let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "x" Option.None)
+        let c5 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs1 = [c2;c3;c4]//c4;c2]//
         let line1 = makeRowFrom glyphs1 
         let line1_Width = List.fold (fun acc x -> x.width + acc) 0. glyphs1
 
-        let s0=  makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.cubeRootPrefix))
-        let s1 = makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = makeGlyph scriptSizeFont (Element (Element.build (Token Mn) [] [] "2"))
-        let s3 = makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.timesWithLeftHalfBlackInfix))
-        let s4 = makeGlyph scriptSizeFont (Element (Element.build (Token Mn) [] [] "2"))
-        let s5 = makeOperatorGlyph scriptSizeFont (Operator(OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
+        let s0=  makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
+        let s1 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
+        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "2" Option.None)
+        let s3 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.minusSignInfix))
+        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "2" Option.None)
+        let s5 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
-        let glyphs2 = [s2]//s0;s1;s2;s3;s4;s5]
+        let glyphs2 = [s1;s2;s3;s4;s5]//s2]//s0;
         let line2 = makeRowFrom glyphs2
        
         let textBlock =                    
