@@ -265,6 +265,7 @@ type Operator =
       rspace : Length
       properties: MathMLAttribute list 
     } 
+
 type Element = 
     { element : MathMLElement; 
       attributes : MathMLAttribute list; 

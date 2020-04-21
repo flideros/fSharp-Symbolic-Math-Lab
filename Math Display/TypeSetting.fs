@@ -90,8 +90,6 @@ type GlyphBox (glyph) as glyphBox =
         glyphBox.SetValue(Grid.RowSpanProperty,3)
         glyphBox.Child <- g
 
-
-
 module TypeSetting = 
     open MathML
     
@@ -153,7 +151,7 @@ module TypeSetting =
                 
                 let symbol = 
                     match el.operator with 
-                    | Some o -> o.glyph 
+                    | Some o -> getOperatorString o
                     | Option.None -> el.symbol
                 let lSpace = 
                     match el.operator with 
@@ -164,8 +162,6 @@ module TypeSetting =
                     | Some o -> Operator.getValueFromLength font.emSquare o.rspace
                     | Option.None -> 0.
                 
-                //let elem = (Element.build (Token Mo) [] [] symbol el.operator)
-
                 let text = 
                     let variant = 
                         List.tryFind (fun x -> 
@@ -245,12 +241,15 @@ module TypeSetting =
             kerns
         
         let mathSpaces = 
-            // compare adjacent glyph widths to the typeset width of the pair.
+            // Apply operator lSpace and rSpace.
             let leftGlyphs = List.truncate (glyphs.Length-1) glyphs
             let rightGlyphs = glyphs.Tail
             let glyphPairs = List.zip leftGlyphs rightGlyphs
             let spaces = List.scan (fun acc (l,r) -> acc + l.rSpace + r.lSpace - l.rightBearing - r.leftBearing) 0. glyphPairs
-            spaces
+            // Specify space based on em size
+            match glyphs.Head.font.emSquare = 1000.<MathML.em> with
+            | true -> spaces
+            | false -> List.map (fun x -> 0. * x) spaces // In this case, do not apply to script sizes
 
         let positions = 
             let initialPosition = {x=0.;y=0.}
@@ -269,15 +268,14 @@ module TypeSetting =
     (*Test Area*)
     type TestCanvas() as this  =  
         inherit UserControl()
-        
 
         let mathematicalRightFlattenedParenthesisPostfix = OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix
         let invisibleTimesInfix = OperatorDictionary.invisibleTimesInfix
 
         let c0=  makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
         let c1 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let c2 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "2" Option.None)
-        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [MathColor Brushes.BlanchedAlmond] [] "" (Some OperatorDictionary.multiplicationSignInfix))
+        let c2 = makeGlyph textSizeFont (Element.build (Token Mn) [] [] "4" Option.None)
+        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))
         let c4 = makeGlyph textSizeFont (Element.build (Token Mi) [] [] "x" Option.None)
         let c5 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
@@ -287,9 +285,9 @@ module TypeSetting =
 
         let s0=  makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "2" Option.None)
-        let s3 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.minusSignInfix))
-        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "2" Option.None)
+        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] "z" Option.None)
+        let s3 = makeGlyph scriptSizeFont (Element.build (Token Mo) [MathColor Brushes.Crimson] [] "" (Some OperatorDictionary.plusSignInfix))
+        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "32" Option.None)
         let s5 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs2 = [s1;s2;s3;s4;s5]//s2]//s0;
@@ -351,7 +349,7 @@ module TypeSetting =
                         - c4.leftBearing 
                         //+ c4.rightBearing 
                         + MathPositioningConstants.spaceAfterScript 
-                        + 444.
+                        + 444. 
                         ) *0.1, Y = 27.8 - 36.)
             line2.SetValue(Grid.RowProperty,1)
 
