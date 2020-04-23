@@ -246,6 +246,7 @@ type MathLayoutElement =
 type EnliveningExpressionElement = 
     | Maction   /// bind actions to a sub-expression
 
+
 type MathMLElement = 
     | Math 
     | Token of TokenElement 
@@ -294,6 +295,7 @@ module Operator =
         | NamedLength l when l = NegativeThickMathSpace -> (-5./18.<em>) * emSquare
         | NamedLength l when l = NegativeVeryThickMathSpace -> (-6./18.<em>) * emSquare
         | NamedLength l when l = NegativeVeryVeryThickMathSpace -> (-7./18.<em>) * emSquare
+        | EM em -> float em * float emSquare
         | _ -> 0.
 
 module Element =
@@ -334,7 +336,13 @@ module Element =
          + convertLength (x.ToString().Replace(x.GetType().Name + " ","=\""))
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
-           
+    
+    let rec recurseElement eMi el : 'r =
+        let recurse = recurseElement eMi
+        match el.element with 
+        |  Token Mi -> eMi el
+
+
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
         let openTag attrString = 
             match elem with
@@ -533,55 +541,59 @@ module Element =
         
         | Token Mo ->
             let defaultAttributes =  
-                                    [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+               [//2.1.6 Attributes Shared by all MathML Elements 
+                Id "none"; 
+                Xref "none"; 
+                Class "none"; 
+                Style "none"; 
+                Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor System.Windows.Media.Brushes.Black; 
-                                     MathBackground System.Windows.Media.Brushes.Transparent; 
+                //3.1.10 Mathematics style attributes common to presentation elements 
+                MathColor System.Windows.Media.Brushes.Black; 
+                MathBackground System.Windows.Media.Brushes.Transparent; 
 
-                                     //3.2.2 Mathematics style attributes common to token elements 
-                                     MathVariant Normal;
-                                     MathSize (EM 1.0<em>);
-                                     Dir Ltr;                                     
+                //3.2.2 Mathematics style attributes common to token elements 
+                MathVariant Normal;
+                MathSize (EM 1.0<em>);
+                Dir Ltr;                                     
                                      
-                                     //3.2.5.2.1 Dictionary-based attributes 
-                                     Fence false;
-                                     Form _Form.Infix;
-                                     Separator false;
-                                     LSpace (NamedLength ThickMathSpace);
-                                     RSpace (NamedLength ThickMathSpace);
-                                     Stretchy false
-                                     Symmetric false
-                                     MaxSize (KeyWord "infinity");                                     
-                                     MinSize (Pct 100.0<pct>);
-                                     LargeOp false;
-                                     MovableLimits false;
-                                     Accent false;
+                //3.2.5.2.1 Dictionary-based attributes 
+                Fence false;
+                Form _Form.Infix; 
+                Separator false;
+                LSpace (NamedLength ThickMathSpace); 
+                RSpace (NamedLength ThickMathSpace); 
+                Stretchy false
+                Symmetric false
+                MaxSize (KeyWord "infinity");                                     
+                MinSize (Pct 100.0<pct>);
+                LargeOp false;
+                MovableLimits false;
+                Accent false;
                                      
-                                     //3.2.5.2.2 Linebreaking attributes 
-                                     LineBreak _LineBreak.Auto;
-                                     LineBreakMultChar "02062"; //&InvisibleTimes;
-                                     LineBreakStyle _LineBreakStyle.Before;
-                                     LineLeading (Pct 100.0<pct>);
+                //3.2.5.2.2 Linebreaking attributes 
+                LineBreak _LineBreak.Auto;
+                LineBreakMultChar "02062"; //&InvisibleTimes;
+                LineBreakStyle _LineBreakStyle.Before;
+                LineLeading (Pct 100.0<pct>);
                                      
-                                     //3.2.5.2.3 Indentation attributes
-                                     IndentAlign _IndentAlign.Auto;
-                                     IndentAlignFirst _IndentAlignFirst.IndentAlign;
-                                     IndentAlignLast _IndentAlignLast.IndentAlign;
-                                     IndentShift (Numb 0.0);
-                                     IndentShiftFirst (KeyWord "indentshift");
-                                     IndentShiftLast (KeyWord "indentshift");
-                                     IndentTarget "none";                                     
-                                     ]
+                //3.2.5.2.3 Indentation attributes
+                IndentAlign _IndentAlign.Auto;
+                IndentAlignFirst _IndentAlignFirst.IndentAlign;
+                IndentAlignLast _IndentAlignLast.IndentAlign;
+                IndentShift (Numb 0.0);
+                IndentShiftFirst (KeyWord "indentshift");
+                IndentShiftLast (KeyWord "indentshift");
+                IndentTarget "none";                                     
+                ]
 
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
+            let newAttr = 
+                match operator with
+                | Some o -> List.concat[o.properties; attr; [LSpace o.lspace;RSpace o.rspace;Form o.form]]
+                | Option.None -> attr
             { element = elem; 
-              attributes = (scrubAttributes attr defaultAttributes); 
+              attributes = (scrubAttributes newAttr defaultAttributes); 
               openTag = openTag aString;
               closeTag = closeTag;
               symbol = symbol;
@@ -1075,29 +1087,38 @@ module Element =
               operator = Option.None}
         
         | Script Msup ->
-            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+            let defaultAttributes = //2.1.6 Attributes Shared by all MathML Elements
+                [Id "none"; 
+                 Xref "none"; 
+                 Class "none"; 
+                 Style "none"; 
+                 Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor System.Windows.Media.Brushes.Black; 
-                                     MathBackground System.Windows.Media.Brushes.Transparent;
+                 //3.1.10 Mathematics style attributes common to presentation elements 
+                 MathColor System.Windows.Media.Brushes.Black; 
+                 MathBackground System.Windows.Media.Brushes.Transparent;
 
-                                     //3.4.2.2 Attributes 
-                                     SuperScriptShift (KeyWord "automatic");
-                                     ]
-
+                 //3.4.2.2 Attributes 
+                 SuperScriptShift (KeyWord "automatic");
+                ]
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
-            { element = elem; 
-              attributes = (scrubAttributes attr defaultAttributes); 
-              openTag = openTag aString;
-              closeTag = closeTag;
-              symbol = symbol;
-              arguments = arguments
-              operator = Option.None}
+            match arguments.Length = 2 with
+            | false ->
+                { element = GeneralLayout Merror; 
+                  attributes = (scrubAttributes attr defaultAttributes); 
+                  openTag = openTag aString;
+                  closeTag = closeTag;
+                  symbol = "Msup requires 2 arguments; base(index 0) & superscript(index 0)";
+                  arguments = arguments
+                  operator = Option.None}
+            | true ->             
+                { element = elem; 
+                  attributes = (scrubAttributes attr defaultAttributes); 
+                  openTag = openTag aString;
+                  closeTag = closeTag;
+                  symbol = symbol;
+                  arguments = arguments
+                  operator = Option.None}
         
         | Script Msubsup ->
             let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
