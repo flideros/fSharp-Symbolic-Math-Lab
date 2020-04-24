@@ -299,7 +299,11 @@ module Operator =
         | _ -> 0.
 
 module Element =
-    
+    let private containsTokenList (el:Element) = 
+        List.forall (fun x -> 
+            match x.element with
+            | Token _ -> true
+            | _ -> true) el.arguments
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
     let private scrubAttributes attrList defaultAttr = 
         let newValidAttributes =
@@ -336,12 +340,17 @@ module Element =
          + convertLength (x.ToString().Replace(x.GetType().Name + " ","=\""))
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
-    
-    let rec recurseElement eMi el : 'r =
-        let recurse = recurseElement eMi
-        match el.element with 
-        |  Token Mi -> eMi el
 
+    
+    let rec recurseElement eToken eRow el : 'r =
+        let recurse = recurseElement eToken
+        match el.element with 
+        | Token _ -> eToken el
+        | GeneralLayout Mrow -> 
+            match containsTokenList el with
+            | true -> eRow el
+            | false -> failwith "TODO"
+        
 
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
         let openTag attrString = 

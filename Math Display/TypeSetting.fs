@@ -90,10 +90,14 @@ type GlyphBox (glyph) as glyphBox =
         glyphBox.SetValue(Grid.RowSpanProperty,3)
         glyphBox.Child <- g
 
+type TypeObject =
+    | Glyph of Glyph
+    | GlyphRow of GlyphRow
+
 module TypeSetting = 
     open MathML
     
-    let basisSize = 100.<MathML.px> 
+    let basisSize = 100.<MathML.px>
 
     // Font Sizes
     let mathX00px = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
@@ -144,6 +148,15 @@ module TypeSetting =
                                 {x = x; y = y'} // position
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
+    let getFontFromTokenElement (el:Element) = 
+        let mathSize = 
+            List.tryFind (fun x -> 
+                match x with
+                | MathSize _ -> true 
+                | _ -> false) el.attributes
+        match mathSize with 
+        | Some (MathSize (EM s)) -> {emSquare = s * 1000.; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+        | _ -> textSizeFont
 
     // Builders
     let makeGlyph :GlyphBuilder = 
@@ -237,7 +250,9 @@ module TypeSetting =
              string = text;
              lSpace = lSpace;
              rSpace = rSpace}
-    let makeRowFrom (glyphs:Glyph list) =
+    let makeRowFrom (typeObjects:TypeObject list) =
+        let errorGlyph = makeGlyph textSizeFont (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None)
+        let glyphs = List.map (fun x -> match x with | Glyph g -> g | GlyphRow gr -> errorGlyph ) typeObjects
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
         let row1 = RowDefinition(Height = GridLength.Auto)
@@ -276,19 +291,34 @@ module TypeSetting =
         let glyphBoxes = List.map2 (fun g p -> getGlyphBox g p) glyphs positions
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) glyphBoxes
         g
-    
-    // Typesetter
-    (**)
-    let typesetElement (el:Element) =
-        
-        let typeset_mi (el:Element) = 
-            match el.element = Token Mi with
-            | true -> makeGlyph textSizeFont el
-            | false -> makeGlyph textSizeFont (Element.build (Token Mn) [] [] "8" Option.None)
-            
-    //let typeset_mRow (elements:Element list) =     
-    //let typeset_mSup el = 
-        Element.recurseElement typeset_mi el  
+
+    // Typesetter    
+    let typesetElement (el:Element) =        
+        let typeset_Token (el:Element) = 
+            match el.element = Token Mi ||
+                  el.element = Token Mn ||
+                  el.element = Token Mo ||
+                  el.element = Token Ms ||
+                  el.element = Token Mspace ||
+                  el.element = Token Mtext with            
+            | false -> makeGlyph (getFontFromTokenElement el) (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None) |> Glyph
+            | true -> makeGlyph (getFontFromTokenElement el) el |> Glyph
+    //(*
+        let typeset_GlyphRow (el:Element) = 
+            match el.element = GeneralLayout Mrow with            
+            | false ->
+                {grid = [makeGlyph (getFontFromTokenElement el) (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None) |> Glyph] |> makeRowFrom;
+                 inkWidth=1.;
+                 leftBearing=1.;
+                 rightBearing=1.} |> GlyphRow
+            | true -> // TODO ----\/ for testing only
+                {grid = [makeGlyph (getFontFromTokenElement el) (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None) |> Glyph] |> makeRowFrom;
+                inkWidth=1.;
+                leftBearing=1.;
+                rightBearing=1.} |> GlyphRow
+    //*)        
+
+        Element.recurseElement typeset_Token typeset_GlyphRow el  
 
     (*Test Area*)
     type TestCanvas() as this  =  
@@ -297,30 +327,33 @@ module TypeSetting =
         let mathematicalRightFlattenedParenthesisPostfix = OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix
         let invisibleTimesInfix = OperatorDictionary.invisibleTimesInfix
 
-        let c0=  makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
-        let c1 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let c2 = makeGlyph textSizeFont (Element.build (Token Mn) [] [] "8" Option.None)
-        let c3 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))
-        let c4 = makeGlyph textSizeFont (Element.build (Token Mn) [] [] "pi" Option.None)
-        let c5 = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
+        let c0=  typesetElement (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
+        let c1 = typesetElement (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
+        let c2 = typesetElement (Element.build (Token Mn) [] [] "8" Option.None)
+        let c3 = typesetElement (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))
+        let c4 = typesetElement (Element.build (Token Mn) [] [] "pi" Option.None)
+        let c5 = typesetElement (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
 
         let glyphs1 = [c2;c3;c4]//c4;c2]//
         let line1 = makeRowFrom glyphs1 
-        let line1_Width = List.fold (fun acc x -> x.width + acc) 0. glyphs1
+        let line1_Width = 
+            let errorGlyph = makeGlyph textSizeFont (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None)
+            let glyphs = List.map (fun x -> match x with | Glyph g -> g | GlyphRow gr -> errorGlyph ) glyphs1
+            List.fold (fun acc x -> x.width + acc) 0. glyphs
 
-        let s0=  makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
-        let s1 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = makeGlyph scriptSizeFont (Element.build (Token Mi) [] [] "c" Option.None)
-        let s3 = makeGlyph scriptSizeFont (Element.build (Token Mo) [MathColor Brushes.Crimson] [] "" (Some OperatorDictionary.plusMinusSignPrefix))
-        let s4 = makeGlyph scriptSizeFont (Element.build (Token Mn) [] [] "32" Option.None)
-        let s5 = makeGlyph scriptSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
+        let s0=  typesetElement (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
+        let s1 = typesetElement (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
+        let s2 = typesetElement (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "c" Option.None)
+        let s3 = typesetElement (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.Crimson] [] "" (Some OperatorDictionary.plusMinusSignPrefix))
+        let s4 = typesetElement (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "32" Option.None)
+        let s5 = typesetElement (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let glyphs2 = [s1;s2;s3;s4;s5]//s2]//s0;
         let line2 = makeRowFrom glyphs2
        
         let textBlock =                    
             let tb = TextBlock()
-            tb.Text <- (line1_Width  + c4.rightBearing + c2.leftBearing).ToString() 
+            tb.Text <- " "//(line1_Width  + c4.rightBearing + c2.leftBearing).ToString() 
             tb.FontStyle <- FontStyles.Normal
             tb.FontSize <- 60.
             tb.FontFamily <- Text.STIX2Math_FontFamily
@@ -370,8 +403,8 @@ module TypeSetting =
                 TranslateTransform(
                     X = (line1_Width  
                         //+ c2.leftBearing
-                        - c2.rightBearing                        
-                        - c4.leftBearing 
+                        //- c2.rightBearing                        
+                        //- c4.leftBearing 
                         //+ c4.rightBearing 
                         + MathPositioningConstants.spaceAfterScript 
                         + 444. 
