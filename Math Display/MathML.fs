@@ -298,12 +298,7 @@ module Operator =
         | EM em -> float em * float emSquare
         | _ -> 0.
 
-module Element =
-    let private containsTokenList (el:Element) = 
-        List.forall (fun x -> 
-            match x.element with
-            | Token _ -> true
-            | _ -> true) el.arguments
+module Element =    
     let private isValidElementAttributeOf defaultAttrs attr = List.exists (fun elem -> elem.GetType() = attr.GetType()) defaultAttrs
     let private scrubAttributes attrList defaultAttr = 
         let newValidAttributes =
@@ -343,13 +338,12 @@ module Element =
 
     
     let rec recurseElement eToken eRow el : 'r =
-        let recurse = recurseElement eToken
+        let recurse = recurseElement eToken eRow
         match el.element with 
         | Token _ -> eToken el
         | GeneralLayout Mrow -> 
-            match containsTokenList el with
-            | true -> eRow el
-            | false -> failwith "TODO"
+            eRow (List.map (fun x -> recurse x) el.arguments)
+             
         
 
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
