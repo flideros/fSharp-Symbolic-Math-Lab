@@ -39,7 +39,8 @@ type GlyphRow =
      rowWidth:float;
      leftBearing:float;
      rightBearing:float;
-     rowBaseline:float
+     xShift:float;
+     yShift:float
      }
 
 type GlyphBuilder = Font -> Element -> Glyph 
@@ -103,15 +104,21 @@ module TypeSetting =
     
     let basisSize = 100.<MathML.px>
 
-    // Font Sizes
+    //  Font Sizes
     let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     let scriptScriptSizeFont = {emSquare = 500.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     
-    // Format Text
+    //  Checks
+    let areAllGlyphs (tList:TypeObject list) = 
+        List.forall (fun x -> 
+            match x with
+            | Glyph _ -> true
+            | _ -> false) tList
+    //  Format Text
     let formatTextWithFont = fun t font -> Text.format t font.typeFace font.emSquare    
     
-    // Transfomations
+    //  Transfomations
     let scaleGlyphBox (glyphBox :GlyphBox) (s:Size) = 
         do glyphBox.RenderTransform <- ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY)
     let placeGlyphBox (glyphBox :GlyphBox) (p:Position) = 
@@ -122,7 +129,7 @@ module TypeSetting =
             tranforms.Children.Add(ScaleTransform(ScaleX = s.scaleX,ScaleY = s.scaleY))            
             glyphBox.RenderTransform <- tranforms
     
-    // Getters
+    //  Getters
     let getHorizontalKern leftGlyph rightGlyph =
         let typeSetPair = formatTextWithFont (leftGlyph.string + rightGlyph.string) leftGlyph.font        
         typeSetPair.Width - leftGlyph.width - rightGlyph.width
@@ -145,8 +152,8 @@ module TypeSetting =
         match mathSize with 
         | Some (MathSize (EM s)) -> {emSquare = s * 1000.; typeFace = Text.STIX2Math_Typeface; size = basisSize}
         | _ -> textSizeFont
-    let getGridFromTypeObject t = match t with | GlyphRow gr -> gr.grid | Glyph g -> new Grid()
-    let getWidthFromTypeObject t = match t with | GlyphRow gr -> gr.rowWidth | Glyph g -> g.width
+    let getGridFromTypeObject t = match t with | GlyphRow gr -> gr.grid | Glyph g -> new Grid() 
+    let getWidthFromTypeObject t = match t with | GlyphRow gr -> gr.rowWidth | Glyph g -> g.width    
 
     // Builders
     let makeGlyphBox glyph (p:Position) = 
@@ -165,7 +172,7 @@ module TypeSetting =
             gb
     let makeGlyph :GlyphBuilder = 
         fun font el -> 
-                
+        
             let symbol = 
                 match el.operator with 
                 | Some o -> getOperatorString o
@@ -254,9 +261,9 @@ module TypeSetting =
              string = text;
              lSpace = lSpace;
              rSpace = rSpace}
-    let makeRowFromGlyphs (typeObjects:TypeObject list) =
+    let makeRowFromGlyphs (glyphs:TypeObject list) =
         let errorGlyph = makeGlyph textSizeFont (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None)
-        let glyphs = List.map (fun x -> match x with | Glyph g -> g | GlyphRow gr -> errorGlyph ) typeObjects
+        let glyphs = List.map (fun x -> match x with | Glyph g -> g | GlyphRow gr -> errorGlyph ) glyphs
         
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
@@ -304,19 +311,15 @@ module TypeSetting =
          rowWidth = width;
          leftBearing = leftBearing;
          rightBearing = rightBearing;
-         rowBaseline = baseline} |> GlyphRow    
+         xShift=0.;
+         yShift=0.} |> GlyphRow    
     let makeRowFromTypeObjects (typeObjects:TypeObject list) =
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
         let row1 = RowDefinition(Height = GridLength.Auto)
         do  g.RowDefinitions.Add(row0)
             g.RowDefinitions.Add(row1)
-        
-        let areAllGlyphs (tList:TypeObject list) = 
-            List.forall (fun x -> 
-                match x with
-                | Glyph _ -> true
-                | _ -> false) tList        
+               
         let rec getRows (typeObjects:TypeObject list) acc = 
             match typeObjects with
             | [] -> acc
@@ -337,13 +340,14 @@ module TypeSetting =
                     {grid=Grid();
                      rowWidth=0.;
                      leftBearing=0.;
-                     rightBearing=0.;
-                     rowBaseline=0.}) 
+                     rightBearing=0.
+                     xShift=0.;
+                     yShift=0.}) 
 
         let positions = 
-            let initialPosition = {x=0.;y=0.}
-            // positions = 
-            let p = List.scan (fun acc x -> {x = (acc.x + x.rowWidth/10.); y = 0.}) initialPosition rows
+            let initialPosition = {x=0.;y=0.} 
+                                           // Need to revisit this --\/
+            let p = List.scan (fun acc x -> {x = (acc.x + x.rowWidth * 0.1); y = 0.}) initialPosition rows
             List.truncate rows.Length p  
             
         let mappedRows = 
@@ -355,15 +359,58 @@ module TypeSetting =
         let leftBearing = rows.Head.leftBearing
         let rightBearing = (List.rev rows).Head.rightBearing 
         let width = List.fold (fun acc x ->  x.rowWidth + acc) 0. rows
-        let baseline = (List.maxBy (fun x -> x.rowBaseline) rows).rowBaseline
-
+        
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) mappedRows
         
         {grid = g;
          rowWidth = width;
          leftBearing = leftBearing;
          rightBearing = rightBearing;
-         rowBaseline = baseline} |> GlyphRow
+         xShift=0.;
+         yShift=0.}|> GlyphRow
+
+    let makeSuperScriptFromTypeObjects (target:TypeObject) (script:TypeObject) =        
+        let g = Grid()
+
+        let targetGrid =
+            match target with
+            | GlyphRow gr -> gr.grid
+            | Glyph gl -> 
+                let grid = Grid()
+                let gb = makeGlyphBox gl {x=0.;y=0.}
+                do grid.Children.Add(gb) |> ignore
+                grid
+
+        let scriptGrid = 
+            let position = 
+                let x = (getWidthFromTypeObject target)  
+                let y = 27.8 - 36.
+                {x = x; y = y}
+            match script with
+            | GlyphRow gr -> 
+                let g = gr.grid
+                do g.Loaded.AddHandler(
+                    RoutedEventHandler(
+                        fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x*0.1, Y = position.y)))
+                g
+            | Glyph gl -> 
+                let grid = Grid()
+                let gb = makeGlyphBox gl position
+                do grid.Children.Add(gb) |> ignore
+                grid
+        
+        let leftBearing = 0.
+        let rightBearing = 0.
+        let width = (getWidthFromTypeObject target) + (getWidthFromTypeObject script)
+        
+        do  List.iter (fun x -> g.Children.Add(x) |> ignore) [targetGrid; scriptGrid]
+        
+        {grid = g;
+         rowWidth = width;
+         leftBearing = leftBearing;
+         rightBearing = rightBearing;
+         xShift=0.;
+         yShift=0.}|> GlyphRow
 
     // Typesetter    
     let typesetElement (el:Element) =        
@@ -378,9 +425,13 @@ module TypeSetting =
             | false -> makeGlyph (getFontFromTokenElement el) (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None) |> Glyph
             | true -> makeGlyph (getFontFromTokenElement el) el |> Glyph
             
-        let typeset_GlyphRow (el:TypeObject list) = makeRowFromTypeObjects el
+        let typeset_Row (el:TypeObject list) = makeRowFromTypeObjects el
       
-        Element.recurseElement typeset_Token typeset_GlyphRow el    
+        let typeset_Superscript ((target:TypeObject),(script:TypeObject)) = makeSuperScriptFromTypeObjects target script
+        
+        Element.recurseElement typeset_Token 
+                               typeset_Row 
+                               typeset_Superscript el
 
     (*Test Area*)
     type TestCanvas() as this  =  
@@ -392,8 +443,6 @@ module TypeSetting =
         let t3 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))
         let t4 = (Element.build (Token Mi) [] [] "x" Option.None)
         let t5 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
-
-        let r0 = (Element.build (GeneralLayout Mrow) [] [t2;t3;t4] "" Option.None)
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
@@ -402,13 +451,15 @@ module TypeSetting =
         let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "32" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
+        let r0 = (Element.build (GeneralLayout Mrow) [] [t2;t3;t4] "" Option.None)
         let r1 = (Element.build (GeneralLayout Mrow) [] [s1;s2;s3;s4;s5] "" Option.None)
 
         let r = typesetElement (Element.build (GeneralLayout Mrow) [] [r0;r1] "" Option.None)
-
+        let s = typesetElement (Element.build (Script Msup) [SuperScriptShift (Numb MathPositioningConstants.spaceAfterScript)] [r0;r1] "" Option.None)
+        
         //let line1 = getGridFromTypeObject r0
         //let line2 = getGridFromTypeObject r1
-        let line3 = getGridFromTypeObject r
+        let line3 = getGridFromTypeObject s
        
         let textBlock =                    
             let tb = TextBlock()
@@ -470,6 +521,6 @@ module TypeSetting =
             //canvas.Children.Add(line1) |> ignore
             //canvas.Children.Add(line2) |> ignore
             canvas.Children.Add(line3) |> ignore
-            canvas.Children.Add(textBlock) |> ignore
+            //canvas.Children.Add(textBlock) |> ignore
             
             this.Content <- screen_Grid

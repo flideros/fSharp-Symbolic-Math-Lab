@@ -337,13 +337,13 @@ module Element =
         |> addOrRemoveSpace
 
     
-    let rec recurseElement eToken eRow el : 'r =
-        let recurse = recurseElement eToken eRow
+    let rec recurseElement eToken eRow eSuperscript el : 'r =
+        let recurse = recurseElement eToken eRow eSuperscript
         match el.element with 
         | Token _ -> eToken el
         | GeneralLayout Mrow -> 
             eRow (List.map (fun x -> recurse x) el.arguments)
-             
+        | Script Msup -> eSuperscript (recurse el.arguments.[0],recurse el.arguments.[1])
         
 
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
