@@ -38,9 +38,7 @@ type GlyphRow =
     {grid:Grid;
      rowWidth:float;
      leftBearing:float;
-     rightBearing:float;
-     xShift:float;
-     yShift:float
+     rightBearing:float
      }
 
 type GlyphBuilder = Font -> Element -> Glyph 
@@ -101,9 +99,11 @@ type TypeObject =
 
 module TypeSetting = 
     open MathML
-    
+    // Constants
     let basisSize = 100.<MathML.px>
-
+    let basisEmSquare = 10.<MathML.em>
+    let baseline = 761.
+    
     //  Font Sizes
     let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
@@ -115,6 +115,7 @@ module TypeSetting =
             match x with
             | Glyph _ -> true
             | _ -> false) tList
+    
     //  Format Text
     let formatTextWithFont = fun t font -> Text.format t font.typeFace font.emSquare    
     
@@ -310,9 +311,7 @@ module TypeSetting =
         {grid = g;
          rowWidth = width;
          leftBearing = leftBearing;
-         rightBearing = rightBearing;
-         xShift=0.;
-         yShift=0.} |> GlyphRow    
+         rightBearing = rightBearing} |> GlyphRow    
     let makeRowFromTypeObjects (typeObjects:TypeObject list) =
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
@@ -340,9 +339,7 @@ module TypeSetting =
                     {grid=Grid();
                      rowWidth=0.;
                      leftBearing=0.;
-                     rightBearing=0.
-                     xShift=0.;
-                     yShift=0.}) 
+                     rightBearing=0.}) 
 
         let positions = 
             let initialPosition = {x=0.;y=0.} 
@@ -365,11 +362,9 @@ module TypeSetting =
         {grid = g;
          rowWidth = width;
          leftBearing = leftBearing;
-         rightBearing = rightBearing;
-         xShift=0.;
-         yShift=0.}|> GlyphRow
+         rightBearing = rightBearing}|> GlyphRow
 
-    let makeSuperScriptFromTypeObjects (target:TypeObject) (script:TypeObject) =        
+    let makeSuperScriptFromTypeObjects (target:TypeObject) (script:TypeObject) superscriptShiftUp =        
         let g = Grid()
 
         let targetGrid =
@@ -382,16 +377,20 @@ module TypeSetting =
                 grid
 
         let scriptGrid = 
+            let baseCorrectionHeight =  
+                let textSizeScaleFactor = (1000. / 960.) - 1.                
+                baseline * ((1. + textSizeScaleFactor) - (MathPositioningConstants.scriptPercentScaleDown / 100.) * (1. - textSizeScaleFactor))
+            
             let position = 
-                let x = (getWidthFromTypeObject target)  
-                let y = 27.8 - 36.
+                let x = (getWidthFromTypeObject target)/(float basisEmSquare)
+                let y =  (baseCorrectionHeight - superscriptShiftUp) * (float (basisEmSquare / basisSize))
                 {x = x; y = y}
             match script with
             | GlyphRow gr -> 
                 let g = gr.grid
                 do g.Loaded.AddHandler(
                     RoutedEventHandler(
-                        fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x*0.1, Y = position.y)))
+                        fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
                 g
             | Glyph gl -> 
                 let grid = Grid()
@@ -408,9 +407,7 @@ module TypeSetting =
         {grid = g;
          rowWidth = width;
          leftBearing = leftBearing;
-         rightBearing = rightBearing;
-         xShift=0.;
-         yShift=0.}|> GlyphRow
+         rightBearing = rightBearing}|> GlyphRow
 
     // Typesetter    
     let typesetElement (el:Element) =        
@@ -427,7 +424,7 @@ module TypeSetting =
             
         let typeset_Row (el:TypeObject list) = makeRowFromTypeObjects el
       
-        let typeset_Superscript ((target:TypeObject),(script:TypeObject)) = makeSuperScriptFromTypeObjects target script
+        let typeset_Superscript ((target:TypeObject),(script:TypeObject),superscriptShiftUp) = makeSuperScriptFromTypeObjects target script superscriptShiftUp
         
         Element.recurseElement typeset_Token 
                                typeset_Row 
@@ -455,7 +452,7 @@ module TypeSetting =
         let r1 = (Element.build (GeneralLayout Mrow) [] [s1;s2;s3;s4;s5] "" Option.None)
 
         let r = typesetElement (Element.build (GeneralLayout Mrow) [] [r0;r1] "" Option.None)
-        let s = typesetElement (Element.build (Script Msup) [SuperScriptShift (Numb MathPositioningConstants.spaceAfterScript)] [r0;r1] "" Option.None)
+        let s = typesetElement (Element.build (Script Msup) [SuperScriptShift (Numb MathPositioningConstants.superscriptShiftUp)] [r0;r1] "" Option.None)
         
         //let line1 = getGridFromTypeObject r0
         //let line2 = getGridFromTypeObject r1
