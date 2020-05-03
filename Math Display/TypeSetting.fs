@@ -46,6 +46,16 @@ type GlyphBox (glyph) as glyphBox =
     inherit Border(BorderThickness=Thickness(1.5),BorderBrush=Brushes.Red)
     let g = Grid()
     
+    let mLine = 
+        let p = Path(Stroke = Brushes.Cyan, StrokeThickness = 4.)
+
+        let pf = PathFigure(StartPoint = Point(0., glyph.baseline - (MathPositioningConstants.axisHeight * (glyph.font.emSquare / 1000.<MathML.em>))))        
+        do  pf.Segments.Add( LineSegment( Point(glyph.width, glyph.baseline - (MathPositioningConstants.axisHeight * (glyph.font.emSquare / 1000.<MathML.em>))), true ))
+        let pg = PathGeometry() 
+        do  pg.Figures.Add(pf)
+            p.Data <- pg
+            p.SetValue(Grid.ColumnSpanProperty,3)
+        p
     let bLine = 
         let p = Path(Stroke = Brushes.White, StrokeThickness = 4.)
         let pf = PathFigure(StartPoint = Point(0., glyph.baseline))        
@@ -78,11 +88,13 @@ type GlyphBox (glyph) as glyphBox =
     let row1 = RowDefinition(Height = GridLength.Auto)
            
     do  glyph.path.SetValue(Grid.RowProperty,1)
+        mLine.SetValue(Grid.RowProperty,1)
         bLine.SetValue(Grid.RowProperty,1)
         g.RowDefinitions.Add(row0)
         g.RowDefinitions.Add(row1)
         
         g.Children.Add(glyph.path) |> ignore
+        g.Children.Add(mLine) |> ignore
         g.Children.Add(bLine) |> ignore 
         
            
@@ -102,7 +114,7 @@ module TypeSetting =
     // Constants
     let basisSize = 100.<MathML.px>
     let basisEmSquare = 10.<MathML.em>
-    let baseline = 761.
+    let baseline = 762.
     
     //  Font Sizes
     let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
@@ -376,14 +388,21 @@ module TypeSetting =
                 do grid.Children.Add(gb) |> ignore
                 grid
 
+        let targetRBearing =
+            match target with
+            | GlyphRow gr -> gr.rightBearing
+            | Glyph gl -> gl.rightBearing
+
         let scriptGrid = 
-            let baseCorrectionHeight =  
-                let textSizeScaleFactor = (1000. / 960.) - 1.                
-                baseline * ((1. + textSizeScaleFactor) - (MathPositioningConstants.scriptPercentScaleDown / 100.) * (1. - textSizeScaleFactor))
+            let textSizeScaleFactor = float (basisEmSquare / basisSize) 
+            let mathAxisCorrectionHeight = 
+                MathPositioningConstants.axisHeight * 
+                ((MathPositioningConstants.scriptPercentScaleDown / 100.) * 
+                 (1. + textSizeScaleFactor))
             
             let position = 
-                let x = (getWidthFromTypeObject target)/(float basisEmSquare)
-                let y =  (baseCorrectionHeight - superscriptShiftUp) * (float (basisEmSquare / basisSize))
+                let x = (getWidthFromTypeObject target - targetRBearing) * textSizeScaleFactor
+                let y = (mathAxisCorrectionHeight - superscriptShiftUp) * textSizeScaleFactor 
                 {x = x; y = y}
             match script with
             | GlyphRow gr -> 
@@ -399,7 +418,7 @@ module TypeSetting =
                 grid
         
         let leftBearing = 0.
-        let rightBearing = 0.
+        let rightBearing = MathPositioningConstants.spaceAfterScript
         let width = (getWidthFromTypeObject target) + (getWidthFromTypeObject script)
         
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) [targetGrid; scriptGrid]
@@ -438,13 +457,13 @@ module TypeSetting =
         let t1 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let t2 = (Element.build (Token Mn) [] [] "8" Option.None)
         let t3 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))
-        let t4 = (Element.build (Token Mi) [] [] "x" Option.None)
+        let t4 = (Element.build (Token Mi) [] [] "v" Option.None)
         let t5 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "c" Option.None)
-        let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusMinusSignPrefix))
+        let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
         let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "32" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
