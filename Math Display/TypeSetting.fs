@@ -114,8 +114,8 @@ module TypeSetting =
     // Constants
     let basisSize = 100.<MathML.px>
     let basisEmSquare = 10.<MathML.em>
-    let baseline = 762.
-    
+    let textSizeScaleFactor = float (basisEmSquare / basisSize)
+
     //  Font Sizes
     let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
@@ -387,14 +387,13 @@ module TypeSetting =
                 let gb = makeGlyphBox gl {x=0.;y=0.}
                 do grid.Children.Add(gb) |> ignore
                 grid
-
         let targetRBearing =
             match target with
             | GlyphRow gr -> gr.rightBearing
             | Glyph gl -> gl.rightBearing
 
         let scriptGrid = 
-            let textSizeScaleFactor = float (basisEmSquare / basisSize) 
+             
             let mathAxisCorrectionHeight = 
                 MathPositioningConstants.axisHeight * 
                 ((MathPositioningConstants.scriptPercentScaleDown / 100.) * 
@@ -430,7 +429,11 @@ module TypeSetting =
 
     // Typesetter    
     let typesetElement (el:Element) =        
-                
+        let math = 
+            match el.element with
+            | Math -> el
+            | _ -> Element.build (Math) [] [] "" Option.None
+        
         let typeset_Token (el:Element) = 
             match el.element = Token Mi ||
                   el.element = Token Mn ||
@@ -443,7 +446,19 @@ module TypeSetting =
             
         let typeset_Row (el:TypeObject list) = makeRowFromTypeObjects el
       
-        let typeset_Superscript ((target:TypeObject),(script:TypeObject),superscriptShiftUp) = makeSuperScriptFromTypeObjects target script superscriptShiftUp
+        let typeset_Superscript ((target:TypeObject),(script:TypeObject), superscriptShift) = 
+            let display = 
+                match List.tryFind (fun x -> 
+                    match x with
+                    | Display _ -> true 
+                    | _ -> false) el.attributes with
+                | Some (Display n) -> n
+                | _ -> Inline
+            let superscriptShiftUp = 
+                match display with
+                | Inline -> MathPositioningConstants.superscriptShiftUpCramped + superscriptShift
+                | Block -> MathPositioningConstants.superscriptShiftUp + superscriptShift
+            makeSuperScriptFromTypeObjects target script superscriptShiftUp
         
         Element.recurseElement typeset_Token 
                                typeset_Row 
@@ -471,11 +486,13 @@ module TypeSetting =
         let r1 = (Element.build (GeneralLayout Mrow) [] [s1;s2;s3;s4;s5] "" Option.None)
 
         let r = typesetElement (Element.build (GeneralLayout Mrow) [] [r0;r1] "" Option.None)
-        let s = typesetElement (Element.build (Script Msup) [SuperScriptShift (Numb MathPositioningConstants.superscriptShiftUp)] [r0;r1] "" Option.None)
+        let s = typesetElement (Element.build (Script Msup) [] [r0;r1] "" Option.None)
         
-        //let line1 = getGridFromTypeObject r0
-        //let line2 = getGridFromTypeObject r1
-        let line3 = getGridFromTypeObject s
+
+        let ms = (Element.build (Script Msup) [] [r0;r1] "" Option.None)
+        let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
+
+        let line3 = getGridFromTypeObject m
        
         let textBlock =                    
             let tb = TextBlock()
@@ -524,19 +541,7 @@ module TypeSetting =
             do g.Children.Add(canvas_DockPanel) |> ignore        
             g
 
-        do  //line1.RenderTransform <- TranslateTransform(X = 0., Y = 200.)
-            //line2.RenderTransform <- 
-                //TranslateTransform(
-                    //X = (getWidthFromTypeObject r0    
-                        //+ MathPositioningConstants.spaceAfterScript 
-                        //) * 0.1, Y = 27.8 - 36.)
-            //line2.SetValue(Grid.RowProperty,1)
-
-            //line1.Children.Add(line2) |> ignore
-
-            //canvas.Children.Add(line1) |> ignore
-            //canvas.Children.Add(line2) |> ignore
-            canvas.Children.Add(line3) |> ignore
+        do  canvas.Children.Add(line3) |> ignore
             //canvas.Children.Add(textBlock) |> ignore
             
             this.Content <- screen_Grid

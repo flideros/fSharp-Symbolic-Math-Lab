@@ -248,7 +248,7 @@ type EnliveningExpressionElement =
 
 
 type MathMLElement = 
-    | Math 
+    | Math
     | Token of TokenElement 
     | GeneralLayout of GeneralLayoutElement 
     | Script of ScriptElement 
@@ -317,14 +317,14 @@ module Element =
         let convertLength (l:string)=
             match l.Contains("(") with
             | true -> 
-                let value =
-                    let last = l.IndexOf(")")
-                    let start = l.IndexOf(" ")
+                let value =                    
+                    let start = match l.IndexOf(" ") with | x when x > 0 -> x | _ -> 0
+                    let last = match l.IndexOf(")") with | x when x > start -> x | _ -> l.Length
                     l.Substring(start,last-start).Trim()
                 let unit =
-                    let start = l.IndexOf("(")
-                    let last = l.IndexOf(" ")
-                    l.Substring(start+1,last-start).ToLower().Trim()
+                    let start = match l.IndexOf("(") with | x when x > 0 -> x | _ -> 0
+                    let last = match l.IndexOf(" ") with | x when x > start -> x | _ -> l.Length
+                    l.Substring(start,last-start).ToLower().Trim()
                 match unit with
                 | "em" | "ex" | "px" | "cm" | "in" | "mm" | "pt" | "pc" -> "=\"" + value + unit
                 | "pct" -> "=\"" + value + "%"
@@ -335,11 +335,11 @@ module Element =
          + convertLength (x.ToString().Replace(x.GetType().Name + " ","=\""))
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
-
     
     let rec recurseElement eToken eRow eSuperscript el : 'r =
         let recurse = recurseElement eToken eRow eSuperscript
         match el.element with 
+        | Math -> eRow (List.map (fun x -> recurse x) el.arguments)
         | Token _ -> eToken el
         | GeneralLayout Mrow -> 
             eRow (List.map (fun x -> recurse x) el.arguments)
@@ -352,12 +352,11 @@ module Element =
                 | Some (SuperScriptShift (Numb n)) -> n
                 | _ -> 0.
             eSuperscript (recurse el.arguments.[0],recurse el.arguments.[1],shift)
-        
 
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
         let openTag attrString = 
             match elem with
-            | Math -> "<math" + attrString + ">"
+            | Math _ -> "<math " + attrString + ">"
             | Token x -> "<" + (x.ToString().ToLower()) + attrString + ">"
             | GeneralLayout x -> "<" + (x.ToString().ToLower()) + attrString + ">"
             | Script x -> "<" + (x.ToString().ToLower()) + attrString + ">"
@@ -366,7 +365,7 @@ module Element =
             | Enlivening x -> "<" + (x.ToString().ToLower()) + attrString + ">"
         let closeTag = 
             match elem with
-            | Math -> "</math>"
+            | Math _ -> "</math>"
             | Token x -> "</" + x.ToString().ToLower() + ">"
             | GeneralLayout x -> "</" + x.ToString().ToLower() + ">"
             | Script x -> "</" + x.ToString().ToLower() + ">"
@@ -388,12 +387,12 @@ module Element =
                 CdGroup ""; 
                                      
                 //3.3.4 Style Change <mstyle>
-                ScriptLevel ('+',0u)
+                ScriptLevel ('+',0u);
                 DisplayStyle false ///When display="block", displaystyle is initialized to "true" when display="inline", displaystyle is initialized to "false"
-                ScriptSizeMultiplier 0.71
-                ScriptMinSize (PT 8.0<pt>)
+                ScriptSizeMultiplier 0.70;
+                ScriptMinSize (PT 8.0<pt>);
                 InfixLineBreakStyle Before;
-                DecimalPoint '.'
+                DecimalPoint '.';
                                      
                 //2.1.6 Attributes Shared by all MathML Elements 
                 Id "none"; 
@@ -463,7 +462,7 @@ module Element =
                 MsLineThickness (KeyWord "medium");
                 Notation LongDiv;
                 NumAlign _NumAlign.Center;
-                Open ")";
+                Open "(";
                 Position 0;
                 RightOverhang (Numb 0.0);
                 RowAlign _RowAlign.Baseline;
@@ -511,8 +510,7 @@ module Element =
                 MathVariant Italic;
                 MathSize (EM 1.0<em>);
                 Dir Ltr;
-                ]         
-
+                ]
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 
