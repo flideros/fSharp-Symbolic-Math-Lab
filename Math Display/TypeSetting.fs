@@ -37,6 +37,7 @@ type Glyph =
 type GlyphRow = 
     {grid:Grid;
      rowWidth:float;
+     rowHeight:float;
      leftBearing:float;
      rightBearing:float
      }
@@ -115,6 +116,7 @@ module TypeSetting =
     let basisSize = 100.<MathML.px>
     let basisEmSquare = 10.<MathML.em>
     let textSizeScaleFactor = float (basisEmSquare / basisSize)
+    let textBaseline = 762.
 
     //  Font Sizes
     let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
@@ -166,7 +168,8 @@ module TypeSetting =
         | Some (MathSize (EM s)) -> {emSquare = s * 1000.; typeFace = Text.STIX2Math_Typeface; size = basisSize}
         | _ -> textSizeFont
     let getGridFromTypeObject t = match t with | GlyphRow gr -> gr.grid | Glyph g -> new Grid() 
-    let getWidthFromTypeObject t = match t with | GlyphRow gr -> gr.rowWidth | Glyph g -> g.width    
+    let getWidthFromTypeObject t = match t with | GlyphRow gr -> gr.rowWidth | Glyph g -> g.width
+    let getHeightFromTypeObject t = match t with | GlyphRow gr -> gr.rowHeight | Glyph g -> g.height    
 
     // Builders
     let makeGlyphBox glyph (p:Position) = 
@@ -316,12 +319,14 @@ module TypeSetting =
              List.fold (fun acc x -> x.width + acc) 0. glyphs + // glyphWidths
              List.fold (fun acc x -> x + acc) 0. kerns        + // kerns
              List.fold (fun acc x -> x + acc) 0. mathSpaces     // math space
+        let height = (List.maxBy (fun x -> x.height) glyphs).height
         let baseline = (List.maxBy (fun x -> x.baseline) glyphs).baseline
         let glyphBoxes = List.map2 (fun g p -> makeGlyphBox g p) glyphs positions
 
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) glyphBoxes
         {grid = g;
          rowWidth = width;
+         rowHeight = height;
          leftBearing = leftBearing;
          rightBearing = rightBearing} |> GlyphRow    
     let makeRowFromTypeObjects (typeObjects:TypeObject list) =
@@ -350,6 +355,7 @@ module TypeSetting =
                 | Glyph g -> 
                     {grid=Grid();
                      rowWidth=0.;
+                     rowHeight=0.;
                      leftBearing=0.;
                      rightBearing=0.}) 
 
@@ -368,14 +374,15 @@ module TypeSetting =
         let leftBearing = rows.Head.leftBearing
         let rightBearing = (List.rev rows).Head.rightBearing 
         let width = List.fold (fun acc x ->  x.rowWidth + acc) 0. rows
+        let height = (List.maxBy (fun x -> x.rowHeight) rows).rowHeight
         
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) mappedRows
         
         {grid = g;
          rowWidth = width;
+         rowHeight = height;
          leftBearing = leftBearing;
          rightBearing = rightBearing}|> GlyphRow
-
     let makeSuperScriptFromTypeObjects (target:TypeObject) (script:TypeObject) superscriptShiftUp =        
         let g = Grid()
 
@@ -392,12 +399,12 @@ module TypeSetting =
             | GlyphRow gr -> gr.rightBearing
             | Glyph gl -> gl.rightBearing
 
-        let scriptGrid = 
-             
-            let mathAxisCorrectionHeight = 
+        let mathAxisCorrectionHeight = 
                 MathPositioningConstants.axisHeight * 
                 ((MathPositioningConstants.scriptPercentScaleDown / 100.) * 
                  (1. + textSizeScaleFactor))
+        
+        let scriptGrid = 
             
             let position = 
                 let x = (getWidthFromTypeObject target - targetRBearing) * textSizeScaleFactor
@@ -419,13 +426,82 @@ module TypeSetting =
         let leftBearing = 0.
         let rightBearing = MathPositioningConstants.spaceAfterScript
         let width = (getWidthFromTypeObject target) + (getWidthFromTypeObject script)
+        let height = (getHeightFromTypeObject target) + ((mathAxisCorrectionHeight - superscriptShiftUp) * textSizeScaleFactor)
         
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) [targetGrid; scriptGrid]
         
         {grid = g;
          rowWidth = width;
+         rowHeight = height;
          leftBearing = leftBearing;
          rightBearing = rightBearing}|> GlyphRow
+
+    let makeFractionFromTypeObjects 
+        (numerator:TypeObject) 
+        (denominator:TypeObject) =        
+        //lineThickness 
+        //numAlign
+        //denomAlign
+        //bevelled =
+        
+        let fractionWidth = 
+            match (getWidthFromTypeObject numerator) > (getWidthFromTypeObject denominator) with
+            | true -> (getWidthFromTypeObject numerator) * 0.1
+            | false -> (getWidthFromTypeObject denominator) * 0.1
+        
+        let numeratorShift = 
+            match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
+            | true -> 0.
+            | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5
+
+        let mathLine = (MathPositioningConstants.mathLeading + textBaseline - MathPositioningConstants.axisHeight) * textSizeScaleFactor
+
+        let mathAxisCorrectionHeight = MathPositioningConstants.axisHeight * (MathPositioningConstants.scriptPercentScaleDown / 100.)
+
+        let mLine = 
+            let p = Path(Stroke = Brushes.Black, StrokeThickness = 4.)
+            let pf = PathFigure(StartPoint = Point(0., mathLine))        
+            do  pf.Segments.Add( LineSegment(Point(fractionWidth, mathLine), true ))
+            let pg = PathGeometry() 
+            do  pg.Figures.Add(pf)
+                p.Data <- pg
+                p.SetValue(Grid.RowProperty,1)
+            p
+
+        let numeratorGrid =
+            match numerator with
+            | GlyphRow gr -> gr.grid
+            | Glyph gl -> 
+                let grid = Grid()
+                let gb = makeGlyphBox gl {x = numeratorShift;y = mathAxisCorrectionHeight - MathPositioningConstants.fractionNumeratorShiftUp * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
+                do grid.Children.Add(gb) |> ignore
+                grid
+
+        let denominatorGrid =              
+            match denominator with
+            | GlyphRow gr -> gr.grid
+            | Glyph gl -> 
+                let grid = Grid()
+                let gb = makeGlyphBox gl {x=0.;y = mathAxisCorrectionHeight + MathPositioningConstants.fractionDenominatorShiftDown * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
+                do grid.Children.Add(gb) |> ignore
+                grid
+        
+        let leftBearing = 0.
+        let rightBearing = 0.
+        let width = (getWidthFromTypeObject numerator)
+        let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator)
+        
+        let g = Grid()
+                
+        do g.Children.Add(mLine) |> ignore
+           List.iter (fun x -> g.Children.Add(x) |> ignore) [numeratorGrid; denominatorGrid]
+        
+        {grid = g;
+         rowWidth = width;
+         rowHeight = height * 0.1;
+         leftBearing = leftBearing;
+         rightBearing = rightBearing}|> GlyphRow
+
 
     // Typesetter    
     let typesetElement (el:Element) =        
@@ -446,12 +522,21 @@ module TypeSetting =
             
         let typeset_Row (el:TypeObject list) = makeRowFromTypeObjects el
       
-        let typeset_Superscript ((target:TypeObject),(script:TypeObject), superscriptShift) = 
+        let typeset_Superscript ((target:TypeObject),(script:TypeObject), attributes) = 
+            
+            let superscriptShift =
+                match List.tryFind (fun x -> 
+                        match x with
+                        | SuperScriptShift _ -> true 
+                        | _ -> false) attributes with
+                | Some (SuperScriptShift (Numb n)) -> n
+                | _ -> 0.
+
             let display = 
                 match List.tryFind (fun x -> 
                     match x with
                     | Display _ -> true 
-                    | _ -> false) el.attributes with
+                    | _ -> false) math.attributes with
                 | Some (Display n) -> n
                 | _ -> Inline
             let superscriptShiftUp = 
@@ -460,9 +545,13 @@ module TypeSetting =
                 | Block -> MathPositioningConstants.superscriptShiftUp + superscriptShift
             makeSuperScriptFromTypeObjects target script superscriptShiftUp
         
+        let typeset_Fraction ((numerator:TypeObject),(denominator:TypeObject), attributes) = 
+            makeFractionFromTypeObjects numerator denominator
+        
         Element.recurseElement typeset_Token 
                                typeset_Row 
-                               typeset_Superscript el
+                               typeset_Superscript 
+                               typeset_Fraction el
 
     (*Test Area*)
     type TestCanvas() as this  =  
@@ -479,7 +568,7 @@ module TypeSetting =
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "c" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
-        let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "32" Option.None)
+        let s4 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "x" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let r0 = (Element.build (GeneralLayout Mrow) [] [t2;t3;t4] "" Option.None)
@@ -492,7 +581,10 @@ module TypeSetting =
         let ms = (Element.build (Script Msup) [] [r0;r1] "" Option.None)
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
-        let line3 = getGridFromTypeObject m
+        let f0 = (Element.build (GeneralLayout Mfrac) [] [s2;s4] "" Option.None)
+        let f = typesetElement f0
+
+        let line3 = getGridFromTypeObject f
        
         let textBlock =                    
             let tb = TextBlock()

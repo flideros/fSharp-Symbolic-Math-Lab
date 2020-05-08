@@ -336,22 +336,14 @@ module Element =
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
     
-    let rec recurseElement eToken eRow eSuperscript el : 'r =
-        let recurse = recurseElement eToken eRow eSuperscript
+    let rec recurseElement eToken eRow eSuperscript eFraction el : 'r =
+        let recurse = recurseElement eToken eRow eSuperscript eFraction
         match el.element with 
         | Math -> eRow (List.map (fun x -> recurse x) el.arguments)
         | Token _ -> eToken el
-        | GeneralLayout Mrow -> 
-            eRow (List.map (fun x -> recurse x) el.arguments)
-        | Script Msup -> 
-            let shift = 
-                match List.tryFind (fun x -> 
-                        match x with
-                        | SuperScriptShift _ -> true 
-                        | _ -> false) el.attributes with
-                | Some (SuperScriptShift (Numb n)) -> n
-                | _ -> 0.
-            eSuperscript (recurse el.arguments.[0],recurse el.arguments.[1],shift)
+        | GeneralLayout Mrow -> eRow (List.map (fun x -> recurse x) el.arguments)
+        | GeneralLayout Mfrac -> eFraction (recurse el.arguments.[0],recurse el.arguments.[1],el.attributes)
+        | Script Msup -> eSuperscript (recurse el.arguments.[0],recurse el.arguments.[1],el.attributes)
 
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
         let openTag attrString = 
@@ -373,7 +365,7 @@ module Element =
             | MathLayout x -> "</" + x.ToString().ToLower() + ">"
             | Enlivening x -> "</" + x.ToString().ToLower() + ">"
         match elem with
-        | Math ->                     
+        | Math ->
             let defaultAttributes = 
                 [//2.2 Top-Level <math> Element
                 Display Inline;

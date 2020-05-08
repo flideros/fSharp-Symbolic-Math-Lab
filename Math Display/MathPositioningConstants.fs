@@ -11,7 +11,10 @@ module MathPositioningConstants =
     Height — Specifies a distance from the main baseline.
     Kern — Represents a fixed amount of empty space to be introduced.
     Gap — Represents an amount of empty space that may need to be increased to meet certain criteria.
-    Drop and Rise — Specifies the relationship between measurements of two elements to be positioned relative to each other (but not necessarily in a stack-like manner) that must meet certain criteria. For a Drop, one of the positioned elements has to be moved down to satisfy those criteria; for a Rise, the movement is upwards.
+    Drop and Rise — Specifies the relationship between measurements of two elements to be positioned 
+        relative to each other (but not necessarily in a stack-like manner) that must meet certain 
+        criteria. For a Drop, one of the positioned elements has to be moved down to satisfy those 
+        criteria; for a Rise, the movement is upwards.
     Shift — Defines a vertical shift applied to an element sitting on a baseline.
     Dist — Defines a distance between baselines of two elements.
     *)
