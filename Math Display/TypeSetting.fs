@@ -314,13 +314,12 @@ module TypeSetting =
             // apply math spacees
             |> List.mapi (fun i (p:Position) -> {x = p.x + mathSpaces.[i]; y = p.y})
         let leftBearing = glyphs.Head.leftBearing
-        let rightBearing = (List.rev glyphs).Head.rightBearing
+        let rightBearing = (List.rev glyphs).Head.rightBearing + (List.rev glyphs).Head.rSpace
         let width = 
              List.fold (fun acc x -> x.width + acc) 0. glyphs + // glyphWidths
              List.fold (fun acc x -> x + acc) 0. kerns        + // kerns
              List.fold (fun acc x -> x + acc) 0. mathSpaces     // math space
         let height = (List.maxBy (fun x -> x.height) glyphs).height
-        let baseline = (List.maxBy (fun x -> x.baseline) glyphs).baseline
         let glyphBoxes = List.map2 (fun g p -> makeGlyphBox g p) glyphs positions
 
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) glyphBoxes
@@ -362,7 +361,7 @@ module TypeSetting =
         let positions = 
             let initialPosition = {x=0.;y=0.} 
                                            // Need to revisit this --\/
-            let p = List.scan (fun acc x -> {x = (acc.x + x.rowWidth * 0.1); y = 0.}) initialPosition rows
+            let p = List.scan (fun acc x -> {x = (acc.x + (x.rowWidth + x.rightBearing) * 0.1); y = 0.}) initialPosition rows
             List.truncate rows.Length p  
             
         let mappedRows = 
@@ -453,13 +452,17 @@ module TypeSetting =
             match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
             | true -> 0.
             | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5
+        let denominatorShift = 
+            match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
+            | true -> 0.
+            | false -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) * 0.5
 
         let mathLine = (MathPositioningConstants.mathLeading + textBaseline - MathPositioningConstants.axisHeight) * textSizeScaleFactor
 
         let mathAxisCorrectionHeight = MathPositioningConstants.axisHeight * (MathPositioningConstants.scriptPercentScaleDown / 100.)
 
         let mLine = 
-            let p = Path(Stroke = Brushes.Black, StrokeThickness = 4.)
+            let p = Path(Stroke = Brushes.Black, StrokeThickness = MathPositioningConstants.fractionRuleThickness * (100./960.))
             let pf = PathFigure(StartPoint = Point(0., mathLine))        
             do  pf.Segments.Add( LineSegment(Point(fractionWidth, mathLine), true ))
             let pg = PathGeometry() 
@@ -473,7 +476,13 @@ module TypeSetting =
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
                 let grid = Grid()
-                let gb = makeGlyphBox gl {x = numeratorShift;y = mathAxisCorrectionHeight - MathPositioningConstants.fractionNumeratorShiftUp * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
+                let gb = 
+                    makeGlyphBox gl 
+                        {x = numeratorShift;
+                         y = mathAxisCorrectionHeight  
+                             - (MathPositioningConstants.fractionNumeratorDisplayStyleShiftUp)
+                             //- MathPositioningConstants.fractionNumeratorShiftUp
+                             * (MathPositioningConstants.scriptPercentScaleDown / 100.)}                
                 do grid.Children.Add(gb) |> ignore
                 grid
 
@@ -482,14 +491,20 @@ module TypeSetting =
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
                 let grid = Grid()
-                let gb = makeGlyphBox gl {x=0.;y = mathAxisCorrectionHeight + MathPositioningConstants.fractionDenominatorShiftDown * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
+                let gb = 
+                    makeGlyphBox gl 
+                        {x=denominatorShift;
+                         y = mathAxisCorrectionHeight 
+                             + MathPositioningConstants.fractionDenominatorDisplayStyleShiftDown 
+                             //+ MathPositioningConstants.fractionDenominatorShiftDown
+                             * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
                 do grid.Children.Add(gb) |> ignore
                 grid
         
         let leftBearing = 0.
         let rightBearing = 0.
-        let width = (getWidthFromTypeObject numerator)
-        let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator)
+        let width = fractionWidth
+        let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator) // + some others
         
         let g = Grid()
                 
@@ -566,9 +581,9 @@ module TypeSetting =
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "c" Option.None)
+        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "g" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
-        let s4 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "x" Option.None)
+        let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "2" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let r0 = (Element.build (GeneralLayout Mrow) [] [t2;t3;t4] "" Option.None)
@@ -582,7 +597,8 @@ module TypeSetting =
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
         let f0 = (Element.build (GeneralLayout Mfrac) [] [s2;s4] "" Option.None)
-        let f = typesetElement f0
+        let f1 = (Element.build (GeneralLayout Mrow) [] [t4;t3;f0] "" Option.None)
+        let f = typesetElement f1
 
         let line3 = getGridFromTypeObject f
        
