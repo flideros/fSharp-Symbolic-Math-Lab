@@ -313,8 +313,14 @@ module TypeSetting =
             |> List.mapi (fun i (p:Position) -> {x = p.x + kerns.[i]; y = p.y})
             // apply math spacees
             |> List.mapi (fun i (p:Position) -> {x = p.x + mathSpaces.[i]; y = p.y})
-        let leftBearing = glyphs.Head.leftBearing
-        let rightBearing = (List.rev glyphs).Head.rightBearing + (List.rev glyphs).Head.rSpace
+        let leftBearing = 
+            match glyphs.Head.lSpace = 0. with
+            | false -> glyphs.Head.lSpace - glyphs.Head.leftBearing
+            | true -> glyphs.Head.leftBearing
+        let rightBearing = 
+            match glyphs.Head.rSpace = 0. with
+            | false -> (List.rev glyphs).Head.rSpace - (List.rev glyphs).Head.rightBearing 
+            | true -> (List.rev glyphs).Head.rightBearing
         let width = 
              List.fold (fun acc x -> x.width + acc) 0. glyphs + // glyphWidths
              List.fold (fun acc x -> x + acc) 0. kerns        + // kerns
@@ -338,13 +344,14 @@ module TypeSetting =
         let rec getRows (typeObjects:TypeObject list) acc = 
             match typeObjects with
             | [] -> acc
-            | gs when areAllGlyphs gs -> [makeRowFromGlyphs gs]
+            //| gs when areAllGlyphs gs -> [makeRowFromGlyphs gs]
             | GlyphRow gr :: tail -> getRows tail (List.concat [acc; [GlyphRow gr]])
             | Glyph g :: tail -> 
-                let tail = Seq.toList(Seq.skipWhile (fun x -> match x with | Glyph g -> true | GlyphRow gr -> false) typeObjects)
-                let r0 = Seq.toList(Seq.takeWhile (fun x -> match x with | Glyph g -> true | GlyphRow gr -> false) typeObjects)
-                         |> makeRowFromGlyphs
-                getRows tail (List.concat [acc; [r0]])
+                let tail' = Seq.toList(Seq.skipWhile (fun x -> match x with | Glyph _ -> true | GlyphRow _ -> false) tail)
+                let r0 = 
+                    let r = Seq.toList(Seq.takeWhile (fun x -> match x with | Glyph _ -> true | GlyphRow _ -> false) tail)
+                    makeRowFromGlyphs ((Glyph g)::r)
+                getRows tail' (List.concat [acc; [r0]])
 
         let rows = 
             getRows typeObjects [] 
@@ -361,13 +368,13 @@ module TypeSetting =
         let positions = 
             let initialPosition = {x=0.;y=0.} 
                                            // Need to revisit this --\/
-            let p = List.scan (fun acc x -> {x = (acc.x + (x.rowWidth + x.rightBearing) * 0.1); y = 0.}) initialPosition rows
+            let p = List.scan (fun acc x -> {x = (acc.x + (x.rowWidth + x.rightBearing + x.leftBearing) * 0.1); y = 0.}) initialPosition rows
             List.truncate rows.Length p  
             
         let mappedRows = 
             List.map2 (fun gr p -> 
                 let gOut = gr.grid
-                do  gOut.RenderTransform <- TranslateTransform(p.x,p.y)
+                do  gOut.RenderTransform <- TranslateTransform(p.x + (gr.leftBearing/10.),p.y)
                 gOut) rows positions
 
         let leftBearing = rows.Head.leftBearing
@@ -444,9 +451,10 @@ module TypeSetting =
         //bevelled =
         
         let fractionWidth = 
-            match (getWidthFromTypeObject numerator) > (getWidthFromTypeObject denominator) with
-            | true -> (getWidthFromTypeObject numerator) * 0.1
-            | false -> (getWidthFromTypeObject denominator) * 0.1
+            let n,d = (getWidthFromTypeObject numerator), (getWidthFromTypeObject denominator)           
+            match n > d with
+            | true -> n / 10.
+            | false -> d / 10.
         
         let numeratorShift = 
             match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
@@ -503,7 +511,7 @@ module TypeSetting =
         
         let leftBearing = 0.
         let rightBearing = 0.
-        let width = fractionWidth
+        let width = fractionWidth * 10.
         let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator) // + some others
         
         let g = Grid()
@@ -513,7 +521,7 @@ module TypeSetting =
         
         {grid = g;
          rowWidth = width;
-         rowHeight = height * 0.1;
+         rowHeight = height;
          leftBearing = leftBearing;
          rightBearing = rightBearing}|> GlyphRow
 
@@ -581,7 +589,7 @@ module TypeSetting =
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "g" Option.None)
+        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "w" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
         let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "2" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
@@ -597,7 +605,7 @@ module TypeSetting =
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
         let f0 = (Element.build (GeneralLayout Mfrac) [] [s2;s4] "" Option.None)
-        let f1 = (Element.build (GeneralLayout Mrow) [] [t4;t3;f0] "" Option.None)
+        let f1 = (Element.build (GeneralLayout Mrow) [] [f0;t3;t4] "" Option.None)
         let f = typesetElement f1
 
         let line3 = getGridFromTypeObject f
