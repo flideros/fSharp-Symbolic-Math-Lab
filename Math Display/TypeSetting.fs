@@ -33,13 +33,16 @@ type Glyph =
      font:Font;
      lSpace:float;
      rSpace:float
+     element:MathMLElement
      }
 type GlyphRow = 
     {grid:Grid;
      rowWidth:float;
      rowHeight:float;
      leftBearing:float;
-     rightBearing:float
+     rightBearing:float;
+     leftElement:MathMLElement;
+     rightElement:MathMLElement
      }
 
 type GlyphBuilder = Font -> Element -> Glyph 
@@ -122,14 +125,7 @@ module TypeSetting =
     let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
     let scriptScriptSizeFont = {emSquare = 500.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
-    
-    //  Checks
-    let areAllGlyphs (tList:TypeObject list) = 
-        List.forall (fun x -> 
-            match x with
-            | Glyph _ -> true
-            | _ -> false) tList
-    
+        
     //  Format Text
     let formatTextWithFont = fun t font -> Text.format t font.typeFace font.emSquare    
     
@@ -170,6 +166,8 @@ module TypeSetting =
     let getGridFromTypeObject t = match t with | GlyphRow gr -> gr.grid | Glyph g -> new Grid() 
     let getWidthFromTypeObject t = match t with | GlyphRow gr -> gr.rowWidth | Glyph g -> g.width
     let getHeightFromTypeObject t = match t with | GlyphRow gr -> gr.rowHeight | Glyph g -> g.height    
+    let getLeftElementFromTypeObject t = match t with | GlyphRow gr -> gr.leftElement | Glyph g -> g.element
+    let getRightElementFromTypeObject t = match t with | GlyphRow gr -> gr.rightElement | Glyph g -> g.element
 
     // Builders
     let makeGlyphBox glyph (p:Position) = 
@@ -187,8 +185,7 @@ module TypeSetting =
                                 {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
             gb
     let makeGlyph :GlyphBuilder = 
-        fun font el -> 
-        
+        fun font el ->
             let symbol = 
                 match el.operator with 
                 | Some o -> getOperatorString o
@@ -276,7 +273,9 @@ module TypeSetting =
              font = font;
              string = text;
              lSpace = lSpace;
-             rSpace = rSpace}
+             rSpace = rSpace
+             element = el.element
+             }
     let makeRowFromGlyphs (glyphs:TypeObject list) =
         let errorGlyph = makeGlyph textSizeFont (Element.build (GeneralLayout Merror) [] [] "\ufffd" Option.None)
         let glyphs = List.map (fun x -> match x with | Glyph g -> g | GlyphRow gr -> errorGlyph ) glyphs
@@ -333,7 +332,10 @@ module TypeSetting =
          rowWidth = width;
          rowHeight = height;
          leftBearing = leftBearing;
-         rightBearing = rightBearing} |> GlyphRow    
+         rightBearing = rightBearing;
+         leftElement = glyphs.Head.element;
+         rightElement = (List.rev glyphs).Head.element       
+         } |> GlyphRow    
     let makeRowFromTypeObjects (typeObjects:TypeObject list) =
         let g = Grid()
         let row0 = RowDefinition(Height = GridLength.Auto)
@@ -344,7 +346,6 @@ module TypeSetting =
         let rec getRows (typeObjects:TypeObject list) acc = 
             match typeObjects with
             | [] -> acc
-            //| gs when areAllGlyphs gs -> [makeRowFromGlyphs gs]
             | GlyphRow gr :: tail -> getRows tail (List.concat [acc; [GlyphRow gr]])
             | Glyph g :: tail -> 
                 let tail' = Seq.toList(Seq.skipWhile (fun x -> match x with | Glyph _ -> true | GlyphRow _ -> false) tail)
@@ -363,12 +364,14 @@ module TypeSetting =
                      rowWidth=0.;
                      rowHeight=0.;
                      leftBearing=0.;
-                     rightBearing=0.}) 
+                     rightBearing=0.
+                     leftElement = g.element;
+                     rightElement = g.element}) 
 
         let positions = 
             let initialPosition = {x=0.;y=0.} 
                                            // Need to revisit this --\/
-            let p = List.scan (fun acc x -> {x = (acc.x + (x.rowWidth + x.rightBearing + x.leftBearing) * 0.1); y = 0.}) initialPosition rows
+            let p = List.scan (fun acc x -> {x = (acc.x + (x.rowWidth + x.rightBearing) * 0.1); y = 0.}) initialPosition rows
             List.truncate rows.Length p  
             
         let mappedRows = 
@@ -381,14 +384,20 @@ module TypeSetting =
         let rightBearing = (List.rev rows).Head.rightBearing 
         let width = List.fold (fun acc x ->  x.rowWidth + acc) 0. rows
         let height = (List.maxBy (fun x -> x.rowHeight) rows).rowHeight
-        
+        let leftElement, rightElement =
+            (getLeftElementFromTypeObject typeObjects.Head), 
+            (getRightElementFromTypeObject (List.rev typeObjects).Head)
+
         do  List.iter (fun x -> g.Children.Add(x) |> ignore) mappedRows
         
         {grid = g;
          rowWidth = width;
          rowHeight = height;
          leftBearing = leftBearing;
-         rightBearing = rightBearing}|> GlyphRow
+         rightBearing = rightBearing;
+         leftElement = leftElement;
+         rightElement = rightElement
+         }|> GlyphRow
     let makeSuperScriptFromTypeObjects (target:TypeObject) (script:TypeObject) superscriptShiftUp =        
         let g = Grid()
 
@@ -440,37 +449,39 @@ module TypeSetting =
          rowWidth = width;
          rowHeight = height;
          leftBearing = leftBearing;
-         rightBearing = rightBearing}|> GlyphRow
+         rightBearing = rightBearing;
+         leftElement = Script Msup;
+         rightElement = Script Msup
+         }|> GlyphRow
 
     let makeFractionFromTypeObjects 
         (numerator:TypeObject) 
-        (denominator:TypeObject) =        
-        //lineThickness 
-        //numAlign
-        //denomAlign
-        //bevelled =
+        (denominator:TypeObject)     
+        (lineThickness:Length)  
+        (numAlign:_NumAlign) //TODO
+        (denomAlign:_DenomAlign) //TODO
+        (bevelled:bool) //TODO 
+        (display : _Display) = 
         
         let fractionWidth = 
             let n,d = (getWidthFromTypeObject numerator), (getWidthFromTypeObject denominator)           
             match n > d with
             | true -> n / 10.
-            | false -> d / 10.
-        
+            | false -> d / 10.        
         let numeratorShift = 
             match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
             | true -> 0.
-            | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5
+            | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5        
         let denominatorShift = 
             match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
             | true -> 0.
             | false -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) * 0.5
-
+        
         let mathLine = (MathPositioningConstants.mathLeading + textBaseline - MathPositioningConstants.axisHeight) * textSizeScaleFactor
-
         let mathAxisCorrectionHeight = MathPositioningConstants.axisHeight * (MathPositioningConstants.scriptPercentScaleDown / 100.)
-
         let mLine = 
-            let p = Path(Stroke = Brushes.Black, StrokeThickness = MathPositioningConstants.fractionRuleThickness * (100./960.))
+            let thickness = (Operator.getValueFromLength 306.<em> lineThickness) * (100./960.)
+            let p = Path(Stroke = Brushes.Black, StrokeThickness = thickness)
             let pf = PathFigure(StartPoint = Point(0., mathLine))        
             do  pf.Segments.Add( LineSegment(Point(fractionWidth, mathLine), true ))
             let pg = PathGeometry() 
@@ -480,6 +491,10 @@ module TypeSetting =
             p
 
         let numeratorGrid =
+            let shiftUp = 
+                match display with 
+                | Inline -> - MathPositioningConstants.fractionNumeratorShiftUp
+                | Block -> - (MathPositioningConstants.fractionNumeratorDisplayStyleShiftUp)
             match numerator with
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
@@ -488,13 +503,15 @@ module TypeSetting =
                     makeGlyphBox gl 
                         {x = numeratorShift;
                          y = mathAxisCorrectionHeight  
-                             - (MathPositioningConstants.fractionNumeratorDisplayStyleShiftUp)
-                             //- MathPositioningConstants.fractionNumeratorShiftUp
-                             * (MathPositioningConstants.scriptPercentScaleDown / 100.)}                
+                             + shiftUp * (MathPositioningConstants.scriptPercentScaleDown / 100.)}                
                 do grid.Children.Add(gb) |> ignore
                 grid
 
         let denominatorGrid =              
+            let shiftDown = 
+                match display with 
+                | Inline -> MathPositioningConstants.fractionDenominatorShiftDown
+                | Block -> MathPositioningConstants.fractionDenominatorDisplayStyleShiftDown
             match denominator with
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
@@ -503,14 +520,12 @@ module TypeSetting =
                     makeGlyphBox gl 
                         {x=denominatorShift;
                          y = mathAxisCorrectionHeight 
-                             + MathPositioningConstants.fractionDenominatorDisplayStyleShiftDown 
-                             //+ MathPositioningConstants.fractionDenominatorShiftDown
-                             * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
+                             + shiftDown * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
                 do grid.Children.Add(gb) |> ignore
                 grid
         
-        let leftBearing = 0.
-        let rightBearing = 0.
+        let leftBearing = (Operator.getValueFromLength 1000.<em> (NamedLength MediumMathSpace)) * (1000./960.)
+        let rightBearing = (Operator.getValueFromLength 1000.<em> (NamedLength MediumMathSpace)) * (1000./960.)
         let width = fractionWidth * 10.
         let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator) // + some others
         
@@ -523,8 +538,10 @@ module TypeSetting =
          rowWidth = width;
          rowHeight = height;
          leftBearing = leftBearing;
-         rightBearing = rightBearing}|> GlyphRow
-
+         rightBearing = rightBearing;
+         leftElement = GeneralLayout Mfrac;
+         rightElement = GeneralLayout Mfrac}
+         |> GlyphRow
 
     // Typesetter    
     let typesetElement (el:Element) =        
@@ -545,8 +562,7 @@ module TypeSetting =
             
         let typeset_Row (el:TypeObject list) = makeRowFromTypeObjects el
       
-        let typeset_Superscript ((target:TypeObject),(script:TypeObject), attributes) = 
-            
+        let typeset_Superscript ((target:TypeObject),(script:TypeObject), attributes) =             
             let superscriptShift =
                 match List.tryFind (fun x -> 
                         match x with
@@ -554,7 +570,6 @@ module TypeSetting =
                         | _ -> false) attributes with
                 | Some (SuperScriptShift (Numb n)) -> n
                 | _ -> 0.
-
             let display = 
                 match List.tryFind (fun x -> 
                     match x with
@@ -569,7 +584,47 @@ module TypeSetting =
             makeSuperScriptFromTypeObjects target script superscriptShiftUp
         
         let typeset_Fraction ((numerator:TypeObject),(denominator:TypeObject), attributes) = 
-            makeFractionFromTypeObjects numerator denominator
+            let lineThickness = 
+                match List.tryFind (fun x -> 
+                    match x with
+                    | LineThickness _ -> true 
+                    | _ -> false) attributes with
+                | Some (LineThickness (KeyWord k)) when k.ToString() = "medium"-> NamedLength MediumMathSpace
+                | Some (LineThickness (KeyWord k)) when k.ToString() = "thick"-> NamedLength ThickMathSpace
+                | Some (LineThickness (KeyWord k)) when k.ToString() = "thin"-> NamedLength ThinMathSpace
+                | Some (LineThickness (Pct p)) -> Numb ((p / 100.<pct>) * MathPositioningConstants.fractionRuleThickness)
+                | Some (LineThickness th) -> th
+                | _ -> Numb MathPositioningConstants.fractionRuleThickness
+            let numAlignment = 
+                match List.tryFind (fun x -> 
+                    match x with
+                    | NumAlign _ -> true 
+                    | _ -> false) math.attributes with
+                | Some (NumAlign a) -> a
+                | _ -> _NumAlign.Center
+            let denomAlignment = 
+                match List.tryFind (fun x -> 
+                    match x with
+                    | DenomAlign _ -> true 
+                    | _ -> false) math.attributes with
+                | Some (DenomAlign a) -> a
+                | _ -> _DenomAlign.Center
+            let isBevelled = 
+                match List.tryFind (fun x -> 
+                    match x with
+                    | Bevelled _ -> true 
+                    | _ -> false) math.attributes with
+                | Some (Bevelled b) -> b
+                | _ -> false
+            let display = 
+                match List.tryFind (fun x -> 
+                    match x with
+                    | Display _ -> true 
+                    | _ -> false) math.attributes with
+                | Some (Display n) -> n
+                | _ -> Inline
+
+            makeFractionFromTypeObjects numerator denominator lineThickness numAlignment denomAlignment isBevelled display
         
         Element.recurseElement typeset_Token 
                                typeset_Row 
@@ -582,17 +637,24 @@ module TypeSetting =
 
         let t0 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
         let t1 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let t2 = (Element.build (Token Mn) [] [] "8" Option.None)
-        let t3 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))
-        let t4 = (Element.build (Token Mi) [] [] "v" Option.None)
+        let t2 = (Element.build (Token Mn) [] [] "13" Option.None)
+        let t3 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))//fractionSlashInfix))//
+        let t4 = (Element.build (Token Mi) [] [] "pi" Option.None)
         let t5 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "w" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
-        let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "2" Option.None)
+        let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "52" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
+
+        let ss0=  (Element.build (Token Mo) [MathSize (EM 0.55<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
+        let ss1 = (Element.build (Token Mo) [MathSize (EM 0.55<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
+        let ss2 = (Element.build (Token Mi) [MathSize (EM 0.55<em>)] [] "w" Option.None)
+        let ss3 = (Element.build (Token Mo) [MathSize (EM 0.55<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
+        let ss4 = (Element.build (Token Mn) [MathSize (EM 0.55<em>)] [] "52" Option.None)
+        let ss5 = (Element.build (Token Mo) [MathSize (EM 0.55<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let r0 = (Element.build (GeneralLayout Mrow) [] [t2;t3;t4] "" Option.None)
         let r1 = (Element.build (GeneralLayout Mrow) [] [s1;s2;s3;s4;s5] "" Option.None)
@@ -601,12 +663,12 @@ module TypeSetting =
         let s = typesetElement (Element.build (Script Msup) [] [r0;r1] "" Option.None)
         
 
-        let ms = (Element.build (Script Msup) [] [r0;r1] "" Option.None)
+        let ms = (Element.build (Script Msup) [] [t4;r1] "" Option.None)
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
         let f0 = (Element.build (GeneralLayout Mfrac) [] [s2;s4] "" Option.None)
-        let f1 = (Element.build (GeneralLayout Mrow) [] [f0;t3;t4] "" Option.None)
-        let f = typesetElement f1
+        let f1 = (Element.build (GeneralLayout Mrow) [] [t2;f0;t3;t4] "" Option.None)
+        let f = typesetElement (Element.build (Math) [Display Inline] [f1] "" Option.None)
 
         let line3 = getGridFromTypeObject f
        

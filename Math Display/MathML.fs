@@ -296,6 +296,7 @@ module Operator =
         | NamedLength l when l = NegativeVeryThickMathSpace -> (-6./18.<em>) * emSquare
         | NamedLength l when l = NegativeVeryVeryThickMathSpace -> (-7./18.<em>) * emSquare
         | EM em -> float em * float emSquare
+        | Numb n -> n
         | _ -> 0.
 
 module Element =    
