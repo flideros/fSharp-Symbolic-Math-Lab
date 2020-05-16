@@ -458,8 +458,8 @@ module TypeSetting =
         (numerator:TypeObject) 
         (denominator:TypeObject)     
         (lineThickness:Length)  
-        (numAlign:_NumAlign) //TODO
-        (denomAlign:_DenomAlign) //TODO
+        (numAlign:_NumAlign) 
+        (denomAlign:_DenomAlign) 
         (bevelled:bool) //TODO 
         (display : _Display) = 
         
@@ -468,14 +468,28 @@ module TypeSetting =
             match n > d with
             | true -> n / 10.
             | false -> d / 10.        
-        let numeratorShift = 
-            match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
-            | true -> 0.
-            | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5        
-        let denominatorShift = 
-            match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
-            | true -> 0.
-            | false -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) * 0.5
+        let numeratorHorozontalShift = 
+            match numAlign with
+            | _NumAlign.Center -> 
+                match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
+                | true -> 0.
+                | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5
+            | _NumAlign.Left -> 0.
+            | _NumAlign.Right -> 
+                match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
+                | false -> 0.
+                | true -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) //* 0.5
+        let denominatorHorozontalShift = 
+            match denomAlign with
+            | _DenomAlign.Center -> 
+                match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
+                | true -> 0.
+                | false -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) * 0.5
+            | _DenomAlign.Left -> 0.
+            | _DenomAlign.Right -> 
+                match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
+                | false -> 0.
+                | true -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) //* 0.5
         
         let mathLine = (MathPositioningConstants.mathLeading + textBaseline - MathPositioningConstants.axisHeight) * textSizeScaleFactor
         let mathAxisCorrectionHeight = MathPositioningConstants.axisHeight * (MathPositioningConstants.scriptPercentScaleDown / 100.)
@@ -501,7 +515,7 @@ module TypeSetting =
                 let grid = Grid()
                 let gb = 
                     makeGlyphBox gl 
-                        {x = numeratorShift;
+                        {x = numeratorHorozontalShift;
                          y = mathAxisCorrectionHeight  
                              + shiftUp * (MathPositioningConstants.scriptPercentScaleDown / 100.)}                
                 do grid.Children.Add(gb) |> ignore
@@ -518,7 +532,7 @@ module TypeSetting =
                 let grid = Grid()
                 let gb = 
                     makeGlyphBox gl 
-                        {x=denominatorShift;
+                        {x=denominatorHorozontalShift;
                          y = mathAxisCorrectionHeight 
                              + shiftDown * (MathPositioningConstants.scriptPercentScaleDown / 100.)}
                 do grid.Children.Add(gb) |> ignore
@@ -599,21 +613,21 @@ module TypeSetting =
                 match List.tryFind (fun x -> 
                     match x with
                     | NumAlign _ -> true 
-                    | _ -> false) math.attributes with
+                    | _ -> false) attributes with
                 | Some (NumAlign a) -> a
                 | _ -> _NumAlign.Center
             let denomAlignment = 
                 match List.tryFind (fun x -> 
                     match x with
                     | DenomAlign _ -> true 
-                    | _ -> false) math.attributes with
+                    | _ -> false) attributes with
                 | Some (DenomAlign a) -> a
                 | _ -> _DenomAlign.Center
             let isBevelled = 
                 match List.tryFind (fun x -> 
                     match x with
                     | Bevelled _ -> true 
-                    | _ -> false) math.attributes with
+                    | _ -> false) attributes with
                 | Some (Bevelled b) -> b
                 | _ -> false
             let display = 
@@ -646,7 +660,7 @@ module TypeSetting =
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "w" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
-        let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "52" Option.None)
+        let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "527.14" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
 
         let ss0=  (Element.build (Token Mo) [MathSize (EM 0.55<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
@@ -666,9 +680,9 @@ module TypeSetting =
         let ms = (Element.build (Script Msup) [] [t4;r1] "" Option.None)
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
-        let f0 = (Element.build (GeneralLayout Mfrac) [] [s2;s4] "" Option.None)
+        let f0 = (Element.build (GeneralLayout Mfrac) [DenomAlign _DenomAlign.Center] [s2;s4] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mrow) [] [t2;f0;t3;t4] "" Option.None)
-        let f = typesetElement (Element.build (Math) [Display Inline] [f1] "" Option.None)
+        let f = typesetElement (Element.build (Math) [Display Inline] [f0] "" Option.None)
 
         let line3 = getGridFromTypeObject f
        
