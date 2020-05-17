@@ -394,7 +394,10 @@ module TypeSetting =
          leftElement = leftElement;
          rightElement = rightElement
          }|> GlyphRow
-    let makeSuperScriptFromTypeObjects (target:TypeObject) (script:TypeObject) superscriptShiftUp =        
+    let makeSuperScriptFromTypeObjects 
+        (target:TypeObject) 
+        (script:TypeObject) 
+         superscriptShiftUp =        
         let g = Grid()
 
         let targetGrid =
@@ -449,7 +452,6 @@ module TypeSetting =
          leftElement = Script Msup;
          rightElement = Script Msup
          }|> GlyphRow
-
     let makeFractionFromTypeObjects 
         (numerator:TypeObject) 
         (denominator:TypeObject)     
@@ -511,7 +513,8 @@ module TypeSetting =
                 match display, bevelled with 
                 | Inline, false -> - MathPositioningConstants.fractionNumeratorShiftUp
                 | Block, false -> - (MathPositioningConstants.fractionNumeratorDisplayStyleShiftUp)
-                | _, true -> - MathPositioningConstants.fractionNumeratorShiftUp
+                | Block, true -> - MathPositioningConstants.fractionNumeratorShiftUp
+                | Inline, true -> - (MathPositioningConstants.skewedFractionVerticalGap*0.5 + 1000. - textBaseline)
             match numerator with
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
@@ -528,7 +531,8 @@ module TypeSetting =
                 match display, bevelled with 
                 | Inline, false -> MathPositioningConstants.fractionDenominatorShiftDown
                 | Block, false -> MathPositioningConstants.fractionDenominatorDisplayStyleShiftDown
-                | _, true -> MathPositioningConstants.fractionDenominatorShiftDown
+                | Block, true -> MathPositioningConstants.fractionDenominatorShiftDown
+                | Inline, true -> (MathPositioningConstants.skewedFractionVerticalGap*0.5 + textBaseline - MathPositioningConstants.axisHeight)
             match denominator with
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
@@ -655,7 +659,7 @@ module TypeSetting =
 
         let t0 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
         let t1 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let t2 = (Element.build (Token Mn) [] [] "13" Option.None)
+        let t2 = (Element.build (Token Mn) [] [] "9" Option.None)
         let t3 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))//fractionSlashInfix))//
         let t4 = (Element.build (Token Mi) [] [] "pi" Option.None)
         let t5 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
@@ -684,9 +688,9 @@ module TypeSetting =
         let ms = (Element.build (Script Msup) [] [t4;r1] "" Option.None)
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
-        let f0 = (Element.build (GeneralLayout Mfrac) [Bevelled true;(**) NumAlign _NumAlign.Left] [s2;s4] "" Option.None)
+        let f0 = (Element.build (GeneralLayout Mfrac) [Bevelled true;(**) NumAlign _NumAlign.Center] [s2;s4] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mrow) [] [t2;f0;t3;t4] "" Option.None)
-        let f = typesetElement (Element.build (Math) [Display Block(*Inline*)] [f1] "" Option.None)
+        let f = typesetElement (Element.build (Math) [Display Inline(*Block*)] [f1] "" Option.None)
         
         let line3 = getGridFromTypeObject f
        
