@@ -761,23 +761,24 @@ module Element =
               operator = Option.None}
         
         | GeneralLayout Mfrac ->
-            let defaultAttributes = [//2.1.6 Attributes Shared by all MathML Elements 
-                                     Id "none"; 
-                                     Xref "none"; 
-                                     Class "none"; 
-                                     Style "none"; 
-                                     Href "none";
+            let defaultAttributes =
+                [//2.1.6 Attributes Shared by all MathML Elements 
+                 Id "none"; 
+                 Xref "none"; 
+                 Class "none"; 
+                 Style "none"; 
+                 Href "none";
                                      
-                                     //3.1.10 Mathematics style attributes common to presentation elements 
-                                     MathColor System.Windows.Media.Brushes.Black; 
-                                     MathBackground System.Windows.Media.Brushes.Transparent;
+                 //3.1.10 Mathematics style attributes common to presentation elements 
+                 MathColor System.Windows.Media.Brushes.Black; 
+                 MathBackground System.Windows.Media.Brushes.Transparent;
 
-                                     //3.3.2.2 Attributes
-                                     LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
-                                     NumAlign _NumAlign.Center;
-                                     DenomAlign _DenomAlign.Center;
-                                     Bevelled false;
-                                    ]
+                 //3.3.2.2 Attributes
+                 LineThickness (KeyWord "medium"); //"thin" | "medium" | "thick"
+                 NumAlign _NumAlign.Center;
+                 DenomAlign _DenomAlign.Center;
+                 Bevelled false;
+                ]
             let aString = (List.fold (fun acc x -> acc + x) "" (List.map (fun x -> getAttrString x) (scrubAttributes attr defaultAttributes)))
             { element = elem; 
               attributes = (scrubAttributes attr defaultAttributes); 

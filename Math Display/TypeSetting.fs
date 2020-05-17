@@ -2,13 +2,11 @@
 
 open MathML
 open System
-
 open System.Windows       
 open System.Windows.Controls  
 open System.Windows.Shapes  
 open System.Windows.Media
 open MathematicalAlphanumericSymbols
-open MathML
 
 type Position = {x:float;y:float}
 type Size = {scaleX :float; scaleY :float} 
@@ -106,8 +104,6 @@ type GlyphBox (glyph) as glyphBox =
         glyphBox.SetValue(Grid.RowProperty,1)
         glyphBox.SetValue(Grid.RowSpanProperty,3)
         glyphBox.Child <- g
-
-////(**)
 
 type TypeObject =
     | Glyph of Glyph
@@ -460,39 +456,42 @@ module TypeSetting =
         (lineThickness:Length)  
         (numAlign:_NumAlign) 
         (denomAlign:_DenomAlign) 
-        (bevelled:bool) //TODO 
+        (bevelled:bool)
         (display : _Display) = 
         
         let fractionWidth = 
             let n,d = (getWidthFromTypeObject numerator), (getWidthFromTypeObject denominator)           
-            match n > d with
-            | true -> n / 10.
-            | false -> d / 10.        
+            match n > d, bevelled with
+            | true, false -> n / 10.
+            | false, false-> d / 10. 
+            | _, true-> (d + n + MathPositioningConstants.skewedFractionHorizontalGap) / 10.
         let numeratorHorozontalShift = 
-            match numAlign with
-            | _NumAlign.Center -> 
+            match numAlign, bevelled with 
+            | _NumAlign.Center, false -> 
                 match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
                 | true -> 0.
                 | false -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) * 0.5
-            | _NumAlign.Left -> 0.
-            | _NumAlign.Right -> 
+            | _NumAlign.Left, false -> 0.
+            | _NumAlign.Right, false -> 
                 match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
                 | false -> 0.
-                | true -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator)) //* 0.5
+                | true -> ((getWidthFromTypeObject denominator) - (getWidthFromTypeObject numerator))
+            | _ , true -> 0.
         let denominatorHorozontalShift = 
-            match denomAlign with
-            | _DenomAlign.Center -> 
+            match denomAlign, bevelled with
+            | _DenomAlign.Center, false -> 
                 match (getWidthFromTypeObject denominator) * 0.1 >= fractionWidth with
                 | true -> 0.
                 | false -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) * 0.5
-            | _DenomAlign.Left -> 0.
-            | _DenomAlign.Right -> 
+            | _DenomAlign.Left, false -> 0.
+            | _DenomAlign.Right, false -> 
                 match (getWidthFromTypeObject numerator) * 0.1 >= fractionWidth with
                 | false -> 0.
-                | true -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator)) //* 0.5
-        
+                | true -> ((getWidthFromTypeObject numerator) - (getWidthFromTypeObject denominator))
+            | _ , true ->  MathPositioningConstants.skewedFractionHorizontalGap + (getWidthFromTypeObject numerator)        
         let mathLine = (MathPositioningConstants.mathLeading + textBaseline - MathPositioningConstants.axisHeight) * textSizeScaleFactor
         let mathAxisCorrectionHeight = MathPositioningConstants.axisHeight * (MathPositioningConstants.scriptPercentScaleDown / 100.)
+        
         let mLine = 
             let thickness = (Operator.getValueFromLength 306.<em> lineThickness) * (100./960.)
             let p = Path(Stroke = Brushes.Black, StrokeThickness = thickness)
@@ -503,12 +502,16 @@ module TypeSetting =
                 p.Data <- pg
                 p.SetValue(Grid.RowProperty,1)
             p
+        let bevLine = 
+            let glyph = makeGlyph textSizeFont (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.divisionSlashInfix))
+            makeGlyphBox glyph {y=0.;x=(getWidthFromTypeObject numerator) - MathPositioningConstants.skewedFractionHorizontalGap*0.25}
 
         let numeratorGrid =
             let shiftUp = 
-                match display with 
-                | Inline -> - MathPositioningConstants.fractionNumeratorShiftUp
-                | Block -> - (MathPositioningConstants.fractionNumeratorDisplayStyleShiftUp)
+                match display, bevelled with 
+                | Inline, false -> - MathPositioningConstants.fractionNumeratorShiftUp
+                | Block, false -> - (MathPositioningConstants.fractionNumeratorDisplayStyleShiftUp)
+                | _, true -> - MathPositioningConstants.fractionNumeratorShiftUp
             match numerator with
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
@@ -520,12 +523,12 @@ module TypeSetting =
                              + shiftUp * (MathPositioningConstants.scriptPercentScaleDown / 100.)}                
                 do grid.Children.Add(gb) |> ignore
                 grid
-
         let denominatorGrid =              
             let shiftDown = 
-                match display with 
-                | Inline -> MathPositioningConstants.fractionDenominatorShiftDown
-                | Block -> MathPositioningConstants.fractionDenominatorDisplayStyleShiftDown
+                match display, bevelled with 
+                | Inline, false -> MathPositioningConstants.fractionDenominatorShiftDown
+                | Block, false -> MathPositioningConstants.fractionDenominatorDisplayStyleShiftDown
+                | _, true -> MathPositioningConstants.fractionDenominatorShiftDown
             match denominator with
             | GlyphRow gr -> gr.grid
             | Glyph gl -> 
@@ -538,14 +541,16 @@ module TypeSetting =
                 do grid.Children.Add(gb) |> ignore
                 grid
         
-        let leftBearing = (Operator.getValueFromLength 1000.<em> (NamedLength MediumMathSpace)) * (1000./960.)
-        let rightBearing = (Operator.getValueFromLength 1000.<em> (NamedLength MediumMathSpace)) * (1000./960.)
+        let leftBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
+        let rightBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
         let width = fractionWidth * 10.
-        let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator) // + some others
+        let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator) // + some others todo
         
         let g = Grid()
                 
-        do g.Children.Add(mLine) |> ignore
+        do match bevelled with
+           | true -> g.Children.Add(bevLine) |> ignore
+           | false -> g.Children.Add(mLine) |> ignore
            List.iter (fun x -> g.Children.Add(x) |> ignore) [numeratorGrid; denominatorGrid]
         
         {grid = g;
@@ -554,8 +559,7 @@ module TypeSetting =
          leftBearing = leftBearing;
          rightBearing = rightBearing;
          leftElement = GeneralLayout Mfrac;
-         rightElement = GeneralLayout Mfrac}
-         |> GlyphRow
+         rightElement = GeneralLayout Mfrac} |> GlyphRow
 
     // Typesetter    
     let typesetElement (el:Element) =        
@@ -658,7 +662,7 @@ module TypeSetting =
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "w" Option.None)
+        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "k" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
         let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "527.14" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
@@ -680,10 +684,10 @@ module TypeSetting =
         let ms = (Element.build (Script Msup) [] [t4;r1] "" Option.None)
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
-        let f0 = (Element.build (GeneralLayout Mfrac) [DenomAlign _DenomAlign.Center] [s2;s4] "" Option.None)
+        let f0 = (Element.build (GeneralLayout Mfrac) [Bevelled true;(**) NumAlign _NumAlign.Left] [s2;s4] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mrow) [] [t2;f0;t3;t4] "" Option.None)
-        let f = typesetElement (Element.build (Math) [Display Inline] [f0] "" Option.None)
-
+        let f = typesetElement (Element.build (Math) [Display Block(*Inline*)] [f1] "" Option.None)
+        
         let line3 = getGridFromTypeObject f
        
         let textBlock =                    
