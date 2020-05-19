@@ -452,10 +452,13 @@ module TypeSetting =
                         fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
                 g
             | Glyph gl -> 
-                let grid = Grid()
+                let g = Grid()
                 let gb = makeGlyphBox gl position
-                do grid.Children.Add(gb) |> ignore
-                grid
+                do  g.Children.Add(gb) |> ignore
+                    g.Loaded.AddHandler(
+                        RoutedEventHandler(
+                            fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
+                g
         
         let leftBearing = 0.
         let rightBearing = MathPositioningConstants.spaceAfterScript
@@ -712,14 +715,14 @@ module TypeSetting =
         let s = typesetElement (Element.build (Script Msup) [] [r0;r1] "" Option.None)
         
 
-        let ms = (Element.build (Script Msup) [] [t4;r1] "" Option.None)
+        let ms = (Element.build (Script Msup) [] [t4;s2] "" Option.None)
         let m = typesetElement(Element.build (Math) [Display Block] [ms] "" Option.None)
 
         let f0 = (Element.build (GeneralLayout Mfrac) [Bevelled true;(**) NumAlign _NumAlign.Center] [s2;s4] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mrow) [] [t2;t3;f0;t3;t4] "" Option.None)
         let f = typesetElement (Element.build (Math) [Display Inline(*Block*)] [f1] "" Option.None)
         
-        let line3 = getGridFromTypeObject f
+        let line3 = getGridFromTypeObject m
        
         let textBlock =                    
             let tb = TextBlock()
