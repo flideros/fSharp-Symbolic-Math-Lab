@@ -372,10 +372,10 @@ module TypeSetting =
                      rightElement = g.element;
                      overHangAfter=0.})
         let positions = 
-            let initialPosition = {x=0.;y=0.}
+            let initialPosition = {x = 0.;y = 0.}
             let p = 
                 List.scan (fun acc x -> 
-                    {x = (acc.x + (x.rowWidth + x.rightBearing + x.leftBearing) / 10.); y = 0.}) initialPosition rows            
+                    {x = (acc.x + (x.rowWidth + x.rightBearing) / 10.); y = 0.}) initialPosition rows            
             List.truncate rows.Length p
         let mappedRows = 
             List.map2 (fun gr p -> 
@@ -433,10 +433,7 @@ module TypeSetting =
             match target with
             | GlyphRow gr -> gr.rightBearing
             | Glyph gl -> gl.rightBearing + gl.rSpace
-        let targetLBearing =
-            match target with
-            | GlyphRow gr -> gr.leftBearing
-            | Glyph gl -> gl.leftBearing + gl.lSpace
+        let targetLBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
 
         let mathAxisCorrectionHeight = 
                 MathPositioningConstants.axisHeight * 
@@ -722,7 +719,7 @@ module TypeSetting =
         let t1 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
         let t2 = (Element.build (Token Mn) [] [] "9" Option.None)
         let t3 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.plusSignInfix))//fractionSlashInfix))//
-        let t4 = (Element.build (Token Mi) [] [] "b" Option.None)
+        let t4 = (Element.build (Token Mi) [] [] "x" Option.None)
         let t5 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.doubleStruckItalicSmallDPrefix))
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
@@ -754,7 +751,7 @@ module TypeSetting =
         let f0 = (Element.build (GeneralLayout Mfrac) [(*Bevelled true; NumAlign _NumAlign.Center*)] [s4;ms0] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mfrac) [(*Bevelled true; NumAlign _NumAlign.Center*)] [ms0;s4] "" Option.None)
         let frow = (Element.build (GeneralLayout Mrow) [] [f1;t3;f0;t3;ms2] "" Option.None)
-        let f = typesetElement (Element.build (Math) [Display Inline(*Block*)] [frow] "" Option.None)
+        let f = typesetElement (Element.build (Math) [Display (*Inline*)Block] [frow] "" Option.None)
         
         let line3 = getGridFromTypeObject f
        
