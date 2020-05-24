@@ -337,8 +337,8 @@ module Element =
          + "\"").ToString().Replace("\"\"", "\"")
         |> addOrRemoveSpace
     
-    let rec recurseElement eToken eRow eSuperscript eFraction eSubscript el : 'r =
-        let recurse = recurseElement eToken eRow eSuperscript eFraction eSubscript
+    let rec recurseElement eToken eRow eSuperscript eSubscript eSuperSubscript eFraction  el : 'r =
+        let recurse = recurseElement eToken eRow eSuperscript eSubscript eSuperSubscript eFraction 
         match el.element with 
         | Math -> eRow (List.map (fun x -> recurse x) el.arguments)
         | Token _ -> eToken el
@@ -346,7 +346,9 @@ module Element =
         | GeneralLayout Mfrac -> eFraction (recurse el.arguments.[0],recurse el.arguments.[1],el.attributes)
         | Script Msup -> eSuperscript (recurse el.arguments.[0],recurse el.arguments.[1],el.attributes)
         | Script Msub -> eSubscript (recurse el.arguments.[0],recurse el.arguments.[1],el.attributes)
-
+        | Script Msubsup -> eSuperSubscript (recurse el.arguments.[0],recurse el.arguments.[1],recurse el.arguments.[2],el.attributes)
+    
+    
     let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
         let openTag attrString = 
             match elem with

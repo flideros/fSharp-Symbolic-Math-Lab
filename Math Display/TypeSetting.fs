@@ -429,7 +429,7 @@ module TypeSetting =
         let targetRBearing =
             match target with
             | GlyphRow gr -> gr.rightBearing
-            | Glyph gl -> gl.rightBearing + gl.rSpace
+            | Glyph gl -> gl.rightBearing + gl.rSpace   
         let targetLBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
 
         let mathAxisCorrectionHeight = 
@@ -525,7 +525,7 @@ module TypeSetting =
                 g
     
         let leftBearing = targetLBearing
-        let rightBearing = MathPositioningConstants.spaceAfterScript
+        let rightBearing = MathPositioningConstants.spaceAfterScript  
         let width = (getWidthFromTypeObject target) + (getWidthFromTypeObject script)
         let height = (getHeightFromTypeObject target) + ((mathAxisCorrectionHeight + subscriptShiftDown) * textSizeScaleFactor)
     
@@ -541,6 +541,99 @@ module TypeSetting =
          overHangAfter = 0.         
          }|> GlyphRow
 
+    let makeSuperSubScriptFromTypeObjects 
+        (target:TypeObject) 
+        (superScript:TypeObject)
+         superscriptShiftUp
+        (subScript:TypeObject)
+         subscriptShiftDown  =        
+    
+        let g = Grid()
+
+        let targetGrid =
+            match target with
+            | GlyphRow gr -> gr.grid
+            | Glyph gl -> 
+                let grid = Grid()
+                let gb = makeGlyphBox gl {x=0.;y=0.}
+                do grid.Children.Add(gb) |> ignore
+                grid
+        let targetRBearing =
+            match target with
+            | GlyphRow gr -> gr.rightBearing
+            | Glyph gl -> gl.rightBearing + gl.rSpace
+        let targetLBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
+
+        let mathAxisCorrectionHeight = 
+                MathPositioningConstants.axisHeight * 
+                ((MathPositioningConstants.scriptPercentScaleDown / 100.) * 
+                 (1. + textSizeScaleFactor))
+     
+        let superScriptGrid =             
+            let position = 
+                let x = (getWidthFromTypeObject target - targetRBearing) * textSizeScaleFactor
+                let y = (mathAxisCorrectionHeight - superscriptShiftUp) * textSizeScaleFactor 
+                {x = x; y = y}
+            
+            match superScript with
+            | GlyphRow gr -> 
+                let g = gr.grid
+                do g.Loaded.AddHandler(
+                    RoutedEventHandler(
+                        fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
+                g
+            | Glyph gl -> 
+                let g = Grid()
+                let gb = makeGlyphBox gl position
+                do  g.Children.Add(gb) |> ignore
+                    g.Loaded.AddHandler(
+                        RoutedEventHandler(
+                            fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
+                g
+        let subScriptGrid =             
+            let position = 
+                let x = (getWidthFromTypeObject target - targetRBearing) * textSizeScaleFactor
+                let y = (mathAxisCorrectionHeight + subscriptShiftDown) * textSizeScaleFactor 
+                {x = x; y = y}
+    
+            match subScript with
+            | GlyphRow gr -> 
+                let g = gr.grid
+                do g.Loaded.AddHandler(
+                    RoutedEventHandler(
+                        fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
+                g
+            | Glyph gl -> 
+                let g = Grid()
+                let gb = makeGlyphBox gl position
+                do  g.Children.Add(gb) |> ignore
+                    g.Loaded.AddHandler(
+                        RoutedEventHandler(
+                            fun _ _ -> g.RenderTransform <- TranslateTransform(X = position.x, Y = position.y)))
+                g
+    
+        let leftBearing = targetLBearing
+        let rightBearing = MathPositioningConstants.spaceAfterScript  
+        let width = 
+            let widerScript = 
+                match (getWidthFromTypeObject superScript) > (getWidthFromTypeObject subScript) with
+                | true -> (getWidthFromTypeObject subScript)
+                | false -> (getWidthFromTypeObject subScript)
+            (getWidthFromTypeObject target) + widerScript
+        let height = (getHeightFromTypeObject target) + ((mathAxisCorrectionHeight + subscriptShiftDown) * textSizeScaleFactor)
+    
+        do  List.iter (fun x -> g.Children.Add(x) |> ignore) [targetGrid; superScriptGrid; subScriptGrid]
+    
+        {grid = g;
+         rowWidth = width;
+         rowHeight = height;
+         leftBearing = leftBearing;
+         rightBearing = rightBearing;
+         leftElement = Script Msub;
+         rightElement = Script Msub;
+         overHangAfter = 0.         
+         }|> GlyphRow
+    
     let makeFractionFromTypeObjects 
         (numerator:TypeObject) 
         (denominator:TypeObject)     
@@ -732,6 +825,17 @@ module TypeSetting =
                         | _ -> false) attributes with
                 | Some (SubScriptShift (Numb n)) -> n
                 | _ -> 0.
+            let subscriptShiftDown = MathPositioningConstants.subscriptShiftDown + manualSubscriptShift
+            makeSubScriptFromTypeObjects target script subscriptShiftDown
+  
+        let typeset_SuperSubscript ((target:TypeObject),(superScript:TypeObject),(subScript:TypeObject), attributes) =             
+            let manualSuperscriptShift =
+                match List.tryFind (fun x -> 
+                        match x with
+                        | SuperScriptShift _ -> true 
+                        | _ -> false) attributes with
+                | Some (SuperScriptShift (Numb n)) -> n
+                | _ -> 0.
             let display = 
                 match List.tryFind (fun x -> 
                     match x with
@@ -739,19 +843,30 @@ module TypeSetting =
                     | _ -> false) math.attributes with
                 | Some (Display n) -> n
                 | _ -> Inline
-            let subScriptShift = 
+            let superScriptShift = 
                 match List.tryFind (fun x -> 
                     match x with
-                    | SubScriptShift _ -> true 
+                    | SuperScriptShift _ -> true 
                     | _ -> false) attributes with
-                | Some (SubScriptShift (KeyWord s)) when s.ToString() = "script" -> Inline
+                | Some (SuperScriptShift (KeyWord s)) when s.ToString() = "script" -> Inline
                 | _ -> display            
-            let subscriptShiftDown = 
-                match subScriptShift with
-                | Inline -> MathPositioningConstants.subscriptShiftDown + manualSubscriptShift
-                | Block -> MathPositioningConstants.subscriptShiftDown + manualSubscriptShift
-            makeSubScriptFromTypeObjects target script subscriptShiftDown
-  
+            let superscriptShiftUp = 
+                match superScriptShift with
+                | Inline -> MathPositioningConstants.superscriptShiftUpCramped + manualSuperscriptShift
+                | Block -> MathPositioningConstants.superscriptShiftUp + manualSuperscriptShift
+            
+            let manualSubscriptShift =
+                match List.tryFind (fun x -> 
+                        match x with
+                        | SubScriptShift _ -> true 
+                        | _ -> false) attributes with
+                | Some (SubScriptShift (Numb n)) -> n
+                | _ -> 0.
+            let subscriptShiftDown = MathPositioningConstants.subscriptShiftDown + manualSubscriptShift
+            
+            makeSuperSubScriptFromTypeObjects target superScript superscriptShiftUp subScript subscriptShiftDown
+        
+        
         let typeset_Fraction ((numerator:TypeObject),(denominator:TypeObject), attributes) = 
             let lineThickness = 
                 match List.tryFind (fun x -> 
@@ -798,8 +913,9 @@ module TypeSetting =
         Element.recurseElement typeset_Token 
                                typeset_Row 
                                typeset_Superscript 
-                               typeset_Fraction 
-                               typeset_Subscript el
+                               typeset_Subscript
+                               typeset_SuperSubscript
+                               typeset_Fraction el
 
     (*Test Area*)
     type TestCanvas() as this  =  
@@ -814,7 +930,7 @@ module TypeSetting =
         
         let s0=  (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.cubeRootPrefix)) 
         let s1 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
-        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "g" Option.None)
+        let s2 = (Element.build (Token Mi) [MathSize (EM 0.7<em>)] [] "2" Option.None)
         let s3 = (Element.build (Token Mo) [MathSize (EM 0.7<em>); MathColor Brushes.BlueViolet] [] "" (Some OperatorDictionary.plusSignPrefix))
         let s4 = (Element.build (Token Mn) [MathSize (EM 0.7<em>)] [] "5" Option.None)
         let s5 = (Element.build (Token Mo) [MathSize (EM 0.7<em>)] [] "" (Some OperatorDictionary.mathematicalRightFlattenedParenthesisPostfix))
@@ -841,10 +957,12 @@ module TypeSetting =
         let f0 = (Element.build (GeneralLayout Mfrac) [(*Bevelled true; NumAlign _NumAlign.Center*)] [s4;ms0] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mfrac) [(*Bevelled true; NumAlign _NumAlign.Center*)] [ms0;s4] "" Option.None)
 
-        let msub0 = (Element.build (Script Msub) [] [t4;s4] "" Option.None)
+        let msub0 = (Element.build (Script Msub) [] [t4;s2] "" Option.None)
+        let msubmsup0 = (Element.build (Script Msup) [] [msub0;s2] "" Option.None)
+        let msubsup0 = (Element.build (Script Msubsup) [] [t4;s2;s2] "" Option.None)
         let su = typesetElement (Element.build (Math) [Display (*Inline*)Block] [msub0] "" Option.None)
         
-        let frow = (Element.build (GeneralLayout Mrow) [] [msub0;t3;f0;t3;f1] "" Option.None)
+        let frow = (Element.build (GeneralLayout Mrow) [] [msubsup0;t3;msubmsup0;t3;f0;t3;f1] "" Option.None)
         let f = typesetElement (Element.build (Math) [Display (*Inline*)Block] [frow] "" Option.None)
 
         let line3 = getGridFromTypeObject f
