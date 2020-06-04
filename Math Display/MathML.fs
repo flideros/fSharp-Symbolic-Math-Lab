@@ -349,7 +349,7 @@ module Element =
         | Script Msubsup -> eSuperSubscript (recurse el.arguments.[0],recurse el.arguments.[1],recurse el.arguments.[2],el.attributes)
     
     
-    let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option)=                 
+    let build (elem : MathMLElement) (attr : MathMLAttribute list) (arguments : Element list) (symbol : string) (operator : Operator option) =                 
         let openTag attrString = 
             match elem with
             | Math _ -> "<math " + attrString + ">"

@@ -7,6 +7,7 @@ open System.Windows.Controls
 open System.Windows.Shapes  
 open System.Windows.Media
 open MathematicalAlphanumericSymbols
+open ControlLibrary
 
 type Position = {x:float;y:float}
 type Size = {scaleX :float; scaleY :float}
@@ -109,15 +110,15 @@ type TypeObject =
 module TypeSetting = 
     open MathML
     // Constants
-    let basisSize = 100.<MathML.px>
-    let basisEmSquare = 10.<MathML.em>
+    let basisSize = 100.<px>
+    let basisEmSquare = 10.<em>
     let textSizeScaleFactor = float (basisEmSquare / basisSize)
     let textBaseline = 762.
 
     //  Font Sizes
-    let textSizeFont = {emSquare = 1000.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
-    let scriptSizeFont = {emSquare = 700.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
-    let scriptScriptSizeFont = {emSquare = 500.<MathML.em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+    let textSizeFont = {emSquare = 1000.<em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+    let scriptSizeFont = {emSquare = 700.<em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
+    let scriptScriptSizeFont = {emSquare = 500.<em>; typeFace = Text.STIX2Math_Typeface; size = basisSize}
         
     //  Format Text
     let formatTextWithFont = fun t font -> Text.format t font.typeFace font.emSquare    
@@ -167,15 +168,15 @@ module TypeSetting =
             let x,y = p.x, p.y
             let y' = y - (match glyph.overHangBefore > 0. with | true -> glyph.overHangBefore | false -> 0.)
             let gb = GlyphBox(glyph)
-            do  gb.Width <- gb.Width * (glyph.font.size / 960.<MathML.px>)
-                gb.Height <- gb.Height * (glyph.font.size / 960.<MathML.px>)
+            do  gb.Width <- gb.Width * (glyph.font.size / 960.<px>)
+                gb.Height <- gb.Height * (glyph.font.size / 960.<px>)
             do  gb.Loaded.AddHandler(
                     RoutedEventHandler(
                         fun _ _ -> 
                             transformGlyphBox 
                                 gb // glyph box
                                 {x = x; y = y'} // position
-                                {scaleX = glyph.font.size / 960.<MathML.px>; scaleY = glyph.font.size / 960.<MathML.px>} )) // font size          
+                                {scaleX = glyph.font.size / 960.<px>; scaleY = glyph.font.size / 960.<px>} )) // font size          
             gb
     let makeGlyph :GlyphBuilder = 
         fun font el ->
@@ -299,7 +300,7 @@ module TypeSetting =
             let glyphPairs = List.zip leftGlyphs rightGlyphs
             let spaces = List.scan (fun acc (l,r) -> acc + l.rSpace + r.lSpace - l.rightBearing - r.leftBearing) 0. glyphPairs
             // Specify space based on em size
-            match glyphs.Head.font.emSquare = 1000.<MathML.em> with
+            match glyphs.Head.font.emSquare = 1000.<em> with
             | true -> spaces
             | false -> List.map (fun x -> 0. * x) spaces // In this case, do not apply to script sizes
         let positions = 
@@ -313,7 +314,7 @@ module TypeSetting =
             |> List.mapi (fun i (p:Position) -> {x = p.x + mathSpaces.[i]; y = p.y})
         let leftBearing = 
             match glyphs.Head.lSpace = 0. with
-            | false -> glyphs.Head.lSpace //+ glyphs.Head.leftBearing
+            | false -> glyphs.Head.lSpace + glyphs.Head.leftBearing
             | true -> glyphs.Head.leftBearing
         let rightBearing = 
             match (List.rev glyphs).Head.rSpace = 0. with
@@ -750,7 +751,7 @@ module TypeSetting =
                 grid
         
         let leftBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
-        let rightBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength MediumMathSpace)) * (1000./960.)
+        let rightBearing = (Operator.getValueFromLength textSizeFont.emSquare (NamedLength VeryThinMathSpace)) * (1000./960.)
         let width = fractionWidth * 10.
         let height = (getHeightFromTypeObject numerator) + (getHeightFromTypeObject denominator) // + some others todo
         
@@ -770,12 +771,12 @@ module TypeSetting =
          rightElement = GeneralLayout Mfrac;
          overHangAfter = 0.} |> GlyphRow
 
+    // Applicators
+    let applyStyleToElements (elements:Element list) (attr : MathMLAttribute list)  = 
+        List.map (fun x -> Element.build x.element (List.concat[attr;x.attributes]) x.arguments x.symbol x.operator) elements
+
     // Typesetter    
-    let typesetElement (el:Element) =        
-        let math = 
-            match el.element with
-            | Math -> el
-            | _ -> Element.build (Math) [] [] "" Option.None
+    let typesetElement (math:Element) (el:Element) =        
         
         let typeset_Token (el:Element) = 
             match el.element = Token Mi ||
@@ -863,10 +864,8 @@ module TypeSetting =
                 | Some (SubScriptShift (Numb n)) -> n
                 | _ -> 0.
             let subscriptShiftDown = MathPositioningConstants.subscriptShiftDown + manualSubscriptShift
-            
             makeSuperSubScriptFromTypeObjects target superScript superscriptShiftUp subScript subscriptShiftDown
-        
-        
+ 
         let typeset_Fraction ((numerator:TypeObject),(denominator:TypeObject), attributes) = 
             let lineThickness = 
                 match List.tryFind (fun x -> 
@@ -917,9 +916,25 @@ module TypeSetting =
                                typeset_SuperSubscript
                                typeset_Fraction el
 
+    let typesetMath (el:Element) = ()
+
+        (*
+        Element.recurseElement typeset_Token 
+                               typeset_Row 
+                               typeset_Superscript 
+                               typeset_Subscript
+                               typeset_SuperSubscript
+                               typeset_Fraction el *)
+
     (*Test Area*)
     type TestCanvas() as this  =  
         inherit UserControl()
+
+        let textMath = Element.build (Math) [Display (*Inline*)Block] [] "" Option.None
+
+        //let math = SharedValue<Element> (Element.build (Math) [Display (*Inline*)Block] [] "" Option.None)
+
+        let typesetElement el = typesetElement textMath el
 
         let t0 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.cubeRootPrefix))
         let t1 = (Element.build (Token Mo) [] [] "" (Some OperatorDictionary.mathematicalLeftFlattenedParenthesisPrefix))
@@ -952,18 +967,18 @@ module TypeSetting =
         let ms0 = (Element.build (Script Msup) [SuperScriptShift (KeyWord "script")] [s2;ss2] "" Option.None)
         let ms1 = (Element.build (Script Msup) [] [t4;ms0] "" Option.None)
         let ms2 = (Element.build (Script Msup) [] [t4;s4] "" Option.None)
-        let m = typesetElement(Element.build (Math) [Display Inline(*Block*)] [ms0] "" Option.None)
+        let m = typesetElement (Element.build (Math) [Display Inline(*Block*)] [ms0] "" Option.None)
 
         let f0 = (Element.build (GeneralLayout Mfrac) [(*Bevelled true; NumAlign _NumAlign.Center*)] [s4;ms0] "" Option.None)
         let f1 = (Element.build (GeneralLayout Mfrac) [(*Bevelled true; NumAlign _NumAlign.Center*)] [ms0;s4] "" Option.None)
 
         let msub0 = (Element.build (Script Msub) [] [t4;s2] "" Option.None)
         let msubmsup0 = (Element.build (Script Msup) [] [msub0;s2] "" Option.None)
-        let msubsup0 = (Element.build (Script Msubsup) [] [t4;s2;s2] "" Option.None)
+        let msubsup0 = (Element.build (Script Msubsup) [(*SubScriptShift(Numb 100.)*)] [t4;s2;s2] "" Option.None)
         let su = typesetElement (Element.build (Math) [Display (*Inline*)Block] [msub0] "" Option.None)
         
         let frow = (Element.build (GeneralLayout Mrow) [] [msubsup0;t3;msubmsup0;t3;f0;t3;f1] "" Option.None)
-        let f = typesetElement (Element.build (Math) [Display (*Inline*)Block] [frow] "" Option.None)
+        let f = typesetElement (Element.build (GeneralLayout Mrow) [] [frow] "" Option.None)
 
         let line3 = getGridFromTypeObject f
        
