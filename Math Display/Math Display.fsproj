@@ -68,6 +68,7 @@
     <Resource Include="STIX2Text-Regular.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -87,6 +88,9 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Wolfram.NETLink">
+      <HintPath>..\packages\Wolfram.NETLink.1.7.1\lib\net461\Wolfram.NETLink.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ControLibrary\ControlLibrary.fsproj">

@@ -74,7 +74,7 @@ let tabs = TabControl()
 
 let item0 = TabItem(Header = "Test Canvas")
 do  item0.Content <- testCanvas
-let item1 = TabItem(Header = "Stack")
+let item1 = TabItem(Header = "Past Projects")
 do  item1.Content <- stack
 
 do  tabs.Items.Add(item0) |> ignore

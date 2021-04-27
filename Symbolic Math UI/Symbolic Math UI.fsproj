@@ -56,6 +56,7 @@
     <None Include="MainScrript.fsx" />
     <None Include="App.config" />
     <Content Include="packages.config" />
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ControLibrary\ControlLibrary.fsproj">
@@ -131,6 +132,9 @@
       <Project>{5484b4f9-2495-45d0-9696-0a72c17070c3}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="Wolfram.NETLink">
+      <HintPath>..\packages\Wolfram.NETLink.1.7.1\lib\net461\Wolfram.NETLink.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

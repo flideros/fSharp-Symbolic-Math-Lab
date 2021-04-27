@@ -81,6 +81,7 @@
     <None Include="md-template.html" />
     <None Include="output\content\MathJax.md" />
     <None Include="output\content\Test.md" />
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Castle.Core">
@@ -318,6 +319,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="WindowsBase" />
+    <Reference Include="Wolfram.NETLink">
+      <HintPath>..\packages\Wolfram.NETLink.1.7.1\lib\net461\Wolfram.NETLink.dll</HintPath>
+    </Reference>
     <Reference Include="XPlot.GoogleCharts">
       <HintPath>..\packages\XPlot.GoogleCharts.3.0.1\lib\netstandard2.0\XPlot.GoogleCharts.dll</HintPath>
     </Reference>

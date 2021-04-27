@@ -55,6 +55,7 @@
     <None Include="ColorSwatch1.png" />
     <None Include="ColorSwatch2.png" />
     <None Include="ColorSwatch3.png" />
+    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -75,6 +76,9 @@
     <Reference Include="UIAutomationProvider" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Wolfram.NETLink">
+      <HintPath>..\packages\Wolfram.NETLink.1.7.1\lib\net461\Wolfram.NETLink.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

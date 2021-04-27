@@ -917,14 +917,15 @@ module TypeSetting =
                                typeset_Fraction el
 
     let typesetMath (el:Element) = ()
+        (*let typeset_Token (el:Element) = ()
+        let typeset_Row (el:TypeObject list) =()
+        let typeset_Superscript ((target:TypeObject),(script:TypeObject), attributes) = ()
+        let typeset_Subscript ((target:TypeObject),(script:TypeObject), attributes) =()
+        let typeset_SuperSubscript ((target:TypeObject),(superScript:TypeObject),(subScript:TypeObject), attributes) = ()
+        let typeset_Fraction ((numerator:TypeObject),(denominator:TypeObject), attributes) = ()
 
-        (*
-        Element.recurseElement typeset_Token 
-                               typeset_Row 
-                               typeset_Superscript 
-                               typeset_Subscript
-                               typeset_SuperSubscript
-                               typeset_Fraction el *)
+        
+        Element.foldbackMath typeset_Math el *)
 
     (*Test Area*)
     type TestCanvas() as this  =  
@@ -932,6 +933,9 @@ module TypeSetting =
 
         let textMath = Element.build (Math) [Display (*Inline*)Block] [] "" Option.None
 
+        ///Wolfram engine experiment
+        
+        
         //let math = SharedValue<Element> (Element.build (Math) [Display (*Inline*)Block] [] "" Option.None)
 
         let typesetElement el = typesetElement textMath el
