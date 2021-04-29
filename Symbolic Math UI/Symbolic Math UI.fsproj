@@ -27,7 +27,7 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -72,6 +72,11 @@
     <ProjectReference Include="..\Symbolic Math\Symbolic Math.fsproj">
       <Name>Symbolic Math</Name>
       <Project>{03e8055f-412d-498f-9cd1-c712257fad32}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\WolframDisplay\WolframDisplay.fsproj">
+      <Name>WolframDisplay</Name>
+      <Project>{dc1efae1-2362-4655-8240-123f7e648317}</Project>
       <Private>True</Private>
     </ProjectReference>
     <Reference Include="FSharp.Control.Reactive">

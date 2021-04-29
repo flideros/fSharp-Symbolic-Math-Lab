@@ -18,13 +18,14 @@ open ControlLibrary
 open BasicCalculator
 open DataLab
 
+
 //Define app resources and load them to the main prograam.
 let resource = new Uri("app.xaml",System.UriKind.Relative)
 let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
 
-let testCanvas = Math.Presentation.TypeSetting.TestCanvas()
+let testCanvas = Math.Presentation.TestCanvas()
 let stack = 
     let sp = StackPanel()
     let dataLab = 

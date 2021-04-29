@@ -53,7 +53,6 @@
     <None Include="Pictures\calc2.JPG" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
-    <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -73,9 +72,6 @@
     <Reference Include="UIAutomationProvider" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Wolfram.NETLink">
-      <HintPath>..\packages\Wolfram.NETLink.1.7.1\lib\net461\Wolfram.NETLink.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ControLibrary\ControlLibrary.fsproj">
