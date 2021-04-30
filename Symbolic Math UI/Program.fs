@@ -25,7 +25,7 @@ let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
 
-let testCanvas = Math.Presentation.TestCanvas()
+let testCanvas = Math.Presentation.TestCanvas2()
 let stack = 
     let sp = StackPanel()
     let dataLab = 
