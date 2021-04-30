@@ -5,6 +5,7 @@ open System.Windows
 open System.Windows.Controls  
 open System.Windows.Shapes  
 open System.Windows.Media
+open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
 (*Test Area*)
@@ -97,6 +98,17 @@ type TestCanvas2() as this  =
     inherit UserControl()
     do Install() |> ignore
     
+    (*Image Converter
+        One-way converter from System.Drawing.Image to System.Windows.Media.ImageSource*)
+    let convertDrawingImage (image:System.Drawing.Image) =
+        let bitmap = new System.Windows.Media.Imaging.BitmapImage()
+        let memoryStream = new System.IO.MemoryStream()
+        do  bitmap.BeginInit()
+            image.Save(memoryStream, image.RawFormat)
+            memoryStream.Seek(int64 0, System.IO.SeekOrigin.Begin) |> ignore
+            bitmap.StreamSource <- memoryStream
+            bitmap.EndInit()
+        bitmap
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/MathKernel.exe\"")
     do  link.WaitAndDiscardAnswer()
@@ -107,9 +119,9 @@ type TestCanvas2() as this  =
             k.CaptureMessages <- true;
             k.CapturePrint <- true;
             k.GraphicsFormat <- "Automatic";
-            k.GraphicsHeight <- 0;
-            k.GraphicsResolution <- 0;
-            k.GraphicsWidth <- 0;
+            //k.GraphicsHeight <- 0;
+            //k.GraphicsResolution <- 0;
+            //k.GraphicsWidth <- 0;
             k.HandleEvents <- true;
             k.Input <- null;
             k.LinkArguments <- null;
@@ -133,6 +145,9 @@ type TestCanvas2() as this  =
         tb.FontStyle <- FontStyles.Normal
         tb.FontSize <- 20.
         tb
+    let result_Viewbox =                    
+        let vb = Viewbox()   
+        vb
     
     
     let canvas = Canvas(ClipToBounds = true)
@@ -178,12 +193,18 @@ type TestCanvas2() as this  =
     let fetch (text:string) =
         match kernel.IsComputing with 
         | false -> 
-            //let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/MathKernel.exe\"")
-            //do  link.WaitAndDiscardAnswer()
-            do  kernel.Compute(text)
-                
+            do  kernel.Compute(text)                
+            let image = Image()
             let out = (string) kernel.Result
+            let getGraphicFrom (k:MathKernel) = 
+                match k.Graphics.Length > 0 with                
+                | true ->
+                    image.Source <- convertDrawingImage (k.Graphics.[0])
+                    result_Viewbox.Child <- image
+                    canvas.Children.Add(result_Viewbox) |> ignore
+                | false -> ()
             do  setDisplayedText out
+                getGraphicFrom kernel
         | true -> kernel.Abort()
     let compute = fun (text:string) -> fetch text             
     (**)
@@ -193,4 +214,4 @@ type TestCanvas2() as this  =
         this.Content <- screen_Grid
 
         //add event handler to each button
-        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> compute "WolframAlpha[\"what is the distance to the moon?\"]"))
+        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> compute "Plot[Sin[x], {x, 0, 6 Pi}]"))
