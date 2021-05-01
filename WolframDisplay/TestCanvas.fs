@@ -98,17 +98,6 @@ type TestCanvas2() as this  =
     inherit UserControl()
     do Install() |> ignore
     
-    (*Image Converter
-        One-way converter from System.Drawing.Image to System.Windows.Media.ImageSource*)
-    let convertDrawingImage (image:System.Drawing.Image) =
-        let bitmap = new System.Windows.Media.Imaging.BitmapImage()
-        let memoryStream = new System.IO.MemoryStream()
-        do  bitmap.BeginInit()
-            image.Save(memoryStream, image.RawFormat)
-            memoryStream.Seek(int64 0, System.IO.SeekOrigin.Begin) |> ignore
-            bitmap.StreamSource <- memoryStream
-            bitmap.EndInit()
-        bitmap
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/MathKernel.exe\"")
     do  link.WaitAndDiscardAnswer()
@@ -199,7 +188,7 @@ type TestCanvas2() as this  =
             let getGraphicFrom (k:MathKernel) = 
                 match k.Graphics.Length > 0 with                
                 | true ->
-                    image.Source <- convertDrawingImage (k.Graphics.[0])
+                    image.Source <- ControlLibrary.Convert._DrawingImage (k.Graphics.[0])
                     result_Viewbox.Child <- image
                     canvas.Children.Add(result_Viewbox) |> ignore
                 | false -> ()
