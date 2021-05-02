@@ -14,9 +14,9 @@ open System.Windows.Media.Media3D
 open Utilities
 open System.Windows.Input
 
-module Convert = 
+module Image = 
     
-    let _DrawingImage (image:System.Drawing.Image) =
+    let convertDrawingImage (image:System.Drawing.Image) =
         let bitmap = new System.Windows.Media.Imaging.BitmapImage()
         let memoryStream = new System.IO.MemoryStream()
         do  bitmap.BeginInit()

@@ -87,8 +87,8 @@ window.Title <- "Math is fun!"
 window.Content <- tabs//notepad//dataLab//calculator//graphingCalc//
 window.MinWidth <- 420.
 window.MinHeight <- 620.
-window.Width <- 420.
-window.Height <- 620.
+window.Width <- 900.
+window.Height <- 900.
 //----------{not needed unless a Xaml used for window}----------//
 // Load XAML -  XAML - MUST be Embedded Resource  ("use  {file name}.xaml")    
 //let mutable this : Window = Utilities.contentAsXamlObject("MainWindow.xaml"):?> Window  
