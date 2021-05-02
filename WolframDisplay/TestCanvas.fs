@@ -128,7 +128,8 @@ type TestCanvas2() as this  =
             tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto
             tb.TextWrapping <- TextWrapping.Wrap
             tb.AcceptsReturn <- true
-        tb
+            tb.Text <- "$InverseTrigFunctions = {ArcSin, ArcCos, ArcSec, ArcCsc, ArcTan,ArcCot, ArcSinh, ArcCosh, ArcSech, ArcCsch, ArcTanh, ArcCoth}; \r\n Table[DensityPlot[Im[f[(x + I y)^3]], {x, -2, 2}, {y, -2, 2},ColorFunction -> \"Pastel\", \n ExclusionsStyle -> {None, Purple},Mesh -> None, PlotLabel -> Im[f[(x + I y)^3]],Ticks -> None], {f, $InverseTrigFunctions}]"
+        tb 
     let compute_Button = 
         Button( Name = "Button",
                 Content = "Press me",
@@ -140,27 +141,32 @@ type TestCanvas2() as this  =
                 Background = Brushes.Aqua)
     let input_StackPanel = 
         let sp = StackPanel()
-        do  sp.Children.Add(input_TextBox) |> ignore
-            sp.Children.Add(compute_Button) |> ignore
-            sp.Orientation <- Orientation.Horizontal
+        do  sp.Children.Add(compute_Button) |> ignore
+            sp.Children.Add(input_TextBox) |> ignore
+            sp.Orientation <- Orientation.Vertical
         sp
     
     let result_TextBlock =                    
         let tb = TextBlock()
         tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         tb.FontStyle <- FontStyles.Normal
-        tb.FontSize <- 20.
+        tb.FontSize <- 14.
         tb
-    let result_Viewbox =                    
-        let vb = Viewbox(Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 20.))   
-        
+    let result_Viewbox image =                    
+        let vb = Viewbox()   
+        do  vb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 20.)
+            vb.Child <- image
         vb
-    
+    let result_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Orientation <- Orientation.Vertical
+        sp
+
     let output_StackPanel = 
         let sp = StackPanel()
         do  sp.Children.Add(input_StackPanel) |> ignore
-            sp.Children.Add(result_TextBlock) |> ignore
-            sp.Children.Add(result_Viewbox) |> ignore
+            sp.Children.Add(result_StackPanel) |> ignore
+            //sp.Children.Add(result_Viewbox) |> ignore
             sp.Orientation <- Orientation.Vertical
         sp
     let output_ScrollViewer = 
@@ -182,9 +188,10 @@ type TestCanvas2() as this  =
                 TickFrequency = 5.,
                 IsSnapToTickEnabled = true,
                 IsEnabled = true)        
-        do s.SetValue(Grid.RowProperty, 0)
+        do  s.SetValue(Grid.RowProperty, 0)
+            s.Visibility <- Visibility.Collapsed
         let handleValueChanged (s) = 
-            output_StackPanel.RenderTransform <- 
+            result_StackPanel.RenderTransform <- 
                 let tranforms = TransformGroup()
                 do  //tranforms.Children.Add(TranslateTransform(X = 100., Y = 100.))
                     tranforms.Children.Add(ScaleTransform(ScaleX = 20.0/s,ScaleY = 20.0/s))            
@@ -200,8 +207,7 @@ type TestCanvas2() as this  =
         g 
     let canvas_DockPanel =
         let d = DockPanel()
-        do  d.Children.Add(scaleSlider_Grid) |> ignore
-            
+        do  d.Children.Add(scaleSlider_Grid) |> ignore            
             d.Children.Add(canvas) |> ignore
         d
     let screen_Grid =
@@ -216,16 +222,25 @@ type TestCanvas2() as this  =
     let fetch (text:string) =
         match kernel.IsComputing with 
         | false -> 
-            do  kernel.Compute(text)                
-            let image = Image()
-            let out = (string) kernel.Result
+            do  kernel.Compute(text)            
+            let outText = (string) kernel.Result
             let getGraphicFrom (k:MathKernel) = 
+                let rec getImages i =
+                    let image = Image()
+                    do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
+                        result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+                    match i + 1 = k.Graphics.Length with
+                    | true -> ()
+                    | false -> getImages (i+1)
                 match k.Graphics.Length > 0 with                
-                | true ->
-                    image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[0])
-                    result_Viewbox.Child <- image
-                | false -> ()
-            do  setDisplayedText out
+                | true ->                                        
+                    result_StackPanel.Children.Clear()                                       
+                    result_StackPanel.Children.Add(result_TextBlock) |> ignore
+                    getImages 0 
+                | false -> 
+                    result_StackPanel.Children.Clear()
+                    result_StackPanel.Children.Add(result_TextBlock) |> ignore                    
+            do  setDisplayedText outText
                 getGraphicFrom kernel
         | true -> kernel.Abort()
     let compute = fun (text:string) -> fetch text             
