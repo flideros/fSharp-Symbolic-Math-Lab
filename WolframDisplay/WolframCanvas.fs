@@ -166,7 +166,7 @@ type WolframCanvas() as this  =
             result_StackPanel.Children.Add(messages_TextBlock) |> ignore
             result_StackPanel.Children.Add(print_TextBlock) |> ignore
     let setPngGraphics (k:MathKernel) = 
-        let outText = k.Result.ToString().Contains("-Graphics-")
+        let outText = k.Result.ToString().Contains("-Graphics-") || k.Result.ToString().Contains("-Image-")
         let grahicsCount = k.Graphics.Length
         match outText && grahicsCount = 0 with
         | true -> 
