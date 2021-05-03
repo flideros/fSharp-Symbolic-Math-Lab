@@ -114,7 +114,7 @@ type TestCanvas2() as this  =
             k.HandleEvents <- true;
             k.Input <- null;
             k.LinkArguments <- null;
-            k.PageWidth <- 60;
+            k.PageWidth <- 200;
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm;
             k.UseFrontEnd <- true;
         k
@@ -132,7 +132,7 @@ type TestCanvas2() as this  =
         tb 
     let compute_Button = 
         Button( Name = "Button",
-                Content = "Press me",
+                Content = "Compute",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
                 VerticalAlignment = VerticalAlignment.Top,
@@ -161,6 +161,19 @@ type TestCanvas2() as this  =
         let sp = StackPanel()
         do  sp.Orientation <- Orientation.Vertical
         sp
+
+    let messages_TextBlock =                    
+        let tb = TextBlock()
+        tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+        tb.FontStyle <- FontStyles.Normal
+        tb.FontSize <- 14.
+        tb
+    let print_TextBlock =                    
+        let tb = TextBlock()
+        tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+        tb.FontStyle <- FontStyles.Normal
+        tb.FontSize <- 14.
+        tb
 
     let output_StackPanel = 
         let sp = StackPanel()
@@ -219,30 +232,41 @@ type TestCanvas2() as this  =
     (*Actions*)
     let setDisplayedText = 
         fun text -> result_TextBlock.Text <- text
+    let setGraphicsFrom (k:MathKernel) = 
+        let rec getImages i =
+            let image = Image()
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+            match i + 1 = k.Graphics.Length with
+            | true -> ()
+            | false -> getImages (i+1)
+        match k.Graphics.Length > 0 with                
+        | true ->                                        
+            result_StackPanel.Children.Clear()                                       
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
+            getImages 0 
+            result_StackPanel.Children.Add(messages_TextBlock) |> ignore
+            result_StackPanel.Children.Add(print_TextBlock) |> ignore
+        | false -> 
+            result_StackPanel.Children.Clear()
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
+            result_StackPanel.Children.Add(messages_TextBlock) |> ignore
+            result_StackPanel.Children.Add(print_TextBlock) |> ignore
     let fetch (text:string) =
+        do compute_Button.Content <- "Working"
         match kernel.IsComputing with 
         | false -> 
             do  kernel.Compute(text)            
-            let outText = (string) kernel.Result
-            let getGraphicFrom (k:MathKernel) = 
-                let rec getImages i =
-                    let image = Image()
-                    do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
-                        result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-                    match i + 1 = k.Graphics.Length with
-                    | true -> ()
-                    | false -> getImages (i+1)
-                match k.Graphics.Length > 0 with                
-                | true ->                                        
-                    result_StackPanel.Children.Clear()                                       
-                    result_StackPanel.Children.Add(result_TextBlock) |> ignore
-                    getImages 0 
-                | false -> 
-                    result_StackPanel.Children.Clear()
-                    result_StackPanel.Children.Add(result_TextBlock) |> ignore                    
-            do  setDisplayedText outText
-                getGraphicFrom kernel
-        | true -> kernel.Abort()
+                messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
+                print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
+                result_TextBlock.Text <- (string) kernel.Result
+                setGraphicsFrom kernel
+                compute_Button.Content <- "Compute"
+        | true -> 
+            do  kernel.Abort()
+                messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
+                print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""
+            compute_Button.Content <- "Compute"
     let compute = fun (text:string) -> fetch text             
     
     (**)
