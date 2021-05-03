@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="TestCanvas.fs" />
+    <Compile Include="WolframCanvas.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
 
