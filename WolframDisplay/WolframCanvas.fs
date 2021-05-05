@@ -8,6 +8,8 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
+
+
 (*Test Area*)
 type WolframCanvas() as this  =  
     inherit UserControl()
@@ -18,20 +20,20 @@ type WolframCanvas() as this  =
     do  link.WaitAndDiscardAnswer()
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)
-        do  k.AutoCloseLink <- true;
-            k.CaptureGraphics <- true;
-            k.CaptureMessages <- true;
-            k.CapturePrint <- true;
-            k.GraphicsFormat <- "Automatic";
-            //k.GraphicsHeight <- 0;
-            //k.GraphicsResolution <- 0;
-            //k.GraphicsWidth <- 0;
-            k.HandleEvents <- true;
-            k.Input <- null;
-            k.LinkArguments <- null;
-            k.PageWidth <- 200;
-            k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm;
-            k.UseFrontEnd <- true;
+        do  k.AutoCloseLink <- true
+            k.CaptureGraphics <- true
+            k.CaptureMessages <- true
+            k.CapturePrint <- true
+            k.GraphicsFormat <- "Automatic"
+            //k.GraphicsHeight <- 0
+            //k.GraphicsResolution <- 100
+            //k.GraphicsWidth <- 0
+            k.HandleEvents <- true
+            k.Input <- null
+            k.LinkArguments <- null
+            k.PageWidth <- 200
+            k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
+            k.UseFrontEnd <- true
         k
     
     (*Controls*)
@@ -43,6 +45,7 @@ type WolframCanvas() as this  =
             tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto
             tb.TextWrapping <- TextWrapping.Wrap
             tb.AcceptsReturn <- true
+            tb.FontSize <- 16.
             tb.Text <- "$InverseTrigFunctions = {ArcSin, ArcCos, ArcSec, ArcCsc, ArcTan,ArcCot, ArcSinh, ArcCosh, ArcSech, ArcCsch, ArcTanh, ArcCoth}; \r\n Table[DensityPlot[Im[f[(x + I y)^3]], {x, -2, 2}, {y, -2, 2},ColorFunction -> \"Pastel\", \n ExclusionsStyle -> {None, Purple},Mesh -> None, PlotLabel -> Im[f[(x + I y)^3]],Ticks -> None], {f, $InverseTrigFunctions}]"
         tb 
     let compute_Button = 
@@ -65,7 +68,7 @@ type WolframCanvas() as this  =
         let tb = TextBlock()
         tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         tb.FontStyle <- FontStyles.Normal
-        tb.FontSize <- 14.
+        tb.FontSize <- 16.
         tb
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -102,7 +105,7 @@ type WolframCanvas() as this  =
         do  sv.VerticalScrollBarVisibility <- ScrollBarVisibility.Auto 
             sv.MaxHeight <- 900.
             sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
-            sv.Width <-900.
+            sv.MaxWidth <-1200.
         sv
     
     let canvas = Canvas(ClipToBounds = true)
@@ -117,12 +120,12 @@ type WolframCanvas() as this  =
                 IsSnapToTickEnabled = true,
                 IsEnabled = true)        
         do  s.SetValue(Grid.RowProperty, 0)
-            s.Visibility <- Visibility.Collapsed
+            s.Visibility <- Visibility.Hidden
         let handleValueChanged (s) = 
             result_StackPanel.RenderTransform <- 
                 let tranforms = TransformGroup()
-                do  //tranforms.Children.Add(TranslateTransform(X = 100., Y = 100.))
-                    tranforms.Children.Add(ScaleTransform(ScaleX = 20.0/s,ScaleY = 20.0/s))            
+                //do  tranforms.Children.Add(TranslateTransform(X = 100., Y = 100.))
+                    //tranforms.Children.Add(ScaleTransform(ScaleX = 20.0/s,ScaleY = 20.0/s))            
                 tranforms
                 
         s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
@@ -145,7 +148,7 @@ type WolframCanvas() as this  =
         g
     
     (*Actions*)
-    let setGraphicsFrom (k:MathKernel) = 
+    let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
             let image = Image()
             do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
@@ -165,23 +168,14 @@ type WolframCanvas() as this  =
             result_StackPanel.Children.Add(result_TextBlock) |> ignore            
             result_StackPanel.Children.Add(messages_TextBlock) |> ignore
             result_StackPanel.Children.Add(print_TextBlock) |> ignore
-    let setOtherGraphics (k:MathKernel) =         
-        let grahicsCount = k.Graphics.Length
-        match grahicsCount = 0 with
+    let setGraphicsFromIKernel (k:IKernelLink) =
+        match kernel.Graphics.Length = 0 with
         | true -> 
-            let newInput = 
-                match ((string) k.Result).Contains("{{") with
-                | true -> "Export[\"file2.png\"," + "result[" + input_TextBox.Text + "]]; \r Show[Import[\"file2.png\"]]"
-                | false -> 
-                    match ((string) k.Result).IndexOf("{") = 0 with
-                    | true -> "Export[\"file2.png\"," + "Map[Show," + input_TextBox.Text + "]]; \r Show[Import[\"file2.png\"]]"
-                    | false -> "Export[\"file2.png\"," + input_TextBox.Text + "]; \r Show[Import[\"file2.png\"]]"
-            kernel.Compute(newInput)
-            messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
-            print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
-            //result_TextBlock.Text <- (string) kernel.Result
-            setGraphicsFrom kernel 
-        | false -> ()
+            let grahics = k.EvaluateToTypeset(input_TextBox.Text,0)
+            let image = Image()
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage (grahics)
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+        | false -> ()    
     let fetch (text:string) =
         do compute_Button.Content <- "Working"
         match kernel.IsComputing with 
@@ -190,8 +184,8 @@ type WolframCanvas() as this  =
                 messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
                 print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
                 result_TextBlock.Text <- (string) kernel.Result
-                setGraphicsFrom kernel
-                setOtherGraphics kernel
+                setGraphicsFromKernel kernel
+                setGraphicsFromIKernel link
                 compute_Button.Content <- "Compute"
         | true -> 
             do  kernel.Abort()
