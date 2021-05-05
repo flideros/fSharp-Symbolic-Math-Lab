@@ -18,6 +18,7 @@ type WolframCanvas() as this  =
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()
+        
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)
         do  k.AutoCloseLink <- true
@@ -35,7 +36,6 @@ type WolframCanvas() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
-    
     (*Controls*)
     
     let input_TextBox = 
@@ -103,9 +103,9 @@ type WolframCanvas() as this  =
     let output_ScrollViewer = 
         let sv = new ScrollViewer();
         do  sv.VerticalScrollBarVisibility <- ScrollBarVisibility.Auto 
-            sv.MaxHeight <- 900.
+            sv.MaxHeight <- 800.
             sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
-            sv.MaxWidth <-1200.
+            //sv.MaxWidth <-800.
         sv
     
     let canvas = Canvas(ClipToBounds = true)
@@ -120,7 +120,7 @@ type WolframCanvas() as this  =
                 IsSnapToTickEnabled = true,
                 IsEnabled = true)        
         do  s.SetValue(Grid.RowProperty, 0)
-            s.Visibility <- Visibility.Hidden
+            s.Visibility <- Visibility.Collapsed
         let handleValueChanged (s) = 
             result_StackPanel.RenderTransform <- 
                 let tranforms = TransformGroup()
@@ -165,18 +165,18 @@ type WolframCanvas() as this  =
             result_StackPanel.Children.Add(print_TextBlock) |> ignore
         | false ->             
             result_StackPanel.Children.Clear()
-            result_StackPanel.Children.Add(result_TextBlock) |> ignore            
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
             result_StackPanel.Children.Add(messages_TextBlock) |> ignore
-            result_StackPanel.Children.Add(print_TextBlock) |> ignore
-    let setGraphicsFromIKernel (k:IKernelLink) =
+            result_StackPanel.Children.Add(print_TextBlock) |> ignore    
+    let setGraphicsFromIKernel (k:IKernelLink) = 
         match kernel.Graphics.Length = 0 with
-        | true -> 
-            let grahics = k.EvaluateToTypeset(input_TextBox.Text,0)
-            let image = Image()
-            do  image.Source <- ControlLibrary.Image.convertDrawingImage (grahics)
-                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+        | true ->              
+            let graphics = k.EvaluateToTypeset(input_TextBox.Text,0)
+            let image = Image()            
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore                
         | false -> ()    
-    let fetch (text:string) =
+    let fetch (text:string) =        
         do compute_Button.Content <- "Working"
         match kernel.IsComputing with 
         | false -> 
@@ -197,6 +197,8 @@ type WolframCanvas() as this  =
     (**)
     do  output_ScrollViewer.Content <- output_StackPanel
         canvas.Children.Add(output_ScrollViewer) |> ignore
+        compute "Plot[Sin[x], {x, 0, 6 Pi}]" // initialize graphic buffer so IKernal works if called first.
+        result_StackPanel.Children.Clear()
         this.Content <- screen_Grid
 
         //add event handler to each button
