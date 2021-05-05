@@ -165,27 +165,33 @@ type WolframCanvas() as this  =
             result_StackPanel.Children.Add(result_TextBlock) |> ignore            
             result_StackPanel.Children.Add(messages_TextBlock) |> ignore
             result_StackPanel.Children.Add(print_TextBlock) |> ignore
-    let setPngGraphics (k:MathKernel) = 
-        let outText = k.Result.ToString().Contains("-Graphics-") || k.Result.ToString().Contains("-Image-")
+    let setOtherGraphics (k:MathKernel) =         
         let grahicsCount = k.Graphics.Length
-        match outText && grahicsCount = 0 with
+        match grahicsCount = 0 with
         | true -> 
-            kernel.Compute("Export[\"file2.png\","+ input_TextBox.Text + "]; \r Show[Import[\"file2.png\"]]")
+            let newInput = 
+                match ((string) k.Result).Contains("{{") with
+                | true -> "Export[\"file2.png\"," + "result[" + input_TextBox.Text + "]]; \r Show[Import[\"file2.png\"]]"
+                | false -> 
+                    match ((string) k.Result).IndexOf("{") = 0 with
+                    | true -> "Export[\"file2.png\"," + "Map[Show," + input_TextBox.Text + "]]; \r Show[Import[\"file2.png\"]]"
+                    | false -> "Export[\"file2.png\"," + input_TextBox.Text + "]; \r Show[Import[\"file2.png\"]]"
+            kernel.Compute(newInput)
             messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
             print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
-            result_TextBlock.Text <- (string) kernel.Result
+            //result_TextBlock.Text <- (string) kernel.Result
             setGraphicsFrom kernel 
         | false -> ()
     let fetch (text:string) =
         do compute_Button.Content <- "Working"
         match kernel.IsComputing with 
         | false -> 
-            do  kernel.Compute(text)            
+            do  kernel.Compute(text)
                 messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
                 print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
                 result_TextBlock.Text <- (string) kernel.Result
                 setGraphicsFrom kernel
-                setPngGraphics kernel
+                setOtherGraphics kernel
                 compute_Button.Content <- "Compute"
         | true -> 
             do  kernel.Abort()
