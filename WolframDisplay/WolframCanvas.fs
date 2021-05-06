@@ -9,7 +9,6 @@ open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
 
-
 (*Test Area*)
 type WolframCanvas() as this  =  
     inherit UserControl()    
@@ -18,7 +17,7 @@ type WolframCanvas() as this  =
     let mutable fontSizePoints = ControlLibrary.SharedValue(44)
     
     (*Wolfram Kernel*)
-    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
+    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()
         
     let kernel = 
@@ -39,6 +38,23 @@ type WolframCanvas() as this  =
             k.UseFrontEnd <- true
         k
     (*Controls*)
+    
+    let mathPictureBox = 
+        let mb = new UI.MathPictureBox()
+        do  mb.Link <- link
+            //mb.Size <- Drawing.Size(200,200)
+            mb.Scale(Drawing.SizeF(7.f,7.f))
+            mb.MathCommand <- "Welcome"
+        mb
+    let mathBox_Grid = 
+        let g = Grid()
+        let host = new System.Windows.Forms.Integration.WindowsFormsHost()
+        do  host.Child <- mathPictureBox
+            g.Margin <-Thickness(Left = 800., Top = 20., Right = 0., Bottom = 0.)
+            //g.Height <- 200.
+            //g.Width <- 200.
+            g.Children.Add(host) |> ignore
+        g
     
     let fontSize_Volume = 
         let v = ControlLibrary.Volume("Font Size",(5,80),fontSizePoints)
@@ -163,8 +179,8 @@ type WolframCanvas() as this  =
         d
     let screen_Grid =
         let g = Grid()
-        do g.SetValue(Grid.RowProperty, 1)        
-        do g.Children.Add(canvas_DockPanel) |> ignore        
+        do  g.SetValue(Grid.RowProperty, 1)        
+        do  g.Children.Add(canvas_DockPanel) |> ignore
         g
     
     (*Actions*)
@@ -198,6 +214,7 @@ type WolframCanvas() as this  =
         | false -> ()    
     let fetch (text:string) =        
         do compute_Button.Content <- "Working"
+           mathPictureBox.MathCommand <- text
         match kernel.IsComputing with 
         | false -> 
             do  kernel.Compute(text)
@@ -217,7 +234,9 @@ type WolframCanvas() as this  =
     (**)
     do  output_ScrollViewer.Content <- output_StackPanel
         canvas.Children.Add(output_ScrollViewer) |> ignore
+        canvas.Children.Add(mathBox_Grid) |> ignore
         compute "Plot[Sin[x], {x, 0, 6 Pi}]" // initialize graphic buffer so IKernal works if called first.
+        mathPictureBox.MathCommand <- "\"Wolfram Canvas\""
         result_StackPanel.Children.Clear()
         this.Content <- screen_Grid
 
