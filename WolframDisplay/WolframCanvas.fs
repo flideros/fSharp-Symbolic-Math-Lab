@@ -15,7 +15,7 @@ type WolframCanvas() as this  =
     inherit UserControl()    
     do Install() |> ignore
     
-    let mutable fontSizePixels = ControlLibrary.SharedValue(44)
+    let mutable fontSizePoints = ControlLibrary.SharedValue(44)
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -41,16 +41,18 @@ type WolframCanvas() as this  =
     (*Controls*)
     
     let fontSize_Volume = 
-        let v = ControlLibrary.Volume("Font Size",(5,80),fontSizePixels)
+        let v = ControlLibrary.Volume("Font Size",(5,80),fontSizePoints)
         do  v.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         v
     let input_TextBox = 
         let tb = TextBox()
         do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            tb.VerticalScrollBarVisibility <- ScrollBarVisibility.Auto
-            tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto
+            tb.VerticalScrollBarVisibility <- ScrollBarVisibility.Visible
+            tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Visible
             tb.TextWrapping <- TextWrapping.Wrap
             tb.AcceptsReturn <- true
+            tb.MaxHeight  <- 500.
+            tb.MaxWidth <- 700.
             tb.FontSize <- 16.
             tb.Text <- "$InverseTrigFunctions = {ArcSin, ArcCos, ArcSec, ArcCsc, ArcTan,ArcCot, ArcSinh, ArcCosh, ArcSech, ArcCsch, ArcTanh, ArcCoth}; \r\n Table[DensityPlot[Im[f[(x + I y)^3]], {x, -2, 2}, {y, -2, 2},ColorFunction -> \"Pastel\", \n ExclusionsStyle -> {None, Purple},Mesh -> None, PlotLabel -> Im[f[(x + I y)^3]],Ticks -> None], {f, $InverseTrigFunctions}]"
         tb 
@@ -74,6 +76,7 @@ type WolframCanvas() as this  =
         do  sp.Children.Add(command_StackPanel) |> ignore            
             sp.Children.Add(input_TextBox) |> ignore
             sp.Orientation <- Orientation.Vertical
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
         sp
     
     let result_TextBlock =                    
@@ -81,6 +84,10 @@ type WolframCanvas() as this  =
         tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         tb.FontStyle <- FontStyles.Normal
         tb.FontSize <- 16.
+        tb.TextWrapping <- TextWrapping.Wrap
+        //tb.MaxHeight  <- 500.
+        tb.HorizontalAlignment <- HorizontalAlignment.Left
+        tb.MaxWidth <- 700.
         tb
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -90,6 +97,7 @@ type WolframCanvas() as this  =
     let result_StackPanel = 
         let sp = StackPanel()
         do  sp.Orientation <- Orientation.Vertical
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
         sp
 
     let messages_TextBlock =                    
@@ -109,15 +117,15 @@ type WolframCanvas() as this  =
         let sp = StackPanel()
         do  sp.Children.Add(input_StackPanel) |> ignore
             sp.Children.Add(result_StackPanel) |> ignore
-            //sp.Children.Add(result_Viewbox) |> ignore
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
             sp.Orientation <- Orientation.Vertical
         sp
     let output_ScrollViewer = 
         let sv = new ScrollViewer();
         do  sv.VerticalScrollBarVisibility <- ScrollBarVisibility.Auto 
-            sv.MaxHeight <- 800.
+            sv.MaxHeight <- 700.
             sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
-            //sv.MaxWidth <-800.
+            sv.MaxWidth <-800.
         sv
     
     let canvas = Canvas(ClipToBounds = true)
@@ -183,7 +191,7 @@ type WolframCanvas() as this  =
     let setGraphicsFromIKernel (k:IKernelLink) = 
         match kernel.Graphics.Length = 0 with
         | true ->              
-            let graphics = k.EvaluateToTypeset("Style[" + input_TextBox.Text + ",FontSize -> " + fontSizePixels.Get.ToString() + "]",0)
+            let graphics = k.EvaluateToTypeset("Style[" + input_TextBox.Text + ",FontSize -> " + fontSizePoints.Get.ToString() + "]",0)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore                
