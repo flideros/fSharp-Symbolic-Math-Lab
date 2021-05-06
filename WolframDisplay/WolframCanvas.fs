@@ -12,8 +12,10 @@ open Wolfram.NETLink
 
 (*Test Area*)
 type WolframCanvas() as this  =  
-    inherit UserControl()
+    inherit UserControl()    
     do Install() |> ignore
+    
+    let mutable fontSizePixels = ControlLibrary.SharedValue(44)
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -27,7 +29,7 @@ type WolframCanvas() as this  =
             k.CapturePrint <- true
             k.GraphicsFormat <- "Automatic"
             //k.GraphicsHeight <- 0
-            //k.GraphicsResolution <- 100
+            k.GraphicsResolution <- 100
             //k.GraphicsWidth <- 0
             k.HandleEvents <- true
             k.Input <- null
@@ -38,6 +40,10 @@ type WolframCanvas() as this  =
         k
     (*Controls*)
     
+    let fontSize_Volume = 
+        let v = ControlLibrary.Volume("Font Size",(5,80),fontSizePixels)
+        do  v.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+        v
     let input_TextBox = 
         let tb = TextBox()
         do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
@@ -57,9 +63,15 @@ type WolframCanvas() as this  =
                 Width = 53.,
                 Height = 33.,
                 Background = Brushes.Aqua)
-    let input_StackPanel = 
+    let command_StackPanel = 
         let sp = StackPanel()
         do  sp.Children.Add(compute_Button) |> ignore
+            sp.Children.Add(fontSize_Volume) |> ignore
+            sp.Orientation <- Orientation.Horizontal
+        sp
+    let input_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Children.Add(command_StackPanel) |> ignore            
             sp.Children.Add(input_TextBox) |> ignore
             sp.Orientation <- Orientation.Vertical
         sp
@@ -171,7 +183,7 @@ type WolframCanvas() as this  =
     let setGraphicsFromIKernel (k:IKernelLink) = 
         match kernel.Graphics.Length = 0 with
         | true ->              
-            let graphics = k.EvaluateToTypeset(input_TextBox.Text,0)
+            let graphics = k.EvaluateToTypeset("Style[" + input_TextBox.Text + ",FontSize -> " + fontSizePixels.Get.ToString() + "]",0)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore                
