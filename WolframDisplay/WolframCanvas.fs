@@ -73,8 +73,16 @@ type WolframCanvas() as this  =
             tb.Text <- "$InverseTrigFunctions = {ArcSin, ArcCos, ArcSec, ArcCsc, ArcTan,ArcCot, ArcSinh, ArcCosh, ArcSech, ArcCsch, ArcTanh, ArcCoth}; \r\n Table[DensityPlot[Im[f[(x + I y)^3]], {x, -2, 2}, {y, -2, 2},ColorFunction -> \"Pastel\", \n ExclusionsStyle -> {None, Purple},Mesh -> None, PlotLabel -> Im[f[(x + I y)^3]],Ticks -> None], {f, $InverseTrigFunctions}]"
         tb 
     let compute_Button = 
-        Button( Name = "Button",
-                Content = "Compute",
+        Button( Content = "Compute",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
+                VerticalAlignment = VerticalAlignment.Top,
+                Width = 53.,
+                Height = 33.,
+                Background = Brushes.Aqua)
+    let animationWindow_Button = 
+        Button( Content = "Pop Out",
+                ToolTip = "Add 't' to a plot funtion to annimate it",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
                 VerticalAlignment = VerticalAlignment.Top,
@@ -85,6 +93,7 @@ type WolframCanvas() as this  =
         let sp = StackPanel()
         do  sp.Children.Add(compute_Button) |> ignore
             sp.Children.Add(fontSize_Volume) |> ignore
+            sp.Children.Add(animationWindow_Button) |> ignore
             sp.Orientation <- Orientation.Horizontal
         sp
     let input_StackPanel = 
@@ -214,6 +223,7 @@ type WolframCanvas() as this  =
         | false -> ()    
     let fetch (text:string) =        
         do compute_Button.Content <- "Working"
+           animationWindow_Button.Content <- "Busy"
            mathPictureBox.MathCommand <- text
         match kernel.IsComputing with 
         | false -> 
@@ -224,21 +234,31 @@ type WolframCanvas() as this  =
                 setGraphicsFromKernel kernel
                 setGraphicsFromIKernel link
                 compute_Button.Content <- "Compute"
+                animationWindow_Button.Content <- "Pop Out"
         | true -> 
             do  kernel.Abort()
                 messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
                 print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""
             compute_Button.Content <- "Compute"
-    let compute = fun (text:string) -> fetch text             
+    let compute = fun (text:string) -> fetch text 
+    let loadCodeBlock = fun (block:string) -> kernel.Compute(block)
+    let popOut = fun (code:string) -> 
+        compute_Button.Content <- "Busy"
+        animationWindow_Button.Content <- "Working"
+        kernel.Compute("AnimationWindow[" + code + ",{t,0,30},Format -> \"StandardForm\", FramePause -> 0.2]")
+        compute_Button.Content <- "Compute"
+        animationWindow_Button.Content <- "Pop Out"
     
     (**)
     do  output_ScrollViewer.Content <- output_StackPanel
         canvas.Children.Add(output_ScrollViewer) |> ignore
         canvas.Children.Add(mathBox_Grid) |> ignore
         compute "Plot[Sin[x], {x, 0, 6 Pi}]" // initialize graphic buffer so IKernal works if called first.
+        loadCodeBlock WolframCodeBlock.animationWindow
         mathPictureBox.MathCommand <- "\"Wolfram Canvas\""
         result_StackPanel.Children.Clear()
         this.Content <- screen_Grid
 
         //add event handler to each button
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> compute input_TextBox.Text))
+        animationWindow_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> popOut input_TextBox.Text))
