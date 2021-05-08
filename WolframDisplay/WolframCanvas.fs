@@ -84,6 +84,7 @@ type WolframCanvas() as this  =
             sp.Orientation <- Orientation.Horizontal
             sp.VerticalAlignment <- VerticalAlignment.Center
         sp
+    
     let input_TextBox = 
         let tb = TextBox()
         do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
@@ -153,37 +154,9 @@ type WolframCanvas() as this  =
         sv
     
     let canvas = Canvas(ClipToBounds = true)
-    let scale_Slider =
-        let s = 
-            Slider(
-                Margin = Thickness(left = 0., top = 20., right = 0., bottom = 0.),
-                Minimum = 5.,
-                Maximum = 100.,
-                TickPlacement = System.Windows.Controls.Primitives.TickPlacement.BottomRight,
-                TickFrequency = 5.,
-                IsSnapToTickEnabled = true,
-                IsEnabled = true)        
-        do  s.SetValue(Grid.RowProperty, 0)
-            s.Visibility <- Visibility.Collapsed
-        let handleValueChanged (s) = 
-            result_StackPanel.RenderTransform <- 
-                let tranforms = TransformGroup()
-                //do  tranforms.Children.Add(TranslateTransform(X = 100., Y = 100.))
-                    //tranforms.Children.Add(ScaleTransform(ScaleX = 20.0/s,ScaleY = 20.0/s))            
-                tranforms
-                
-        s.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ e -> handleValueChanged (e.NewValue)))
-        s
-    let scaleSlider_Grid =
-        let g = Grid()
-        do 
-            g.SetValue(DockPanel.DockProperty,Dock.Top)
-            g.Children.Add(scale_Slider) |> ignore
-        g 
     let canvas_DockPanel =
         let d = DockPanel()
-        do  d.Children.Add(scaleSlider_Grid) |> ignore            
-            d.Children.Add(canvas) |> ignore
+        do  d.Children.Add(canvas) |> ignore
         d
     let screen_Grid =
         let g = Grid()
@@ -249,13 +222,11 @@ type WolframCanvas() as this  =
         setButtonsText "Busy"
         mathPictureBox.MathCommand <- code
         setButtonsText "MathBox"
-
-    let loadAsteroids = fun () -> kernel.Compute( WolframCodeBlock.asteroids() )
-    let launchAsteroids = fun () -> kernel.Compute("Asteroids[]")
-    let asteroids = fun n -> 
+    let asteroids = fun () -> 
+        let loadAsteroids = fun () -> kernel.Compute( WolframCodeBlock.asteroids() )
+        let launchAsteroids = fun () -> kernel.Compute("Asteroids[]")
         do setButtonsText "Busy" |> loadAsteroids |> launchAsteroids                        
            setButtonsText (destination_ComboBox.SelectedItem.ToString())
-           n
     
     let send = fun code ->
         match (string) destination_ComboBox.SelectedValue with
@@ -272,9 +243,8 @@ type WolframCanvas() as this  =
         kernel.Compute( WolframCodeBlock.animationWindow )
         mathPictureBox.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44]"
         result_StackPanel.Children.Clear()        
-        this.Content <- screen_Grid        
+        this.Content <- screen_Grid
 
         //add event handlers      
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> send input_TextBox.Text)) 
-
         destination_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _-> setButtonsText (destination_ComboBox.SelectedValue.ToString())))
