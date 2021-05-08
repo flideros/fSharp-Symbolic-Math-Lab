@@ -8,7 +8,6 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
-
 (*Test Area*)
 type WolframCanvas() as this  =  
     inherit UserControl()    
@@ -65,17 +64,8 @@ type WolframCanvas() as this  =
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Compute"
             cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box"]
-        cb
-    let asteroids_Button = 
-        Button( Name = "Asteroids",
-                Content = "Asteroids",
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
-                VerticalAlignment = VerticalAlignment.Top,
-                Width = 60.,
-                Height = 50.,
-                Background = Brushes.Aqua)
+            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box";"Asteroids"]
+        cb    
     let compute_Button = 
         Button( Name = "Compute",
                 Content = "Compute",
@@ -90,7 +80,7 @@ type WolframCanvas() as this  =
         do  sp.Children.Add(compute_Button) |> ignore
             sp.Children.Add(destination_ComboBox) |> ignore
             sp.Children.Add(mathSize_Volume) |> ignore 
-            sp.Children.Add(asteroids_Button) |> ignore
+            //sp.Children.Add(asteroids_Button) |> ignore
             sp.Orientation <- Orientation.Horizontal
             sp.VerticalAlignment <- VerticalAlignment.Center
         sp
@@ -259,16 +249,20 @@ type WolframCanvas() as this  =
         setButtonsText "Busy"
         mathPictureBox.MathCommand <- code
         setButtonsText "MathBox"
+
+    let loadAsteroids = fun () -> kernel.Compute( WolframCodeBlock.asteroids() )
+    let launchAsteroids = fun () -> kernel.Compute("Asteroids[]")
+    let asteroids = fun n -> 
+        do setButtonsText "Busy" |> loadAsteroids |> launchAsteroids                        
+           setButtonsText (destination_ComboBox.SelectedItem.ToString())
+           n
     
     let send = fun code ->
         match (string) destination_ComboBox.SelectedValue with
         | "Animate" -> sendToAnimationWindow code
         | "Math Picture Box" -> sendToMathPictureBox code
+        | "Asteroids" -> asteroids()
         | _ -> sendToCompute code
-
-    let loadAsteroids = fun () -> kernel.Compute( WolframCodeBlock.asteroids )
-    let launchAsteroids = fun () -> kernel.Compute("Asteroids[]")
-    let asteroids = fun n -> n |> loadAsteroids |> launchAsteroids
 
     (*Initialize*)
     do  output_ScrollViewer.Content <- output_StackPanel
@@ -282,6 +276,5 @@ type WolframCanvas() as this  =
 
         //add event handlers      
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> send input_TextBox.Text)) 
-        asteroids_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> asteroids ()))
 
         destination_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _-> setButtonsText (destination_ComboBox.SelectedValue.ToString())))
