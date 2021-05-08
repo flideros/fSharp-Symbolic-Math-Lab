@@ -1,0 +1,124 @@
+﻿Needs["NETLink`"]
+
+(* Determines the circumcircle of a triangle. Code from Eric Weisstein's PlaneGeometry.m, available on MathWorld. *)
+Circumcircle[{{x1_,y1_}, {x2_,y2_}, {x3_,y3_}}] :=
+	Module[{a, d, f, g},
+		a = Det[{{x1,y1,1}, {x2,y2,1}, {x3,y3,1}}];
+		d = -1/2 Det[{{x1^2+y1^2,y1,1}, {x2^2+y2^2,y2,1}, {x3^2+y3^2,y3,1}}];
+		f = 1/2 Det[{{x1^2+y1^2,x1,1}, {x2^2+y2^2,x2,1}, {x3^2+y3^2,x3,1}}];
+		g = -Det[{{x1^2+y1^2,x1,y1}, {x2^2+y2^2,x2,y2}, {x3^2+y3^2,x3,y3}}];
+		Circle[{-d/a,-f/a}, Sqrt[(f^2+d^2)/a^2-g/a]]
+	]
+
+
+(* This is the function that is called to update the Image that the PictureBox holds. Although it creates
+   temporary .NET objects, there is no need to wrap it in NETBlock because it is only called from event callback
+   functions (onMouseMove and onMouseDown), which are always implicitly wrapped in NETBlock by the internals
+   of .NET/Link.
+*)
+updateImage[pictureBox_?NETObjectQ, vertices_List, {blackPen_, redPen_, bluePen_, blackBrush_}] :=
+	Module[{offScreenBmp, g, circumCenter, circumRadius, midPoints},
+		(* Create an offscreen bitmap and obtain a Graphics object from it that we can use to draw
+		   into the bitmap.
+		*)
+		offScreenBmp = NETNew["System.Drawing.Bitmap", pictureBox@Width, pictureBox@Height]; 
+		g = Graphics`FromImage[offScreenBmp];
+		
+		(* Draw the various lines, points, and circle. For some reason, FillEllipse alone doesn't create a nice small
+		   filled circle, so we also call DrawEllipse to fill in some points on the boundary.
+		*)
+		g@FillEllipse[blackBrush, #1, #2, 6, 6]& @@@ (vertices - 3); 
+		g@DrawEllipse[blackPen, #1, #2, 6, 6]& @@@ (vertices - 3);
+		g@DrawLine[blackPen, #1[[1]], #1[[2]], #2[[1]], #2[[2]]]& @@@ Partition[vertices ~Append~ First[vertices], 2, 1];
+		If[Length[vertices] == 3,
+			{circumCenter, circumRadius} = Round[List @@ Circumcircle[vertices]];
+			g@DrawEllipse[redPen, #1, #2, 6, 6]& @@ (circumCenter - 3);  (* 3 is the radius of the points for vertices. *)
+			g@DrawEllipse[bluePen, #1, #2, 2 circumRadius, 2 circumRadius]& @@ (circumCenter - circumRadius);
+			midpoints = Round[(#1 + #2)/2 & @@@ Partition[vertices ~Append~ First[vertices], 2, 1]];
+			g@DrawLine[redPen, #1, #2, circumCenter[[1]], circumCenter[[2]]]& @@@ midpoints;
+		];
+		
+		(* Set the pictureBox's Image to be the bitmap we have just created and drawn into. Call Refresh() to
+		   force an immediate redraw, which improves smoothness of the animation while dragging.
+		*)
+		pictureBox@Image = offScreenBmp;
+		pictureBox@Refresh[]
+	]
+	
+	
+CircumcircleInteractive[] :=
+	NETBlock[
+		Module[{form, pictureBox, vertices, draggingVertex, onMouseMove, onMouseDown, lastX, lastY,
+					blackBrush, redPen, bluePen, blackPen},
+			InstallNET[];
+			
+			(* First load some classes from which we need to call static members. No assemblies need to be loaded
+			   because the System.Windows.Forms and System.Drawing assemblies are preloaded by .NET/Link.
+			*)
+			LoadNETType["System.Drawing.Color"];
+			LoadNETType["System.Windows.Forms.DockStyle"];
+			LoadNETType["System.Windows.Forms.Cursors"];
+			LoadNETType["System.Drawing.Graphics"];
+			
+			(* Now create the main form and picturebox, and set the desired properties. *)
+			form = NETNew["System.Windows.Forms.Form"];
+			form@Text = "Circumcircle";
+			form@Width = 350;
+			form@Height = 350;
+			pictureBox = NETNew["System.Windows.Forms.PictureBox"];
+			pictureBox@Parent = form;
+			pictureBox@Dock = DockStyle`Fill;
+			pictureBox@BackColor = Color`LightGray;
+			
+			(* Create these drawing resources just once and reuse them in every call to updateImage[]. *)
+			blackBrush = NETNew["System.Drawing.SolidBrush", Color`Black];
+			redPen = NETNew["System.Drawing.Pen", Color`Red];
+			bluePen = NETNew["System.Drawing.Pen", Color`Blue];
+			blackPen = NETNew["System.Drawing.Pen", Color`Black];
+			
+			(* Wire up the event callbacks. *)
+			AddEventHandler[pictureBox@MouseDown, onMouseDown];
+			AddEventHandler[pictureBox@MouseMove, onMouseMove];
+			AddEventHandler[pictureBox@MouseUp, Clear[draggingVertex]&];
+			
+			(* Define the event callback functions. *)
+			onMouseDown[sender_, mouseEvtArgs_] :=
+				Module[{xPos, yPos},
+					{xPos, yPos} = {mouseEvtArgs@X, mouseEvtArgs@Y};
+					If[Length[vertices] < 3,
+						AppendTo[vertices, {xPos, yPos}];
+						updateImage[sender, vertices, {blackPen, redPen, bluePen, blackBrush}],
+					(* else *)
+						draggingVertex = 
+							Scan[
+								If[Sqrt[(#[[1,1]] - xPos)^2 + (#[[1,2]] - yPos)^2] < 6,
+									Return[#[[2]]]
+								]&,
+								Thread[{vertices, {1,2,3}}]
+							];
+						If[IntegerQ[draggingVertex],
+							{lastX, lastY} = {xPos, yPos};
+						]
+					]
+				];
+			onMouseMove[sender_, mouseEvtArgs_] :=
+				Module[{xPos, yPos, isCloseToAnyVertex},
+					{xPos, yPos} = {mouseEvtArgs@X, mouseEvtArgs@Y};
+					Which[
+						IntegerQ[draggingVertex],
+							(* Do the drag *)
+							vertices[[draggingVertex]] += {xPos - lastX, yPos - lastY};
+							{lastX, lastY} = {xPos, yPos};
+							updateImage[sender, vertices, {blackPen, redPen, bluePen, blackBrush}],
+						Length[vertices] == 3,
+							(* Set the Hand cursor if close to any of the vertices. *)
+							isCloseToAnyVertex = Scan[If[Sqrt[(#[[1]] - xPos)^2 + (#[[2]] - yPos)^2] < 6, Return[True]]&, vertices];
+							sender@Cursor = If[TrueQ[isCloseToAnyVertex], Cursors`Hand, Cursors`Arrow]
+					];
+				];
+				
+			(* Initialize and run modally. *)
+			vertices = {};
+			DoNETModal[form]
+		]
+	]

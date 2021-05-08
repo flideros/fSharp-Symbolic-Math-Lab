@@ -7,12 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="AsteroidsGame.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Compile Include="WolframCodeBlocks.fs" />
     <Compile Include="WolframCanvas.fs" />
     <None Include="Script.fsx" />
+    <Content Include="AnimationWindow.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="AsteroidsGame.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestCode.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="CodeBlocks.txt" />
   </ItemGroup>
 
   <ItemGroup>

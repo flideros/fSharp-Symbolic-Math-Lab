@@ -64,7 +64,7 @@ type WolframCanvas() as this  =
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Compute"
             cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box";"Asteroids"]
+            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box";"Asteroids";"Load Test Code";"Run Code"]
         cb    
     let compute_Button = 
         Button( Name = "Compute",
@@ -221,30 +221,66 @@ type WolframCanvas() as this  =
     let sendToMathPictureBox = fun (code:string) ->
         setButtonsText "Busy"
         mathPictureBox.MathCommand <- code
-        setButtonsText "MathBox"
+        setButtonsText "Math Box"
     let asteroids = fun () -> 
         let loadAsteroids = fun () -> kernel.Compute( WolframCodeBlock.asteroids() )
         let launchAsteroids = fun () -> kernel.Compute("Asteroids[]")
         do setButtonsText "Busy" |> loadAsteroids |> launchAsteroids                        
            setButtonsText (destination_ComboBox.SelectedItem.ToString())
-    
+    let loadTestCode = fun () -> 
+        do  setButtonsText "Busy" 
+        match kernel.IsComputing with 
+        | false -> 
+            do
+            kernel.Compute( WolframCodeBlock.testCode )        
+                                   
+            messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
+            print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
+            result_TextBlock.Text <- WolframCodeBlock.testCode
+            input_TextBox.Text <- "Enter a function to compute"
+            destination_ComboBox.SelectedItem <- "Run Code"             
+            setButtonsText (destination_ComboBox.SelectedItem.ToString())
+            result_StackPanel.Children.Clear()                                       
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
+            result_StackPanel.Children.Add(messages_TextBlock) |> ignore
+            result_StackPanel.Children.Add(print_TextBlock) |> ignore
+        | true -> ()
+    let RunCode = fun () -> 
+        do  setButtonsText "Busy" 
+        match kernel.IsComputing with 
+        | false -> 
+            do
+            kernel.Compute( input_TextBox.Text )//mathPictureBox.MathCommand <- input_TextBox.Text//                                    
+            messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
+            print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
+            result_TextBlock.Text <- kernel.Result.ToString()
+            input_TextBox.Text <- "Enter a function to compute"
+            destination_ComboBox.SelectedItem <- "Run Code"             
+            setButtonsText (destination_ComboBox.SelectedItem.ToString())
+            result_StackPanel.Children.Clear()                                       
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
+            result_StackPanel.Children.Add(messages_TextBlock) |> ignore
+            result_StackPanel.Children.Add(print_TextBlock) |> ignore
+        | true -> ()
+
     let send = fun code ->
         match (string) destination_ComboBox.SelectedValue with
         | "Animate" -> sendToAnimationWindow code
         | "Math Picture Box" -> sendToMathPictureBox code
         | "Asteroids" -> asteroids()
+        | "Load Test Code" -> loadTestCode ()
+        | "Run Code" -> RunCode ()
         | _ -> sendToCompute code
 
     (*Initialize*)
     do  output_ScrollViewer.Content <- output_StackPanel
         canvas.Children.Add(output_ScrollViewer) |> ignore
         canvas.Children.Add(mathBox_Grid) |> ignore
-        sendToCompute "Plot[Sin[x], {x, 0, 6 Pi}]" // initialize graphic buffer so IKernal works if called first.
         kernel.Compute( WolframCodeBlock.animationWindow )
         mathPictureBox.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44]"
         result_StackPanel.Children.Clear()        
         this.Content <- screen_Grid
 
-        //add event handlers      
+        //add event handlers
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> send input_TextBox.Text)) 
         destination_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _-> setButtonsText (destination_ComboBox.SelectedValue.ToString())))
