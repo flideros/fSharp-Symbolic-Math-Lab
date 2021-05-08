@@ -18,8 +18,7 @@ type WolframCanvas() as this  =
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
-    do  link.WaitAndDiscardAnswer()
-        
+    do  link.WaitAndDiscardAnswer()        
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)
         do  k.AutoCloseLink <- true
@@ -37,12 +36,11 @@ type WolframCanvas() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
-    (*Controls*)
     
+    (*Controls*)    
     let mathPictureBox = 
         let mb = new UI.MathPictureBox()
         do  mb.Link <- link
-            //mb.Size <- Drawing.Size(200,200)
             mb.Scale(Drawing.SizeF(7.f,7.f))
             mb.MathCommand <- "Welcome"
         mb
@@ -51,38 +49,27 @@ type WolframCanvas() as this  =
         let host = new System.Windows.Forms.Integration.WindowsFormsHost()
         do  host.Child <- mathPictureBox
             g.Margin <-Thickness(Left = 800., Top = 20., Right = 0., Bottom = 0.)
-            //g.Height <- 200.
-            //g.Width <- 200.
             g.Children.Add(host) |> ignore
         g
     
-    let fontSize_Volume = 
-        let v = ControlLibrary.Volume("Font Size",(5,80),fontSizePoints)
+    let mathSize_Volume = 
+        let v = ControlLibrary.Volume("Compute Math Size",(5,80),fontSizePoints)
         do  v.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-        v
-    let input_TextBox = 
-        let tb = TextBox()
-        do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            tb.VerticalScrollBarVisibility <- ScrollBarVisibility.Visible
-            tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Visible
-            tb.TextWrapping <- TextWrapping.Wrap
-            tb.AcceptsReturn <- true
-            tb.MaxHeight  <- 500.
-            tb.MaxWidth <- 700.
-            tb.FontSize <- 16.
-            tb.Text <- "$InverseTrigFunctions = {ArcSin, ArcCos, ArcSec, ArcCsc, ArcTan,ArcCot, ArcSinh, ArcCosh, ArcSech, ArcCsch, ArcTanh, ArcCoth}; \r\n Table[DensityPlot[Im[f[(x + I y)^3]], {x, -2, 2}, {y, -2, 2},ColorFunction -> \"Pastel\", \n ExclusionsStyle -> {None, Purple},Mesh -> None, PlotLabel -> Im[f[(x + I y)^3]],Ticks -> None], {f, $InverseTrigFunctions}]"
-        tb 
+        v    
+    let destination_ComboBox =
+        let cb = ComboBox()        
+        do  cb.Text <- "Output Destination"
+            cb.Width <- 200.
+            cb.Height <- 30.
+            cb.FontSize <- 18.
+            cb.VerticalContentAlignment <- VerticalAlignment.Center
+            cb.SelectedItem <- "Compute"
+            cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box"]
+        cb
     let compute_Button = 
-        Button( Content = "Compute",
-                HorizontalAlignment = HorizontalAlignment.Left,
-                Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
-                VerticalAlignment = VerticalAlignment.Top,
-                Width = 53.,
-                Height = 33.,
-                Background = Brushes.Aqua)
-    let animationWindow_Button = 
-        Button( Content = "Pop Out",
-                ToolTip = "Add 't' to a plot funtion to annimate it",
+        Button( Name = "Compute",
+                Content = "Compute",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
                 VerticalAlignment = VerticalAlignment.Top,
@@ -92,10 +79,22 @@ type WolframCanvas() as this  =
     let command_StackPanel = 
         let sp = StackPanel()
         do  sp.Children.Add(compute_Button) |> ignore
-            sp.Children.Add(fontSize_Volume) |> ignore
-            sp.Children.Add(animationWindow_Button) |> ignore
+            sp.Children.Add(destination_ComboBox) |> ignore
+            sp.Children.Add(mathSize_Volume) |> ignore            
             sp.Orientation <- Orientation.Horizontal
         sp
+    let input_TextBox = 
+        let tb = TextBox()
+        do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            tb.VerticalScrollBarVisibility <- ScrollBarVisibility.Visible
+            tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Visible
+            tb.TextWrapping <- TextWrapping.Wrap
+            tb.AcceptsReturn <- true
+            tb.MaxHeight  <- 300.
+            tb.MaxWidth <- 700.
+            tb.FontSize <- 16.
+            tb.Text <- "$InverseTrigFunctions = {ArcSin, ArcCos, ArcSec, ArcCsc, ArcTan,ArcCot, ArcSinh, ArcCosh, ArcSech, ArcCsch, ArcTanh, ArcCoth}; \r\n Table[DensityPlot[Im[f[(x + I y)^3]], {x, -2, 2}, {y, -2, 2},ColorFunction -> \"Pastel\", \n ExclusionsStyle -> {None, Purple},Mesh -> None, PlotLabel -> Im[f[(x + I y)^3]],Ticks -> None], {f, $InverseTrigFunctions}]"
+        tb 
     let input_StackPanel = 
         let sp = StackPanel()
         do  sp.Children.Add(command_StackPanel) |> ignore            
@@ -103,14 +102,13 @@ type WolframCanvas() as this  =
             sp.Orientation <- Orientation.Vertical
             sp.HorizontalAlignment <- HorizontalAlignment.Left
         sp
-    
+
     let result_TextBlock =                    
         let tb = TextBlock()
         tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         tb.FontStyle <- FontStyles.Normal
         tb.FontSize <- 16.
         tb.TextWrapping <- TextWrapping.Wrap
-        //tb.MaxHeight  <- 500.
         tb.HorizontalAlignment <- HorizontalAlignment.Left
         tb.MaxWidth <- 700.
         tb
@@ -193,6 +191,10 @@ type WolframCanvas() as this  =
         g
     
     (*Actions*)
+    let setButtonsText = fun message -> 
+        match message with 
+        | "Math Picture Box" -> compute_Button.Content <-"MathBox"
+        | _ -> compute_Button.Content <- message
     let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
             let image = Image()
@@ -212,7 +214,7 @@ type WolframCanvas() as this  =
             result_StackPanel.Children.Clear()
             result_StackPanel.Children.Add(result_TextBlock) |> ignore
             result_StackPanel.Children.Add(messages_TextBlock) |> ignore
-            result_StackPanel.Children.Add(print_TextBlock) |> ignore    
+            result_StackPanel.Children.Add(print_TextBlock) |> ignore
     let setGraphicsFromIKernel (k:IKernelLink) = 
         match kernel.Graphics.Length = 0 with
         | true ->              
@@ -220,11 +222,10 @@ type WolframCanvas() as this  =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore                
-        | false -> ()    
-    let fetch (text:string) =        
-        do compute_Button.Content <- "Working"
-           animationWindow_Button.Content <- "Busy"
-           mathPictureBox.MathCommand <- text
+        | false -> ()        
+    
+    let sendToCompute = fun (text:string) ->
+        do setButtonsText "Busy"
         match kernel.IsComputing with 
         | false -> 
             do  kernel.Compute(text)
@@ -233,32 +234,37 @@ type WolframCanvas() as this  =
                 result_TextBlock.Text <- (string) kernel.Result
                 setGraphicsFromKernel kernel
                 setGraphicsFromIKernel link
-                compute_Button.Content <- "Compute"
-                animationWindow_Button.Content <- "Pop Out"
+                setButtonsText "Compute"           
         | true -> 
             do  kernel.Abort()
                 messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
                 print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""
-            compute_Button.Content <- "Compute"
-    let compute = fun (text:string) -> fetch text 
-    let loadCodeBlock = fun (block:string) -> kernel.Compute(block)
-    let popOut = fun (code:string) -> 
-        compute_Button.Content <- "Busy"
-        animationWindow_Button.Content <- "Working"
+                setButtonsText "Compute"    
+    let sendToAnimationWindow = fun (code:string) -> 
+        setButtonsText "Busy"
         kernel.Compute("AnimationWindow[" + code + ",{t,0,30},Format -> \"StandardForm\", FramePause -> 0.2]")
-        compute_Button.Content <- "Compute"
-        animationWindow_Button.Content <- "Pop Out"
+        setButtonsText "Animate"
+    let sendToMathPictureBox = fun (code:string) ->
+        setButtonsText "Busy"
+        mathPictureBox.MathCommand <- code
+        setButtonsText "MathBox"
     
-    (**)
+    let send = fun code ->
+        match (string) destination_ComboBox.SelectedValue with
+        | "Animate" -> sendToAnimationWindow code
+        | "Math Picture Box" -> sendToMathPictureBox code
+        | _ -> sendToCompute code
+
+    (*Initialize*)
     do  output_ScrollViewer.Content <- output_StackPanel
         canvas.Children.Add(output_ScrollViewer) |> ignore
         canvas.Children.Add(mathBox_Grid) |> ignore
-        compute "Plot[Sin[x], {x, 0, 6 Pi}]" // initialize graphic buffer so IKernal works if called first.
-        loadCodeBlock WolframCodeBlock.animationWindow
-        mathPictureBox.MathCommand <- "\"Wolfram Canvas\""
-        result_StackPanel.Children.Clear()
-        this.Content <- screen_Grid
+        sendToCompute "Plot[Sin[x], {x, 0, 6 Pi}]" // initialize graphic buffer so IKernal works if called first.
+        kernel.Compute( WolframCodeBlock.animationWindow )
+        mathPictureBox.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44]"
+        result_StackPanel.Children.Clear()        
+        this.Content <- screen_Grid        
 
-        //add event handler to each button
-        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> compute input_TextBox.Text))
-        animationWindow_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> popOut input_TextBox.Text))
+        //add event handlers      
+        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> send input_TextBox.Text))        
+        destination_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _-> setButtonsText (destination_ComboBox.SelectedValue.ToString())))
