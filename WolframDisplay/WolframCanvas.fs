@@ -67,21 +67,32 @@ type WolframCanvas() as this  =
             cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
             cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box"]
         cb
+    let asteroids_Button = 
+        Button( Name = "Asteroids",
+                Content = "Asteroids",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
+                VerticalAlignment = VerticalAlignment.Top,
+                Width = 60.,
+                Height = 50.,
+                Background = Brushes.Aqua)
     let compute_Button = 
         Button( Name = "Compute",
                 Content = "Compute",
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.),
                 VerticalAlignment = VerticalAlignment.Top,
-                Width = 53.,
-                Height = 33.,
+                Width = 60.,
+                Height = 50.,
                 Background = Brushes.Aqua)
     let command_StackPanel = 
         let sp = StackPanel()
         do  sp.Children.Add(compute_Button) |> ignore
             sp.Children.Add(destination_ComboBox) |> ignore
-            sp.Children.Add(mathSize_Volume) |> ignore            
+            sp.Children.Add(mathSize_Volume) |> ignore 
+            sp.Children.Add(asteroids_Button) |> ignore
             sp.Orientation <- Orientation.Horizontal
+            sp.VerticalAlignment <- VerticalAlignment.Center
         sp
     let input_TextBox = 
         let tb = TextBox()
@@ -255,6 +266,10 @@ type WolframCanvas() as this  =
         | "Math Picture Box" -> sendToMathPictureBox code
         | _ -> sendToCompute code
 
+    let loadAsteroids = fun () -> kernel.Compute( WolframCodeBlock.asteroids )
+    let launchAsteroids = fun () -> kernel.Compute("Asteroids[]")
+    let asteroids = fun n -> n |> loadAsteroids |> launchAsteroids
+
     (*Initialize*)
     do  output_ScrollViewer.Content <- output_StackPanel
         canvas.Children.Add(output_ScrollViewer) |> ignore
@@ -266,5 +281,7 @@ type WolframCanvas() as this  =
         this.Content <- screen_Grid        
 
         //add event handlers      
-        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> send input_TextBox.Text))        
+        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> send input_TextBox.Text)) 
+        asteroids_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> asteroids ()))
+
         destination_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _-> setButtonsText (destination_ComboBox.SelectedValue.ToString())))

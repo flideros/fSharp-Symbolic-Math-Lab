@@ -17,10 +17,10 @@ open System.Windows.Input
 
 /// Volume control , it shows a value and allows you to change it.
 type Volume(title:string, range:int * int, value:SharedValue<int>) as this =
-    inherit StackPanel(Orientation=Orientation.Horizontal)
+    inherit StackPanel(Orientation=Orientation.Vertical,VerticalAlignment = VerticalAlignment.Center)
   
-    do Label(Content=title,Width=50.) |> this.Children.Add |> ignore 
-    let label  = Label(Content=value.Get,Width=50.)    
+    do Label(Content=title,Width=110.) |> this.Children.Add |> ignore 
+    let label  = Label(Content=value.Get,Width=27.)    
     let slider = Slider(Minimum=float(fst range), Maximum=float(snd range), TickFrequency=2., Width=127.)    
     let changedHandler value =
         label.Content <- string value
