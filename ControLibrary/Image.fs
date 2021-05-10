@@ -25,4 +25,3 @@ module Image =
             bitmap.StreamSource <- memoryStream
             bitmap.EndInit()
         bitmap
-

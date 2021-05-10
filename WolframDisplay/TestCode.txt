@@ -10,23 +10,23 @@ Circumcircle[{{x1_,y1_}, {x2_,y2_}, {x3_,y3_}}] :=
 		Circle[{-d/a,-f/a}, Sqrt[(f^2+d^2)/a^2-g/a]]
 	]
 
-
 (* This is the function that is called to update the Image that the PictureBox holds. Although it creates
    temporary .NET objects, there is no need to wrap it in NETBlock because it is only called from event callback
    functions (onMouseMove and onMouseDown), which are always implicitly wrapped in NETBlock by the internals
-   of .NET/Link.
-*)
+   of .NET/Link. *)
+
 updateImage[pictureBox_?NETObjectQ, vertices_List, {blackPen_, redPen_, bluePen_, blackBrush_}] :=
 	Module[{offScreenBmp, g, circumCenter, circumRadius, midPoints},
+		
 		(* Create an offscreen bitmap and obtain a Graphics object from it that we can use to draw
-		   into the bitmap.
-		*)
-		offScreenBmp = NETNew["System.Drawing.Bitmap", pictureBox@Width, pictureBox@Height]; 
+		   into the bitmap. *)
+		
+		offScreenBmp = NETNew["System.Windows.Media.Imaging.BitmapImage", pictureBox@Width, pictureBox@Height]; 
 		g = Graphics`FromImage[offScreenBmp];
 		
 		(* Draw the various lines, points, and circle. For some reason, FillEllipse alone doesn't create a nice small
-		   filled circle, so we also call DrawEllipse to fill in some points on the boundary.
-		*)
+		   filled circle, so we also call DrawEllipse to fill in some points on the boundary. *)
+		
 		g@FillEllipse[blackBrush, #1, #2, 6, 6]& @@@ (vertices - 3); 
 		g@DrawEllipse[blackPen, #1, #2, 6, 6]& @@@ (vertices - 3);
 		g@DrawLine[blackPen, #1[[1]], #1[[2]], #2[[1]], #2[[2]]]& @@@ Partition[vertices ~Append~ First[vertices], 2, 1];
@@ -39,8 +39,8 @@ updateImage[pictureBox_?NETObjectQ, vertices_List, {blackPen_, redPen_, bluePen_
 		];
 		
 		(* Set the pictureBox's Image to be the bitmap we have just created and drawn into. Call Refresh() to
-		   force an immediate redraw, which improves smoothness of the animation while dragging.
-		*)
+		   force an immediate redraw, which improves smoothness of the animation while dragging. *)
+		
 		pictureBox@Image = offScreenBmp;
 		pictureBox@Refresh[]
 	]
@@ -53,35 +53,59 @@ CircumcircleInteractive[] :=
 			InstallNET[];
 			
 			(* First load some classes from which we need to call static members. No assemblies need to be loaded
-			   because the System.Windows.Forms and System.Drawing assemblies are preloaded by .NET/Link.
-			*)
+			   because the System.Windows.Forms and System.Drawing assemblies are preloaded by .NET/Link. *)
+			
+			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\Symbolic_Math.dll"]
+			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\ControlLibrary.dll"]
+			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\WolframDisplay.dll"]
+			LoadNETAssembly["System"]
+			LoadNETAssembly["PresentationCore"]
+			LoadNETAssembly["PresentationFramework"]
+			
+			(*LoadNETType["System"];
+			LoadNETType["System.Drawing"];*)
 			LoadNETType["System.Drawing.Color"];
-			LoadNETType["System.Windows.Forms.DockStyle"];
-			LoadNETType["System.Windows.Forms.Cursors"];
-			LoadNETType["System.Drawing.Graphics"];
+			(*LoadNETType["System.Windows"];
+			LoadNETType["System.Windows.Controls"];
+			LoadNETType["System.Windows.Shapes"];
+			LoadNETType["System.Windows.Media"];
+			LoadNETType["Math.Presentation"];*)
+
 			
 			(* Now create the main form and picturebox, and set the desired properties. *)
-			form = NETNew["System.Windows.Forms.Form"];
-			form@Text = "Circumcircle";
+			
+			form = NETNew["System.Windows.Window"];			
 			form@Width = 350;
 			form@Height = 350;
-			pictureBox = NETNew["System.Windows.Forms.PictureBox"];
-			pictureBox@Parent = form;
-			pictureBox@Dock = DockStyle`Fill;
-			pictureBox@BackColor = Color`LightGray;
+			
+			pictureBoxControl = NETNew["System.Windows.Controls.UserControl"];
+			
+			pictureBoxGrid = NETNew["System.Windows.Controls.Border"];
+			
+			pictureBox = NETNew["System.Windows.Controls.Canvas"];
+			
+			(*pictureBoxGrid@Children'Add pictureBox;*)
+			pictureBoxGrid@Child = pictureBox
+			
+			pictureBoxControl@Content = pictureBoxGrid
+
+			form@Content = pictureBoxControl
 			
 			(* Create these drawing resources just once and reuse them in every call to updateImage[]. *)
-			blackBrush = NETNew["System.Drawing.SolidBrush", Color`Black];
-			redPen = NETNew["System.Drawing.Pen", Color`Red];
-			bluePen = NETNew["System.Drawing.Pen", Color`Blue];
-			blackPen = NETNew["System.Drawing.Pen", Color`Black];
+			
+			blackBrush = NETNew["System.Windows.Media.SolidColorBrush", Color`Black];
+			redPen = NETNew["System.Windows.Media.Pen", Color`Red];
+			bluePen = NETNew["System.Windows.Media.Pen", Color`Blue];
+			blackPen = NETNew["System.Windows.Media.Pen", Color`Black];
 			
 			(* Wire up the event callbacks. *)
+			
 			AddEventHandler[pictureBox@MouseDown, onMouseDown];
 			AddEventHandler[pictureBox@MouseMove, onMouseMove];
 			AddEventHandler[pictureBox@MouseUp, Clear[draggingVertex]&];
 			
 			(* Define the event callback functions. *)
+			
 			onMouseDown[sender_, mouseEvtArgs_] :=
 				Module[{xPos, yPos},
 					{xPos, yPos} = {mouseEvtArgs@X, mouseEvtArgs@Y};

@@ -8,6 +8,49 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
+type WolframDrawCanvas() as this  =  
+    inherit UserControl()    
+    do Install() |> ignore
+       
+    let mutable globalV = 1.7
+
+    (*Wolfram Kernel*)
+    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
+    do  link.WaitAndDiscardAnswer()        
+    let kernel = 
+        let k = new Wolfram.NETLink.MathKernel(link)
+        do  k.AutoCloseLink <- true
+            k.CaptureGraphics <- true
+            k.CaptureMessages <- true
+            k.CapturePrint <- true
+            k.GraphicsFormat <- "Automatic"
+            //k.GraphicsHeight <- 700
+            k.GraphicsResolution <- 100
+            //k.GraphicsWidth <- 0
+            k.HandleEvents <- true
+            k.Input <- null
+            k.LinkArguments <- null
+            k.PageWidth <- 200
+            k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
+            k.UseFrontEnd <- true
+        k
+    
+    (*Controls*)    
+        
+    //let canvas = Canvas(ClipToBounds = true)
+    let screen_Grid =
+        let g = Grid()
+        do  g.SetValue(Grid.RowProperty, 1)        
+        //do  g.Children.Add(canvas) |> ignore
+        g
+    
+    (*Actions*)
+
+    (*Initialize*)
+    do this.Content <- screen_Grid
+
+     (*add event handlers*)
+
 (*Test Area*)
 type WolframCanvas() as this  =  
     inherit UserControl()    
@@ -25,7 +68,7 @@ type WolframCanvas() as this  =
             k.CaptureMessages <- true
             k.CapturePrint <- true
             k.GraphicsFormat <- "Automatic"
-            //k.GraphicsHeight <- 0
+            //k.GraphicsHeight <- 700
             k.GraphicsResolution <- 100
             //k.GraphicsWidth <- 0
             k.HandleEvents <- true
@@ -41,7 +84,7 @@ type WolframCanvas() as this  =
         let mb = new UI.MathPictureBox()
         do  mb.Link <- link
             mb.Scale(Drawing.SizeF(7.f,7.f))
-            mb.MathCommand <- "Welcome"
+            mb.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44]"
         mb
     let mathBox_Grid = 
         let g = Grid()
@@ -112,7 +155,7 @@ type WolframCanvas() as this  =
         tb.FontSize <- 16.
         tb.TextWrapping <- TextWrapping.Wrap
         tb.HorizontalAlignment <- HorizontalAlignment.Left
-        tb.MaxWidth <- 700.
+        tb.MaxWidth <- 700.        
         tb
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -171,7 +214,7 @@ type WolframCanvas() as this  =
         | _ -> compute_Button.Content <- message
     let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
-            let image = Image()
+            let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
             match i + 1 = k.Graphics.Length with
@@ -250,17 +293,18 @@ type WolframCanvas() as this  =
         match kernel.IsComputing with 
         | false -> 
             do
-            kernel.Compute( input_TextBox.Text )//mathPictureBox.MathCommand <- input_TextBox.Text//                                    
-            messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
-            print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
-            result_TextBlock.Text <- kernel.Result.ToString()
-            input_TextBox.Text <- "Enter a function to compute"
-            destination_ComboBox.SelectedItem <- "Run Code"             
-            setButtonsText (destination_ComboBox.SelectedItem.ToString())
-            result_StackPanel.Children.Clear()                                       
-            result_StackPanel.Children.Add(result_TextBlock) |> ignore
-            result_StackPanel.Children.Add(messages_TextBlock) |> ignore
-            result_StackPanel.Children.Add(print_TextBlock) |> ignore
+                kernel.Compute( input_TextBox.Text )//mathPictureBox.MathCommand <- input_TextBox.Text//                                    
+                messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
+                print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
+                result_TextBlock.Text <- kernel.Result.ToString()
+                input_TextBox.Text <- "Enter a function to compute"
+                destination_ComboBox.SelectedItem <- "Run Code"             
+                setButtonsText (destination_ComboBox.SelectedItem.ToString())
+                result_StackPanel.Children.Clear()                                       
+                result_StackPanel.Children.Add(result_TextBlock) |> ignore
+                result_StackPanel.Children.Add(messages_TextBlock) |> ignore
+                result_StackPanel.Children.Add(print_TextBlock) |> ignore
+                setGraphicsFromKernel kernel
         | true -> ()
 
     let send = fun code ->
@@ -277,7 +321,6 @@ type WolframCanvas() as this  =
         canvas.Children.Add(output_ScrollViewer) |> ignore
         canvas.Children.Add(mathBox_Grid) |> ignore
         kernel.Compute( WolframCodeBlock.animationWindow )
-        mathPictureBox.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44]"
         result_StackPanel.Children.Clear()        
         this.Content <- screen_Grid
 
