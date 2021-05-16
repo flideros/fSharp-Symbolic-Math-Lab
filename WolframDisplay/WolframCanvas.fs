@@ -12,8 +12,10 @@ type WolframDrawCanvas() as this  =
     inherit UserControl()    
     do Install() |> ignore
        
-    let mutable globalV = 1.7
-
+    
+    let mutable globalV = ControlLibrary.SharedValue(1.1)
+     
+    
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()        
@@ -35,21 +37,41 @@ type WolframDrawCanvas() as this  =
             k.UseFrontEnd <- true
         k
     
-    (*Controls*)    
-        
-    //let canvas = Canvas(ClipToBounds = true)
+    (*Controls*)                    
+    let text_TextBlock =                    
+        let tb = TextBlock()
+        tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+        tb.FontStyle <- FontStyles.Normal
+        tb.FontSize <- 16.
+        tb.TextWrapping <- TextWrapping.Wrap
+        tb.HorizontalAlignment <- HorizontalAlignment.Left
+        tb.MaxWidth <- 700.       
+        tb.Text <- globalV.Get.ToString()
+        tb    
+    let canvas = 
+        let c = Canvas(ClipToBounds = true)
+        do  c.Background <- System.Windows.Media.Brushes.Aqua
+            c.Children.Add(text_TextBlock) |> ignore
+        c
     let screen_Grid =
         let g = Grid()
         do  g.SetValue(Grid.RowProperty, 1)        
-        //do  g.Children.Add(canvas) |> ignore
+            g.Children.Add(canvas) |> ignore
         g
     
     (*Actions*)
-
+    let setGlobalV () = 
+        let out = globalV.Get + 1.3
+        globalV.Set(out)
+        text_TextBlock.Text <- globalV.Get.ToString()
+        
     (*Initialize*)
     do this.Content <- screen_Grid
 
-     (*add event handlers*)
+    (*add event handlers*)
+       //this.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> setGlobalV ()))
+    
+    member public _sv.SetValue( f : float ) = globalV.Set(f)
 
 (*Test Area*)
 type WolframCanvas() as this  =  
@@ -280,7 +302,7 @@ type WolframCanvas() as this  =
             messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
             print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
             result_TextBlock.Text <- WolframCodeBlock.testCode
-            input_TextBox.Text <- "Enter a function to compute"
+            input_TextBox.Text <- "Test[]"
             destination_ComboBox.SelectedItem <- "Run Code"             
             setButtonsText (destination_ComboBox.SelectedItem.ToString())
             result_StackPanel.Children.Clear()                                       
@@ -297,7 +319,7 @@ type WolframCanvas() as this  =
                 messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
                 print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
                 result_TextBlock.Text <- kernel.Result.ToString()
-                input_TextBox.Text <- "Enter a function to compute"
+                input_TextBox.Text <- ""
                 destination_ComboBox.SelectedItem <- "Run Code"             
                 setButtonsText (destination_ComboBox.SelectedItem.ToString())
                 result_StackPanel.Children.Clear()                                       
