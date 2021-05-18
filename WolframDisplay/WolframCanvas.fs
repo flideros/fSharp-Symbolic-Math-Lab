@@ -8,13 +8,13 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
+type CircumCircleState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : float; y3 : float}
 type WolframDrawCanvas() as this  =  
     inherit UserControl()    
     do Install() |> ignore
-       
-    
-    let mutable globalV = ControlLibrary.SharedValue(1.1)
-     
+        
+    (**)       
+    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.}
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -37,21 +37,30 @@ type WolframDrawCanvas() as this  =
             k.UseFrontEnd <- true
         k
     
-    (*Controls*)                    
-    let text_TextBlock =                    
-        let tb = TextBlock()
-        tb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-        tb.FontStyle <- FontStyles.Normal
-        tb.FontSize <- 16.
-        tb.TextWrapping <- TextWrapping.Wrap
-        tb.HorizontalAlignment <- HorizontalAlignment.Left
-        tb.MaxWidth <- 700.       
-        tb.Text <- globalV.Get.ToString()
-        tb    
+    (*Model*)
+    let p1 = System.Windows.Point(state.x1, state.y1)
+    let p2 = System.Windows.Point(state.x2, state.y2)
+    let p3 = System.Windows.Point(state.x3, state.y3)
+    
+    let image = Image()        
+    do  image.SetValue(Panel.ZIndexProperty, -100)
+    
+    let visual = DrawingVisual() 
+    
+    let black = SolidColorBrush(Colors.Black)
+    let blue = SolidColorBrush(Colors.Blue)
+    let red = SolidColorBrush(Colors.Red)
+    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.3), Pen(black, 0.3)
+    do  bluePen.Freeze()
+        redPen.Freeze()
+        blackPen.Freeze()
+    
+    let verticies = seq[]
+
+    (*Controls*)    
     let canvas = 
         let c = Canvas(ClipToBounds = true)
-        do  c.Background <- System.Windows.Media.Brushes.Aqua
-            c.Children.Add(text_TextBlock) |> ignore
+        do  c.Background <- System.Windows.Media.Brushes.Aqua            
         c
     let screen_Grid =
         let g = Grid()
@@ -60,19 +69,36 @@ type WolframDrawCanvas() as this  =
         g
     
     (*Actions*)
-    let setGlobalV () = 
-        let out = globalV.Get + 1.3
-        globalV.Set(out)
-        text_TextBlock.Text <- globalV.Get.ToString()
-        
+    let handleMouseDown (e : Input.MouseButtonEventArgs)= 
+        match Seq.length verticies with
+        | 0 -> 
+            let context = visual.RenderOpen()
+            let p = e.MouseDevice.GetPosition(this)
+            do  state <- {state with x1 = p.X; y1 = p.Y}
+                context.DrawEllipse(black,redPen,p,6.,6.)
+                context.Close()
+            let bitmap = 
+                RenderTargetBitmap(
+                    (int)SystemParameters.PrimaryScreenWidth,
+                    (int)SystemParameters.PrimaryScreenHeight, 
+                    96.,
+                    96.,
+                    PixelFormats.Pbgra32)        
+            do  
+                bitmap.Render(visual)
+                bitmap.Freeze()
+                image.Source <- bitmap
+                canvas.Children.Clear()
+                canvas.Children.Add(image) |> ignore
+        | _ -> ()
+
+
     (*Initialize*)
     do this.Content <- screen_Grid
 
     (*add event handlers*)
-       //this.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> setGlobalV ()))
+       this.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
     
-    member public _sv.SetValue( f : float ) = globalV.Set(f)
-
 (*Test Area*)
 type WolframCanvas() as this  =  
     inherit UserControl()    

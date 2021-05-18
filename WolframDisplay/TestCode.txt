@@ -16,23 +16,17 @@ Test[] :=
 			InstallNET[];
 
 			(* First load some classes from which we need to call static members. No assemblies need to be loaded
-			   because the System.Windows.Forms and System.Drawing assemblies are preloaded by .NET/Link. *)
+			   because the System.Windows.Forms and System.Drawing assemblies are preloaded by .NET/Link.*)
 			
 			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\Symbolic_Math.dll"];
 			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\ControlLibrary.dll"];
-			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\WolframDisplay.dll"];
-			
+			LoadNETAssembly["d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\WolframDisplay.dll"];			
 			LoadNETAssembly["System.Core"];
 			LoadNETAssembly["System"];
 			LoadNETAssembly["PresentationCore"];
 			LoadNETAssembly["PresentationFramework"];			
 			LoadNETType["System.Windows.Window"];			
 			LoadNETType["ControlLibrary.SharedValue<float>"];
-
-			(*LoadNETType["System.Windows.Media.Colors"];
-			
-			LoadNETType["System.Windows.Controls.Panel"];
-			LoadNETType["System.Windows.Media.Brushes"];*)
 
 			(* Now create the main form and WPF user control, and set the desired properties.*)
 			
@@ -47,7 +41,7 @@ Test[] :=
 			
 			(* Wire up the event callbacks. *)			
 			
-			(* Initialize and run modally. *)
+			(* Initialize and show window. *)
 			vertices = {};			
 			form@Show[];			
 		]
