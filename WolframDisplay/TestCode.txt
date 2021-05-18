@@ -33,7 +33,7 @@ Test[] :=
 			form = NETNew["System.Windows.Window"];
 			form@Width = 500;
 			form@Height = 500;
-			pictureBox = NETNew["Math.Presentation.WolframDrawCanvas"]; 		
+			pictureBox = NETNew["Math.Presentation.CircumCircle"]; 		
 			
 			form@Content = pictureBox;				
 			

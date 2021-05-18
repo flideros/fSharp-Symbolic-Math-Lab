@@ -8,13 +8,14 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
-type CircumCircleState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : float; y3 : float}
-type WolframDrawCanvas() as this  =  
+type CircumCircleState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : float; y3 : float; 
+                          verticies : System.Windows.Point seq}
+type CircumCircle() as this  =  
     inherit UserControl()    
     do Install() |> ignore
         
     (**)       
-    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.}
+    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.;verticies=seq[]}
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -38,10 +39,7 @@ type WolframDrawCanvas() as this  =
         k
     
     (*Model*)
-    let p1 = System.Windows.Point(state.x1, state.y1)
-    let p2 = System.Windows.Point(state.x2, state.y2)
-    let p3 = System.Windows.Point(state.x3, state.y3)
-    
+        
     let image = Image()        
     do  image.SetValue(Panel.ZIndexProperty, -100)
     
@@ -50,13 +48,12 @@ type WolframDrawCanvas() as this  =
     let black = SolidColorBrush(Colors.Black)
     let blue = SolidColorBrush(Colors.Blue)
     let red = SolidColorBrush(Colors.Red)
-    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.3), Pen(black, 0.3)
+    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.3), Pen(black, 0.5)
     do  bluePen.Freeze()
         redPen.Freeze()
         blackPen.Freeze()
     
-    let verticies = seq[]
-
+    
     (*Controls*)    
     let canvas = 
         let c = Canvas(ClipToBounds = true)
@@ -70,12 +67,13 @@ type WolframDrawCanvas() as this  =
     
     (*Actions*)
     let handleMouseDown (e : Input.MouseButtonEventArgs)= 
-        match Seq.length verticies with
+        match Seq.length state.verticies with
         | 0 -> 
             let context = visual.RenderOpen()
             let p = e.MouseDevice.GetPosition(this)
-            do  state <- {state with x1 = p.X; y1 = p.Y}
-                context.DrawEllipse(black,redPen,p,6.,6.)
+            let verticies = Seq.append state.verticies [p]
+            do  state <- {state with x1 = p.X; y1 = p.Y; verticies = verticies}
+                context.DrawEllipse(black,blackPen,p,6.,6.)
                 context.Close()
             let bitmap = 
                 RenderTargetBitmap(
@@ -84,12 +82,60 @@ type WolframDrawCanvas() as this  =
                     96.,
                     96.,
                     PixelFormats.Pbgra32)        
-            do  
-                bitmap.Render(visual)
+            do  bitmap.Render(visual)
+                bitmap.Freeze()
+                image.Source <- bitmap
+                canvas.Children.Clear()
+                canvas.Children.Add(image) |> ignore                
+        | 1 -> 
+            let context = visual.RenderOpen()
+            let p1 = Seq.item 0 state.verticies
+            let p = e.MouseDevice.GetPosition(this) 
+            let verticies = Seq.append state.verticies [p]
+            do  state <- {state with x2 = p.X; y2 = p.Y; verticies = verticies}
+                context.DrawEllipse(black,blackPen,p1,6.,6.)
+                context.DrawEllipse(red,redPen,p,6.,6.)
+                context.DrawLine(blackPen,p1,p)
+                context.Close()
+            let bitmap = 
+                RenderTargetBitmap(
+                    (int)SystemParameters.PrimaryScreenWidth,
+                    (int)SystemParameters.PrimaryScreenHeight, 
+                    96.,
+                    96.,
+                    PixelFormats.Pbgra32)        
+            do  bitmap.Render(visual)
                 bitmap.Freeze()
                 image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
+        | 2 -> 
+            let context = visual.RenderOpen()
+            let p1 = Seq.item 0 state.verticies
+            let p2 = Seq.item 1 state.verticies
+            let p = e.MouseDevice.GetPosition(this) 
+            let verticies = Seq.append state.verticies [p]
+            do  state <- {state with x3 = p.X; y3 = p.Y; verticies = verticies}
+                context.DrawEllipse(black,blackPen,p1,6.,6.)
+                context.DrawEllipse(black,blackPen,p2,6.,6.)
+                context.DrawEllipse(red,redPen,p,6.,6.)
+                context.DrawLine(blackPen,p1,p2)
+                context.DrawLine(blackPen,p2,p)
+                context.DrawLine(blackPen,p,p1)
+                context.Close()
+            let bitmap = 
+                RenderTargetBitmap(
+                    (int)SystemParameters.PrimaryScreenWidth,
+                    (int)SystemParameters.PrimaryScreenHeight, 
+                    96.,
+                    96.,
+                    PixelFormats.Pbgra32)        
+            do  bitmap.Render(visual)
+                bitmap.Freeze()
+                image.Source <- bitmap
+                canvas.Children.Clear()
+                canvas.Children.Add(image) |> ignore
+        | 3 -> ()
         | _ -> ()
 
 
