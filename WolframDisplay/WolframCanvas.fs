@@ -55,25 +55,35 @@ type CircumCircle() as this  =
     
     
     (*Controls*)    
+    let label = 
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 200., Top = 200., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.
+        l
     let canvas = 
         let c = Canvas(ClipToBounds = true)
-        do  c.Background <- System.Windows.Media.Brushes.Aqua            
-        c
+        do  c.Background <- System.Windows.Media.Brushes.Aqua 
+        c    
     let screen_Grid =
         let g = Grid()
         do  g.SetValue(Grid.RowProperty, 1)        
             g.Children.Add(canvas) |> ignore
         g
     
-    (*Actions*)
+    (*Logic*)
+    let isOverPoint (p1:System.Windows.Point) = Seq.exists (fun (p2:System.Windows.Point) -> (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
+
+    (*Actions*)    
     let handleMouseDown (e : Input.MouseButtonEventArgs)= 
+        
         match Seq.length state.verticies with
         | 0 -> 
             let context = visual.RenderOpen()
             let p = e.MouseDevice.GetPosition(this)
             let verticies = Seq.append state.verticies [p]
             do  state <- {state with x1 = p.X; y1 = p.Y; verticies = verticies}
-                context.DrawEllipse(black,blackPen,p,6.,6.)
+                context.DrawEllipse(red,redPen,p,6.,6.)
                 context.Close()
             let bitmap = 
                 RenderTargetBitmap(
@@ -135,7 +145,14 @@ type CircumCircle() as this  =
                 image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
-        | 3 -> ()
+                canvas.Children.Add(label) |> ignore
+        | 3 -> 
+            let p = e.MouseDevice.GetPosition(this)             
+            match isOverPoint p with
+            | true -> 
+                do  label.Text <- "true"                 
+            | false ->
+                do  label.Text <- "false"                
         | _ -> ()
 
 
@@ -382,7 +399,7 @@ type WolframCanvas() as this  =
             result_StackPanel.Children.Add(messages_TextBlock) |> ignore
             result_StackPanel.Children.Add(print_TextBlock) |> ignore
         | true -> ()
-    let RunCode = fun () -> 
+    let runCode = fun () -> 
         do  setButtonsText "Busy" 
         match kernel.IsComputing with 
         | false -> 
@@ -407,7 +424,7 @@ type WolframCanvas() as this  =
         | "Math Picture Box" -> sendToMathPictureBox code
         | "Asteroids" -> asteroids()
         | "Load Test Code" -> loadTestCode ()
-        | "Run Code" -> RunCode ()
+        | "Run Code" -> runCode ()
         | _ -> sendToCompute code
 
     (*Initialize*)
