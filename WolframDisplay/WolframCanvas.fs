@@ -9,13 +9,13 @@ open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
 type CircumCircleState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : float; y3 : float; 
-                          verticies : System.Windows.Point seq}
+                          verticies : System.Windows.Point seq; selectedVertex : int}
 type CircumCircle() as this  =  
     inherit UserControl()    
     do Install() |> ignore
         
     (**)       
-    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.;verticies=seq[]}
+    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.; verticies=seq[]; selectedVertex = 0}
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -72,11 +72,62 @@ type CircumCircle() as this  =
         g
     
     (*Logic*)
-    let isOverPoint (p1:System.Windows.Point) = Seq.exists (fun (p2:System.Windows.Point) -> (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
+    let isOverPoint (p1:System.Windows.Point) = 
+        Seq.exists (fun (p2:System.Windows.Point) -> 
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
 
-    (*Actions*)    
-    let handleMouseDown (e : Input.MouseButtonEventArgs)= 
-        
+    (*Actions*)
+    let getVertexIndex (p1:System.Windows.Point) = 
+        Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
+
+    let generateVerticies (s : CircumCircleState) = 
+        let p1 = System.Windows.Point(X=s.x1,Y=s.y1)
+        let p2 = System.Windows.Point(X=s.x2,Y=s.y2)
+        let p3 = System.Windows.Point(X=s.x3,Y=s.y3)
+        seq[p1;p2;p3]    
+    
+    let handleMouseMove (e : Input.MouseEventArgs) = 
+        let i = state.selectedVertex
+        let p = e.MouseDevice.GetPosition(this)        
+        let p1 = Seq.item ((i + 1) % 3) state.verticies
+        let p2 = Seq.item ((i + 2) % 3) state.verticies
+        let newState = 
+            let s = 
+                match i with 
+                | 0 -> {state with x1 = p.X; y1 = p.Y}
+                | 1 -> {state with x2 = p.X; y2 = p.Y}
+                | _ -> {state with x3 = p.X; y3 = p.Y}
+            let newVerticies = generateVerticies s
+            {s with verticies = newVerticies}
+        match Input.Mouse.LeftButton = Input.MouseButtonState.Pressed with
+        |false -> ()
+        | true -> 
+            do  state <- newState
+            let context = visual.RenderOpen()
+            do  context.DrawEllipse(black,blackPen,p1,6.,6.)
+                context.DrawEllipse(black,blackPen,p2,6.,6.)
+                context.DrawEllipse(red,redPen,p,6.,6.)
+                context.DrawLine(blackPen,p1,p2)
+                context.DrawLine(blackPen,p2,p)
+                context.DrawLine(blackPen,p,p1)
+                context.Close()
+
+            let bitmap = 
+                RenderTargetBitmap(
+                    (int)SystemParameters.PrimaryScreenWidth,
+                    (int)SystemParameters.PrimaryScreenHeight, 
+                    96.,
+                    96.,
+                    PixelFormats.Pbgra32)        
+            do  bitmap.Render(visual)
+                bitmap.Freeze()
+                image.Source <- bitmap
+                canvas.Children.Clear()
+                canvas.Children.Add(image) |> ignore
+                canvas.Children.Add(label) |> ignore   
+
+    let handleMouseDown (e : Input.MouseButtonEventArgs) =
         match Seq.length state.verticies with
         | 0 -> 
             let context = visual.RenderOpen()
@@ -147,21 +198,24 @@ type CircumCircle() as this  =
                 canvas.Children.Add(image) |> ignore
                 canvas.Children.Add(label) |> ignore
         | 3 -> 
-            let p = e.MouseDevice.GetPosition(this)             
+            let p = e.MouseDevice.GetPosition(this) 
+            let i = match getVertexIndex p with | Some i -> i | None -> 0            
             match isOverPoint p with
-            | true -> 
-                do  label.Text <- "true"                 
+            | true ->                 
+                do  state <- {state with selectedVertex = i}
+                    label.Text <- "true"                     
+                    this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
             | false ->
-                do  label.Text <- "false"                
+                do  label.Text <- "false"
+                    
         | _ -> ()
-
 
     (*Initialize*)
     do this.Content <- screen_Grid
 
     (*add event handlers*)
-       this.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
-    
+       this.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
+       
 (*Test Area*)
 type WolframCanvas() as this  =  
     inherit UserControl()    
