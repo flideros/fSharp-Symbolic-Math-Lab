@@ -37,22 +37,27 @@ type CircumCircle() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
+    do  kernel.Compute(
+            "Circumcircle[{{x1_,y1_}, {x2_,y2_}, {x3_,y3_}}] :=
+    	        Module[{a, d, f, g},
+    		        a = Det[{{x1,y1,1}, {x2,y2,1}, {x3,y3,1}}];
+    		        d = -1/2 Det[{{x1^2+y1^2,y1,1}, {x2^2+y2^2,y2,1}, {x3^2+y3^2,y3,1}}];
+    		        f = 1/2 Det[{{x1^2+y1^2,x1,1}, {x2^2+y2^2,x2,1}, {x3^2+y3^2,x3,1}}];
+    		        g = -Det[{{x1^2+y1^2,x1,y1}, {x2^2+y2^2,x2,y2}, {x3^2+y3^2,x3,y3}}];
+    		        Circle[{-d/a,-f/a}, Sqrt[(f^2+d^2)/a^2-g/a]]
+    	        ]")
     
-    (*Model*)
-        
+    (*Model*)        
     let image = Image()        
-    do  image.SetValue(Panel.ZIndexProperty, -100)
-    
-    let visual = DrawingVisual() 
-    
+    do  image.SetValue(Panel.ZIndexProperty, -100)    
+    let visual = DrawingVisual()     
     let black = SolidColorBrush(Colors.Black)
     let blue = SolidColorBrush(Colors.Blue)
     let red = SolidColorBrush(Colors.Red)
     let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.3), Pen(black, 0.5)
     do  bluePen.Freeze()
         redPen.Freeze()
-        blackPen.Freeze()
-    
+        blackPen.Freeze()    
     
     (*Controls*)    
     let label = 
@@ -77,16 +82,34 @@ type CircumCircle() as this  =
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
 
     (*Actions*)
+    let getBitmap v = 
+        let bitmap = 
+            RenderTargetBitmap(
+                (int)SystemParameters.PrimaryScreenWidth,
+                (int)SystemParameters.PrimaryScreenHeight, 
+                96.,
+                96.,
+                PixelFormats.Pbgra32)        
+        do  bitmap.Render(visual)
+            bitmap.Freeze()
+        bitmap
+    
     let getVertexIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
 
-    let generateVerticies (s : CircumCircleState) = 
+    let getVerticies (s : CircumCircleState) = 
         let p1 = System.Windows.Point(X=s.x1,Y=s.y1)
         let p2 = System.Windows.Point(X=s.x2,Y=s.y2)
         let p3 = System.Windows.Point(X=s.x3,Y=s.y3)
         seq[p1;p2;p3]    
     
+    let getCircle s = 
+        do  (kernel.Compute("N[Circumcircle[{{" + s.x1.ToString() + "," + s.y1.ToString() + "},{"
+                                                + s.x2.ToString() + "," + s.y2.ToString() + "},{"
+                                                + s.x3.ToString() + "," + s.y3.ToString() + "}}]]"))
+        (string )kernel.Result
+
     let handleMouseMove (e : Input.MouseEventArgs) = 
         let i = state.selectedVertex
         let p = e.MouseDevice.GetPosition(this)        
@@ -98,7 +121,7 @@ type CircumCircle() as this  =
                 | 0 -> {state with x1 = p.X; y1 = p.Y}
                 | 1 -> {state with x2 = p.X; y2 = p.Y}
                 | _ -> {state with x3 = p.X; y3 = p.Y}
-            let newVerticies = generateVerticies s
+            let newVerticies = getVerticies s
             {s with verticies = newVerticies}
         match Input.Mouse.LeftButton = Input.MouseButtonState.Pressed with
         |false -> ()
@@ -113,16 +136,8 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p,p1)
                 context.Close()
 
-            let bitmap = 
-                RenderTargetBitmap(
-                    (int)SystemParameters.PrimaryScreenWidth,
-                    (int)SystemParameters.PrimaryScreenHeight, 
-                    96.,
-                    96.,
-                    PixelFormats.Pbgra32)        
-            do  bitmap.Render(visual)
-                bitmap.Freeze()
-                image.Source <- bitmap
+            let bitmap = getBitmap visual
+            do  image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
                 canvas.Children.Add(label) |> ignore   
@@ -136,16 +151,8 @@ type CircumCircle() as this  =
             do  state <- {state with x1 = p.X; y1 = p.Y; verticies = verticies}
                 context.DrawEllipse(red,redPen,p,6.,6.)
                 context.Close()
-            let bitmap = 
-                RenderTargetBitmap(
-                    (int)SystemParameters.PrimaryScreenWidth,
-                    (int)SystemParameters.PrimaryScreenHeight, 
-                    96.,
-                    96.,
-                    PixelFormats.Pbgra32)        
-            do  bitmap.Render(visual)
-                bitmap.Freeze()
-                image.Source <- bitmap
+            let bitmap = getBitmap visual        
+            do  image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore                
         | 1 -> 
@@ -158,16 +165,8 @@ type CircumCircle() as this  =
                 context.DrawEllipse(red,redPen,p,6.,6.)
                 context.DrawLine(blackPen,p1,p)
                 context.Close()
-            let bitmap = 
-                RenderTargetBitmap(
-                    (int)SystemParameters.PrimaryScreenWidth,
-                    (int)SystemParameters.PrimaryScreenHeight, 
-                    96.,
-                    96.,
-                    PixelFormats.Pbgra32)        
-            do  bitmap.Render(visual)
-                bitmap.Freeze()
-                image.Source <- bitmap
+            let bitmap = getBitmap visual
+            do  image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
         | 2 -> 
@@ -184,16 +183,8 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
                 context.Close()
-            let bitmap = 
-                RenderTargetBitmap(
-                    (int)SystemParameters.PrimaryScreenWidth,
-                    (int)SystemParameters.PrimaryScreenHeight, 
-                    96.,
-                    96.,
-                    PixelFormats.Pbgra32)        
-            do  bitmap.Render(visual)
-                bitmap.Freeze()
-                image.Source <- bitmap
+            let bitmap = getBitmap visual
+            do  image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
                 canvas.Children.Add(label) |> ignore
@@ -206,7 +197,7 @@ type CircumCircle() as this  =
                     label.Text <- "true"                     
                     this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
             | false ->
-                do  label.Text <- "false"
+                do  label.Text <- getCircle state
                     
         | _ -> ()
 
