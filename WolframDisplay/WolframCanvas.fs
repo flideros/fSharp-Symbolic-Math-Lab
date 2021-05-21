@@ -80,10 +80,10 @@ type CircumCircle() as this  =
     (*Logic*)
     let isOverPoint (p1:System.Windows.Point) = 
         Seq.exists (fun (p2:System.Windows.Point) -> 
-            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (state.verticies)
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 27.) (state.verticies)
 
     (*Actions*)
-    let getBitmap v = 
+    let getBitmap visual = 
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
@@ -104,6 +104,12 @@ type CircumCircle() as this  =
         let p2 = System.Windows.Point(X=s.x2,Y=s.y2)
         let p3 = System.Windows.Point(X=s.x3,Y=s.y3)
         seq[p1;p2;p3]    
+
+    let getTangets (s : CircumCircleState) = 
+        let t1 = System.Windows.Point(X = (s.x1 + s.x2) / 2., Y= (s.y1 + s.y2) / 2.)
+        let t2 = System.Windows.Point(X = (s.x2 + s.x3) / 2., Y= (s.y2 + s.y3) / 2.)
+        let t3 = System.Windows.Point(X = (s.x3 + s.x1) / 2., Y= (s.y3 + s.y1) / 2.)
+        [t1;t2;t3]    
     
     let getCircle s = 
         do  (kernel.Compute(
@@ -139,6 +145,7 @@ type CircumCircle() as this  =
         | true -> 
             do  state <- newState
             let center,radius = getCircle state |> parseCircle
+            let tangents = getTangets state
             let context = visual.RenderOpen()
             do  context.DrawEllipse(black,blackPen,p1,6.,6.)
                 context.DrawEllipse(black,blackPen,p2,6.,6.)
@@ -146,6 +153,10 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
+                context.DrawLine(bluePen,center,tangents.[0])
+                context.DrawLine(bluePen,center,tangents.[1])
+                context.DrawLine(bluePen,center,tangents.[2])
+                context.DrawEllipse(Brushes.Transparent,bluePen,center,6.,6.)
                 context.DrawEllipse(Brushes.Transparent,redPen,center,radius,radius)
                 context.Close()
 
@@ -183,21 +194,25 @@ type CircumCircle() as this  =
             do  image.Source <- bitmap
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
-        | 2 -> 
-            let context = visual.RenderOpen()
+        | 2 ->             
             let p1 = Seq.item 0 state.verticies
             let p2 = Seq.item 1 state.verticies
             let p = e.MouseDevice.GetPosition(this) 
             let verticies = Seq.append state.verticies [p]            
             do  state <- {state with x3 = p.X; y3 = p.Y; verticies = verticies}
             let center,radius = getCircle state |> parseCircle    
-            
+            let tangents = getTangets state
+            let context = visual.RenderOpen()
             do  context.DrawEllipse(black,blackPen,p1,6.,6.)
                 context.DrawEllipse(black,blackPen,p2,6.,6.)
                 context.DrawEllipse(red,redPen,p,6.,6.)
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
+                context.DrawLine(bluePen,center,tangents.[0])
+                context.DrawLine(bluePen,center,tangents.[1])
+                context.DrawLine(bluePen,center,tangents.[2])
+                context.DrawEllipse(Brushes.Transparent,bluePen,center,6.,6.)
                 context.DrawEllipse(Brushes.Transparent,redPen,center,radius,radius)
                 context.Close()
             let bitmap = getBitmap visual
