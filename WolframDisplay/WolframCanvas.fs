@@ -55,7 +55,7 @@ type CircumCircle() as this  =
     let black = SolidColorBrush(Colors.Black)
     let blue = SolidColorBrush(Colors.Blue)
     let red = SolidColorBrush(Colors.Red)
-    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.3), Pen(black, 0.5)
+    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
     do  bluePen.Freeze()
         redPen.Freeze()
         blackPen.Freeze()    
@@ -63,7 +63,7 @@ type CircumCircle() as this  =
     (*Controls*)    
     let label = 
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 200., Top = 200., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 80., Top = 200., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
         l
@@ -146,7 +146,7 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
-                context.DrawEllipse(blue,redPen,center,radius,radius)
+                context.DrawEllipse(Brushes.Transparent,redPen,center,radius,radius)
                 context.Close()
 
             let bitmap = getBitmap visual
@@ -188,14 +188,17 @@ type CircumCircle() as this  =
             let p1 = Seq.item 0 state.verticies
             let p2 = Seq.item 1 state.verticies
             let p = e.MouseDevice.GetPosition(this) 
-            let verticies = Seq.append state.verticies [p]
+            let verticies = Seq.append state.verticies [p]            
             do  state <- {state with x3 = p.X; y3 = p.Y; verticies = verticies}
-                context.DrawEllipse(black,blackPen,p1,6.,6.)
+            let center,radius = getCircle state |> parseCircle    
+            
+            do  context.DrawEllipse(black,blackPen,p1,6.,6.)
                 context.DrawEllipse(black,blackPen,p2,6.,6.)
                 context.DrawEllipse(red,redPen,p,6.,6.)
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
+                context.DrawEllipse(Brushes.Transparent,redPen,center,radius,radius)
                 context.Close()
             let bitmap = getBitmap visual
             do  image.Source <- bitmap
