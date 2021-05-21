@@ -1,15 +1,5 @@
 ﻿Needs["NETLink`"]
-
-(* Determines the circumcircle of a triangle. Code from Eric Weisstein's PlaneGeometry.m, available on MathWorld. *)
-Circumcircle[{{x1_,y1_}, {x2_,y2_}, {x3_,y3_}}] :=
-	Module[{a, d, f, g},
-		a = Det[{{x1,y1,1}, {x2,y2,1}, {x3,y3,1}}];
-		d = -1/2 Det[{{x1^2+y1^2,y1,1}, {x2^2+y2^2,y2,1}, {x3^2+y3^2,y3,1}}];
-		f = 1/2 Det[{{x1^2+y1^2,x1,1}, {x2^2+y2^2,x2,1}, {x3^2+y3^2,x3,1}}];
-		g = -Det[{{x1^2+y1^2,x1,y1}, {x2^2+y2^2,x2,y2}, {x3^2+y3^2,x3,y3}}];
-		Circle[{-d/a,-f/a}, Sqrt[(f^2+d^2)/a^2-g/a]]
-	]
-	
+(*loads a WPF control*)
 Test[] :=
 	NETBlock[
 		Module[{form, pictureBox, vertices, draggingVertex, onMouseMove, onMouseDown, lastX, lastY},

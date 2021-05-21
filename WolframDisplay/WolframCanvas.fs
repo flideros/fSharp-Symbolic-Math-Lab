@@ -38,6 +38,7 @@ type CircumCircle() as this  =
             k.UseFrontEnd <- true
         k
     do  kernel.Compute(
+            (* Determines the circumcircle of a triangle. Code from Eric Weisstein's PlaneGeometry.m, available on MathWorld. *)
             "Circumcircle[{{x1_,y1_}, {x2_,y2_}, {x3_,y3_}}] :=
     	        Module[{a, d, f, g},
     		        a = Det[{{x1,y1,1}, {x2,y2,1}, {x3,y3,1}}];
@@ -105,11 +106,21 @@ type CircumCircle() as this  =
         seq[p1;p2;p3]    
     
     let getCircle s = 
-        do  (kernel.Compute("N[Circumcircle[{{" + s.x1.ToString() + "," + s.y1.ToString() + "},{"
-                                                + s.x2.ToString() + "," + s.y2.ToString() + "},{"
-                                                + s.x3.ToString() + "," + s.y3.ToString() + "}}]]"))
-        (string )kernel.Result
+        do  (kernel.Compute(
+                "N[Circumcircle[{{" 
+                + s.x1.ToString() + "," + s.y1.ToString() + "},{"
+                + s.x2.ToString() + "," + s.y2.ToString() + "},{"
+                + s.x3.ToString() + "," + s.y3.ToString() + "}}]]"))
+        (string) kernel.Result
 
+    let parseCircle (c : string) = 
+        let sp = c.Split(',') 
+        let px = float ( sp.[0].Replace("Circle[{","") )
+        let py = float ( sp.[1].Replace("}","") )
+        let r = float ( sp.[2].Replace("]","") )
+        let center = Point(X=px, Y=py)
+        (center,r)
+    
     let handleMouseMove (e : Input.MouseEventArgs) = 
         let i = state.selectedVertex
         let p = e.MouseDevice.GetPosition(this)        
@@ -124,9 +135,10 @@ type CircumCircle() as this  =
             let newVerticies = getVerticies s
             {s with verticies = newVerticies}
         match Input.Mouse.LeftButton = Input.MouseButtonState.Pressed with
-        |false -> ()
+        |false -> do  label.Text <- getCircle state
         | true -> 
             do  state <- newState
+            let center,radius = getCircle state |> parseCircle
             let context = visual.RenderOpen()
             do  context.DrawEllipse(black,blackPen,p1,6.,6.)
                 context.DrawEllipse(black,blackPen,p2,6.,6.)
@@ -134,6 +146,7 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
+                context.DrawEllipse(blue,redPen,center,radius,radius)
                 context.Close()
 
             let bitmap = getBitmap visual
@@ -141,7 +154,8 @@ type CircumCircle() as this  =
                 canvas.Children.Clear()
                 canvas.Children.Add(image) |> ignore
                 canvas.Children.Add(label) |> ignore   
-
+                label.Text <- getCircle state
+    
     let handleMouseDown (e : Input.MouseButtonEventArgs) =
         match Seq.length state.verticies with
         | 0 -> 
@@ -194,11 +208,10 @@ type CircumCircle() as this  =
             match isOverPoint p with
             | true ->                 
                 do  state <- {state with selectedVertex = i}
-                    label.Text <- "true"                     
+                    label.Text <- "Got Vertex"                     
                     this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
             | false ->
-                do  label.Text <- getCircle state
-                    
+                do  label.Text <- getCircle state                    
         | _ -> ()
 
     (*Initialize*)

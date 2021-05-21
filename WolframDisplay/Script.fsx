@@ -12,6 +12,15 @@ open System.Windows.Controls
 open System.Windows.Media
 open Wolfram.NETLink
 
+
+//Example:
+let code = "Circle[{3.4,7.5},45.2]"
+let sp = code.Split(',') 
+let px = float ( sp.[0].Replace("Circle[{","") )
+let py = float ( sp.[1].Replace("}","") )
+let r = float ( sp.[2].Replace("]","") )
+sp.Length
+
 Install()
 
 // I had to add ml64i4.dll to the same folder as the NETLink DLL 
