@@ -22,7 +22,8 @@ Test[] :=
 			
 			form = NETNew["System.Windows.Window"];
 			form@Width = 500;
-			form@Height = 500;
+			form@Height = 500;			
+			form@Title = "CircumCircle";
 			pictureBox = NETNew["Math.Presentation.CircumCircle"]; 		
 			
 			form@Content = pictureBox;				
