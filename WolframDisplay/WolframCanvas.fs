@@ -64,8 +64,20 @@ type WolframCanvas() as this  =
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Compute"
             cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box";"Asteroids";"Load Test Code";"Run Code"]
+            cb.ItemsSource <- ["Compute";"Animate";"Math Picture Box";"Asteroids";"Load Code";"Run Code"]
         cb    
+    let customControl_ComboBox =
+        let cb = ComboBox()        
+        do  cb.Text <- "Output Destination"
+            cb.Width <- 200.
+            cb.Height <- 30.
+            cb.FontSize <- 18.
+            cb.VerticalContentAlignment <- VerticalAlignment.Center
+            cb.SelectedItem <- "Test"
+            cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            cb.ItemsSource <- ["Test";"CircumCircle"]
+            cb.Visibility <- Visibility.Collapsed
+        cb
     let compute_Button = 
         Button( Name = "Compute",
                 Content = "Compute",
@@ -78,9 +90,9 @@ type WolframCanvas() as this  =
     let command_StackPanel = 
         let sp = StackPanel()
         do  sp.Children.Add(compute_Button) |> ignore
-            sp.Children.Add(destination_ComboBox) |> ignore
+            sp.Children.Add(destination_ComboBox) |> ignore            
+            sp.Children.Add(customControl_ComboBox) |> ignore
             sp.Children.Add(mathSize_Volume) |> ignore 
-            //sp.Children.Add(asteroids_Button) |> ignore
             sp.Orientation <- Orientation.Horizontal
             sp.VerticalAlignment <- VerticalAlignment.Center
         sp
@@ -167,8 +179,15 @@ type WolframCanvas() as this  =
     (*Actions*)
     let setButtonsText = fun message -> 
         match message with 
-        | "Math Picture Box" -> compute_Button.Content <-"MathBox"
-        | _ -> compute_Button.Content <- message
+        | "Math Picture Box" -> 
+            do  compute_Button.Content <-"MathBox"
+                customControl_ComboBox.Visibility <- Visibility.Collapsed
+        | "Load Code" -> 
+            do  compute_Button.Content <- message
+                customControl_ComboBox.Visibility <- Visibility.Visible
+        | _ -> 
+            do  compute_Button.Content <- message
+                customControl_ComboBox.Visibility <- Visibility.Collapsed
     let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
             let image = Image()            
@@ -229,15 +248,21 @@ type WolframCanvas() as this  =
            setButtonsText (destination_ComboBox.SelectedItem.ToString())
     let loadTestCode = fun () -> 
         do  setButtonsText "Busy" 
+            
         match kernel.IsComputing with 
         | false -> 
-            do
-            kernel.Compute( WolframCodeBlock.testCode )        
-                                   
+            do            
+            let code = 
+                match customControl_ComboBox.SelectionBoxItem.ToString() with
+                | "CircumCircle" -> CircumCircle.window
+                | "Test" -> WolframCodeBlock.testCode
+                | _ -> WolframCodeBlock.testCode
+            kernel.Compute( code )
+            result_TextBlock.Text <- code
             messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
             print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
-            result_TextBlock.Text <- WolframCodeBlock.testCode
-            input_TextBox.Text <- "Test[]"
+            //result_TextBlock.Text <- WolframCodeBlock.testCode
+            input_TextBox.Text <- customControl_ComboBox.SelectionBoxItem.ToString() + "[]"
             destination_ComboBox.SelectedItem <- "Run Code"             
             setButtonsText (destination_ComboBox.SelectedItem.ToString())
             result_StackPanel.Children.Clear()                                       
@@ -249,8 +274,7 @@ type WolframCanvas() as this  =
         do  setButtonsText "Busy" 
         match kernel.IsComputing with 
         | false -> 
-            do
-                kernel.Compute( input_TextBox.Text )//mathPictureBox.MathCommand <- input_TextBox.Text//                                    
+            do  kernel.Compute( input_TextBox.Text )//mathPictureBox.MathCommand <- input_TextBox.Text//                                    
                 messages_TextBlock.Text <- kernel.Messages |> Seq.fold (+) ""
                 print_TextBlock.Text <- kernel.PrintOutput |> Seq.fold (+) ""            
                 result_TextBlock.Text <- kernel.Result.ToString()
@@ -269,7 +293,7 @@ type WolframCanvas() as this  =
         | "Animate" -> sendToAnimationWindow code
         | "Math Picture Box" -> sendToMathPictureBox code
         | "Asteroids" -> asteroids()
-        | "Load Test Code" -> loadTestCode ()
+        | "Load Code" -> loadTestCode ()
         | "Run Code" -> runCode ()
         | _ -> sendToCompute code
 

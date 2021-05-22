@@ -111,7 +111,7 @@ type CircumCircle() as this  =
         let p3 = System.Windows.Point(X=s.x3,Y=s.y3)
         seq[p1;p2;p3]    
 
-    let getTangets (s : CircumCircleState) = 
+    let getBisectors (s : CircumCircleState) = 
         let t1 = System.Windows.Point(X = (s.x1 + s.x2) / 2., Y= (s.y1 + s.y2) / 2.)
         let t2 = System.Windows.Point(X = (s.x2 + s.x3) / 2., Y= (s.y2 + s.y3) / 2.)
         let t3 = System.Windows.Point(X = (s.x3 + s.x1) / 2., Y= (s.y3 + s.y1) / 2.)
@@ -151,7 +151,7 @@ type CircumCircle() as this  =
         | true -> 
             do  state <- newState
             let center,radius = getCircle state |> parseCircle
-            let tangents = getTangets state
+            let bisectors = getBisectors state
             let context = visual.RenderOpen()
             do  context.DrawEllipse(black,blackPen,p1,6.,6.)
                 context.DrawEllipse(black,blackPen,p2,6.,6.)
@@ -159,9 +159,9 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
-                context.DrawLine(bluePen,center,tangents.[0])
-                context.DrawLine(bluePen,center,tangents.[1])
-                context.DrawLine(bluePen,center,tangents.[2])
+                context.DrawLine(bluePen,center,bisectors.[0])
+                context.DrawLine(bluePen,center,bisectors.[1])
+                context.DrawLine(bluePen,center,bisectors.[2])
                 context.DrawEllipse(Brushes.Transparent,bluePen,center,6.,6.)
                 context.DrawEllipse(Brushes.Transparent,redPen,center,radius,radius)
                 context.Close()
@@ -206,7 +206,7 @@ type CircumCircle() as this  =
             let verticies = Seq.append state.verticies [p]            
             do  state <- {state with x3 = p.X; y3 = p.Y; verticies = verticies}
             let center,radius = getCircle state |> parseCircle    
-            let tangents = getTangets state
+            let bisectors = getBisectors state
             let context = visual.RenderOpen()
             do  context.DrawEllipse(black,blackPen,p1,6.,6.)
                 context.DrawEllipse(black,blackPen,p2,6.,6.)
@@ -214,9 +214,9 @@ type CircumCircle() as this  =
                 context.DrawLine(blackPen,p1,p2)
                 context.DrawLine(blackPen,p2,p)
                 context.DrawLine(blackPen,p,p1)
-                context.DrawLine(bluePen,center,tangents.[0])
-                context.DrawLine(bluePen,center,tangents.[1])
-                context.DrawLine(bluePen,center,tangents.[2])
+                context.DrawLine(bluePen,center,bisectors.[0])
+                context.DrawLine(bluePen,center,bisectors.[1])
+                context.DrawLine(bluePen,center,bisectors.[2])
                 context.DrawEllipse(Brushes.Transparent,bluePen,center,6.,6.)
                 context.DrawEllipse(Brushes.Transparent,redPen,center,radius,radius)
                 context.Close()
@@ -242,4 +242,30 @@ type CircumCircle() as this  =
         
     (*add event handlers*)
         this.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
-       
+        this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
+module CircumCircle = 
+    let window =
+        "Needs[\"NETLink`\"]        
+        CircumCircle[] :=
+        	NETBlock[
+        		Module[{form, pictureBox},
+        			InstallNET[];        			
+        			LoadNETAssembly[\"d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\Symbolic_Math.dll\"];
+        			LoadNETAssembly[\"d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\ControlLibrary.dll\"];
+        			LoadNETAssembly[\"d:\\MyFolders\\Desktop\\SymbolicMath\\Symbolic Math UI\\Bin\\Debug\\WolframDisplay.dll\"];			
+        			LoadNETAssembly[\"System.Core\"];
+        			LoadNETAssembly[\"System\"];
+        			LoadNETAssembly[\"PresentationCore\"];
+        			LoadNETAssembly[\"PresentationFramework\"];			
+        			LoadNETType[\"System.Windows.Window\"];			
+        			LoadNETType[\"ControlLibrary.SharedValue<float>\"];        
+        			form = NETNew[\"System.Windows.Window\"];
+        			form@Width = 500;
+        			form@Height = 500;			
+        			form@Title = \"CircumCircle\";
+        			pictureBox = NETNew[\"Math.Presentation.CircumCircle\"];        			
+        			form@Content = pictureBox;				
+        			vertices = {};			
+        			form@Show[];			
+        		]
+        	]"
