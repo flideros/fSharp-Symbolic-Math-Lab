@@ -13,7 +13,9 @@ type BlankCanvasState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : fl
 type BlankCanvas() as this  =  
     inherit UserControl()    
     do Install() |> ignore
-        
+    
+    
+     
     (* Based on the Wolfram .NET/Link Example: Circumcircle
        but utilizing F# and WPF *)  
        
@@ -39,73 +41,92 @@ type BlankCanvas() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
-    do  kernel.Compute(
-            (* Determines the circumcircle of a triangle. Code from Eric Weisstein's PlaneGeometry.m, available on MathWorld. *)
-            "Circumcircle[{{x1_,y1_}, {x2_,y2_}, {x3_,y3_}}] :=
-    	        Module[{a, d, f, g},
-    		        a = Det[{{x1,y1,1}, {x2,y2,1}, {x3,y3,1}}];
-    		        d = -1/2 Det[{{x1^2+y1^2,y1,1}, {x2^2+y2^2,y2,1}, {x3^2+y3^2,y3,1}}];
-    		        f = 1/2 Det[{{x1^2+y1^2,x1,1}, {x2^2+y2^2,x2,1}, {x3^2+y3^2,x3,1}}];
-    		        g = -Det[{{x1^2+y1^2,x1,y1}, {x2^2+y2^2,x2,y2}, {x3^2+y3^2,x3,y3}}];
-    		        Circle[{-d/a,-f/a}, Sqrt[(f^2+d^2)/a^2-g/a]]
-    	        ]")
-    
-    (*Model*)        
-    let image = Image()        
-    do  image.SetValue(Panel.ZIndexProperty, -100)    
-    let visual = DrawingVisual()     
-    let black = SolidColorBrush(Colors.Black)
-    let blue = SolidColorBrush(Colors.Blue)
-    let red = SolidColorBrush(Colors.Red)
-    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
-    do  bluePen.Freeze()
-        redPen.Freeze()
-        blackPen.Freeze()    
-    
+    do  kernel.Compute("Plot[Sin[x (1 + 0 x)], {x, 0, 6}]")
+        
     (*Controls*)    
     let label = 
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 40., Top = 80., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 240., Top = 400., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 400.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- "Blank canvas for next project"
         l
+    let parameter_Slider =
+        let s = Slider()                       
+        do  s.SetValue(Grid.RowProperty, 0)
+            s.Margin <- Thickness(left = 10., top = 400., right = 0., bottom = 0.)
+            s.Minimum <- 0.
+            s.Maximum <- 6.
+            s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
+            s.TickFrequency <- 0.25
+            s.IsSnapToTickEnabled <- false
+            s.IsEnabled <- true 
+        s
+    let slider_Grid = 
+        let g = Grid()
+        do  g.Children.Add(parameter_Slider) |> ignore
+            g.Width <- 200.
+        g
+    let result_Viewbox image =                    
+        let vb = Viewbox()   
+        do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            vb.Child <- image
+        vb
+    let result_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Orientation <- Orientation.Vertical
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
+        sp
     let canvas = 
         let c = Canvas(ClipToBounds = true)
-        do  c.Background <- System.Windows.Media.Brushes.Aqua 
+        do  c.Background <- System.Windows.Media.Brushes.White 
             c.Children.Add(label) |> ignore
-        c    
+            c.Children.Add(slider_Grid) |> ignore
+            c.Children.Add(result_StackPanel) |> ignore
+        c
     let screen_Grid =
         let g = Grid()
         do  g.SetValue(Grid.RowProperty, 1)        
             g.Children.Add(canvas) |> ignore
         g
     
-    (*Logic*)
-    let isOverPoint (p1:System.Windows.Point) = 
-        Seq.exists (fun (p2:System.Windows.Point) -> 
-            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (state.verticies)
+    (*Logic*)    
 
     (*Actions*)
-    let getBitmap visual = 
-        let bitmap = 
-            RenderTargetBitmap(
-                (int)SystemParameters.PrimaryScreenWidth,
-                (int)SystemParameters.PrimaryScreenHeight, 
-                96.,
-                96.,
-                PixelFormats.Pbgra32)        
-        do  bitmap.Render(visual)
-            bitmap.Freeze()
-        bitmap
+    let setGraphicsFromKernel (k:MathKernel) = 
+        let rec getImages i =
+            let image = Image()            
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+            match i + 1 = k.Graphics.Length with
+            | true -> ()
+            | false -> getImages (i+1)
+        match k.Graphics.Length > 0 with                
+        | true ->                                        
+            result_StackPanel.Children.Clear()            
+            getImages 0             
+        | false ->             
+            result_StackPanel.Children.Clear()
     
+    let handleSliderValueChange () = do label.Text <- parameter_Slider.Value.ToString()
+    
+    let handleSliderChange () = 
+        let p = parameter_Slider.Value.ToString()
+        do  label.Text <- parameter_Slider.Value.ToString()        
+            kernel.Compute("Plot[Sin[x (1 + " + p + " x)], {x, 0, 6}]")
+            setGraphicsFromKernel kernel
+
     (*Initialize*)
     do  this.Content <- screen_Grid
-        
+    
     (*add event handlers*)
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
+        this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
+        this.MouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSliderChange ()))
+        parameter_Slider.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSliderChange ()))
+        parameter_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueChange ()))
 module BlankCanvas = 
     let window =
         "Needs[\"NETLink`\"]        
@@ -122,7 +143,7 @@ module BlankCanvas =
         			LoadNETAssembly[\"PresentationFramework\"];			
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
-        			form@Width = 500;
+        			form@Width = 600;
         			form@Height = 500;			
         			form@Title = \"Blank Canvas\";
         			pictureBox = NETNew[\"Math.Presentation.BlankCanvas\"];        			
@@ -131,4 +152,4 @@ module BlankCanvas =
         			form@Show[];			
         		]
         	]"
-
+    
