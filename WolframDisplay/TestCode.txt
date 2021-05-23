@@ -16,15 +16,14 @@ Test[] :=
 			LoadNETAssembly["PresentationCore"];
 			LoadNETAssembly["PresentationFramework"];			
 			LoadNETType["System.Windows.Window"];			
-			LoadNETType["ControlLibrary.SharedValue<float>"];
 
 			(* Now create the main form and WPF user control, and set the desired properties.*)
 			
 			form = NETNew["System.Windows.Window"];
 			form@Width = 500;
 			form@Height = 500;			
-			form@Title = "CircumCircle";
-			pictureBox = NETNew["Math.Presentation.CircumCircle"]; 		
+			form@Title = "Test";
+			pictureBox = NETNew["Math.Presentation.WolframEngine.BlankCanvas"]; 		
 			
 			form@Content = pictureBox;				
 			

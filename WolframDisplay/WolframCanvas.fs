@@ -254,7 +254,7 @@ type WolframCanvas() as this  =
             do            
             let code = 
                 match customControl_ComboBox.SelectionBoxItem.ToString() with
-                | "CircumCircle" -> CircumCircle.window
+                | "CircumCircle" -> WolframEngine.CircumCircle.window
                 | "Test" -> WolframCodeBlock.testCode
                 | _ -> WolframCodeBlock.testCode
             kernel.Compute( code )

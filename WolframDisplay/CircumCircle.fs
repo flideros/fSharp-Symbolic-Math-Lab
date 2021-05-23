@@ -1,4 +1,4 @@
-﻿namespace Math.Presentation
+﻿namespace Math.Presentation.WolframEngine
 
 open System
 open System.Windows       
@@ -257,13 +257,12 @@ module CircumCircle =
         			LoadNETAssembly[\"System\"];
         			LoadNETAssembly[\"PresentationCore\"];
         			LoadNETAssembly[\"PresentationFramework\"];			
-        			LoadNETType[\"System.Windows.Window\"];			
-        			LoadNETType[\"ControlLibrary.SharedValue<float>\"];        
+        			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
         			form@Width = 500;
         			form@Height = 500;			
         			form@Title = \"CircumCircle\";
-        			pictureBox = NETNew[\"Math.Presentation.CircumCircle\"];        			
+        			pictureBox = NETNew[\"Math.Presentation.WolframEngine.CircumCircle\"];        			
         			form@Content = pictureBox;				
         			vertices = {};			
         			form@Show[];			
