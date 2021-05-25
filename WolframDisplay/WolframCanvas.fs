@@ -1,4 +1,4 @@
-﻿namespace Math.Presentation
+﻿namespace Math.Presentation.WolframEngine
 
 open System
 open System.Windows       
@@ -41,7 +41,7 @@ type WolframCanvas() as this  =
         let mb = new UI.MathPictureBox()
         do  mb.Link <- link
             mb.Scale(Drawing.SizeF(7.f,7.f))
-            mb.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44]"
+            mb.MathCommand <- "Style[\"{Wolfram Canvas}\",FontSize -> 44,FontFamily -> \"Stix2\"]"
         mb
     let mathBox_Grid = 
         let g = Grid()
@@ -75,7 +75,7 @@ type WolframCanvas() as this  =
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Test"
             cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            cb.ItemsSource <- ["Test";"CircumCircle"]
+            cb.ItemsSource <- ["Test";"CircumCircle";"MohrsCircle"]
             cb.Visibility <- Visibility.Collapsed
         cb
     let compute_Button = 
@@ -254,7 +254,8 @@ type WolframCanvas() as this  =
             do            
             let code = 
                 match customControl_ComboBox.SelectionBoxItem.ToString() with
-                | "CircumCircle" -> WolframEngine.CircumCircle.window
+                | "CircumCircle" -> CircumCircle.window
+                | "MohrsCircle" -> MohrsCircle.window
                 | "Test" -> WolframCodeBlock.testCode
                 | _ -> WolframCodeBlock.testCode
             kernel.Compute( code )

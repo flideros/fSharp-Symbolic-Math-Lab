@@ -8,14 +8,33 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
-type BlankCanvasState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : float; y3 : float; 
-                          verticies : System.Windows.Point seq; selectedVertex : int}
-type BlankCanvas() as this  =  
-    inherit UserControl()    
+type MohrsCircleState = {sigmaX : float;  tauXY : float;  tauXZ : float;
+                          tauYX : float; sigmaY : float;  tauYZ : float;
+                          tauZX : float;  tauZY : float; sigmaZ : float}
+type MohrsCircle() as this  =  
+    inherit UserControl()
     do Install() |> ignore
            
-    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.; verticies=seq[]; selectedVertex = 0}
+    let mutable state = {sigmaX = 4.0;  tauXY = 2.3;  tauXZ = 0.0;
+                          tauYX = 0.0; sigmaY = 5.0;  tauYZ = 0.0;
+                          tauZX = 0.0;  tauZY = 0.0; sigmaZ = -1.5}
     
+    let code (s:MohrsCircleState) = 
+        let wCode =
+            "Grid[{{Text@Style[\"Mohr's Circle\", 16], SpanFromLeft}, 
+                {Graphics[{{
+                    Line[{{\[Sigma]x, - \[Tau]}, {\[Sigma]y, \[Tau]}}],
+                    Circle[{(\[Sigma]x - \[Sigma]y)/2 + \[Sigma]y, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
+                    Circle[{(\[Sigma]x - \[Sigma]y)/2 + \[Sigma]y, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{Pi/6,3 Pi/4}]}},             
+                    Axes -> True, 
+                    AxesOrigin -> {0, 0}, 
+                    AspectRatio -> Automatic, 
+                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Sheer\", Medium]},
+                    ImageSize -> Medium], 
+                    SpanFromLeft}}]"
+        wCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString())
+
+
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()        
@@ -36,7 +55,7 @@ type BlankCanvas() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
-    do  kernel.Compute("Plot[Sin[x (1 + 0 x)], {x, 0, 2 * Pi}]")
+    do  kernel.Compute(code state)
         
     (*Controls*)    
     let label = 
@@ -105,12 +124,17 @@ type BlankCanvas() as this  =
             result_StackPanel.Children.Clear()            
             getImages 0             
         | false ->             
-            result_StackPanel.Children.Clear()    
+            result_StackPanel.Children.Clear()
+            let graphics = link.EvaluateToImage(code state, width = 400, height = 300)
+            let image = Image()            
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
     let handleSliderValueChange () = do label.Text <- parameter_Slider.Value.ToString()    
     let handleSliderChange () = 
         let p = parameter_Slider.Value.ToString()
-        do  label.Text <- parameter_Slider.Value.ToString()        
-            kernel.Compute("Plot[Sin[x (1 + " + p + " x)], {x, 0, 2 * Pi}]")
+        do  state <- {state with sigmaZ = parameter_Slider.Value}
+            label.Text <- parameter_Slider.Value.ToString()        
+            kernel.Compute(code state)
             setGraphicsFromKernel kernel
 
     (*Initialize*)
@@ -121,10 +145,10 @@ type BlankCanvas() as this  =
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
         parameter_Slider.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSliderChange ()))
         parameter_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueChange ()))
-module BlankCanvas = 
+module MohrsCircle = 
     let window =
         "Needs[\"NETLink`\"]        
-        BlankCanvas[] :=
+        MohrsCircle[] :=
         	NETBlock[
         		Module[{form, pictureBox},
         			InstallNET[];        			
@@ -139,8 +163,8 @@ module BlankCanvas =
         			form = NETNew[\"System.Windows.Window\"];
         			form@Width = 600;
         			form@Height = 500;			
-        			form@Title = \"Blank Canvas\";
-        			pictureBox = NETNew[\"Math.Presentation.WolframEngine.BlankCanvas\"];        			
+        			form@Title = \"Mohrs Circle\";
+        			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
         			form@Content = pictureBox;				
         			vertices = {};			
         			form@Show[];			

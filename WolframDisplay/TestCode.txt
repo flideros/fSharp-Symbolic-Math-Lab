@@ -20,7 +20,7 @@ Test[] :=
 			(* Now create the main form and WPF user control, and set the desired properties.*)
 			
 			form = NETNew["System.Windows.Window"];
-			form@Width = 500;
+			form@Width = 600;
 			form@Height = 500;			
 			form@Title = "Test";
 			pictureBox = NETNew["Math.Presentation.WolframEngine.BlankCanvas"]; 		

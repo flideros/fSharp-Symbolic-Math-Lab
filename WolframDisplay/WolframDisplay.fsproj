@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Include="BlankCanvas.fs" />
+    <Compile Include="MohrsCircle.fs" />
     <Compile Include="CircumCircle.fs" />
     <Compile Include="WolframCodeBlocks.fs" />
     <Compile Include="WolframCanvas.fs" />

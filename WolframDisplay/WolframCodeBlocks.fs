@@ -1,4 +1,4 @@
-﻿namespace Math.Presentation
+﻿namespace Math.Presentation.WolframEngine
 
 open System
 open System.IO
