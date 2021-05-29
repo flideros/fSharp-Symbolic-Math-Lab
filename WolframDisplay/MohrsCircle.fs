@@ -16,10 +16,10 @@ type MohrsCircle() as this  =
     inherit UserControl()
     do Install() |> ignore
            
-    let mutable state = {sigmaX = 15.0;  tauXY = -3.5;  tauXZ = 0.0;
+    let mutable state = {sigmaX = 25.0;  tauXY = -3.5;  tauXZ = 0.0;
                           tauYX = -3.5; sigmaY = 5.0;  tauYZ = 0.0;
                           tauZX = 0.0;  tauZY = 0.0; sigmaZ = 0.0;
-                          theta = 36.0}
+                          theta = 0.0}
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -46,7 +46,7 @@ type MohrsCircle() as this  =
         v.Replace("\[Sigma]x", s.sigmaX.ToString())
          .Replace("\[Sigma]y", s.sigmaY.ToString())
          .Replace("\[Tau]",    s.tauXY.ToString())
-         .Replace("\[Theta]",  s.theta.ToString())
+         .Replace("\[Theta]",  s.theta.ToString() + "Degree")
     let sigma = 
         "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
         A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
@@ -73,7 +73,7 @@ type MohrsCircle() as this  =
         let wCode =
             "Grid[{{Text@Style[\"Mohr's Circle\", 16], SpanFromLeft}, 
                 {Graphics[{{
-                    Line[{{\[Sigma]x, - \[Tau]}, {\[Sigma]y, \[Tau]}}],
+                    Line[{{\[Sigma]x, - (\[Tau])}, {\[Sigma]y, \[Tau]}}],
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{ArcTan[(\[Sigma]x - \[Sigma]y)/2, - \[Tau]],0}],             
                 
