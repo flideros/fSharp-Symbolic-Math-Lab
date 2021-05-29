@@ -15,7 +15,7 @@ type MohrsCircle() as this  =
     inherit UserControl()
     do Install() |> ignore
            
-    let mutable state = {sigmaX = 15.0;  tauXY = 4.0;  tauXZ = 0.0;
+    let mutable state = {sigmaX = 25.0;  tauXY = 4.0;  tauXZ = 0.0;
                           tauYX = -3.5; sigmaY = 5.0;  tauYZ = 0.0;
                           tauZX = 0.0;  tauZY = 0.0; sigmaZ = -1.5}
     
@@ -40,40 +40,34 @@ type MohrsCircle() as this  =
             k.UseFrontEnd <- true
         k
     
-    let sigmaXPrime (s:MohrsCircleState) = 
-        let spCode =
-            "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
-            A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
-            At = Transpose[A];
-            sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{1,1}]]"
-        let code = spCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()).Replace("\[Theta]","-10. \[Degree]")
+    let substituteValues (v : string) s = 
+        v.Replace("\[Sigma]x",s.sigmaX.ToString())
+         .Replace("\[Sigma]y", s.sigmaY.ToString())
+         .Replace("\[Tau]",s.tauXY.ToString())
+         .Replace("\[Theta]","12.")
+    let sigma = 
+        "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
+        A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
+        At = Transpose[A];"
+    let sigmaX' (s:MohrsCircleState) = 
+        let s'Code = sigma + "sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{1,1}]]"
+        let code = substituteValues s'Code s
         kernel.Compute(code)
         kernel.Result.ToString()
-    
-    let sigmaYPrime (s:MohrsCircleState) = 
-        let spCode =
-            "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
-            A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
-            At = Transpose[A];
-            sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{2,2}]]"
-        let code = spCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()).Replace("\[Theta]","-10. \[Degree]")
+    let sigmaY' (s:MohrsCircleState) = 
+        let s'Code = sigma + "sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{2,2}]]"
+        let code = substituteValues s'Code s
         kernel.Compute(code)
         kernel.Result.ToString()
-
-    let tauPrime (s:MohrsCircleState) = 
-        let tpCode =
-            "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
-            A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
-            At = Transpose[A];
-            InputForm[Extract[Simplify[Expand[A . sigma . At]],{1,2}]]"
-        let code = tpCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()).Replace("\[Theta]","-10. \[Degree]")
+    let tau' (s:MohrsCircleState) = 
+        let t'Code = sigma + "sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{1,2}]]"
+        let code = substituteValues t'Code s
         kernel.Compute(code)
         kernel.Result.ToString()
-
     let code (s:MohrsCircleState) = 
-        let spX = sigmaXPrime state
-        let spY = sigmaYPrime state
-        let tp = tauPrime state
+        let spX = sigmaX' state
+        let spY = sigmaY' state
+        let tp = tau' state
         let wCode =
             "Grid[{{Text@Style[\"Mohr's Circle\", 16], SpanFromLeft}, 
                 {Graphics[{{
@@ -92,15 +86,10 @@ type MohrsCircle() as this  =
                     AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Sheer\", Medium]},
                     ImageSize -> Medium], 
                     SpanFromLeft}}]"
-        wCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()) //.Replace("\[Theta]","0.0")
+        substituteValues wCode s
 
-
-    
     do  kernel.Compute(code state)
-     
-     
-
-
+ 
     (*Controls*)    
     let label = 
         let l = TextBlock()
