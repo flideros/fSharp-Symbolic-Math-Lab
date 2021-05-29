@@ -31,7 +31,7 @@ type WolframCanvas() as this  =
             k.HandleEvents <- true
             k.Input <- null
             k.LinkArguments <- null
-            k.PageWidth <- 200
+            k.PageWidth <- 400
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k

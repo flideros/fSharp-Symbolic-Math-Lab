@@ -67,26 +67,26 @@ type MohrsCircle() as this  =
         kernel.Compute(code)
         kernel.Result.ToString()
     let code (s:MohrsCircleState) = 
-        let spX = sigmaX' state
-        let spY = sigmaY' state
-        let tp = tau' state
+        let sX' = sigmaX' state
+        let sY' = sigmaY' state
+        let t' = tau' state
         let wCode =
-            "Grid[{{Text@Style[\"Mohr's Circle\", 16], SpanFromLeft}, 
+            "Grid[{{Text@Style[\"Mohr's Circle\", 26], SpanFromLeft}, 
                 {Graphics[{{
                     Line[{{\[Sigma]x, - (\[Tau])}, {\[Sigma]y, \[Tau]}}],
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{ArcTan[(\[Sigma]x - \[Sigma]y)/2, - \[Tau]],0}],             
                 
                     {Red,
-                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0},  0.45 Sqrt[((" + spX + " - " + spY + ")/2)^2 + (" + tp + ")^2],{ArcTan[(" + spX + " - " + spY + ")/2, - " + tp + "],0}],                    
-                    Line[{{" + spX + ", -(" + tp + ")}, {" + spY + ", " + tp + "}}],}                                        
+                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0},  0.45 Sqrt[((" + sX' + " - " + sY' + ")/2)^2 + (" + t' + ")^2],{ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "],0}],                    
+                    Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}],}                                        
                     }},                    
                 
                     Axes -> True, 
                     AxesOrigin -> {0, 0}, 
-                    AspectRatio -> 1, 
-                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Sheer\", Medium]},
-                    ImageSize -> Large], 
+                    AspectRatio -> Automatic, 
+                    AxesLabel -> {Style[\"\[Sigma]\", Large], Style[\"Sheer\", Large]},
+                    ImageSize -> Scaled[0.8]],
                     SpanFromLeft}}]"
         substituteValues wCode s
 
@@ -95,7 +95,7 @@ type MohrsCircle() as this  =
     (*Controls*)    
     let label = 
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 240., Top = 400., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 240., Top = 650., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 400.
@@ -105,7 +105,7 @@ type MohrsCircle() as this  =
     let parameter_Slider =
         let s = Slider()                       
         do  s.SetValue(Grid.RowProperty, 0)
-            s.Margin <- Thickness(left = 10., top = 400., right = 0., bottom = 0.)
+            s.Margin <- Thickness(left = 10., top = 650., right = 0., bottom = 0.)
             s.Minimum <- 0.
             s.Maximum <- 90.
             s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
@@ -160,7 +160,7 @@ type MohrsCircle() as this  =
             getImages 0             
         | false ->             
             result_StackPanel.Children.Clear()
-            let graphics = link.EvaluateToImage(code state, width = 400, height = 300)
+            let graphics = link.EvaluateToImage(code state, width = 600, height = 600)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
@@ -197,7 +197,7 @@ module MohrsCircle =
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
         			form@Width = 600;
-        			form@Height = 600;			
+        			form@Height = 800;			
         			form@Title = \"Mohrs Circle\";
         			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
         			form@Content = pictureBox;				
