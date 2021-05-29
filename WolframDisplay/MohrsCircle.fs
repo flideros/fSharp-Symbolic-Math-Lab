@@ -15,26 +15,10 @@ type MohrsCircle() as this  =
     inherit UserControl()
     do Install() |> ignore
            
-    let mutable state = {sigmaX = 4.0;  tauXY = 2.3;  tauXZ = 0.0;
-                          tauYX = 0.0; sigmaY = 5.0;  tauYZ = 0.0;
+    let mutable state = {sigmaX = 15.0;  tauXY = 4.0;  tauXZ = 0.0;
+                          tauYX = -3.5; sigmaY = 5.0;  tauYZ = 0.0;
                           tauZX = 0.0;  tauZY = 0.0; sigmaZ = -1.5}
     
-    let code (s:MohrsCircleState) = 
-        let wCode =
-            "Grid[{{Text@Style[\"Mohr's Circle\", 16], SpanFromLeft}, 
-                {Graphics[{{
-                    Line[{{\[Sigma]x, - \[Tau]}, {\[Sigma]y, \[Tau]}}],
-                    Circle[{(\[Sigma]x - \[Sigma]y)/2 + \[Sigma]y, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
-                    Circle[{(\[Sigma]x - \[Sigma]y)/2 + \[Sigma]y, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{Pi/6,3 Pi/4}]}},             
-                    Axes -> True, 
-                    AxesOrigin -> {0, 0}, 
-                    AspectRatio -> Automatic, 
-                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Sheer\", Medium]},
-                    ImageSize -> Medium], 
-                    SpanFromLeft}}]"
-        wCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString())
-
-
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()        
@@ -55,8 +39,68 @@ type MohrsCircle() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
+    
+    let sigmaXPrime (s:MohrsCircleState) = 
+        let spCode =
+            "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
+            A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
+            At = Transpose[A];
+            sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{1,1}]]"
+        let code = spCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()).Replace("\[Theta]","-10. \[Degree]")
+        kernel.Compute(code)
+        kernel.Result.ToString()
+    
+    let sigmaYPrime (s:MohrsCircleState) = 
+        let spCode =
+            "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
+            A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
+            At = Transpose[A];
+            sigmaPrime = InputForm[Extract[Simplify[Expand[A . sigma . At]],{2,2}]]"
+        let code = spCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()).Replace("\[Theta]","-10. \[Degree]")
+        kernel.Compute(code)
+        kernel.Result.ToString()
+
+    let tauPrime (s:MohrsCircleState) = 
+        let tpCode =
+            "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
+            A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
+            At = Transpose[A];
+            InputForm[Extract[Simplify[Expand[A . sigma . At]],{1,2}]]"
+        let code = tpCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()).Replace("\[Theta]","-10. \[Degree]")
+        kernel.Compute(code)
+        kernel.Result.ToString()
+
+    let code (s:MohrsCircleState) = 
+        let spX = sigmaXPrime state
+        let spY = sigmaYPrime state
+        let tp = tauPrime state
+        let wCode =
+            "Grid[{{Text@Style[\"Mohr's Circle\", 16], SpanFromLeft}, 
+                {Graphics[{{
+                    Line[{{\[Sigma]x, - \[Tau]}, {\[Sigma]y, \[Tau]}}],
+                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
+                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{ArcTan[(\[Sigma]x - \[Sigma]y)/2, - \[Tau]],0}],             
+                
+                    {Red,
+                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0},  0.45 Sqrt[((" + spX + " - " + spY + ")/2)^2 + (" + tp + ")^2],{ArcTan[(" + spX + " - " + spY + ")/2, - " + tp + "],0}],                    
+                    Line[{{" + spX + ", -" + tp + "}, {" + spY + ", " + tp + "}}],}                                        
+                    }},                    
+                
+                    Axes -> True, 
+                    AxesOrigin -> {0, 0}, 
+                    AspectRatio -> 1, 
+                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Sheer\", Medium]},
+                    ImageSize -> Medium], 
+                    SpanFromLeft}}]"
+        wCode.Replace("\[Sigma]x",s.sigmaX.ToString()).Replace("\[Sigma]y", s.sigmaY.ToString()).Replace("\[Tau]",s.tauXY.ToString()) //.Replace("\[Theta]","0.0")
+
+
+    
     do  kernel.Compute(code state)
-        
+     
+     
+
+
     (*Controls*)    
     let label = 
         let l = TextBlock()
@@ -162,7 +206,7 @@ module MohrsCircle =
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
         			form@Width = 600;
-        			form@Height = 500;			
+        			form@Height = 600;			
         			form@Title = \"Mohrs Circle\";
         			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
         			form@Content = pictureBox;				
