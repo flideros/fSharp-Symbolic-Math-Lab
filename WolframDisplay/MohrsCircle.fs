@@ -10,14 +10,16 @@ open Wolfram.NETLink
 
 type MohrsCircleState = {sigmaX : float;  tauXY : float;  tauXZ : float;
                           tauYX : float; sigmaY : float;  tauYZ : float;
-                          tauZX : float;  tauZY : float; sigmaZ : float}
+                          tauZX : float;  tauZY : float; sigmaZ : float;
+                          theta : float}
 type MohrsCircle() as this  =  
     inherit UserControl()
     do Install() |> ignore
            
-    let mutable state = {sigmaX = 25.0;  tauXY = 4.0;  tauXZ = 0.0;
+    let mutable state = {sigmaX = 15.0;  tauXY = -3.5;  tauXZ = 0.0;
                           tauYX = -3.5; sigmaY = 5.0;  tauYZ = 0.0;
-                          tauZX = 0.0;  tauZY = 0.0; sigmaZ = -1.5}
+                          tauZX = 0.0;  tauZY = 0.0; sigmaZ = 0.0;
+                          theta = 36.0}
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
@@ -41,10 +43,10 @@ type MohrsCircle() as this  =
         k
     
     let substituteValues (v : string) s = 
-        v.Replace("\[Sigma]x",s.sigmaX.ToString())
+        v.Replace("\[Sigma]x", s.sigmaX.ToString())
          .Replace("\[Sigma]y", s.sigmaY.ToString())
-         .Replace("\[Tau]",s.tauXY.ToString())
-         .Replace("\[Theta]","12.")
+         .Replace("\[Tau]",    s.tauXY.ToString())
+         .Replace("\[Theta]",  s.theta.ToString())
     let sigma = 
         "sigma = {{\[Sigma]x, \[Tau]}, {\[Tau], \[Sigma]y}};
         A = {{Cos[\[Theta]], Sin[\[Theta]]}, {-Sin[\[Theta]], Cos[\[Theta]]}};
@@ -77,14 +79,14 @@ type MohrsCircle() as this  =
                 
                     {Red,
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0},  0.45 Sqrt[((" + spX + " - " + spY + ")/2)^2 + (" + tp + ")^2],{ArcTan[(" + spX + " - " + spY + ")/2, - " + tp + "],0}],                    
-                    Line[{{" + spX + ", -" + tp + "}, {" + spY + ", " + tp + "}}],}                                        
+                    Line[{{" + spX + ", -(" + tp + ")}, {" + spY + ", " + tp + "}}],}                                        
                     }},                    
                 
                     Axes -> True, 
                     AxesOrigin -> {0, 0}, 
                     AspectRatio -> 1, 
                     AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Sheer\", Medium]},
-                    ImageSize -> Medium], 
+                    ImageSize -> Large], 
                     SpanFromLeft}}]"
         substituteValues wCode s
 
@@ -105,7 +107,7 @@ type MohrsCircle() as this  =
         do  s.SetValue(Grid.RowProperty, 0)
             s.Margin <- Thickness(left = 10., top = 400., right = 0., bottom = 0.)
             s.Minimum <- 0.
-            s.Maximum <- 6.
+            s.Maximum <- 90.
             s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
             s.TickFrequency <- 0.25
             s.IsSnapToTickEnabled <- false
@@ -165,7 +167,7 @@ type MohrsCircle() as this  =
     let handleSliderValueChange () = do label.Text <- parameter_Slider.Value.ToString()    
     let handleSliderChange () = 
         let p = parameter_Slider.Value.ToString()
-        do  state <- {state with sigmaZ = parameter_Slider.Value}
+        do  state <- {state with theta = parameter_Slider.Value}
             label.Text <- parameter_Slider.Value.ToString()        
             kernel.Compute(code state)
             setGraphicsFromKernel kernel
