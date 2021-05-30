@@ -8,17 +8,15 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
-type MohrsCircleState = {sigmaX : float;  tauXY : float;  tauXZ : float;
-                          tauYX : float; sigmaY : float;  tauYZ : float;
-                          tauZX : float;  tauZY : float; sigmaZ : float;
+type MohrsCircleState = {sigmaX : float;  tauXY : float;  
+                          tauYX : float; sigmaY : float;                          
                           theta : float}
 type MohrsCircle() as this  =  
     inherit UserControl()
     do Install() |> ignore
            
-    let mutable state = {sigmaX = 25.0;  tauXY = -3.5;  tauXZ = 0.0;
-                          tauYX = -3.5; sigmaY = 5.0;  tauYZ = 0.0;
-                          tauZX = 0.0;  tauZY = 0.0; sigmaZ = 0.0;
+    let mutable state = {sigmaX = 4.0;  tauXY = 2.3;
+                          tauYX = 2.3; sigmaY = 1.5;
                           theta = 0.0}
     
     (*Wolfram Kernel*)
@@ -76,17 +74,21 @@ type MohrsCircle() as this  =
                     Line[{{\[Sigma]x, - (\[Tau])}, {\[Sigma]y, \[Tau]}}],
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{ArcTan[(\[Sigma]x - \[Sigma]y)/2, - \[Tau]],0}],             
-                
-                    {Red,
+                    
+                    Locator[{\[Sigma]y, \[Tau]}],
+                    Locator[{\[Sigma]x, -(\[Tau])}],
+                    Locator[{" + sX' + ", -(" + t' + ")}, Graphics[  {Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
+
+                    {Red,                    
                     Circle[{(\[Sigma]x + \[Sigma]y)/2, 0},  0.45 Sqrt[((" + sX' + " - " + sY' + ")/2)^2 + (" + t' + ")^2],{ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "],0}],                    
-                    Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}],}                                        
+                    Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
                     }},                    
                 
-                    Axes -> True, 
+                    Axes -> True,  
                     AxesOrigin -> {0, 0}, 
                     AspectRatio -> Automatic, 
-                    AxesLabel -> {Style[\"\[Sigma]\", Large], Style[\"Sheer\", Large]},
-                    ImageSize -> Scaled[0.8]],
+                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Shear\", Medium]},
+                    ImageSize -> Scaled[1]],
                     SpanFromLeft}}]"
         substituteValues wCode s
 
@@ -107,7 +109,7 @@ type MohrsCircle() as this  =
         do  s.SetValue(Grid.RowProperty, 0)
             s.Margin <- Thickness(left = 10., top = 650., right = 0., bottom = 0.)
             s.Minimum <- 0.
-            s.Maximum <- 90.
+            s.Maximum <- 180.
             s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
             s.TickFrequency <- 0.25
             s.IsSnapToTickEnabled <- false
@@ -196,7 +198,7 @@ module MohrsCircle =
         			LoadNETAssembly[\"PresentationFramework\"];			
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
-        			form@Width = 600;
+        			form@Width = 700;
         			form@Height = 800;			
         			form@Title = \"Mohrs Circle\";
         			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
