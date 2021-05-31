@@ -2,7 +2,7 @@
 
 open System
 open System.Windows       
-open System.Windows.Controls  
+open System.Windows.Controls 
 open System.Windows.Shapes  
 open System.Windows.Media
 open System.Windows.Media.Imaging
@@ -13,7 +13,8 @@ type MohrsCircleState = {sigmaX : float;  tauXY : float;
                           theta : float}
 type MohrsCircle() as this  =  
     inherit UserControl()
-    do Install() |> ignore
+    
+    do  Install() |> ignore
            
     let mutable state = {sigmaX = 4.0;  tauXY = 2.3;
                           tauYX = 2.3; sigmaY = 1.5;
@@ -40,6 +41,7 @@ type MohrsCircle() as this  =
             k.UseFrontEnd <- true
         k
     
+    (*Logic*)    
     let substituteValues (v : string) s = 
         v.Replace("\[Sigma]x", s.sigmaX.ToString())
          .Replace("\[Sigma]y", s.sigmaY.ToString())
@@ -104,7 +106,7 @@ type MohrsCircle() as this  =
                     AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\[Tau], Medium]},
                     ImageSize -> Scaled[1]]
                     }},Frame -> All]"
-        wCode//table//
+        wCode
 
     do  kernel.Compute(code state)
  
@@ -134,30 +136,96 @@ type MohrsCircle() as this  =
         let l = Label()
         let sp = StackPanel()
         do  l.HorizontalAlignment <- HorizontalAlignment.Center
-            l.Content <- "Angle"
+            l.Content <- "\u03B8"
             l.FontSize <- 16.
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(l) |> ignore
             sp.Children.Add(parameter_Slider) |> ignore
             sp.Children.Add(angle_TextBlock) |> ignore            
-            g.Margin <- Thickness(left = 10., top = 630., right = 0., bottom = 0.)
+            
             g.Children.Add(sp) |> ignore
             g.Width <- 200.
-        g
-    
+        g    
     let sigmaX_TextBox = 
         let tb = TextBox()
         do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            tb.VerticalScrollBarVisibility <- ScrollBarVisibility.Visible
-            tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Visible
             tb.TextWrapping <- TextWrapping.Wrap
-            tb.AcceptsReturn <- true
-            tb.MaxHeight  <- 300.
-            tb.MaxWidth <- 700.
+            tb.AcceptsReturn <- false
+            tb.MaxHeight  <- 30.
+            tb.Width <- 100.
             tb.FontSize <- 16.
+            tb.TextAlignment <- TextAlignment.Center
             tb.Text <- state.sigmaX.ToString()
-        tb 
-
+        tb
+    let sigmaX_Grid = 
+        let g = Grid()
+        let l = Label()
+        let sp = StackPanel()
+        do  l.HorizontalAlignment <- HorizontalAlignment.Center
+            l.Content <- "\u03C3" + "x"
+            l.FontSize <- 16.
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(l) |> ignore
+            sp.Children.Add(sigmaX_TextBox) |> ignore            
+            g.Children.Add(sp) |> ignore
+        g    
+    let sigmaY_TextBox = 
+        let tb = TextBox()
+        do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            tb.TextWrapping <- TextWrapping.NoWrap
+            tb.AcceptsReturn <- false
+            tb.MaxHeight  <- 30.
+            tb.Width <- 100.
+            tb.FontSize <- 16.
+            tb.TextAlignment <- TextAlignment.Center
+            tb.Text <- state.sigmaY.ToString()
+        tb
+    let sigmaY_Grid = 
+        let g = Grid()
+        let l = Label()
+        let sp = StackPanel()
+        do  l.HorizontalAlignment <- HorizontalAlignment.Center
+            l.Content <- "\u03C3" + "y"
+            l.FontSize <- 16.
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(l) |> ignore
+            sp.Children.Add(sigmaY_TextBox) |> ignore            
+            g.Children.Add(sp) |> ignore
+        g
+    let tau_TextBox = 
+        let tb = TextBox()
+        do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            tb.TextWrapping <- TextWrapping.NoWrap
+            tb.AcceptsReturn <- false
+            tb.MaxHeight  <- 30.
+            tb.Width <- 100.
+            tb.FontSize <- 16.
+            tb.TextAlignment <- TextAlignment.Center
+            tb.Text <- state.tauXY.ToString()
+            tb.IsReadOnly <- false
+        tb
+    let tau_Grid = 
+        let g = Grid()
+        let l = Label()
+        let sp = StackPanel()
+        do  l.HorizontalAlignment <- HorizontalAlignment.Center
+            l.Content <- "\u03C4"
+            l.FontSize <- 16.
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(l) |> ignore
+            sp.Children.Add(tau_TextBox) |> ignore            
+            g.Children.Add(sp) |> ignore
+        g
+    let control_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Orientation <- Orientation.Horizontal
+            sp.Orientation <- Orientation.Horizontal
+            sp.Children.Add(slider_Grid) |> ignore
+            sp.Children.Add(sigmaX_Grid) |> ignore
+            sp.Children.Add(sigmaY_Grid) |> ignore
+            sp.Children.Add(tau_Grid) |> ignore
+            sp.Margin <- Thickness(left = 10., top = 610., right = 0., bottom = 0.)
+        sp    
     let result_Viewbox image =                    
         let vb = Viewbox()   
         do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
@@ -171,7 +239,7 @@ type MohrsCircle() as this  =
     let canvas = 
         let c = Canvas(ClipToBounds = true)
         do  c.Background <- System.Windows.Media.Brushes.White             
-            c.Children.Add(slider_Grid) |> ignore
+            c.Children.Add(control_StackPanel) |> ignore
             c.Children.Add(result_StackPanel) |> ignore
         c
     let screen_Grid =
@@ -180,8 +248,6 @@ type MohrsCircle() as this  =
             g.Children.Add(canvas) |> ignore
         g
     
-    (*Logic*)    
-
     (*Actions*)
     let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
@@ -203,11 +269,33 @@ type MohrsCircle() as this  =
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
     let handleSliderValueChange () = do angle_TextBlock.Text <- parameter_Slider.Value.ToString()    
     let handleSliderChange () = 
-        let p = parameter_Slider.Value.ToString()
         do  state <- {state with theta = parameter_Slider.Value}
             angle_TextBlock.Text <- parameter_Slider.Value.ToString()        
             kernel.Compute(code state)
             setGraphicsFromKernel kernel
+    let handleSigmaXValueChanged () =
+        do  state <- 
+                match sigmaX_TextBox.Text.Length = 0 with
+                | false -> {state with sigmaX = (float) sigmaX_TextBox.Text}
+                | true -> {state with sigmaX = 0.}                       
+    let handleSigmaYValueChanged () =
+        do  state <- 
+                match sigmaY_TextBox.Text.Length = 0 with
+                | false -> {state with sigmaY = (float) sigmaY_TextBox.Text}
+                | true -> {state with sigmaY = 0.}
+    let handleTauValueChanged () =
+        do  state <- 
+                match tau_TextBox.Text.Length = 0 with
+                | false -> {state with tauXY = (float) tau_TextBox.Text; tauYX = (float) tau_TextBox.Text}                           
+                | true -> {state with tauXY = 0.; tauYX = 0.}
+
+    let handleReturnKey (e:Input.KeyEventArgs) = 
+            match e.Key with
+            | Input.Key.Return -> 
+                kernel.Compute(code state)
+                setGraphicsFromKernel kernel
+            | _ -> e.Handled <- true
+
 
     (*Initialize*)
     do  this.Content <- screen_Grid
@@ -217,6 +305,10 @@ type MohrsCircle() as this  =
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
         parameter_Slider.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSliderChange ()))
         parameter_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueChange ()))
+        sigmaX_TextBox.PreviewKeyUp .AddHandler(Input.KeyEventHandler(fun _ _ -> handleSigmaXValueChanged ()))
+        sigmaY_TextBox.PreviewKeyUp.AddHandler(Input.KeyEventHandler(fun _ _ -> handleSigmaYValueChanged ()))
+        tau_TextBox.PreviewKeyUp.AddHandler(Input.KeyEventHandler(fun _ _ -> handleTauValueChanged ()))
+        this.KeyUp.AddHandler(Input.KeyEventHandler(fun _ e -> handleReturnKey (e)))
 module MohrsCircle = 
     let window =
         "Needs[\"NETLink`\"]        
@@ -232,14 +324,14 @@ module MohrsCircle =
         			LoadNETAssembly[\"PresentationCore\"];
         			LoadNETAssembly[\"PresentationFramework\"];			
         			LoadNETType[\"System.Windows.Window\"];
-        			form = NETNew[\"System.Windows.Window\"];
-        			form@Width = 1200;
-        			form@Height = 800;			
+        			form = NETNew[\"System.Windows.Window\"];        			
+                    form@Width = 720;
+        			form@Height = 780;	
         			form@Title = \"Mohrs Circle\";
         			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
         			form@Content = pictureBox;				
         			vertices = {};			
-        			form@Show[];			
+        			form@ShowDialog[];
         		]
         	]"
     

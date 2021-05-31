@@ -25,7 +25,7 @@ let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
 
-let testCanvas = Math.Presentation.WolframEngine.MohrsCircle()//.WolframCanvas()//
+let testCanvas = Math.Presentation.WolframEngine.WolframCanvas()//.MohrsCircle()//
 let stack = 
     let sp = StackPanel()
     let dataLab = 
