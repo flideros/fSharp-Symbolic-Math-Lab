@@ -65,32 +65,47 @@ type MohrsCircle() as this  =
         kernel.Compute(code)
         kernel.Result.ToString()
     let code (s:MohrsCircleState) = 
-        let sX' = sigmaX' state
-        let sY' = sigmaY' state
-        let t' = tau' state
+        let sX = s.sigmaX  .ToString()
+        let sY = s.sigmaY  .ToString()
+        let t  = s.tauXY   .ToString()
+        let sX' = sigmaX' s
+        let sY' = sigmaY' s
+        let t'  = tau' s
+        let table = 
+            "{TextGrid[{
+                        {\"\[Sigma]x\", \"  " + sX + " \"}, 
+                        {\"\[Sigma]y\", \"  " + sY + " \"},
+                        {\"\[Tau]\", \"  " + t + " \"},
+                        {\"\[Sigma]x'\", \"  " + sX' + " \"}, 
+                        {\"\[Sigma]y'\", \"  " + sY' + " \"},
+                        {\"\[Tau]'\", \"  " + t' + " \"}
+                        }, Frame -> All],SpanFromBoth}"
+        
         let wCode =
-            "Grid[{{Text@Style[\"Mohr's Circle\", 26], SpanFromLeft}, 
-                {Graphics[{{
-                    Line[{{\[Sigma]x, - (\[Tau])}, {\[Sigma]y, \[Tau]}}],
-                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2]],
-                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0}, 0.35 Sqrt[((\[Sigma]x - \[Sigma]y)/2)^2 + (\[Tau])^2],{ArcTan[(\[Sigma]x - \[Sigma]y)/2, - \[Tau]],0}],             
+            "Grid[
+                {" + table + "
+                {SpanFromAbove, Text@Style[\"Mohr's Circle\", 26]},
+                {SpanFromAbove,Graphics[{{
+                    Line[{{" + sX + ", - (" + t + ")}, {" + sY + ", " + t + "}}],
+                    Circle[{(" + sX + " + " + sY + ")/2, 0}, Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2]],
+                    Circle[{(" + sX + " + " + sY + ")/2, 0}, 0.35 Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2],{ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "],0}],             
                     
-                    Locator[{\[Sigma]y, \[Tau]}],
-                    Locator[{\[Sigma]x, -(\[Tau])}],
+                    Locator[{" + sY + ", " + t + "}],
+                    Locator[{" + sX + ", -(" + t + ")}],
                     Locator[{" + sX' + ", -(" + t' + ")}, Graphics[  {Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
 
                     {Red,                    
-                    Circle[{(\[Sigma]x + \[Sigma]y)/2, 0},  0.45 Sqrt[((" + sX' + " - " + sY' + ")/2)^2 + (" + t' + ")^2],{ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "],0}],                    
+                    Circle[{(" + sX + " + " + sY + ")/2, 0},  0.45 Sqrt[((" + sX' + " - " + sY' + ")/2)^2 + (" + t' + ")^2],{ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "],0}],                    
                     Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
                     }},                    
                 
                     Axes -> True,  
                     AxesOrigin -> {0, 0}, 
                     AspectRatio -> Automatic, 
-                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\"Shear\", Medium]},
-                    ImageSize -> Scaled[1]],
-                    SpanFromLeft}}]"
-        substituteValues wCode s
+                    AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\[Tau], Medium]},
+                    ImageSize -> Scaled[1]]
+                    }},Frame -> All]"
+        wCode//table//
 
     do  kernel.Compute(code state)
  
@@ -198,7 +213,7 @@ module MohrsCircle =
         			LoadNETAssembly[\"PresentationFramework\"];			
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
-        			form@Width = 700;
+        			form@Width = 1200;
         			form@Height = 800;			
         			form@Title = \"Mohrs Circle\";
         			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
