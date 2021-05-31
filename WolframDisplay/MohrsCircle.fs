@@ -72,14 +72,13 @@ type MohrsCircle() as this  =
         let sY' = sigmaY' s
         let t'  = tau' s
         let table = 
-            "{TextGrid[{
-                        {\"\[Sigma]x\", \"  " + sX + " \"}, 
-                        {\"\[Sigma]y\", \"  " + sY + " \"},
-                        {\"\[Tau]\", \"  " + t + " \"},
-                        {\"\[Sigma]x'\", \"  " + sX' + " \"}, 
-                        {\"\[Sigma]y'\", \"  " + sY' + " \"},
-                        {\"\[Tau]'\", \"  " + t' + " \"}
-                        }, Frame -> All],SpanFromBoth}"
+            "{Grid[{{\[Sigma]x," + sX + "}, 
+                    {\[Sigma]y," + sY + "},
+                    {\[Tau]," + t + "},
+                    {\[Sigma]x'," + sX' + "}, 
+                    {\[Sigma]y'," + sY' + "},
+                    {\[Tau]'," + t' + "}
+                   }, Frame -> All],SpanFromBoth}"
         
         let wCode =
             "Grid[
@@ -110,33 +109,55 @@ type MohrsCircle() as this  =
     do  kernel.Compute(code state)
  
     (*Controls*)    
-    let label = 
+    let angle_TextBlock = 
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 240., Top = 650., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
+        do  l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 400.
-            l.TextWrapping <- TextWrapping.Wrap
+            l.HorizontalAlignment <- HorizontalAlignment.Center
             l.Text <- "0"
         l
     let parameter_Slider =
         let s = Slider()                       
-        do  s.SetValue(Grid.RowProperty, 0)
-            s.Margin <- Thickness(left = 10., top = 650., right = 0., bottom = 0.)
+        do  s.SetValue(Grid.RowProperty, 0)            
             s.Minimum <- 0.
             s.Maximum <- 180.
             s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
-            s.TickFrequency <- 0.25
-            s.IsSnapToTickEnabled <- false
+            s.TickFrequency <- 0.1
+            s.IsSnapToTickEnabled <- true
             s.IsEnabled <- true
             s.AutoToolTipPlacement <- Primitives.AutoToolTipPlacement.TopLeft 
             s.IsSelectionRangeEnabled <- true
         s
     let slider_Grid = 
         let g = Grid()
-        do  g.Children.Add(parameter_Slider) |> ignore
+        let l = Label()
+        let sp = StackPanel()
+        do  l.HorizontalAlignment <- HorizontalAlignment.Center
+            l.Content <- "Angle"
+            l.FontSize <- 16.
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(l) |> ignore
+            sp.Children.Add(parameter_Slider) |> ignore
+            sp.Children.Add(angle_TextBlock) |> ignore            
+            g.Margin <- Thickness(left = 10., top = 630., right = 0., bottom = 0.)
+            g.Children.Add(sp) |> ignore
             g.Width <- 200.
         g
+    
+    let sigmaX_TextBox = 
+        let tb = TextBox()
+        do  tb.Margin <-Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            tb.VerticalScrollBarVisibility <- ScrollBarVisibility.Visible
+            tb.HorizontalScrollBarVisibility <- ScrollBarVisibility.Visible
+            tb.TextWrapping <- TextWrapping.Wrap
+            tb.AcceptsReturn <- true
+            tb.MaxHeight  <- 300.
+            tb.MaxWidth <- 700.
+            tb.FontSize <- 16.
+            tb.Text <- state.sigmaX.ToString()
+        tb 
+
     let result_Viewbox image =                    
         let vb = Viewbox()   
         do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
@@ -149,8 +170,7 @@ type MohrsCircle() as this  =
         sp
     let canvas = 
         let c = Canvas(ClipToBounds = true)
-        do  c.Background <- System.Windows.Media.Brushes.White 
-            c.Children.Add(label) |> ignore
+        do  c.Background <- System.Windows.Media.Brushes.White             
             c.Children.Add(slider_Grid) |> ignore
             c.Children.Add(result_StackPanel) |> ignore
         c
@@ -181,11 +201,11 @@ type MohrsCircle() as this  =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-    let handleSliderValueChange () = do label.Text <- parameter_Slider.Value.ToString()    
+    let handleSliderValueChange () = do angle_TextBlock.Text <- parameter_Slider.Value.ToString()    
     let handleSliderChange () = 
         let p = parameter_Slider.Value.ToString()
         do  state <- {state with theta = parameter_Slider.Value}
-            label.Text <- parameter_Slider.Value.ToString()        
+            angle_TextBlock.Text <- parameter_Slider.Value.ToString()        
             kernel.Compute(code state)
             setGraphicsFromKernel kernel
 
