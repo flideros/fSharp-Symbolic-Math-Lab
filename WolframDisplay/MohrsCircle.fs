@@ -80,13 +80,13 @@ type MohrsCircle() as this  =
                     {\[Sigma]x'," + sX' + "}, 
                     {\[Sigma]y'," + sY' + "},
                     {\[Tau]'," + t' + "}
-                   }, Frame -> All],SpanFromBoth}"
+                   },Frame -> All],SpanFromBoth}"
         
         let wCode =
-            "Grid[
-                {" + table + "
-                {SpanFromAbove, Text@Style[\"Mohr's Circle\", 26]},
-                {SpanFromAbove,Graphics[{{
+            "Row[" + table + ",            
+            Column[{
+                Text@Style[\"Mohr's Circle\", 26],
+                Graphics[{{
                     Line[{{" + sX + ", - (" + t + ")}, {" + sY + ", " + t + "}}],
                     Circle[{(" + sX + " + " + sY + ")/2, 0}, Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2]],
                     Circle[{(" + sX + " + " + sY + ")/2, 0}, 0.35 Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2],{ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "],0}],             
@@ -105,7 +105,7 @@ type MohrsCircle() as this  =
                     AspectRatio -> Automatic, 
                     AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\[Tau], Medium]},
                     ImageSize -> Scaled[1]]
-                    }},Frame -> All]"
+                    },Center,Frame -> All]]"
         wCode
 
     do  kernel.Compute(code state)
@@ -224,7 +224,7 @@ type MohrsCircle() as this  =
             sp.Children.Add(sigmaX_Grid) |> ignore
             sp.Children.Add(sigmaY_Grid) |> ignore
             sp.Children.Add(tau_Grid) |> ignore
-            sp.Margin <- Thickness(left = 10., top = 610., right = 0., bottom = 0.)
+            sp.Margin <- Thickness(left = 80., top = 610., right = 0., bottom = 0.)
         sp    
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -263,7 +263,7 @@ type MohrsCircle() as this  =
             getImages 0             
         | false ->             
             result_StackPanel.Children.Clear()
-            let graphics = link.EvaluateToImage(code state, width = 600, height = 600)
+            let graphics = link.EvaluateToImage(code state, width = 700, height = 600)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
