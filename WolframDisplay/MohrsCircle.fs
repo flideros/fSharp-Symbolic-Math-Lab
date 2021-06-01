@@ -273,21 +273,18 @@ type MohrsCircle() as this  =
             angle_TextBlock.Text <- parameter_Slider.Value.ToString()        
             kernel.Compute(code state)
             setGraphicsFromKernel kernel
-    let handleSigmaXValueChanged () =
-        do  state <- 
-                match sigmaX_TextBox.Text.Length = 0 with
-                | false -> {state with sigmaX = (float) sigmaX_TextBox.Text}
-                | true -> {state with sigmaX = 0.}                       
-    let handleSigmaYValueChanged () =
-        do  state <- 
-                match sigmaY_TextBox.Text.Length = 0 with
-                | false -> {state with sigmaY = (float) sigmaY_TextBox.Text}
-                | true -> {state with sigmaY = 0.}
-    let handleTauValueChanged () =
-        do  state <- 
-                match tau_TextBox.Text.Length = 0 with
-                | false -> {state with tauXY = (float) tau_TextBox.Text; tauYX = (float) tau_TextBox.Text}                           
-                | true -> {state with tauXY = 0.; tauYX = 0.}
+    let handleSigmaXValueChanged () = 
+        match Double.TryParse (sigmaX_TextBox.Text) with 
+        | true,_ -> state <- {state with sigmaX = (float) sigmaX_TextBox.Text} 
+        | false,_ -> state <- {state with sigmaX = 0.}
+    let handleSigmaYValueChanged () = 
+        match Double.TryParse (sigmaY_TextBox.Text) with 
+        | true,_ -> state <- {state with sigmaY = (float) sigmaX_TextBox.Text} 
+        | false,_ -> state <- {state with sigmaY = 0.}
+    let handleTauValueChanged () = 
+        match Double.TryParse (tau_TextBox.Text) with 
+        | true,_ -> state <- {state with tauXY = (float) tau_TextBox.Text; tauYX = (float) tau_TextBox.Text} 
+        | false,_ -> state <- {state with tauXY = 0.; tauYX = 0.}                
 
     let handleReturnKey (e:Input.KeyEventArgs) = 
             match e.Key with
