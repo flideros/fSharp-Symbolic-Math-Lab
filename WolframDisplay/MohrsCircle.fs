@@ -156,6 +156,7 @@ type MohrsCircle() as this  =
             tb.FontSize <- 16.
             tb.TextAlignment <- TextAlignment.Center
             tb.Text <- state.sigmaX.ToString()
+            tb.ToolTip <- "Hit Enter to change stress."
         tb
     let sigmaX_Grid = 
         let g = Grid()
@@ -179,6 +180,7 @@ type MohrsCircle() as this  =
             tb.FontSize <- 16.
             tb.TextAlignment <- TextAlignment.Center
             tb.Text <- state.sigmaY.ToString()
+            tb.ToolTip <- "Hit Enter to change stress."
         tb
     let sigmaY_Grid = 
         let g = Grid()
@@ -203,6 +205,7 @@ type MohrsCircle() as this  =
             tb.TextAlignment <- TextAlignment.Center
             tb.Text <- state.tauXY.ToString()
             tb.IsReadOnly <- false
+            tb.ToolTip <- "Hit Enter to change stress."
         tb
     let tau_Grid = 
         let g = Grid()
@@ -279,20 +282,18 @@ type MohrsCircle() as this  =
         | false,_ -> state <- {state with sigmaX = 0.}
     let handleSigmaYValueChanged () = 
         match Double.TryParse (sigmaY_TextBox.Text) with 
-        | true,_ -> state <- {state with sigmaY = (float) sigmaX_TextBox.Text} 
+        | true,_ -> state <- {state with sigmaY = (float) sigmaY_TextBox.Text} 
         | false,_ -> state <- {state with sigmaY = 0.}
     let handleTauValueChanged () = 
         match Double.TryParse (tau_TextBox.Text) with 
         | true,_ -> state <- {state with tauXY = (float) tau_TextBox.Text; tauYX = (float) tau_TextBox.Text} 
-        | false,_ -> state <- {state with tauXY = 0.; tauYX = 0.}                
-
+        | false,_ -> state <- {state with tauXY = 0.; tauYX = 0.}
     let handleReturnKey (e:Input.KeyEventArgs) = 
             match e.Key with
             | Input.Key.Return -> 
                 kernel.Compute(code state)
                 setGraphicsFromKernel kernel
             | _ -> e.Handled <- true
-
 
     (*Initialize*)
     do  this.Content <- screen_Grid
