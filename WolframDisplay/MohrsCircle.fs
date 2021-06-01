@@ -78,22 +78,27 @@ type MohrsCircle() as this  =
         let s2 = "-" + radius + " + (" + sX + " + " + sY + ")/2"
         let theta1 = "ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "]"
         let theta2 = "ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "]"
-        let table = 
-            "{Grid[{{\[Sigma]x," + sX + "}, 
-                    {\[Sigma]y," + sY + "},
-                    {\[Tau]," + t + "},
-                    {\[Sigma]x'," + sX' + "}, 
-                    {\[Sigma]y'," + sY' + "},
-                    {\[Tau]'," + t' + "},
-                    {Subscript[\[Sigma],1]," + s1 + "}, 
-                    {Subscript[\[Sigma],2]," + s2 + "},                    
-                    {Subscript[\[Tau],max]," + radius + "},
-                    {Subscript[\[Tau],min], - " + radius + "},
-                    {2 Subscript[\[Theta],1]," + theta1 + "/Degree}
-                   },Frame -> All],SpanFromBoth}"
+        let table = "Column[
+                    {Style[\"Stress Components\",16],
+                    TextGrid[{
+                    {Style[\[Sigma]x,14],Style[" + sX + ",14]}, 
+                    {Style[\[Sigma]y,14],Style[" + sY + ",14]},
+                    {Style[\[Tau],14],Style[" + t + ",14]}                    
+                   },Frame -> All,Spacings -> {1,1}],
+                    Style[\"Computed Results\",16],
+                    TextGrid[{
+                    {Style[\[Sigma]x',14],Style[" + sX' + ",14]}, 
+                    {Style[\[Sigma]y',14],Style[" + sY' + ",14]},
+                    {Style[\[Tau]',14],Style[" + t' + ",14]},
+                    {Style[Subscript[\[Sigma],1],14],Style[" + s1 + ",14]}, 
+                    {Style[Subscript[\[Sigma],2],14],Style[" + s2 + ",14]},                    
+                    {Style[Subscript[\[Tau],max],14],Style[" + radius + ",14]},
+                    {Style[Subscript[\[Tau],min],14],Style[ - " + radius + ",14]},
+                    {Style[2 Subscript[\[Theta],1],14],Style[" + theta1 + "/Degree,14]}
+                   },Alignment -> Center,Frame -> All,Spacings -> {1,1}]}]"
         
         let wCode =
-            "Row[" + table + ",            
+            "GraphicsRow[{" + table + ",            
             Column[{
                 Text@Style[\"Mohr's Circle\", 26],
                 Graphics[{{
@@ -115,10 +120,8 @@ type MohrsCircle() as this  =
                     AspectRatio -> Automatic, 
                     AxesLabel -> {Style[\"\[Sigma]\", Medium], Style[\[Tau], Medium]},
                     ImageSize -> Scaled[1]]
-                    },Center,Frame -> All]]"
+                    },Center,Frame -> All]}]"
         wCode
-
-    do  kernel.Compute(code state)
  
     (*Controls*)    
     let angle_TextBlock = 
@@ -276,7 +279,7 @@ type MohrsCircle() as this  =
             getImages 0             
         | false ->             
             result_StackPanel.Children.Clear()
-            let graphics = link.EvaluateToImage(code state, width = 700, height = 600)
+            let graphics = link.EvaluateToImage(code state, width = 800, height = 600)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
@@ -307,7 +310,7 @@ type MohrsCircle() as this  =
 
     (*Initialize*)
     do  this.Content <- screen_Grid
-    
+        setGraphicsFromKernel kernel
     (*add event handlers*)
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
