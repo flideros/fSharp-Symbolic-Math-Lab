@@ -78,24 +78,25 @@ type MohrsCircle() as this  =
         let s2 = "-" + radius + " + (" + sX + " + " + sY + ")/2"
         let theta1 = "ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "]"
         let theta2 = "ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "]"
-        let table = "Column[
-                    {Style[\"Stress Components\",16],
+        let table = "Column[{
+                    Style[\"Stress Components\",16],
                     TextGrid[{
-                    {Style[\[Sigma]x,14],Style[" + sX + ",14]}, 
-                    {Style[\[Sigma]y,14],Style[" + sY + ",14]},
-                    {Style[\[Tau],14],Style[" + t + ",14]}                    
-                   },Frame -> All,Spacings -> {1,1}],
+                        {Style[Subscript[\[Sigma],x],14],Style[" + sX + ",14]}, 
+                        {Style[Subscript[\[Sigma],y],14],Style[" + sY + ",14]},
+                        {Style[\[Tau],14],Style[" + t + ",14]}                    
+                       },Frame -> All,Spacings -> {1,1}],
+                    Style[\" \",16],
                     Style[\"Computed Results\",16],
                     TextGrid[{
-                    {Style[\[Sigma]x',14],Style[" + sX' + ",14]}, 
-                    {Style[\[Sigma]y',14],Style[" + sY' + ",14]},
-                    {Style[\[Tau]',14],Style[" + t' + ",14]},
-                    {Style[Subscript[\[Sigma],1],14],Style[" + s1 + ",14]}, 
-                    {Style[Subscript[\[Sigma],2],14],Style[" + s2 + ",14]},                    
-                    {Style[Subscript[\[Tau],max],14],Style[" + radius + ",14]},
-                    {Style[Subscript[\[Tau],min],14],Style[ - " + radius + ",14]},
-                    {Style[2 Subscript[\[Theta],1],14],Style[" + theta1 + "/Degree,14]}
-                   },Alignment -> Center,Frame -> All,Spacings -> {1,1}]}]"
+                        {Style[Subscript[\[Sigma],x]',14],Style[" + sX' + ",14]}, 
+                        {Style[Subscript[\[Sigma],y]',14],Style[" + sY' + ",14]},
+                        {Style[\[Tau]',14],Style[" + t' + ",14]},
+                        {Style[Subscript[\[Sigma],1],14],Style[" + s1 + ",14]}, 
+                        {Style[Subscript[\[Sigma],2],14],Style[" + s2 + ",14]},                    
+                        {Style[Subscript[\[Tau],max],14],Style[" + radius + ",14]},
+                        {Style[Subscript[\[Tau],min],14],Style[ - " + radius + ",14]},
+                        {Style[2 Subscript[\[Theta],1],14],Style[" + theta1 + "/Degree,14]}
+                       },Frame -> All,Spacings -> {1,1}]},Alignment -> Center]"
         
         let wCode =
             "GraphicsRow[{" + table + ",            
@@ -336,7 +337,7 @@ module MohrsCircle =
         			LoadNETAssembly[\"PresentationFramework\"];			
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];        			
-                    form@Width = 720;
+                    form@Width = 820;
         			form@Height = 780;	
         			form@Title = \"Mohrs Circle\";
         			pictureBox = NETNew[\"Math.Presentation.WolframEngine.MohrsCircle\"];        			
