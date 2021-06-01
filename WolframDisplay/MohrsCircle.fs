@@ -73,13 +73,23 @@ type MohrsCircle() as this  =
         let sX' = sigmaX' s
         let sY' = sigmaY' s
         let t'  = tau' s
+        let radius = "Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2]"
+        let s1 = radius + " + (" + sX + " + " + sY + ")/2"
+        let s2 = "-" + radius + " + (" + sX + " + " + sY + ")/2"
+        let theta1 = "ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "]"
+        let theta2 = "ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "]"
         let table = 
             "{Grid[{{\[Sigma]x," + sX + "}, 
                     {\[Sigma]y," + sY + "},
                     {\[Tau]," + t + "},
                     {\[Sigma]x'," + sX' + "}, 
                     {\[Sigma]y'," + sY' + "},
-                    {\[Tau]'," + t' + "}
+                    {\[Tau]'," + t' + "},
+                    {Subscript[\[Sigma],1]," + s1 + "}, 
+                    {Subscript[\[Sigma],2]," + s2 + "},                    
+                    {Subscript[\[Tau],max]," + radius + "},
+                    {Subscript[\[Tau],min], - " + radius + "},
+                    {2 Subscript[\[Theta],1]," + theta1 + "/Degree}
                    },Frame -> All],SpanFromBoth}"
         
         let wCode =
@@ -88,15 +98,15 @@ type MohrsCircle() as this  =
                 Text@Style[\"Mohr's Circle\", 26],
                 Graphics[{{
                     Line[{{" + sX + ", - (" + t + ")}, {" + sY + ", " + t + "}}],
-                    Circle[{(" + sX + " + " + sY + ")/2, 0}, Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2]],
-                    Circle[{(" + sX + " + " + sY + ")/2, 0}, 0.35 Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2],{ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "],0}],             
+                    Circle[{(" + sX + " + " + sY + ")/2, 0}, " + radius + "],
+                    Circle[{(" + sX + " + " + sY + ")/2, 0}, 0.35 " + radius + ",{" + theta1 + ",0}],             
                     
                     Locator[{" + sY + ", " + t + "}],
                     Locator[{" + sX + ", -(" + t + ")}],
-                    Locator[{" + sX' + ", -(" + t' + ")}, Graphics[  {Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
+                    Locator[{" + sX' + ", -(" + t' + ")}, Graphics[{Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
 
                     {Red,                    
-                    Circle[{(" + sX + " + " + sY + ")/2, 0},  0.45 Sqrt[((" + sX' + " - " + sY' + ")/2)^2 + (" + t' + ")^2],{ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "],0}],                    
+                    Circle[{(" + sX + " + " + sY + ")/2, 0},  0.45 " + radius + ",{" + theta2 + ",0}],                    
                     Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
                     }},                    
                 
