@@ -114,7 +114,13 @@ type MohrsCircle() as this  =
                     Locator[{" + sX + ", -(" + t + ")}],
                     Locator[{" + sX' + ", -(" + t' + ")}, 
                         Graphics[{Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
-
+                   
+                    
+                    {Blue,Dashed,
+                    Circle[{" + sMean + ", 0},  0.55 " + radius + ",{-Pi/2," + theta1 + "}],
+                    Line[{{" + sMean + ", -(" + radius + ")}, {" + sMean + ", " + radius + "}}]},
+                   
+                    
                     {Red,                    
                     Circle[{" + sMean + ", 0},  0.45 " + radius + ",{" + theta2 + ",0}],                    
                     Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
