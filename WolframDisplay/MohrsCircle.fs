@@ -122,7 +122,7 @@ type MohrsCircle() as this  =
                    
                     
                     {Red,                    
-                    Circle[{" + sMean + ", 0},  0.45 " + radius + ",{" + theta2 + ",0}],                    
+                    Circle[{" + sMean + ", 0},  0.45 " + radius + ",{" + theta2 + "," + theta1 + "}],                    
                     Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
                     }},                    
                 
