@@ -117,7 +117,7 @@ type MohrsCircle() as this  =
                    
                     
                     {Blue,Dashed,
-                    Circle[{" + sMean + ", 0},  0.55 " + radius + ",{-Pi/2," + theta1 + "}],
+                    Circle[{" + sMean + ", 0},  0.35 " + radius + ",{-Pi/2," + theta1 + "}],
                     Line[{{" + sMean + ", -(" + radius + ")}, {" + sMean + ", " + radius + "}}]},
                    
                     
@@ -135,14 +135,16 @@ type MohrsCircle() as this  =
         wCode
  
     (*Controls*)    
-    let angle_TextBlock = 
-        let l = TextBlock()
-        do  l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.
-            l.MaxWidth <- 400.
-            l.HorizontalAlignment <- HorizontalAlignment.Center
-            l.Text <- "0"
-        l
+    let angle_TextBox = 
+        let tb = TextBox()
+        do  tb.FontStyle <- FontStyles.Normal
+            tb.FontSize <- 16.
+            tb.MaxWidth <- 100.
+            tb.HorizontalAlignment <- HorizontalAlignment.Center
+            tb.Text <- "0"
+            tb.ToolTip <- "Hit Enter to change angle."
+            tb.AcceptsReturn <- false
+        tb
     let parameter_Slider =
         let s = Slider()                       
         do  s.SetValue(Grid.RowProperty, 0)            
@@ -166,7 +168,7 @@ type MohrsCircle() as this  =
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(l) |> ignore
             sp.Children.Add(parameter_Slider) |> ignore
-            sp.Children.Add(angle_TextBlock) |> ignore            
+            sp.Children.Add(angle_TextBox) |> ignore            
             
             g.Children.Add(sp) |> ignore
             g.Width <- 200.
@@ -295,10 +297,10 @@ type MohrsCircle() as this  =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-    let handleSliderValueChange () = do angle_TextBlock.Text <- parameter_Slider.Value.ToString()    
+    let handleSliderValueChange () = do angle_TextBox.Text <- parameter_Slider.Value.ToString()    
     let handleSliderChange () = 
         do  state <- {state with theta = parameter_Slider.Value}
-            angle_TextBlock.Text <- parameter_Slider.Value.ToString()        
+            angle_TextBox.Text <- parameter_Slider.Value.ToString()        
             kernel.Compute(code state)
             setGraphicsFromKernel kernel
     let handleSigmaXValueChanged () = 
@@ -313,6 +315,13 @@ type MohrsCircle() as this  =
         match Double.TryParse (tau_TextBox.Text) with 
         | true,_ -> state <- {state with tauXY = (float) tau_TextBox.Text; tauYX = (float) tau_TextBox.Text} 
         | false,_ -> state <- {state with tauXY = 0.; tauYX = 0.}
+    let handleThetaValueChanged () = 
+        match Double.TryParse (angle_TextBox.Text) with 
+        | true,_ -> 
+            state <- {state with theta = (float) angle_TextBox.Text}
+            parameter_Slider.Value <- (float) angle_TextBox.Text
+
+        | false,_ -> state <- {state with theta = parameter_Slider.Value}
     let handleReturnKey (e:Input.KeyEventArgs) = 
             match e.Key with
             | Input.Key.Return -> 
@@ -331,6 +340,7 @@ type MohrsCircle() as this  =
         sigmaX_TextBox.PreviewKeyUp .AddHandler(Input.KeyEventHandler(fun _ _ -> handleSigmaXValueChanged ()))
         sigmaY_TextBox.PreviewKeyUp.AddHandler(Input.KeyEventHandler(fun _ _ -> handleSigmaYValueChanged ()))
         tau_TextBox.PreviewKeyUp.AddHandler(Input.KeyEventHandler(fun _ _ -> handleTauValueChanged ()))
+        angle_TextBox.PreviewKeyUp.AddHandler(Input.KeyEventHandler(fun _ _ -> handleThetaValueChanged ()))
         this.KeyUp.AddHandler(Input.KeyEventHandler(fun _ e -> handleReturnKey (e)))
 module MohrsCircle = 
     let window =
