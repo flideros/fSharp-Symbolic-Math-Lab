@@ -16,8 +16,8 @@ type MohrsCircle() as this  =
     
     do  Install() |> ignore
            
-    let mutable state = {sigmaX = 4.0;  tauXY = 2.3;
-                          tauYX = 2.3; sigmaY = 1.5;
+    let mutable state = {sigmaX = 244.0;  tauXY = 55.0;
+                          tauYX = -55.0; sigmaY = -34.0;
                           theta = 0.0}
     
     (*Wolfram Kernel*)
@@ -76,8 +76,10 @@ type MohrsCircle() as this  =
         let radius = "Sqrt[((" + sX + " - " + sY + ")/2)^2 + (" + t + ")^2]"
         let s1 = radius + " + (" + sX + " + " + sY + ")/2"
         let s2 = "-" + radius + " + (" + sX + " + " + sY + ")/2"
+        let sMean = "(" + sX + " + " + sY + ")/2"
         let theta1 = "ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "]"
         let theta2 = "ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "]"
+        let thetaPrinciple = "-" + theta1 + "/2"
         let table = "Column[{
                     Style[\"Stress Components\",16],
                     TextGrid[{
@@ -93,26 +95,28 @@ type MohrsCircle() as this  =
                         {Style[\[Tau]',14],Style[" + t' + ",14]},
                         {Style[Subscript[\[Sigma],1],14],Style[" + s1 + ",14]}, 
                         {Style[Subscript[\[Sigma],2],14],Style[" + s2 + ",14]},                    
+                        {Style[Subscript[\[Sigma],mean],14],Style[" + sMean + ",14]},
                         {Style[Subscript[\[Tau],max],14],Style[" + radius + ",14]},
                         {Style[Subscript[\[Tau],min],14],Style[ - " + radius + ",14]},
-                        {Style[2 Subscript[\[Theta],1],14],Style[" + theta1 + "/Degree,14]}
+                        {Style[Subscript[\[Theta],p],14],Style[" +  thetaPrinciple + "/Degree,14]},
+                        {Style[Subscript[\[Theta],s],14],Style[" +  thetaPrinciple + "/Degree - 45,14]}
                        },Frame -> All,Spacings -> {1,1}]},Alignment -> Center]"
-        
         let wCode =
             "GraphicsRow[{" + table + ",            
             Column[{
                 Text@Style[\"Mohr's Circle\", 26],
                 Graphics[{{
                     Line[{{" + sX + ", - (" + t + ")}, {" + sY + ", " + t + "}}],
-                    Circle[{(" + sX + " + " + sY + ")/2, 0}, " + radius + "],
-                    Circle[{(" + sX + " + " + sY + ")/2, 0}, 0.35 " + radius + ",{" + theta1 + ",0}],             
+                    Circle[{" + sMean + ", 0}, " + radius + "],
+                    Circle[{" + sMean + ", 0}, 0.35 " + radius + ",{" + theta1 + ",0}],             
                     
                     Locator[{" + sY + ", " + t + "}],
                     Locator[{" + sX + ", -(" + t + ")}],
-                    Locator[{" + sX' + ", -(" + t' + ")}, Graphics[{Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
+                    Locator[{" + sX' + ", -(" + t' + ")}, 
+                        Graphics[{Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
 
                     {Red,                    
-                    Circle[{(" + sX + " + " + sY + ")/2, 0},  0.45 " + radius + ",{" + theta2 + ",0}],                    
+                    Circle[{" + sMean + ", 0},  0.45 " + radius + ",{" + theta2 + ",0}],                    
                     Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
                     }},                    
                 
@@ -144,6 +148,7 @@ type MohrsCircle() as this  =
             s.IsEnabled <- true
             s.AutoToolTipPlacement <- Primitives.AutoToolTipPlacement.TopLeft 
             s.IsSelectionRangeEnabled <- true
+            //s.Value <- 35.
         s
     let slider_Grid = 
         let g = Grid()
