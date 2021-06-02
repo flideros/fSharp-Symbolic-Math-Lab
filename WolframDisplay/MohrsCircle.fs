@@ -146,10 +146,10 @@ type MohrsCircle() as this  =
     let parameter_Slider =
         let s = Slider()                       
         do  s.SetValue(Grid.RowProperty, 0)            
-            s.Minimum <- 0.
-            s.Maximum <- 180.
+            s.Minimum <- -90.
+            s.Maximum <- 90.
             s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
-            s.TickFrequency <- 0.1
+            s.TickFrequency <- 1.
             s.IsSnapToTickEnabled <- true
             s.IsEnabled <- true
             s.AutoToolTipPlacement <- Primitives.AutoToolTipPlacement.TopLeft 
