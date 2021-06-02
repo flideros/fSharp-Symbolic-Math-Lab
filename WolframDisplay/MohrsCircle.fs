@@ -78,7 +78,7 @@ type MohrsCircle() as this  =
         let s2 = "-" + radius + " + (" + sX + " + " + sY + ")/2"
         let sMean = "(" + sX + " + " + sY + ")/2"
         let theta1 = "ArcTan[(" + sX + " - " + sY + ")/2, - " + t + "]"
-        let theta2 = "ArcTan[(" + sX' + " - " + sY' + ")/2, - " + t' + "]"
+        let theta2 = "ArcTan[(N[" + sX' + "] - N[" + sY' + "])/2, - N[" + t' + "]]"
         let thetaPrinciple = "-" + theta1 + "/2"
         let table = "Column[{
                     Style[\"Stress Components\",16],
@@ -114,13 +114,11 @@ type MohrsCircle() as this  =
                     Locator[{" + sX + ", -(" + t + ")}],
                     Locator[{" + sX' + ", -(" + t' + ")}, 
                         Graphics[{Red,Circle[{" + sX' + ", -(" + t' + ")}, 0.3]},AspectRatio -> Automatic, ImageSize -> 20]],
-                   
-                    
+                  
                     {Blue,Dashed,
                     Circle[{" + sMean + ", 0},  0.35 " + radius + ",{-Pi/2," + theta1 + "}],
                     Line[{{" + sMean + ", -(" + radius + ")}, {" + sMean + ", " + radius + "}}]},
-                   
-                    
+                 
                     {Red,                    
                     Circle[{" + sMean + ", 0},  0.45 " + radius + ",{" + theta2 + "," + theta1 + "}],                    
                     Line[{{" + sX' + ", -(" + t' + ")}, {" + sY' + ", " + t' + "}}]}                                        
