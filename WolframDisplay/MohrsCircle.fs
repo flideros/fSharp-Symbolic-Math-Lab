@@ -21,7 +21,7 @@ type MohrsCircle() as this  =
                           theta = 0.0}
     
     (*Wolfram Kernel*)
-    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
+    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()        
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)

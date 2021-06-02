@@ -20,7 +20,7 @@ type CircumCircle() as this  =
     let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.; verticies=seq[]; selectedVertex = 0}
     
     (*Wolfram Kernel*)
-    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
+    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()        
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)

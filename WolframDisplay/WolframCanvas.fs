@@ -16,7 +16,7 @@ type WolframCanvas() as this  =
     let mutable fontSizePoints = ControlLibrary.SharedValue(44)
     
     (*Wolfram Kernel*)
-    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.2/WolframKernel.exe\"")
+    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
     do  link.WaitAndDiscardAnswer()        
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)
