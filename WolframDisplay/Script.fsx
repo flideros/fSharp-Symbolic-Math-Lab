@@ -12,7 +12,7 @@ open System.Windows.Controls
 open System.Windows.Media
 open Wolfram.NETLink
 
-
+System.Media.SystemSounds.Asterisk .Play()
 //Example:
 let code = "Circle[{3.4,7.5},45.2]"
 let sp = code.Split(',') 

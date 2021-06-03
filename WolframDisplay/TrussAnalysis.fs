@@ -8,13 +8,24 @@ open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
 
-type BlankCanvasState = {x1 : float; x2 : float; x3 : float; y1 : float; y2 : float; y3 : float; 
-                          verticies : System.Windows.Point seq; selectedVertex : int}
-type BlankCanvas() as this  =  
+///  CURRENT  PROJECT  ///
+(*Truss analysis: This project will explore the mathematics of truss analysis. 
+->  Task 1 - Domain Model
+    Task 2 - UI controls
+    Task 3 - Develop Wolfram Language Stucture and Interactions
+    Task 4 - Continuous Development of features
+*)
+
+
+
+//   UI Shell, no funtionality at the moment, 
+//\/--- but will run an exampe computation ----\/\\
+type TrussAnalysisState = {x1 : string}
+type TrussAnalysis() as this  =  
     inherit UserControl()    
     do Install() |> ignore
            
-    let mutable state = {x1 = 0.; x2 = 0.; x3 = 0.; y1 = 0.; y2 = 0.; y3 = 0.; verticies=seq[]; selectedVertex = 0}
+    let mutable state = {x1 = ""}
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
@@ -36,7 +47,7 @@ type BlankCanvas() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
-    do  kernel.Compute("Plot[Sin[x (1 + 0 x)], {x, 0, 2 * Pi}]")
+    
         
     (*Controls*)    
     let label = 
@@ -51,12 +62,12 @@ type BlankCanvas() as this  =
     let parameter_Slider =
         let s = Slider()                       
         do  s.SetValue(Grid.RowProperty, 0)
-            s.Margin <- Thickness(left = 10., top = 400., right = 0., bottom = 0.)
+            s.Margin <- Thickness(left = 10., top = 450., right = 0., bottom = 0.)
             s.Minimum <- 0.
             s.Maximum <- 6.
             s.TickPlacement <- System.Windows.Controls.Primitives.TickPlacement.BottomRight
-            s.TickFrequency <- 0.25
-            s.IsSnapToTickEnabled <- false
+            s.TickFrequency <- 1.
+            s.IsSnapToTickEnabled <- true
             s.IsEnabled <- true
             s.AutoToolTipPlacement <- Primitives.AutoToolTipPlacement.TopLeft 
             s.IsSelectionRangeEnabled <- true
@@ -104,27 +115,34 @@ type BlankCanvas() as this  =
         | true ->                                        
             result_StackPanel.Children.Clear()            
             getImages 0             
-        | false ->             
-            result_StackPanel.Children.Clear()    
+        | false -> 
+          result_StackPanel.Children.Clear()
+          let p = parameter_Slider.Value.ToString()
+          let graphics = link.EvaluateToImage("Factor[x^" + p + " + 1]", width = 400, height = 400)
+          let image = Image()            
+          do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
+              result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+            
     let handleSliderValueChange () = do label.Text <- parameter_Slider.Value.ToString()    
     let handleSliderChange () = 
         let p = parameter_Slider.Value.ToString()
         do  label.Text <- parameter_Slider.Value.ToString()        
-            kernel.Compute("Plot[Sin[x (1 + " + p + " x)], {x, 0, 2 * Pi}]")
+            kernel.Compute("Factor[x^" + p + " + 1]") //kernel.Compute("Plot[Sin[x (1 + " + p + " x)], {x, 0, 2 * Pi}]")//
             setGraphicsFromKernel kernel
 
     (*Initialize*)
     do  this.Content <- screen_Grid
-    
+        
+        setGraphicsFromKernel kernel
     (*add event handlers*)
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
         parameter_Slider.PreviewMouseUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleSliderChange ()))
         parameter_Slider.ValueChanged.AddHandler(RoutedPropertyChangedEventHandler(fun _ _ -> handleSliderValueChange ()))
-module BlankCanvas = 
+module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        
-        BlankCanvas[] :=
+        TrussAnalysis[] :=
         	NETBlock[
         		Module[{form, pictureBox},
         			InstallNET[];        			
@@ -138,12 +156,12 @@ module BlankCanvas =
         			LoadNETType[\"System.Windows.Window\"];
         			form = NETNew[\"System.Windows.Window\"];
         			form@Width = 600;
-        			form@Height = 500;			
-        			form@Title = \"Blank Canvas\";
-        			pictureBox = NETNew[\"Math.Presentation.WolframEngine.BlankCanvas\"];        			
+        			form@Height = 600;			
+        			form@Title = \"Truss Analysis\";
+        			pictureBox = NETNew[\"Math.Presentation.WolframEngine.TrussAnalysis\"];        			
         			form@Content = pictureBox;				
         			vertices = {};			
-        			form@Show[];			
+        			form@ShowDialog[];			
         		]
         	]"
     

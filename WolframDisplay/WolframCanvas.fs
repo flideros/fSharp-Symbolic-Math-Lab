@@ -75,7 +75,7 @@ type WolframCanvas() as this  =
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Test"
             cb.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            cb.ItemsSource <- ["Test";"CircumCircle";"MohrsCircle"]
+            cb.ItemsSource <- ["Test";"CircumCircle";"MohrsCircle";"TrussAnalysis"]
             cb.Visibility <- Visibility.Collapsed
         cb
     let compute_Button = 
@@ -254,6 +254,7 @@ type WolframCanvas() as this  =
             do            
             let code = 
                 match customControl_ComboBox.SelectionBoxItem.ToString() with
+                | "TrussAnalysis" -> TrussAnalysis.window
                 | "CircumCircle" -> CircumCircle.window
                 | "MohrsCircle" -> MohrsCircle.window
                 | "Test" -> WolframCodeBlock.testCode
