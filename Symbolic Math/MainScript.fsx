@@ -4,10 +4,10 @@
 //#r @"D:\MyFolders\MyDocuments\Visual Studio 2017\Projects\Symbolic Math\packages\FSharp.Data.3.0.0\lib\net45\FSharp.Data.dll"
 #r "System.Xml.Linq.dll"
 open FSharp.Data
-open OpenMath
+//open OpenMath
 open Math.Foundations
-open MathML
-open MathML.Element
+//open MathML
+//open MathML.Element
 open Math.TypeExtensions
 open Math.Foundations.Logic
 open Math.Pure.Objects

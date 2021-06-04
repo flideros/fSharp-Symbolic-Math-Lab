@@ -4,6 +4,7 @@
 #r @"System.Xaml"
 #r @"UIAutomationTypes"
 #r @"D:\MyFolders\Desktop\SymbolicMath\packages\Wolfram.NETLink.1.7.1\lib\net461\Wolfram.NETLink.dll"
+#r @"D:\MyFolders\Desktop\SymbolicMath\Symbolic Math UI\bin\Debug\WolframDisplay.dll"
 
 open System
 open System.IO
@@ -11,6 +12,40 @@ open System.Windows
 open System.Windows.Controls
 open System.Windows.Media
 open Wolfram.NETLink
+open Math.Presentation.WolframEngine
+
+open TrussgDomain
+open TrussImplementation
+
+let x0,x1,x2,x3,x4 = X 0., X 1., X 2., X 3., X 4.
+let y0,y1,y2,y3,y4 = Y 0., Y 1., Y 2., Y 3., Y 4.
+let z0,z1,z2,z3,z4 = Z 0., Z 1., Z 2., Z 3., Z 4.
+let j1 = {x=x1;y=y3;z=z0}
+let j2 = {x=x2;y=y1;z=z0}
+let j3 = {x=x3;y=y2;z=z0}
+let m1 = j1,j2
+let m2 = j3,j2
+let m3 = j1,j3
+let f1 = {magnitude = 1.; direction = Point (x0,y1); joint = j1}
+let f2 = {magnitude = 1.; direction = Point (x4,y3); joint = j2}
+let s1,s2 = Pinned f1, Pinned f1
+
+let mList = [m1;m2;m3]
+
+getJointList mList
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////
 
 System.Media.SystemSounds.Asterisk .Play()
 //Example:

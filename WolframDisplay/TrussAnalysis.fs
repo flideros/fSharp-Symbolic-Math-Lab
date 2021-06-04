@@ -16,7 +16,63 @@ open Wolfram.NETLink
     Task 4 - Continuous Development of features
 *)
 
+module TrussgDomain =
+    
+    // Parameters
+    type X = X of float
+    type Y = Y of float
+    type Z = Z of float
+   
+    // Geometry
+    type Point = 
+        | Point of X * Y 
+        | Point3D of X * Y * Z    
+    type ArcSegment =
+        { Point : Point
+          Size : Size
+          RotationAngle : float
+          IsLargeArc : bool
+          SweepDirection : SweepDirection }    
+    type BezierSegment =
+        { Point1 : Point
+          Point2 : Point
+          Point3 : Point }
+    type QuadraticBezierSegment =
+        { Point1 : Point
+          Point2 : Point }     
+    type PathGeometry =
+        /// Creates a line between two points.
+        | LineSegment of Point        
+        /// Creates an elliptical arc between two points.
+        | ArcSegment of ArcSegment
+        /// Creates a cubic Bezier curve between two points.
+        | BezierSegment of BezierSegment
+        /// Creates a quadratic Bezier curve.
+        | QuadraticBezierSegment of QuadraticBezierSegment
+        /// Creates a series of lines.
+        | PolyLineSegment of seq<Point>        
+        /// Creates a series of cubic Bezier curves.
+        | PolyBezierSegment of seq<Point>        
+        /// Creates a series of quadratic Bezier curves.
+        | PolyQuadraticBezierSegment  of seq<Point>
+    type Trace = {startPoint:Point; traceSegments:PathGeometry list}
 
+    // Domain Types
+    type Joint = {x:X; y:Y; z:Z}
+    type Member = (Joint*Joint)
+    type Force = {magnitude: float; direction : Point;joint:Joint}
+    type Support = | Pinned of Force | Roller of (Force*Force)    
+    type Truss = {members:Member list; forces:Force list; supports:Support list}
+
+module TrussImplementation = 
+    open TrussgDomain
+    
+    let getJointList (members: Member list) = 
+        let (l1,l2) = List.unzip members
+        List.concat [l1;l2] |> List.distinct
+
+module TrussServices = 
+    let o = "TBD"
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
