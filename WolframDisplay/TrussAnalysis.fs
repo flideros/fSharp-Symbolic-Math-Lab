@@ -10,13 +10,13 @@ open Wolfram.NETLink
 
 ///  CURRENT  PROJECT  ///
 (*Truss analysis: This project will explore the mathematics of truss analysis. 
-->  Task 1 - Domain Model
+->  Task 1 - Domain Model and implementation
     Task 2 - UI controls
     Task 3 - Develop Wolfram Language Stucture and Interactions
     Task 4 - Continuous Development of features
 *)
 
-module TrussgDomain =
+module TrussDomain =
     
     // Parameters
     type X = X of float
@@ -60,28 +60,58 @@ module TrussgDomain =
     // Domain Types
     type Joint = {x:X; y:Y; z:Z}
     type Member = (Joint*Joint)
-    type Force = {magnitude: float; direction : Point;joint:Joint}
-    type Support = | Pinned of Force | Roller of (Force*Force)    
+    type Force = {magnitude:float; direction:Point; joint:Joint}
+    type Support = | Pin of Force | Roller of (Force*Force)    
     type Truss = {members:Member list; forces:Force list; supports:Support list}
 
-module TrussImplementation = 
-    open TrussgDomain
+    // Types to describe results
+    type Error = 
+        | TrussIndeterminate
+        | LazyCoder  
+        | InputError
+        | Other of string
     
+    // Data associated with each state     
+    type EvaluatedStateData = {truss:Truss}
+    type AccumulateMemberData = {newMember : Member option;  truss : Truss}
+    type AccumulateSupportData = {newSupport : Support option;  truss : Truss}
+    type AccumulateForceData = {newForce : Force option;  truss : Truss}
+    type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}
+    type ErrorStateData = { error : Error ; truss : Truss}
+    
+    // States
+    type TrussAnalysisState =         
+        | EvaluatedState of EvaluatedStateData
+        | AccumulateMemberState of AccumulateMemberData
+        | AccumulateSupport of AccumulateSupportData
+        | AccumulateForce of AccumulateForceData
+        | SelectionState of SelectionStateData
+        | ErrorState of ErrorStateData
+
+    // Services
+    //type AccumulateMember = Type signature of function
+
+module TrussImplementation = 
+    open TrussDomain
+    
+    let initialState = EvaluatedState {truss = {members=[]; forces=[]; supports=[]}}
+
     let getJointList (members: Member list) = 
         let (l1,l2) = List.unzip members
         List.concat [l1;l2] |> List.distinct
+
+
 
 module TrussServices = 
     let o = "TBD"
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
-type TrussAnalysisState = {x1 : string}
 type TrussAnalysis() as this  =  
     inherit UserControl()    
     do Install() |> ignore
            
-    let mutable state = {x1 = ""}
+    let mutable state = TrussImplementation.initialState
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")

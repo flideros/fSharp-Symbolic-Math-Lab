@@ -14,7 +14,7 @@ open System.Windows.Media
 open Wolfram.NETLink
 open Math.Presentation.WolframEngine
 
-open TrussgDomain
+open TrussDomain
 open TrussImplementation
 
 let x0,x1,x2,x3,x4 = X 0., X 1., X 2., X 3., X 4.
