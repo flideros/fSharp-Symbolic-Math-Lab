@@ -61,7 +61,7 @@ module TrussDomain =
     type Joint = {x:X; y:Y; z:Z}
     type Member = (Joint*Joint)
     type Force = {magnitude:float; direction:Vector; joint:Joint}
-    type Support = | Pin of Force | Roller of (Force*Force)    
+    type Support = | Roller of Force | Pin of (Force*Force)    
     type Truss = {members:Member list; forces:Force list; supports:Support list}
     type TrussStability = | Stable | NotEnoughReactions | ReactionsAreParallel 
                           | ReactionsAreConcurrent | InternalCollapseMechanism
@@ -101,7 +101,7 @@ module TrussImplementation =
         let (l1,l2) = List.unzip members
         List.concat [l1;l2] |> List.distinct    
     let getReactionForcesFrom (supports: Support list) = 
-        List.fold (fun acc r -> match r with | Pin f -> f::acc  | Roller (f1,f2) -> f1::f2::acc) [] supports
+        List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin (f1,f2) -> f1::f2::acc) [] supports
     let getDirectionsFrom (forces:Force list) = List.map (fun x -> x.direction) forces
 
 
@@ -118,7 +118,8 @@ module TrussImplementation =
                 | _::[] -> premise
                 | r1::r2::tail -> match r1.X/r2.X = r1.Y/r2.Y with | true -> compareReactions reactions true | false ->  false
             compareReactions reactions false
-
+        let checkForConcurrentReactions = ()        
+        
         match checkNotEnoughReactions, 
               checkForParallelReactions with
         | true, true -> [NotEnoughReactions; ReactionsAreParallel]
