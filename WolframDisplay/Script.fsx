@@ -26,13 +26,13 @@ let j3 = {x=x3;y=y2;z=z0}
 let m1 = j1,j2
 let m2 = j3,j2
 let m3 = j1,j3
-let f1 = {magnitude = 1.; direction = Point (x0,y1); joint = j1}
-let f2 = {magnitude = 1.; direction = Point (x4,y3); joint = j2}
-let s1,s2 = Pinned f1, Pinned f1
+let f1 = {magnitude = 1.; direction = Vector (x=0.,y=1.); joint = j1}
+let f2 = {magnitude = 1.; direction = Vector (x=4.,y=3.); joint = j2}
+let s1,s2 = Pin f1, Pin f1
 
 let mList = [m1;m2;m3]
 
-getJointList mList
+getJointListFrom mList
 
 
 
