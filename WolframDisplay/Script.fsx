@@ -20,15 +20,15 @@ open TrussImplementation
 let x0,x1,x2,x3,x4 = X 0., X 1., X 2., X 3., X 4.
 let y0,y1,y2,y3,y4 = Y 0., Y 1., Y 2., Y 3., Y 4.
 let z0,z1,z2,z3,z4 = Z 0., Z 1., Z 2., Z 3., Z 4.
-let j1 = {x=x1;y=y3;z=z0}
-let j2 = {x=x2;y=y1;z=z0}
-let j3 = {x=x3;y=y2;z=z0}
+let j1 = {x=x1;y=y3}
+let j2 = {x=x2;y=y1}
+let j3 = {x=x3;y=y2}
 let m1 = j1,j2
 let m2 = j3,j2
 let m3 = j1,j3
 let f1 = {magnitude = 1.; direction = Vector (x=0.,y=1.); joint = j1}
 let f2 = {magnitude = 1.; direction = Vector (x=4.,y=3.); joint = j2}
-let s1,s2 = Pin f1, Pin f1
+let s1,s2 = Roller f1, Roller f1
 
 let mList = [m1;m2;m3]
 

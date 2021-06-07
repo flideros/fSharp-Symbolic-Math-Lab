@@ -1,6 +1,7 @@
 ﻿namespace Math.Presentation.WolframEngine
 
 open System
+open System.Numerics
 open System.Windows       
 open System.Windows.Controls  
 open System.Windows.Shapes  
@@ -58,7 +59,7 @@ module TrussDomain =
     type Trace = {startPoint:Point; traceSegments:PathGeometry list}
 
     // Domain Types
-    type Joint = {x:X; y:Y; z:Z}
+    type Joint = {x:X; y:Y} //; z:Z}
     type Member = (Joint*Joint)
     type Force = {magnitude:float; direction:Vector; joint:Joint}
     type Support = | Roller of Force | Pin of (Force*Force)    
@@ -97,13 +98,21 @@ module TrussDomain =
 module TrussImplementation = 
     open TrussDomain
     
+    let getYFrom (j:Joint) = match j.y with | Y y -> y
+    let getXFrom (j:Joint) = match j.x with | X x -> x
     let getJointListFrom (members: Member list) = 
         let (l1,l2) = List.unzip members
         List.concat [l1;l2] |> List.distinct    
     let getReactionForcesFrom (supports: Support list) = 
         List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin (f1,f2) -> f1::f2::acc) [] supports
     let getDirectionsFrom (forces:Force list) = List.map (fun x -> x.direction) forces
-
+    let getLineOfActionFrom (force:Force) = 
+        match (force.direction.X - (getXFrom force.joint)) = 0. with 
+        | true -> 
+            let m = (force.direction.Y - (getYFrom force.joint)) / (force.direction.X - (getXFrom force.joint))                   
+            let b = (getYFrom force.joint) - (m * (getXFrom force.joint))
+            (m,b)
+        | false -> (0.,(getYFrom force.joint))
 
     let checkTrussStability (truss:Truss) = 
         let m = truss.members.Length 
@@ -116,16 +125,75 @@ module TrussImplementation =
                 match reactions with 
                 | [] -> premise
                 | _::[] -> premise
-                | r1::r2::tail -> match r1.X/r2.X = r1.Y/r2.Y with | true -> compareReactions reactions true | false ->  false
+                | r1::r2::tail -> 
+                    match r1.X*r2.Y = r1.Y*r2.X with 
+                    | true -> compareReactions (r2::tail) true                                    
+                    | false ->  false                                     
             compareReactions reactions false
-        let checkForConcurrentReactions = ()        
-        
+        let checkForConcurrentReactions = 
+            let reactions = getReactionForcesFrom truss.supports
+            let compareReactions (reactions:Force list) = 
+                match reactions with 
+                | [] -> false
+                | _::[] -> false
+                | r1::r2::tail -> 
+                    match (r1.direction.X - (getXFrom r1.joint)),(r2.direction.X - (getXFrom r2.joint)) with
+                    | 0.,0. -> false 
+                    | 0.,_ -> 
+                        let a = 0.
+                        let b = (r2.direction.Y - (getYFrom r2.joint)) / (r2.direction.X - (getXFrom r2.joint))                   
+                        let c = getYFrom r1.joint
+                        let d = (getYFrom r2.joint) - (b * (getXFrom r2.joint))
+                        match a = b with
+                        | true -> false
+                        | false -> 
+                            let x = (d - c)/b
+                            let y =  c
+                            List.forall (fun f -> 
+                                let m,b = (getLineOfActionFrom f)
+                                m*x + b = y) tail
+                    | _,0. -> 
+                        let a = (r1.direction.Y - (getYFrom r1.joint)) / (r1.direction.X - (getXFrom r1.joint))
+                        let b = 0.
+                        let c = (getYFrom r1.joint) - (a * (getXFrom r1.joint))
+                        let d = (getYFrom r2.joint)
+                        match a = b with
+                        | true -> false
+                        | false -> 
+                            let x = (d - c)/a
+                            let y = a*((d - c)/a) + c
+                            List.forall (fun f -> 
+                                let m,b = (getLineOfActionFrom f)
+                                m*x + b = y) tail
+                    | _,_ ->                     
+                        let a = (r1.direction.Y - (getYFrom r1.joint)) / (r1.direction.X - (getXFrom r1.joint))
+                        let b = (r2.direction.Y - (getYFrom r2.joint)) / (r2.direction.X - (getXFrom r2.joint))                   
+                        let c = (getYFrom r1.joint) - (a * (getXFrom r1.joint))
+                        let d = (getYFrom r2.joint) - (b * (getXFrom r2.joint))
+                        match a = b with
+                        | true -> false
+                        | false -> 
+                            let x = (d - c)/(a - b)
+                            let y = a*((d - c)/(a - b)) + c
+                            List.forall (fun f -> 
+                                let m,b = (getLineOfActionFrom f)
+                                m*x + b = y) tail  
+            compareReactions reactions
+
         match checkNotEnoughReactions, 
-              checkForParallelReactions with
-        | true, true -> [NotEnoughReactions; ReactionsAreParallel]
-        | true, false -> [NotEnoughReactions]
-        | false, true -> [ReactionsAreParallel]
-        | false, false -> [Stable]
+              checkForParallelReactions, 
+              checkForConcurrentReactions with
+        | true, true,true -> [NotEnoughReactions; ReactionsAreParallel;ReactionsAreConcurrent]
+        | true, true,false -> [NotEnoughReactions; ReactionsAreParallel]
+        
+        | true, false,true -> [NotEnoughReactions;ReactionsAreConcurrent]
+        | true, false,false -> [NotEnoughReactions]
+        
+        | false, true,true -> [ReactionsAreParallel;ReactionsAreConcurrent]
+        | false, true,false -> [ReactionsAreParallel]
+        
+        | false, false,true -> [ReactionsAreConcurrent]
+        | false, false,false -> [Stable]
         
 
     let checkTrussDeterminacy (truss:Truss)  = 
