@@ -105,7 +105,10 @@ module TrussImplementation =
         List.concat [l1;l2] |> List.distinct    
     let getReactionForcesFrom (supports: Support list) = 
         List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin (f1,f2) -> f1::f2::acc) [] supports
-    let getDirectionsFrom (forces:Force list) = List.map (fun x -> x.direction) forces
+    let getDirectionsFrom (forces:Force list) = List.map (fun x -> 
+        Vector(
+            x = x.direction.X - (getXFrom x.joint), 
+            y = x.direction.Y - (getYFrom x.joint))) forces
     let getLineOfActionFrom (force:Force) = 
         match (force.direction.X - (getXFrom force.joint)) = 0. with 
         | true -> 
@@ -120,7 +123,7 @@ module TrussImplementation =
         let j = (getJointListFrom truss.members).Length
         let checkNotEnoughReactions = m + r < 2 * j
         let checkForParallelReactions = 
-            let reactions = getReactionForcesFrom truss.supports |> getDirectionsFrom
+            let reactions = getReactionForcesFrom truss.supports |> getDirectionsFrom            
             let rec compareReactions (reactions:Vector list) (premise:bool) = 
                 match reactions with 
                 | [] -> premise
@@ -194,7 +197,6 @@ module TrussImplementation =
         
         | false, false,true -> [ReactionsAreConcurrent]
         | false, false,false -> [Stable]
-        
 
     let checkTrussDeterminacy (truss:Truss)  = 
         let stability = checkTrussStability truss
