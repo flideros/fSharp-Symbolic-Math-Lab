@@ -68,32 +68,47 @@ module TrussDomain =
                           | ReactionsAreConcurrent | InternalCollapseMechanism
     type TrussDeterminacy = | Determinate | Indeterminate
     
-    // Types to describe results
+    type TrussPart =
+        | Joint of Joint
+        | Member of Member
+        | Force of Force
+        | Support of Support
+    
+    type TrussBuildOp =
+        | AddTrussPart
+        | SubtractTrussPart
+        | SelectTrussPart
+
+    type PendingBuildOp = (TrussBuildOp * TrussPart)
+
+    // Types to describe error results
     type Error = 
-        | TrussIndeterminate
         | LazyCoder  
         | InputError
         | Other of string
-    
+ 
     // Data associated with each state     
     type EvaluatedStateData = {truss:Truss}
-    type AccumulateMemberData = {newMember : Member option;  truss : Truss}
-    type AccumulateSupportData = {newSupport : Support option;  truss : Truss}
-    type AccumulateForceData = {newForce : Force option;  truss : Truss}
+    type AccumulateTrussPartData = {newTrussPart : PendingBuildOp option;  truss : Truss}
     type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}
     type ErrorStateData = { error : Error ; truss : Truss}
     
     // States
     type TrussAnalysisState =         
         | EvaluatedState of EvaluatedStateData
-        | AccumulateMemberState of AccumulateMemberData
-        | AccumulateSupport of AccumulateSupportData
-        | AccumulateForce of AccumulateForceData
+        | AccumulateTrussPartState of AccumulateTrussPartData
         | SelectionState of SelectionStateData
         | ErrorState of ErrorStateData
 
+    
     // Services
-    //type AccumulateMember = Type signature of function
+    type Test = string -> string
+    type GetPointListFromTruss = Truss -> System.Windows.Point seq
+    
+    type TrussServices = 
+        {test:Test;
+         getJointSeqFromTruss:GetPointListFromTruss}
+
 
 module TrussImplementation = 
     open TrussDomain
@@ -116,6 +131,8 @@ module TrussImplementation =
             let b = (getYFrom force.joint) - (m * (getXFrom force.joint))
             (m,b)
         | false -> (0.,(getYFrom force.joint))
+
+    //let sumHorizontalForces (forces:Force list) = 
 
     let checkTrussStability (truss:Truss) = 
         let m = truss.members.Length 
@@ -197,7 +214,6 @@ module TrussImplementation =
         
         | false, false,true -> [ReactionsAreConcurrent]
         | false, false,false -> [Stable]
-
     let checkTrussDeterminacy (truss:Truss)  = 
         let stability = checkTrussStability truss
         let m = truss.members.Length 
@@ -208,15 +224,29 @@ module TrussImplementation =
         | false -> Indeterminate
 
 module TrussServices = 
-    let o = "TBD"
+   open TrussDomain
+   open TrussImplementation
+
+   let getWolframCode s = (s + "Steady") 
+
+   let getJointSeqFromTruss (t:Truss) = 
+       let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
+       let j = getJointListFrom t.members
+       let l = List.map (fun x -> pointMap x ) j 
+       List.toSeq l
+   let createServices () = 
+       {test = getWolframCode;
+        getJointSeqFromTruss = getJointSeqFromTruss }
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
 type TrussAnalysis() as this  =  
     inherit UserControl()    
     do Install() |> ignore
-           
-    let mutable state = TrussDomain.EvaluatedState {truss = {members=[]; forces=[]; supports=[]}}
+
+    let initialState = TrussDomain.EvaluatedState {truss = {members=[]; forces=[]; supports=[]}}
+
+    let mutable state = initialState
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
@@ -238,16 +268,28 @@ type TrussAnalysis() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
- 
+
+    (*Model*)        
+    let image = Image()
+    do  image.SetValue(Panel.ZIndexProperty, -100)    
+    let visual = DrawingVisual()     
+    let black = SolidColorBrush(Colors.Black)
+    let blue = SolidColorBrush(Colors.Blue)
+    let red = SolidColorBrush(Colors.Red)
+    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
+    do  bluePen.Freeze()
+        redPen.Freeze()
+        blackPen.Freeze() 
+    
     (*Controls*)    
     let label = 
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 240., Top = 400., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 240., Top = 450., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 400.
             l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "0"
+            l.Text <- "Rock"
         l
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -259,7 +301,6 @@ type TrussAnalysis() as this  =
         do  sp.Orientation <- Orientation.Vertical
             sp.HorizontalAlignment <- HorizontalAlignment.Left
         sp
-
     let canvas = 
         let c = Canvas(ClipToBounds = true)
         do  c.Background <- System.Windows.Media.Brushes.White 
@@ -271,8 +312,35 @@ type TrussAnalysis() as this  =
         do  g.SetValue(Grid.RowProperty, 1)        
             g.Children.Add(canvas) |> ignore
         g
- 
+    
+    (*Truss Services*)
+    let trussServices = TrussServices.createServices()
+    
     (*Actions*)
+    let getBitmap visual = 
+        let bitmap = 
+            RenderTargetBitmap(
+                (int)SystemParameters.PrimaryScreenWidth,
+                (int)SystemParameters.PrimaryScreenHeight, 
+                96.,
+                96.,
+                PixelFormats.Pbgra32)        
+        do  bitmap.Render(visual)
+            bitmap.Freeze()
+        bitmap
+    let getTruss = 
+        match state with
+        | TrussDomain.EvaluatedState es -> es.truss
+        | TrussDomain.AccumulateTrussPartState aps-> aps.truss
+        | TrussDomain.SelectionState ss -> ss.truss
+        | TrussDomain.ErrorState es -> es.truss
+
+    let getVertexIndex (p1:System.Windows.Point) = 
+        let v = trussServices.getJointSeqFromTruss (getTruss)
+        Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (v)
+
+
     let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
             let image = Image()            
@@ -291,14 +359,16 @@ type TrussAnalysis() as this  =
           let image = Image()            
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-            
+    let testLabelFromService = 
+        do label.Text <- trussServices.test "Rock"
+
     (*Initialize*)
     do  this.Content <- screen_Grid
         
         setGraphicsFromKernel kernel
     (*add event handlers*)
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
-        this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
+        this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> testLabelFromService))
 module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        

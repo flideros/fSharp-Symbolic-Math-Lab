@@ -51,7 +51,7 @@ type CircumCircle() as this  =
     	        ]")
     
     (*Model*)        
-    let image = Image()        
+    let image = Image()
     do  image.SetValue(Panel.ZIndexProperty, -100)    
     let visual = DrawingVisual()     
     let black = SolidColorBrush(Colors.Black)
