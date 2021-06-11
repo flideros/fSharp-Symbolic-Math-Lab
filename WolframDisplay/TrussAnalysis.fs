@@ -60,26 +60,28 @@ module TrussDomain =
 
     // Domain Types
     type Joint = {x:X; y:Y} //; z:Z}
+    type MemberBuilder = (Joint*(Joint option))
     type Member = (Joint*Joint)
+    type ForceBuilder = {magnitude:float option; direction:Vector option; joint:Joint}
     type Force = {magnitude:float; direction:Vector; joint:Joint}
+    type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
     type Support = | Roller of Force | Pin of (Force*Force)    
     type Truss = {members:Member list; forces:Force list; supports:Support list}
     type TrussStability = | Stable | NotEnoughReactions | ReactionsAreParallel 
                           | ReactionsAreConcurrent | InternalCollapseMechanism
     type TrussDeterminacy = | Determinate | Indeterminate
     
-    type TrussPart =
-        | Joint of Joint
+    type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
         | Member of Member
         | Force of Force
         | Support of Support
     
     type TrussBuildOp =
-        | AddTrussPart
-        | SubtractTrussPart
-        | SelectTrussPart
-
-    type PendingBuildOp = (TrussBuildOp * TrussPart)
+        | AddTrussPart of TrussPart
+        | SubtractTrussPart of TrussPart
+        | SelectTrussPart of TrussPart
+        | BuildMember of MemberBuilder
+        | BuildForce of ForceBuilder
 
     // Types to describe error results
     type Error = 
@@ -88,26 +90,23 @@ module TrussDomain =
         | Other of string
  
     // Data associated with each state     
-    type EvaluatedStateData = {truss:Truss}
-    type AccumulateTrussPartData = {newTrussPart : PendingBuildOp option;  truss : Truss}
+    type TrussStateData = {truss:Truss} // Includes the empty truss
+    type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
     type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}
     type ErrorStateData = { error : Error ; truss : Truss}
     
     // States
     type TrussAnalysisState =         
-        | EvaluatedState of EvaluatedStateData
-        | AccumulateTrussPartState of AccumulateTrussPartData
+        | TrussState of TrussStateData
+        | BuildState of TrussBuildData
         | SelectionState of SelectionStateData
         | ErrorState of ErrorStateData
-
     
     // Services
-    type Test = string -> string
     type GetPointListFromTruss = Truss -> System.Windows.Point seq
     
     type TrussServices = 
-        {test:Test;
-         getJointSeqFromTruss:GetPointListFromTruss}
+        {getJointSeqFromTruss:GetPointListFromTruss}
 
 
 module TrussImplementation = 
@@ -132,7 +131,7 @@ module TrussImplementation =
             (m,b)
         | false -> (0.,(getYFrom force.joint))
 
-    //let sumHorizontalForces (forces:Force list) = 
+
 
     let checkTrussStability (truss:Truss) = 
         let m = truss.members.Length 
@@ -228,15 +227,14 @@ module TrussServices =
    open TrussImplementation
 
    let getWolframCode s = (s + "Steady") 
-
    let getJointSeqFromTruss (t:Truss) = 
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
        let l = List.map (fun x -> pointMap x ) j 
        List.toSeq l
+   
    let createServices () = 
-       {test = getWolframCode;
-        getJointSeqFromTruss = getJointSeqFromTruss }
+       {getJointSeqFromTruss = getJointSeqFromTruss }
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
@@ -244,7 +242,7 @@ type TrussAnalysis() as this  =
     inherit UserControl()    
     do Install() |> ignore
 
-    let initialState = TrussDomain.EvaluatedState {truss = {members=[]; forces=[]; supports=[]}}
+    let initialState = TrussDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}}
 
     let mutable state = initialState
     
@@ -277,6 +275,7 @@ type TrussAnalysis() as this  =
     let blue = SolidColorBrush(Colors.Blue)
     let red = SolidColorBrush(Colors.Red)
     let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
+       
     do  bluePen.Freeze()
         redPen.Freeze()
         blackPen.Freeze() 
@@ -317,7 +316,7 @@ type TrussAnalysis() as this  =
     let trussServices = TrussServices.createServices()
     
     (*Actions*)
-    let getBitmap visual = 
+    let getBitmapFrom visual = 
         let bitmap = 
             RenderTargetBitmap(
                 (int)SystemParameters.PrimaryScreenWidth,
@@ -328,18 +327,33 @@ type TrussAnalysis() as this  =
         do  bitmap.Render(visual)
             bitmap.Freeze()
         bitmap
-    let getTruss = 
-        match state with
-        | TrussDomain.EvaluatedState es -> es.truss
-        | TrussDomain.AccumulateTrussPartState aps-> aps.truss
+    let getTrussFrom s = 
+        match s with
+        | TrussDomain.TrussState es -> es.truss
+        | TrussDomain.BuildState bs-> bs.truss
         | TrussDomain.SelectionState ss -> ss.truss
         | TrussDomain.ErrorState es -> es.truss
-
-    let getVertexIndex (p1:System.Windows.Point) = 
-        let v = trussServices.getJointSeqFromTruss (getTruss)
+    let getJointsFrom (s) = trussServices.getJointSeqFromTruss (getTrussFrom s)    
+    let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
-            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (v)
-
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (getJointsFrom state)
+    
+    let drawTruss () = ()
+        (*//Workflow
+        get truss from state
+        get joints as point seq  
+        get members as lines
+        get supports as drawing visual
+        context = visual.RenderOpen()  
+        for each joint 
+            context.DrawEllipse(black,blackPen,p1,6.,6.)
+        for each member 
+            context.DrawLine(blackPen,p1,p2)
+        for each member 
+            add suppot graffic to context
+        context.Close()
+       *)
+        
 
     let setGraphicsFromKernel (k:MathKernel) = 
         let rec getImages i =
@@ -360,7 +374,7 @@ type TrussAnalysis() as this  =
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
     let testLabelFromService = 
-        do label.Text <- trussServices.test "Rock"
+        do label.Text <- "Rock"
 
     (*Initialize*)
     do  this.Content <- screen_Grid
