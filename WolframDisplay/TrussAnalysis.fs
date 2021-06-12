@@ -23,46 +23,12 @@ module TrussDomain =
     type X = X of float
     type Y = Y of float
     type Z = Z of float
-   
-    // Geometry
-    type Point = 
-        | Point of X * Y 
-        | Point3D of X * Y * Z    
-    type ArcSegment =
-        { Point : Point
-          Size : Size
-          RotationAngle : float
-          IsLargeArc : bool
-          SweepDirection : SweepDirection }    
-    type BezierSegment =
-        { Point1 : Point
-          Point2 : Point
-          Point3 : Point }
-    type QuadraticBezierSegment =
-        { Point1 : Point
-          Point2 : Point }     
-    type PathGeometry =
-        /// Creates a line between two points.
-        | LineSegment of Point        
-        /// Creates an elliptical arc between two points.
-        | ArcSegment of ArcSegment
-        /// Creates a cubic Bezier curve between two points.
-        | BezierSegment of BezierSegment
-        /// Creates a quadratic Bezier curve.
-        | QuadraticBezierSegment of QuadraticBezierSegment
-        /// Creates a series of lines.
-        | PolyLineSegment of seq<Point>        
-        /// Creates a series of cubic Bezier curves.
-        | PolyBezierSegment of seq<Point>        
-        /// Creates a series of quadratic Bezier curves.
-        | PolyQuadraticBezierSegment  of seq<Point>
-    type Trace = {startPoint:Point; traceSegments:PathGeometry list}
 
     // Domain Types
     type Joint = {x:X; y:Y} //; z:Z}
     type MemberBuilder = (Joint*(Joint option))
     type Member = (Joint*Joint)
-    type ForceBuilder = {magnitude:float option; direction:Vector option; joint:Joint}
+    type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
     type Force = {magnitude:float; direction:Vector; joint:Joint}
     type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
     type Support = | Roller of Force | Pin of (Force*Force)    
@@ -103,10 +69,12 @@ module TrussDomain =
         | ErrorState of ErrorStateData
     
     // Services
-    type GetPointListFromTruss = Truss -> System.Windows.Point seq
+    type GetJointSeqFromTruss = Truss -> System.Windows.Point seq
+    type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
     
     type TrussServices = 
-        {getJointSeqFromTruss:GetPointListFromTruss}
+        {getJointSeqFromTruss:GetJointSeqFromTruss;
+         getMemberSeqFromTruss:GetMemberSeqFromTruss}
 
 
 module TrussImplementation = 
@@ -131,8 +99,29 @@ module TrussImplementation =
             (m,b)
         | false -> (0.,(getYFrom force.joint))
 
-
-
+    // Workflow for building a member
+    let makeMemberBuilderFrom (j:Joint) = (j,None)
+    let addJointToMemberBuilder (j:Joint) (mb:MemberBuilder) = 
+        let a, _b = mb
+        (a,Some j)
+    let addMemberToTruss (t:Truss) (mb:MemberBuilder) = 
+        match mb with 
+        | j1,Some j2 -> 
+            let m = (j1,j2)
+            {t with members = m::t.members}
+        | _J1,None -> t
+    
+    // Workflow for building a force
+    let makeForceBuilderFromJoint (j:Joint) = {_magnitude = None; _direction = None; joint = j}
+    let addDirectionToForceBuilder (v:Vector) (fb:ForceBuilder) = {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}
+    let addMagnitudeoForceBuilder m (fb:ForceBuilder) = {_magnitude = Some m; _direction = fb._direction; joint = fb.joint}
+    let addForceToTruss (t:Truss) (fb:ForceBuilder) = 
+        match fb with
+        | {_magnitude = Some m; _direction = Some d; joint = j} -> 
+            let f = {direction = d; magnitude = m; joint = j}
+            {t with forces = f::t.forces}
+        | _ -> t
+    
     let checkTrussStability (truss:Truss) = 
         let m = truss.members.Length 
         let r = List.fold (fun acc r -> match r with | Pin _-> acc + 2 | Roller _ -> acc + 1) 0 truss.supports
@@ -226,15 +215,23 @@ module TrussServices =
    open TrussDomain
    open TrussImplementation
 
-   let getWolframCode s = (s + "Steady") 
-   let getJointSeqFromTruss (t:Truss) = 
+   let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
-       let l = List.map (fun x -> pointMap x ) j 
+       let l = List.map (fun x -> pointMap x ) j
        List.toSeq l
    
+   let getMemberSeqFromTruss (t:Truss) =
+       let memberMap (m:Member) = 
+           let a,b = m
+           (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
+            System.Windows.Point (x = (getXFrom b),y = (getYFrom b)))
+       let l = List.map (fun x -> memberMap x ) t.members
+       List.toSeq l
+
    let createServices () = 
-       {getJointSeqFromTruss = getJointSeqFromTruss }
+       {getJointSeqFromTruss = getJointSeqFromTruss 
+        getMemberSeqFromTruss = getMemberSeqFromTruss}
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
@@ -315,7 +312,7 @@ type TrussAnalysis() as this  =
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
     
-    (*Actions*)
+    (*Actions*)        
     let getBitmapFrom visual = 
         let bitmap = 
             RenderTargetBitmap(
@@ -338,11 +335,15 @@ type TrussAnalysis() as this  =
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (getJointsFrom state)
     
+    let sendPointToBuilder (p) = ()
+        
+        
     let drawTruss () = ()
+        
         (*//Workflow
-        get truss from state
-        get joints as point seq  
-        get members as lines
+        get truss from state -- done
+        get joints as point seq -- done
+        get members as lines 
         get supports as drawing visual
         context = visual.RenderOpen()  
         for each joint 
