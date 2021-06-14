@@ -52,14 +52,16 @@ module TrussDomain =
     // Types to describe error results
     type Error = 
         | LazyCoder  
-        | InputError
+        | Input
+        | TrussBuildOp
+        | WrongStateData
         | Other of string
  
     // Data associated with each state     
     type TrussStateData = {truss:Truss} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
     type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}
-    type ErrorStateData = { error : Error ; truss : Truss}
+    type ErrorStateData = {error : Error list; truss : Truss}
     
     // States
     type TrussAnalysisState =         
@@ -114,7 +116,7 @@ module TrussImplementation =
     // Workflow for building a force
     let makeForceBuilderFromJoint (j:Joint) = {_magnitude = None; _direction = None; joint = j}
     let addDirectionToForceBuilder (v:Vector) (fb:ForceBuilder) = {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}
-    let addMagnitudeoForceBuilder m (fb:ForceBuilder) = {_magnitude = Some m; _direction = fb._direction; joint = fb.joint}
+    let addMagnitudeToForceBuilder m (fb:ForceBuilder) = {_magnitude = Some m; _direction = fb._direction; joint = fb.joint}
     let addForceToTruss (t:Truss) (fb:ForceBuilder) = 
         match fb with
         | {_magnitude = Some m; _direction = Some d; joint = j} -> 
@@ -122,6 +124,32 @@ module TrussImplementation =
             {t with forces = f::t.forces}
         | _ -> t
     
+    // Workflow for building a support
+    let makeRollerSupportBuilder (j:Joint) = SupportBuilder.Roller {_magnitude = None; _direction = None; joint = j}
+    let makePinSupportBuilder (j:Joint) = SupportBuilder.Pin ({_magnitude = None; _direction = None; joint = j},{_magnitude = None; _direction = None; joint = j})
+    let addDirectionToSupportBuilder (v:Vector*(Vector option)) (sb:SupportBuilder) =
+        let v1,v2 = v
+        match sb with 
+        | SupportBuilder.Roller fb -> SupportBuilder.Roller {fb with _direction = Some v1}
+        | SupportBuilder.Pin fb -> SupportBuilder.Pin ({fst fb with  _direction = Some v1},{snd fb with _direction = v2 })
+    let addMagnitudeToSupportBuilder (m:float*(float option)) (sb:SupportBuilder) =
+        let m1,m2 = m
+        match sb with 
+        | SupportBuilder.Roller fb -> SupportBuilder.Roller {fb with _magnitude = Some m1}
+        | SupportBuilder.Pin fb -> SupportBuilder.Pin ({fst fb with  _magnitude = Some m1},{(snd fb) with _magnitude = m2 })
+    let addSupportToTruss (t:Truss) (sb:SupportBuilder) = 
+        match sb with
+        | SupportBuilder.Roller {_magnitude = Some m; _direction = Some d; joint = j} -> 
+            let r = Roller {direction = d; magnitude = m; joint = j}
+            {t with supports = r::t.supports}
+        | SupportBuilder.Pin ({_magnitude = Some m; _direction = Some d; joint = j},
+                              {_magnitude = Some m'; _direction = Some d'; joint = j'}) -> 
+            let p = Pin ({direction = d; magnitude = m; joint = j},
+                         {direction = d'; magnitude = m'; joint = j'})
+            {t with supports = p::t.supports}
+        | _ -> t
+
+    // Inspect truss
     let checkTrussStability (truss:Truss) = 
         let m = truss.members.Length 
         let r = List.fold (fun acc r -> match r with | Pin _-> acc + 2 | Roller _ -> acc + 1) 0 truss.supports
@@ -211,16 +239,32 @@ module TrussImplementation =
         | true  -> Determinate 
         | false -> Indeterminate
 
+
 module TrussServices = 
    open TrussDomain
    open TrussImplementation
+
+   let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
+
+   let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
+       match state with 
+       | TrussDomain.TrussState es -> 
+           {buildOp = makeMemberBuilderFrom (makeJointFrom point) 
+                      |> MemberBuilder |> BuildMember; truss = es.truss} |> BuildState
+       | TrussDomain.BuildState bs-> 
+           match bs.buildOp with
+           | BuildMember mb -> 
+               {truss = addJointToMemberBuilder (makeJointFrom point) mb
+                        |> addMemberToTruss bs.truss} |> TrussState
+           | _ -> ErrorState {error = [TrussBuildOp]; truss = bs.truss}           
+       | TrussDomain.SelectionState ss -> ErrorState {error = [WrongStateData]; truss = ss.truss} 
+       | TrussDomain.ErrorState es -> ErrorState {error = WrongStateData::es.error; truss = es.truss}
 
    let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
        let l = List.map (fun x -> pointMap x ) j
-       List.toSeq l
-   
+       List.toSeq l   
    let getMemberSeqFromTruss (t:Truss) =
        let memberMap (m:Member) = 
            let a,b = m
@@ -335,7 +379,7 @@ type TrussAnalysis() as this  =
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (getJointsFrom state)
     
-    let sendPointToBuilder (p) = ()
+    let sendPointToMemberBuilder (p:System.Windows.Point) = ()
         
         
     let drawTruss () = ()
