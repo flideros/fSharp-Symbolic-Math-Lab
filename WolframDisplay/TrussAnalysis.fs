@@ -61,7 +61,7 @@ module TrussDomain =
     type TrussStateData = {truss:Truss} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
     type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}
-    type ErrorStateData = {error : Error list; truss : Truss}
+    type ErrorStateData = {errors : Error list; truss : Truss}
     
     // States
     type TrussAnalysisState =         
@@ -73,11 +73,16 @@ module TrussDomain =
     // Services
     type GetJointSeqFromTruss = Truss -> System.Windows.Point seq
     type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
-    
+    type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
+
     type TrussServices = 
         {getJointSeqFromTruss:GetJointSeqFromTruss;
-         getMemberSeqFromTruss:GetMemberSeqFromTruss}
-
+         getMemberSeqFromTruss:GetMemberSeqFromTruss;
+         sendPointToMemberBuilder:SendPointToMemberBuilder;
+         sendPointToForceBuilder:SendPointToForceBuilder;
+         sendMagnitudeToForceBuilder:SendMagnitudeToForceBuilder}
 
 module TrussImplementation = 
     open TrussDomain
@@ -102,7 +107,7 @@ module TrussImplementation =
         | false -> (0.,(getYFrom force.joint))
 
     // Workflow for building a member
-    let makeMemberBuilderFrom (j:Joint) = (j,None)
+    let makeMemberBuilderFrom (j:Joint) = MemberBuilder (j,None)
     let addJointToMemberBuilder (j:Joint) (mb:MemberBuilder) = 
         let a, _b = mb
         (a,Some j)
@@ -114,7 +119,7 @@ module TrussImplementation =
         | _J1,None -> t
     
     // Workflow for building a force
-    let makeForceBuilderFromJoint (j:Joint) = {_magnitude = None; _direction = None; joint = j}
+    let makeForceBuilderFrom (j:Joint) = {_magnitude = None; _direction = None; joint = j}
     let addDirectionToForceBuilder (v:Vector) (fb:ForceBuilder) = {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}
     let addMagnitudeToForceBuilder m (fb:ForceBuilder) = {_magnitude = Some m; _direction = fb._direction; joint = fb.joint}
     let addForceToTruss (t:Truss) (fb:ForceBuilder) = 
@@ -125,8 +130,8 @@ module TrussImplementation =
         | _ -> t
     
     // Workflow for building a support
-    let makeRollerSupportBuilder (j:Joint) = SupportBuilder.Roller {_magnitude = None; _direction = None; joint = j}
-    let makePinSupportBuilder (j:Joint) = SupportBuilder.Pin ({_magnitude = None; _direction = None; joint = j},{_magnitude = None; _direction = None; joint = j})
+    let makeRollerSupportBuilderFrom (j:Joint) = SupportBuilder.Roller {_magnitude = None; _direction = None; joint = j}
+    let makePinSupportBuilderFrom (j:Joint) = SupportBuilder.Pin ({_magnitude = None; _direction = None; joint = j},{_magnitude = None; _direction = None; joint = j})
     let addDirectionToSupportBuilder (v:Vector*(Vector option)) (sb:SupportBuilder) =
         let v1,v2 = v
         match sb with 
@@ -241,41 +246,79 @@ module TrussImplementation =
 
 
 module TrussServices = 
-   open TrussDomain
-   open TrussImplementation
+    open TrussDomain
+    open TrussImplementation
 
-   let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
+    let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
+    let makeVectorFrom (point :System.Windows.Point) = Vector(x = point.X, y = point.Y)
 
-   let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
-       match state with 
-       | TrussDomain.TrussState es -> 
-           {buildOp = makeMemberBuilderFrom (makeJointFrom point) 
-                      |> MemberBuilder |> BuildMember; truss = es.truss} |> BuildState
-       | TrussDomain.BuildState bs-> 
-           match bs.buildOp with
-           | BuildMember mb -> 
-               {truss = addJointToMemberBuilder (makeJointFrom point) mb
-                        |> addMemberToTruss bs.truss} |> TrussState
-           | _ -> ErrorState {error = [TrussBuildOp]; truss = bs.truss}           
-       | TrussDomain.SelectionState ss -> ErrorState {error = [WrongStateData]; truss = ss.truss} 
-       | TrussDomain.ErrorState es -> ErrorState {error = WrongStateData::es.error; truss = es.truss}
-
-   let getJointSeqFromTruss (t:Truss) =
+    let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
        let l = List.map (fun x -> pointMap x ) j
        List.toSeq l   
-   let getMemberSeqFromTruss (t:Truss) =
+    let getMemberSeqFromTruss (t:Truss) =
        let memberMap (m:Member) = 
            let a,b = m
            (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
             System.Windows.Point (x = (getXFrom b),y = (getYFrom b)))
        let l = List.map (fun x -> memberMap x ) t.members
        List.toSeq l
+    
+    let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
+       match state with 
+       | TrussDomain.TrussState es -> 
+           {buildOp = makeMemberBuilderFrom (makeJointFrom point) |> BuildMember; 
+            truss = es.truss} |> BuildState
+       | TrussDomain.BuildState bs-> 
+           match bs.buildOp with
+           | BuildMember mb -> 
+               {truss = addJointToMemberBuilder (makeJointFrom point) mb
+                        |> addMemberToTruss bs.truss} |> TrussState
+           | _ -> ErrorState {errors = [TrussBuildOp]; truss = bs.truss}           
+       | TrussDomain.SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+       | TrussDomain.ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    let sendPointToForceBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
+        match state with 
+        | TrussDomain.TrussState es -> 
+            {buildOp = makeForceBuilderFrom (makeJointFrom point) 
+                       |> BuildForce; truss = es.truss} |> BuildState
+        | TrussDomain.BuildState bs-> 
+            match bs.buildOp with
+            | BuildForce fb -> 
+                match fb._direction, fb._magnitude with
+                | _, None -> 
+                    {buildOp = addDirectionToForceBuilder (makeVectorFrom point) fb |> BuildForce; 
+                     truss = bs.truss} |> BuildState
+                | _, Some m -> 
+                    {truss = addDirectionToForceBuilder (makeVectorFrom point) fb                
+                    |> addForceToTruss bs.truss} |> TrussState                         
+            | _ -> ErrorState {errors = [TrussBuildOp]; truss = bs.truss}
+        | TrussDomain.SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | TrussDomain.ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    let sendMagnitudeToForceBuilder magnitude (state :TrussAnalysisState) =       
+        match state with 
+        | TrussDomain.TrussState es -> ErrorState {errors = [WrongStateData]; truss = es.truss}
+        | TrussDomain.BuildState bs-> 
+            match bs.buildOp with
+            | BuildForce fb -> 
+                match fb._magnitude, fb._direction with
+                | _, None -> 
+                    {buildOp = addMagnitudeToForceBuilder magnitude fb |> BuildForce; 
+                     truss = bs.truss} |> BuildState
+                | _, Some m -> 
+                    {truss = addMagnitudeToForceBuilder magnitude fb                
+                    |> addForceToTruss bs.truss} |> TrussState                         
+            | _ -> ErrorState {errors = [TrussBuildOp]; truss = bs.truss}
+        | TrussDomain.SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | TrussDomain.ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
 
-   let createServices () = 
-       {getJointSeqFromTruss = getJointSeqFromTruss 
-        getMemberSeqFromTruss = getMemberSeqFromTruss}
+    let createServices () = 
+       {getJointSeqFromTruss = getJointSeqFromTruss;
+        getMemberSeqFromTruss = getMemberSeqFromTruss;
+        sendPointToMemberBuilder = sendPointToMemberBuilder;
+        sendPointToForceBuilder = sendPointToForceBuilder;
+        sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder}
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
@@ -370,24 +413,25 @@ type TrussAnalysis() as this  =
         bitmap
     let getTrussFrom s = 
         match s with
-        | TrussDomain.TrussState es -> es.truss
+        | TrussDomain.TrussState ts -> ts.truss
         | TrussDomain.BuildState bs-> bs.truss
         | TrussDomain.SelectionState ss -> ss.truss
         | TrussDomain.ErrorState es -> es.truss
-    let getJointsFrom (s) = trussServices.getJointSeqFromTruss (getTrussFrom s)    
+    let getJointsFrom s = trussServices.getJointSeqFromTruss (getTrussFrom s)    
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (getJointsFrom state)
     
-    let sendPointToMemberBuilder (p:System.Windows.Point) = ()
-        
+    let sendPointToMemberBuilder (p:System.Windows.Point) = trussServices.sendPointToMemberBuilder p state
+    let sendPointToForceBuilder (p:System.Windows.Point) = trussServices.sendPointToForceBuilder p state
+    let sendNagnitudeToForceBuilder m = trussServices.sendMagnitudeToForceBuilder m state
         
     let drawTruss () = ()
-        
+   
         (*//Workflow
         get truss from state -- done
         get joints as point seq -- done
-        get members as lines 
+        get members as lines -- done
         get supports as drawing visual
         context = visual.RenderOpen()  
         for each joint 
@@ -453,4 +497,3 @@ module TrussAnalysis =
         			form@ShowDialog[];			
         		]
         	]"
-    
