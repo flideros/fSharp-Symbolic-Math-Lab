@@ -41,12 +41,11 @@ module TrussDomain =
         | Member of Member
         | Force of Force
         | Support of Support
+    
     type TrussBuildOp =
-        | AddTrussPart of TrussPart
-        | SubtractTrussPart of TrussPart
-        | SelectTrussPart of TrussPart
         | BuildMember of MemberBuilder
         | BuildForce of ForceBuilder
+        | BuildSupport of SupportBuilder
 
     type BuildOpResult =
         | TrussPart of TrussPart
@@ -138,13 +137,36 @@ module TrussImplementation =
     let addDirectionToSupportBuilder (v:Vector*(Vector option)) (sb:SupportBuilder) =
         let v1,v2 = v
         match sb with 
-        | SupportBuilder.Roller fb -> SupportBuilder.Roller {fb with _direction = Some v1}
-        | SupportBuilder.Pin fb -> SupportBuilder.Pin ({fst fb with  _direction = Some v1},{snd fb with _direction = v2 })
+        | SupportBuilder.Roller fb -> 
+            match fb._magnitude.IsSome with 
+            | false -> SupportBuilder.Roller {fb with _direction = Some v1}  |> BuildSupport|> BuildOpResult.TrussBuildOp
+            | true -> {magnitude = fb._magnitude.Value; direction = v1; joint = fb.joint} |> Roller |> Support |> BuildOpResult.TrussPart
+        | SupportBuilder.Pin fb -> 
+            let f1,f2 = fb 
+            match f1._magnitude.IsSome && f2._magnitude.IsSome && v2.IsSome with
+            | false -> SupportBuilder.Pin ({f1 with  _direction = Some v1},{f2 with _direction = v2 }) |> BuildSupport |> BuildOpResult.TrussBuildOp
+            | true -> ({magnitude = f1._magnitude.Value; direction = v1; joint = f1.joint},
+                       {magnitude = f2._magnitude.Value; direction = v2.Value; joint = f2.joint}) |> Pin |> Support |> BuildOpResult.TrussPart
     let addMagnitudeToSupportBuilder (m:float*(float option)) (sb:SupportBuilder) =
         let m1,m2 = m
         match sb with 
-        | SupportBuilder.Roller fb -> SupportBuilder.Roller {fb with _magnitude = Some m1}
-        | SupportBuilder.Pin fb -> SupportBuilder.Pin ({fst fb with  _magnitude = Some m1},{(snd fb) with _magnitude = m2 })
+        | SupportBuilder.Roller fb -> 
+            match fb._direction.IsSome with 
+            | false -> SupportBuilder.Roller {fb with _magnitude = Some m1}  |> BuildSupport|> BuildOpResult.TrussBuildOp
+            | true -> {magnitude = m1; direction = fb._direction.Value; joint = fb.joint} |> Roller |> Support |> BuildOpResult.TrussPart
+        | SupportBuilder.Pin fb -> 
+            let f1,f2 = fb 
+            match f1._direction.IsSome && f2._direction.IsSome && m2.IsSome with
+            | false -> SupportBuilder.Pin ({f1 with  _magnitude = Some m1},{f2 with _magnitude = m2 }) |> BuildSupport |> BuildOpResult.TrussBuildOp
+            | true -> ({magnitude = m1; direction = f1._direction.Value; joint = f1.joint},
+                       {magnitude = m2.Value; direction = f2._direction.Value; joint = f2.joint}) |> Pin |> Support |> BuildOpResult.TrussPart
+        (*match sb with 
+        | SupportBuilder.Roller fb -> SupportBuilder.Roller {fb with _magnitude = Some m1} |> BuildSupport|> BuildOpResult.TrussBuildOp
+        | SupportBuilder.Pin fb -> SupportBuilder.Pin ({fst fb with  _magnitude = Some m1},{(snd fb) with _magnitude = m2 }) |> BuildSupport|> BuildOpResult.TrussBuildOp*)
+    
+    
+    
+    
     let addSupportToTruss (t:Truss) (sb:SupportBuilder) = 
         match sb with
         | SupportBuilder.Roller {_magnitude = Some m; _direction = Some d; joint = j} -> 
