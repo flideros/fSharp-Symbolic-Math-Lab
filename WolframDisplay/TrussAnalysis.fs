@@ -41,13 +41,16 @@ module TrussDomain =
         | Member of Member
         | Force of Force
         | Support of Support
-    
     type TrussBuildOp =
         | AddTrussPart of TrussPart
         | SubtractTrussPart of TrussPart
         | SelectTrussPart of TrussPart
         | BuildMember of MemberBuilder
         | BuildForce of ForceBuilder
+
+    type BuildOpResult =
+        | TrussPart of TrussPart
+        | TrussBuildOp of TrussBuildOp
 
     // Types to describe error results
     type Error = 
@@ -106,29 +109,29 @@ module TrussImplementation =
             (m,b)
         | false -> (0.,(getYFrom force.joint))
 
+    let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
+        match p with 
+        | Member m -> {t with members = m::t.members}
+        | Force f -> {t with forces = f::t.forces}
+        | Support s -> {t with supports = s::t.supports}
+    
     // Workflow for building a member
     let makeMemberBuilderFrom (j:Joint) = MemberBuilder (j,None)
     let addJointToMemberBuilder (j:Joint) (mb:MemberBuilder) = 
         let a, _b = mb
-        (a,Some j)
-    let addMemberToTruss (t:Truss) (mb:MemberBuilder) = 
-        match mb with 
-        | j1,Some j2 -> 
-            let m = (j1,j2)
-            {t with members = m::t.members}
-        | _J1,None -> t
-    
+        Member (a,j) 
+        
     // Workflow for building a force
     let makeForceBuilderFrom (j:Joint) = {_magnitude = None; _direction = None; joint = j}
-    let addDirectionToForceBuilder (v:Vector) (fb:ForceBuilder) = {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}
-    let addMagnitudeToForceBuilder m (fb:ForceBuilder) = {_magnitude = Some m; _direction = fb._direction; joint = fb.joint}
-    let addForceToTruss (t:Truss) (fb:ForceBuilder) = 
-        match fb with
-        | {_magnitude = Some m; _direction = Some d; joint = j} -> 
-            let f = {direction = d; magnitude = m; joint = j}
-            {t with forces = f::t.forces}
-        | _ -> t
-    
+    let addDirectionToForceBuilder (v:Vector) (fb:ForceBuilder) = 
+        match fb._magnitude.IsSome with
+        | false -> {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}  |> BuildForce |> BuildOpResult.TrussBuildOp
+        | true -> {magnitude = fb._magnitude.Value; direction = v; joint = fb.joint} |> Force |> BuildOpResult.TrussPart
+    let addMagnitudeToForceBuilder m (fb:ForceBuilder) = 
+        match fb._direction.IsSome with
+        | false -> {_magnitude = Some m; _direction = fb._direction; joint = fb.joint} |> BuildForce |> BuildOpResult.TrussBuildOp
+        | true -> {magnitude = m; direction = fb._direction.Value; joint = fb.joint} |> Force |> BuildOpResult.TrussPart
+        
     // Workflow for building a support
     let makeRollerSupportBuilderFrom (j:Joint) = SupportBuilder.Roller {_magnitude = None; _direction = None; joint = j}
     let makePinSupportBuilderFrom (j:Joint) = SupportBuilder.Pin ({_magnitude = None; _direction = None; joint = j},{_magnitude = None; _direction = None; joint = j})
@@ -274,25 +277,23 @@ module TrussServices =
            match bs.buildOp with
            | BuildMember mb -> 
                {truss = addJointToMemberBuilder (makeJointFrom point) mb
-                        |> addMemberToTruss bs.truss} |> TrussState
+                        |> addTrussPartToTruss bs.truss} |> TrussState
            | _ -> ErrorState {errors = [TrussBuildOp]; truss = bs.truss}           
        | TrussDomain.SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
        | TrussDomain.ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendPointToForceBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
         match state with 
         | TrussDomain.TrussState es -> 
-            {buildOp = makeForceBuilderFrom (makeJointFrom point) 
-                       |> BuildForce; truss = es.truss} |> BuildState
+            {buildOp = makeForceBuilderFrom (makeJointFrom point) |> BuildForce; truss = es.truss} |> BuildState
         | TrussDomain.BuildState bs-> 
             match bs.buildOp with
             | BuildForce fb -> 
-                match fb._direction, fb._magnitude with
-                | _, None -> 
-                    {buildOp = addDirectionToForceBuilder (makeVectorFrom point) fb |> BuildForce; 
-                     truss = bs.truss} |> BuildState
-                | _, Some m -> 
-                    {truss = addDirectionToForceBuilder (makeVectorFrom point) fb                
-                    |> addForceToTruss bs.truss} |> TrussState                         
+                let op = addDirectionToForceBuilder (makeVectorFrom point) fb
+                match op with
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | BuildOpResult.TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
+                 
+                                             
             | _ -> ErrorState {errors = [TrussBuildOp]; truss = bs.truss}
         | TrussDomain.SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | TrussDomain.ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
@@ -302,13 +303,10 @@ module TrussServices =
         | TrussDomain.BuildState bs-> 
             match bs.buildOp with
             | BuildForce fb -> 
-                match fb._magnitude, fb._direction with
-                | _, None -> 
-                    {buildOp = addMagnitudeToForceBuilder magnitude fb |> BuildForce; 
-                     truss = bs.truss} |> BuildState
-                | _, Some m -> 
-                    {truss = addMagnitudeToForceBuilder magnitude fb                
-                    |> addForceToTruss bs.truss} |> TrussState                         
+                let op = addMagnitudeToForceBuilder magnitude fb
+                match op with
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | BuildOpResult.TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState       
             | _ -> ErrorState {errors = [TrussBuildOp]; truss = bs.truss}
         | TrussDomain.SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | TrussDomain.ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
