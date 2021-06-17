@@ -78,13 +78,19 @@ module TrussDomain =
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToRollerSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToPinSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
         {getJointSeqFromTruss:GetJointSeqFromTruss;
          getMemberSeqFromTruss:GetMemberSeqFromTruss;
          sendPointToMemberBuilder:SendPointToMemberBuilder;
          sendPointToForceBuilder:SendPointToForceBuilder;
-         sendMagnitudeToForceBuilder:SendMagnitudeToForceBuilder}
+         sendMagnitudeToForceBuilder:SendMagnitudeToForceBuilder;
+         sendPointToRollerSupportBuilder:SendPointToRollerSupportBuilder;
+         sendPointToPinSupportBuilder:SendPointToPinSupportBuilder;
+         sendMagnitudeToSupportBuilder:SendMagnitudeToSupportBuilder}
 
 module TrussImplementation = 
     open TrussDomain
@@ -107,6 +113,11 @@ module TrussImplementation =
             let b = (getYFrom force.joint) - (m * (getXFrom force.joint))
             (m,b)
         | false -> (0.,(getYFrom force.joint))
+    let getJointFromSupportBuilder (sb:SupportBuilder) = 
+        match sb with
+        | SupportBuilder.Roller r -> r.joint
+        | SupportBuilder.Pin (p,_) -> p.joint
+
 
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -253,7 +264,6 @@ module TrussImplementation =
         | true  -> Determinate 
         | false -> Indeterminate
 
-
 module TrussServices = 
     open TrussDomain
     open TrussImplementation
@@ -265,7 +275,7 @@ module TrussServices =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
        let l = List.map (fun x -> pointMap x ) j
-       List.toSeq l   
+       List.toSeq l
     let getMemberSeqFromTruss (t:Truss) =
        let memberMap (m:Member) = 
            let a,b = m
@@ -318,13 +328,61 @@ module TrussServices =
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    let sendPointToRollerSupportBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
+        match state with 
+        | TrussState es -> 
+            {buildOp = makeRollerSupportBuilderFrom (makeJointFrom point) |> BuildSupport; truss = es.truss} |> BuildState
+        | BuildState bs-> 
+            match bs.buildOp with
+            | BuildSupport sb -> 
+                let op = addDirectionToSupportBuilder (makeVectorFrom point,None) sb
+                match op with
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
+            | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
+        | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    let sendPointToPinSupportBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
+        match state with 
+        | TrussState es -> 
+            {buildOp = makePinSupportBuilderFrom (makeJointFrom point) |> BuildSupport; truss = es.truss} |> BuildState
+        | BuildState bs-> 
+            match bs.buildOp with
+            | BuildSupport sb -> 
+                let j = getJointFromSupportBuilder sb
+                let x,y = getXFrom j, getYFrom j
+                let point' = System.Windows.Point(x + point.Y,y - point.X)
+                let op = addDirectionToSupportBuilder (makeVectorFrom point,Some (makeVectorFrom point')) sb
+                match op with
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
+            | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
+        | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    let sendMagnitudeToSupportBuilder magnitude (state :TrussAnalysisState) =       
+        match state with 
+        | TrussState es -> ErrorState {errors = [WrongStateData]; truss = es.truss}
+        | BuildState bs-> 
+            match bs.buildOp with
+            | BuildSupport sb -> 
+                let op = addMagnitudeToSupportBuilder magnitude sb
+                match op with
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState       
+            | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
+        | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+
 
     let createServices () = 
        {getJointSeqFromTruss = getJointSeqFromTruss;
         getMemberSeqFromTruss = getMemberSeqFromTruss;
         sendPointToMemberBuilder = sendPointToMemberBuilder;
         sendPointToForceBuilder = sendPointToForceBuilder;
-        sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder}
+        sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder;
+        sendPointToRollerSupportBuilder = sendPointToRollerSupportBuilder;
+        sendPointToPinSupportBuilder = sendPointToPinSupportBuilder;
+        sendMagnitudeToSupportBuilder = sendMagnitudeToSupportBuilder}
 
 //   UI Shell, no funtionality at the moment, 
 //\/--- but will run an exampe computation ----\/\\
