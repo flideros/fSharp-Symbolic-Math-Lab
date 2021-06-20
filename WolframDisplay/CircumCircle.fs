@@ -21,7 +21,7 @@ type CircumCircle() as this  =
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
-    do  link.WaitAndDiscardAnswer()        
+    do  link.WaitAndDiscardAnswer()
     let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)
         do  k.AutoCloseLink <- true

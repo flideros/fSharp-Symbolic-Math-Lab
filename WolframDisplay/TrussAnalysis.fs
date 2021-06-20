@@ -390,7 +390,29 @@ type TrussAnalysis() as this  =
     inherit UserControl()    
     do Install() |> ignore
 
-    let initialState = TrussDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}}
+    
+
+    let x0,x1,x2,x3,x4 = TrussDomain.X 240., TrussDomain.X 100., TrussDomain.X 200., TrussDomain.X 137., TrussDomain.X 499.
+    let y0,y1,y2,y3,y4 = TrussDomain.Y 360., TrussDomain.Y 166., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
+   
+    let j1 = {TrussDomain.x=x3;TrussDomain.y=y0}
+    let j2 = {TrussDomain.x=x0;TrussDomain.y=y1}
+    let j3 = {TrussDomain.x=x1;TrussDomain.y=y2}
+    let j4 = {TrussDomain.x=x1;TrussDomain.y=y3}
+    let j5 = {TrussDomain.x=x2;TrussDomain.y=y4}
+    let j6 = {TrussDomain.x=x4;TrussDomain.y=y1}
+    
+    let m1 = j1,j2
+    let m2 = j1,j3
+    let m3 = j2,j4
+    let m4 = j1,j4
+    let m5 = j4,j3
+    let m6 = j3,j5
+    let m7 = j4,j5
+    let m8 = j4,j6
+    let m9 = j5,j6
+
+    let initialState = TrussDomain.TrussState {truss = {members=[m1;m2;m3;m8;m9]; forces=[]; supports=[]}}
 
     let mutable state = initialState
     
@@ -424,6 +446,25 @@ type TrussAnalysis() as this  =
     let red = SolidColorBrush(Colors.Red)
     let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
        
+    let trussJoint (p:System.Windows.Point) = 
+        let radius = 6.
+        let e = Ellipse()
+        do  e.Fill <- blue
+            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
+            e.Width <- 2.*radius
+            e.Height <- 2.*radius
+        e
+    let trussMember (p1:System.Windows.Point,p2:System.Windows.Point) = 
+        let l = Line()
+        do  l.Stroke <- red
+            l.StrokeThickness <- 2.
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+        l
+
     do  bluePen.Freeze()
         redPen.Freeze()
         blackPen.Freeze() 
@@ -449,10 +490,10 @@ type TrussAnalysis() as this  =
             sp.HorizontalAlignment <- HorizontalAlignment.Left
         sp
     let canvas = 
-        let c = Canvas(ClipToBounds = true)
+        let c = Canvas(ClipToBounds = true)        
         do  c.Background <- System.Windows.Media.Brushes.White 
             c.Children.Add(label) |> ignore            
-            c.Children.Add(result_StackPanel) |> ignore
+            //c.Children.Add(result_StackPanel) |> ignore            
         c
     let screen_Grid =
         let g = Grid()
@@ -481,17 +522,29 @@ type TrussAnalysis() as this  =
         | TrussDomain.BuildState bs-> bs.truss
         | TrussDomain.SelectionState ss -> ss.truss
         | TrussDomain.ErrorState es -> es.truss
-    let getJointsFrom s = trussServices.getJointSeqFromTruss (getTrussFrom s)    
+    let getJointsFrom s = trussServices.getJointSeqFromTruss (getTrussFrom s)
+    let getmembersFrom s = trussServices.getMemberSeqFromTruss (getTrussFrom s)
+    
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 9.) (getJointsFrom state)
     
     let sendPointToMemberBuilder (p:System.Windows.Point) = trussServices.sendPointToMemberBuilder p state
     let sendPointToForceBuilder (p:System.Windows.Point) = trussServices.sendPointToForceBuilder p state
-    let sendNagnitudeToForceBuilder m = trussServices.sendMagnitudeToForceBuilder m state
+    let sendMagnitudeToForceBuilder m = trussServices.sendMagnitudeToForceBuilder m state
         
-    let drawTruss () = ()
-   
+    let drawTruss = 
+        let drawPoint (p:System.Windows.Point) =
+            let j = trussJoint p
+            do  canvas.Children.Add(j) |> ignore
+        let drawLine (p1:System.Windows.Point,p2:System.Windows.Point) =
+            let l = trussMember (p1,p2)
+            do  canvas.Children.Add(l) |> ignore
+        let joints = getJointsFrom state
+        let members = getmembersFrom state        
+        
+        Seq.iter (fun l -> drawLine l) members
+        Seq.iter (fun p -> drawPoint p) joints
         (*//Workflow
         get truss from state -- done
         get joints as point seq -- done
@@ -505,10 +558,9 @@ type TrussAnalysis() as this  =
         for each member 
             add suppot graffic to context
         context.Close()
-       *)
-        
+       *)        
 
-    let setGraphicsFromKernel (k:MathKernel) = 
+    let setGraphicsFromKernel (k:MathKernel) =
         let rec getImages i =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
@@ -526,7 +578,7 @@ type TrussAnalysis() as this  =
           let image = Image()            
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-    let testLabelFromService = 
+    let testLabel = 
         do label.Text <- "Rock"
 
     (*Initialize*)
@@ -535,7 +587,7 @@ type TrussAnalysis() as this  =
         setGraphicsFromKernel kernel
     (*add event handlers*)
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
-        this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> testLabelFromService))
+        this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss))
 module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        
