@@ -51,6 +51,13 @@ module TrussDomain =
         | TrussPart of TrussPart
         | TrussBuildOp of TrussBuildOp
 
+    type TrussMode =
+        | Select
+        | Delete
+        | MemberBuild
+        | ForceBuild
+        | SupportBuild
+
     // Types to describe error results
     type Error = 
         | LazyCoder  
@@ -60,9 +67,9 @@ module TrussDomain =
         | Other of string
  
     // Data associated with each state     
-    type TrussStateData = {truss:Truss} // Includes the empty truss
+    type TrussStateData = {truss:Truss;mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
-    type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}
+    type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     
     // States
@@ -294,7 +301,7 @@ module TrussServices =
            | BuildMember mb -> 
                let result = addJointToMemberBuilder (makeJointFrom point) mb
                match result with
-               | TrussPart tp -> {truss = tp |> addTrussPartToTruss bs.truss} |> TrussState
+               | TrussPart tp -> {truss = tp |> addTrussPartToTruss bs.truss; mode = MemberBuild} |> TrussState
                | TrussBuildOp bo -> {buildOp = bo; truss = bs.truss} |> BuildState
            | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}           
        | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
@@ -308,7 +315,7 @@ module TrussServices =
             | BuildForce fb -> 
                 let op = addDirectionToForceBuilder (makeVectorFrom point) fb
                 match op with
-                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = ForceBuild} |> TrussState
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
                  
                                              
@@ -323,7 +330,7 @@ module TrussServices =
             | BuildForce fb -> 
                 let op = addMagnitudeToForceBuilder magnitude fb
                 match op with
-                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = ForceBuild} |> TrussState
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState       
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
@@ -337,7 +344,7 @@ module TrussServices =
             | BuildSupport sb -> 
                 let op = addDirectionToSupportBuilder (makeVectorFrom point,None) sb
                 match op with
-                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
@@ -354,7 +361,7 @@ module TrussServices =
                 let point' = System.Windows.Point(x + point.Y,y - point.X)
                 let op = addDirectionToSupportBuilder (makeVectorFrom point,Some (makeVectorFrom point')) sb
                 match op with
-                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
@@ -367,7 +374,7 @@ module TrussServices =
             | BuildSupport sb -> 
                 let op = addMagnitudeToSupportBuilder magnitude sb
                 match op with
-                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp} |> TrussState
+                | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState       
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
@@ -412,7 +419,7 @@ type TrussAnalysis() as this  =
     let m8 = j4,j6
     let m9 = j5,j6
 
-    let initialState = TrussDomain.TrussState {truss = {members=[m1;m2;m3;m8;m9]; forces=[]; supports=[]}}
+    let initialState = TrussDomain.TrussState {truss = {members=[m1;m2;m3;m8;m9]; forces=[]; supports=[]}; mode = TrussDomain.SupportBuild}
 
     let mutable state = initialState
     
@@ -534,31 +541,19 @@ type TrussAnalysis() as this  =
     let sendMagnitudeToForceBuilder m = trussServices.sendMagnitudeToForceBuilder m state
         
     let drawTruss = 
-        let drawPoint (p:System.Windows.Point) =
+        let drawJoint (p:System.Windows.Point) =
             let j = trussJoint p
             do  canvas.Children.Add(j) |> ignore
-        let drawLine (p1:System.Windows.Point,p2:System.Windows.Point) =
+        let drawMember (p1:System.Windows.Point,p2:System.Windows.Point) =
             let l = trussMember (p1,p2)
             do  canvas.Children.Add(l) |> ignore
+        
         let joints = getJointsFrom state
         let members = getmembersFrom state        
         
-        Seq.iter (fun l -> drawLine l) members
-        Seq.iter (fun p -> drawPoint p) joints
-        (*//Workflow
-        get truss from state -- done
-        get joints as point seq -- done
-        get members as lines -- done
-        get supports as drawing visual
-        context = visual.RenderOpen()  
-        for each joint 
-            context.DrawEllipse(black,blackPen,p1,6.,6.)
-        for each member 
-            context.DrawLine(blackPen,p1,p2)
-        for each member 
-            add suppot graffic to context
-        context.Close()
-       *)        
+        Seq.iter (fun m -> drawMember m) members
+        Seq.iter (fun j -> drawJoint j) joints
+                
 
     let setGraphicsFromKernel (k:MathKernel) =
         let rec getImages i =
@@ -578,16 +573,16 @@ type TrussAnalysis() as this  =
           let image = Image()            
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-    let testLabel = 
-        do label.Text <- "Rock"
-
+    
     (*Initialize*)
-    do  this.Content <- screen_Grid
-        
+    do label.Text <- "members: " + (getTrussFrom state).members.Length.ToString()
+    do  this.Content <- screen_Grid        
         setGraphicsFromKernel kernel
+    
     (*add event handlers*)
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss))
+
 module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        
