@@ -17,16 +17,15 @@ open Math.Presentation.WolframEngine
 open TrussDomain
 open TrussImplementation
 
-let x0,x1,x2,x3,x4 = X 0., X 1., X 2., X 3., X 4.
-let y0,y1,y2,y3,y4 = Y 0., Y 1., Y 2., Y 3., Y 4.
-let z0,z1,z2,z3,z4 = Z 0., Z 1., Z 2., Z 3., Z 4.
-
-let j1 = {x=x0;y=y0}
-let j2 = {x=x0;y=y1}
-let j3 = {x=x1;y=y0}
-let j4 = {x=x1;y=y1}
-let j5 = {x=x2;y=y0}
-let j6 = {x=x2;y=y1}
+let x0,x1,x2,x3,x4 = TrussDomain.X 240., TrussDomain.X 100., TrussDomain.X 200., TrussDomain.X 137., TrussDomain.X 499.
+let y0,y1,y2,y3,y4 = TrussDomain.Y 360., TrussDomain.Y 166., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
+   
+let j1 = {TrussDomain.x=x3;TrussDomain.y=y0}
+let j2 = {TrussDomain.x=x0;TrussDomain.y=y1}
+let j3 = {TrussDomain.x=x1;TrussDomain.y=y2}
+let j4 = {TrussDomain.x=x1;TrussDomain.y=y3}
+let j5 = {TrussDomain.x=x2;TrussDomain.y=y4}
+let j6 = {TrussDomain.x=x4;TrussDomain.y=y1}
 
 let m1 = j1,j2
 let m2 = j1,j3
