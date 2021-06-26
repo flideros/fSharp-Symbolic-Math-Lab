@@ -438,15 +438,15 @@ type TrussAnalysis() as this  =
         let unhighlight () = e.Fill <- clear
         do  e.Stroke <- blue
             e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
-            e.Width <- 2.*radius
-            e.Height <- 2.*radius
+            e.Width <- 2. * radius
+            e.Height <- 2. * radius
             e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         e
-    let trussMember (p1:System.Windows.Point,p2:System.Windows.Point) = 
+    let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
-        do  l.Stroke <- red
-            l.StrokeThickness <- 2.
+        do  l.Stroke <- black
+            l.StrokeThickness <- 0.4
             l.Visibility <- Visibility.Visible
             l.X1 <- p1.X
             l.Y1 <- p1.Y
@@ -459,12 +459,12 @@ type TrussAnalysis() as this  =
         blackPen.Freeze() 
     
     (*Controls*)    
-    let label = 
+    let label =
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 240., Top = 50., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 40., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
-            l.MaxWidth <- 50.
+            l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
         l
@@ -515,7 +515,7 @@ type TrussAnalysis() as this  =
     let getmembersFrom s = trussServices.getMemberSeqFromTruss (getTrussFrom s)    
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
-            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 12.) (getJointsFrom state)
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (getJointsFrom state)
     
     let sendPointToMemberBuilder (p:System.Windows.Point) s = trussServices.sendPointToMemberBuilder p s
     let sendPointToForceBuilder (p:System.Windows.Point) s = trussServices.sendPointToForceBuilder p s
@@ -532,6 +532,8 @@ type TrussAnalysis() as this  =
         let l = trussMember (p1,p2)
         do  canvas.Children.Add(l) |> ignore    
     let drawTruss s =
+        do  canvas.Children.Clear()
+            canvas.Children.Add(label) |> ignore
         let joints = getJointsFrom s
         let members = getmembersFrom s    
         Seq.iter (fun m -> drawMember m) members
@@ -573,7 +575,7 @@ type TrussAnalysis() as this  =
                 let newState = sendPointToMemberBuilder p state
                 do  drawBuildJoint p1
                     state <- newState
-                    label.Text <- (Seq.length (getJointsFrom newState)).ToString()
+                    label.Text <- "Joints" + (Seq.length (getJointsFrom newState)).ToString()
             | TrussDomain.TrussMode.ForceBuild -> ()
             | TrussDomain.TrussMode.SupportBuild -> ()
             | TrussDomain.TrussMode.Delete -> ()
@@ -584,7 +586,7 @@ type TrussAnalysis() as this  =
                 let newState = sendPointToMemberBuilder p state
                 do  drawTruss newState
                     state <- newState
-                    label.Text <-(Seq.length (getJointsFrom newState)) .ToString()
+                    label.Text <- "Joints" + (Seq.length (getJointsFrom newState)) .ToString()
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> ()

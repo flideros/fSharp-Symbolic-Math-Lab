@@ -77,8 +77,11 @@ let item0 = TabItem(Header = "Test Canvas")
 do  item0.Content <- testCanvas
 let item1 = TabItem(Header = "Past Projects")
 do  item1.Content <- stack
+let item2 = TabItem(Header = "Truss Analysis")
+do  item2.Content <- Math.Presentation.WolframEngine.TrussAnalysis()
 
-do  tabs.Items.Add(item0) |> ignore
+do  tabs.Items.Add(item2) |> ignore
+    tabs.Items.Add(item0) |> ignore
     tabs.Items.Add(item1) |> ignore
 (**)
 // Make a window and add content
