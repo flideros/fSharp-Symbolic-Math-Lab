@@ -65,6 +65,7 @@ module TrussDomain =
         | TrussBuildOpFailure
         | TrussModeError
         | WrongStateData
+        | NoJointSelected
         | Other of string
  
     // Data associated with each state     
@@ -449,6 +450,7 @@ type TrussAnalysis() as this  =
     let clear = SolidColorBrush(Colors.Transparent)
     let black = SolidColorBrush(Colors.Black)
     let blue = SolidColorBrush(Colors.Blue)
+    let olive = SolidColorBrush(Colors.Olive)
     let red = SolidColorBrush(Colors.Red)
     let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
        
@@ -479,7 +481,7 @@ type TrussAnalysis() as this  =
         redPen.Freeze()
         blackPen.Freeze() 
     
-    (*Controls*)    
+    (*Controls*)      
     let label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 180., Top = 50., Right = 0., Bottom = 0.)
@@ -489,6 +491,7 @@ type TrussAnalysis() as this  =
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
         l
+    // Truss mode selection
     let forceBuilder_RadioButton = 
         let r = RadioButton()
         let tb = TextBlock(Text="Build Force",FontSize=20.)            
@@ -504,8 +507,6 @@ type TrussAnalysis() as this  =
         r
     let trussMode_StackPanel = 
         let sp = StackPanel()
-        
-        
         do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
@@ -513,7 +514,45 @@ type TrussAnalysis() as this  =
             sp.Children.Add(memberBuilder_RadioButton) |> ignore
             sp.Children.Add(forceBuilder_RadioButton) |> ignore
         sp
+    // Force builder
     
+    let trussForceAngle_TextBlock = 
+        let tb = TextBlock(Text = "Angle (Degrees)")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussForceAngle_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        tb
+    let trussForceMagnitude_TextBlock = 
+        let tb = TextBlock(Text = "Magnitude")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussForceMagnitude_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        tb
+    
+    let trussForceBuilder_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussForceAngle_TextBlock) |> ignore
+            sp.Children.Add(trussForceAngle_TextBox) |> ignore
+            sp.Children.Add(trussForceMagnitude_TextBlock) |> ignore
+            sp.Children.Add(trussForceMagnitude_TextBox) |> ignore
+        sp
+    
+    let trussControls_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 40., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMode_StackPanel) |> ignore
+            sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
+        sp
+
     let result_Viewbox image =                    
         let vb = Viewbox()   
         do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
@@ -570,10 +609,16 @@ type TrussAnalysis() as this  =
     let drawMember (p1:System.Windows.Point, p2:System.Windows.Point) =
         let l = trussMember (p1,p2)
         do  canvas.Children.Add(l) |> ignore    
+    let drawBuildForce (p:System.Windows.Point) =
+        let j = trussJoint p
+        do  j.Stroke <- olive
+            j.StrokeThickness <- 2.
+            canvas.Children.Add(j) |> ignore
+    
     let drawTruss s =
         do  canvas.Children.Clear()
             canvas.Children.Add(label) |> ignore
-            canvas.Children.Add(trussMode_StackPanel) |> ignore
+            canvas.Children.Add(trussControls_StackPanel) |> ignore
         let joints = getJointsFrom s
         let members = getmembersFrom s    
         Seq.iter (fun m -> drawMember m) members
@@ -613,7 +658,9 @@ type TrussAnalysis() as this  =
         match check with 
         | true ->             
             let newState = 
-                match forceBuilder_RadioButton.IsChecked.Value , memberBuilder_RadioButton.IsChecked.Value, memberBuilder_RadioButton.IsMouseOver with
+                match forceBuilder_RadioButton.IsChecked.Value, 
+                      memberBuilder_RadioButton.IsChecked.Value, 
+                      memberBuilder_RadioButton.IsMouseOver with
                 | true, false, false -> trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
                 | true, false, true -> trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 
@@ -631,8 +678,16 @@ type TrussAnalysis() as this  =
                     let newState = sendPointToMemberBuilder p state
                     do  drawBuildJoint p1
                         state <- newState
-                        label.Text <- check.ToString() + "Joints " + (Seq.length (getJointsFrom newState)).ToString()
-                | TrussDomain.TrussMode.ForceBuild -> ()
+                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
+                | TrussDomain.TrussMode.ForceBuild ->                     
+                    match joint with
+                    | None -> 
+                        state <- TrussDomain.ErrorState {errors = [TrussDomain.NoJointSelected]; truss = getTrussFrom state}
+                        label.Text <- state.ToString()
+                    | Some i -> 
+                        let newState = sendPointToForceBuilder p state
+                        state <- newState
+                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
                 | TrussDomain.TrussMode.SupportBuild -> ()
                 | TrussDomain.TrussMode.Delete -> ()
                 | TrussDomain.TrussMode.Select -> ()
