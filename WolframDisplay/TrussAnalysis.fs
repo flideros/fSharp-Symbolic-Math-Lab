@@ -484,7 +484,7 @@ type TrussAnalysis() as this  =
     (*Controls*)      
     let label =
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 180., Top = 50., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 880., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 500.
@@ -492,48 +492,101 @@ type TrussAnalysis() as this  =
             l.Text <- state.ToString()
         l
     // Truss mode selection
+    let trussMode_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Truss Mode"
+        l
     let forceBuilder_RadioButton = 
         let r = RadioButton()
-        let tb = TextBlock(Text="Build Force",FontSize=20.)            
+        let tb = TextBlock(Text="Build Force",FontSize=15.)            
         
         do  r.Content <- tb
             r.IsChecked <- false |> Nullable<bool>
         r
     let memberBuilder_RadioButton = 
         let r = RadioButton()
-        let tb = TextBlock(Text="Build Member",FontSize=20.)            
+        let tb = TextBlock(Text="Build Member",FontSize=15.)            
         do  r.Content <- tb
             r.IsChecked <- true |> Nullable<bool>
         r
     let trussMode_StackPanel = 
         let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMode_Label) |> ignore
             sp.Children.Add(memberBuilder_RadioButton) |> ignore
             sp.Children.Add(forceBuilder_RadioButton) |> ignore
         sp
-    // Force builder
+    // Member builder    
+    let trussMemberP1X_TextBlock = 
+        let tb = TextBlock(Text = "X1")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP1X_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        tb
+    let trussMemberP1Y_TextBlock = 
+        let tb = TextBlock(Text = "Y1")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP1Y_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        tb    
+    let trussMemberP2X_TextBlock = 
+        let tb = TextBlock(Text = "X2")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP2X_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        tb
+    let trussMemberP2Y_TextBlock = 
+        let tb = TextBlock(Text = "Y2")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP2Y_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        tb 
     
+    let trussMemberBuilder_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMemberP1X_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP1X_TextBox) |> ignore
+            sp.Children.Add(trussMemberP1Y_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP1Y_TextBox) |> ignore
+            sp.Children.Add(trussMemberP2X_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP2X_TextBox) |> ignore
+            sp.Children.Add(trussMemberP2Y_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP2Y_TextBox) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+    // Force builder    
     let trussForceAngle_TextBlock = 
         let tb = TextBlock(Text = "Angle (Degrees)")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let trussForceAngle_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
         tb
     let trussForceMagnitude_TextBlock = 
         let tb = TextBlock(Text = "Magnitude")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let trussForceMagnitude_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
-        tb
-    
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        tb    
     let trussForceBuilder_StackPanel = 
         let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
@@ -541,17 +594,24 @@ type TrussAnalysis() as this  =
             sp.Children.Add(trussForceAngle_TextBox) |> ignore
             sp.Children.Add(trussForceMagnitude_TextBlock) |> ignore
             sp.Children.Add(trussForceMagnitude_TextBox) |> ignore
+            sp.Visibility <- Visibility.Collapsed
         sp
     
-    let trussControls_StackPanel = 
+    let trussControls_Border = 
+        let border = Border()
+        do  border.BorderBrush <- black
+            border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
+            border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 40., Right = 0., Bottom = 0.)
+        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(trussMode_StackPanel) |> ignore
+            sp.Children.Add(trussMemberBuilder_StackPanel) |> ignore
             sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
-        sp
+            border.Child <- sp
+        border
 
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -618,7 +678,7 @@ type TrussAnalysis() as this  =
     let drawTruss s =
         do  canvas.Children.Clear()
             canvas.Children.Add(label) |> ignore
-            canvas.Children.Add(trussControls_StackPanel) |> ignore
+            canvas.Children.Add(trussControls_Border) |> ignore
         let joints = getJointsFrom s
         let members = getmembersFrom s    
         Seq.iter (fun m -> drawMember m) members
@@ -654,18 +714,31 @@ type TrussAnalysis() as this  =
                 let p2 = Seq.item i joints
                 p2
         let check = forceBuilder_RadioButton.IsMouseOver ||
-                    memberBuilder_RadioButton.IsMouseOver
+                    memberBuilder_RadioButton.IsMouseOver ||
+                    trussControls_Border.IsMouseOver
         match check with 
         | true ->             
             let newState = 
                 match forceBuilder_RadioButton.IsChecked.Value, 
                       memberBuilder_RadioButton.IsChecked.Value, 
-                      memberBuilder_RadioButton.IsMouseOver with
-                | true, false, false -> trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
-                | true, false, true -> trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
-                
-                | false, true, false -> trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state                
-                | false, true, true -> trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
+                      memberBuilder_RadioButton.IsMouseOver,
+                      forceBuilder_RadioButton.IsMouseOver with
+                | true, false, false, true -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
+                    trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
+                | true, false, true, false -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state                
+                | false, true, false, true -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
+                    trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state                
+                | false, true, true, false -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 
                 | _ -> TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
             do  state <- newState
