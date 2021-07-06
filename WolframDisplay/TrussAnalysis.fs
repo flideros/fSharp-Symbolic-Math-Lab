@@ -484,7 +484,7 @@ type TrussAnalysis() as this  =
     (*Controls*)      
     let label =
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 880., Top = 50., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 480., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 500.
@@ -529,33 +529,22 @@ type TrussAnalysis() as this  =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let trussMemberP1X_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
         tb
     let trussMemberP1Y_TextBlock = 
         let tb = TextBlock(Text = "Y1")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let trussMemberP1Y_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
         tb    
-    let trussMemberP2X_TextBlock = 
-        let tb = TextBlock(Text = "X2")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let trussMemberP2X_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
-        tb
-    let trussMemberP2Y_TextBlock = 
-        let tb = TextBlock(Text = "Y2")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let trussMemberP2Y_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.))
-        tb 
-    
-    let trussMemberBuilder_StackPanel = 
+    let trussMemberP1_StackPanel = 
         let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+        do  sp.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
@@ -563,10 +552,48 @@ type TrussAnalysis() as this  =
             sp.Children.Add(trussMemberP1X_TextBox) |> ignore
             sp.Children.Add(trussMemberP1Y_TextBlock) |> ignore
             sp.Children.Add(trussMemberP1Y_TextBox) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+
+    let trussMemberP2X_TextBlock = 
+        let tb = TextBlock(Text = "X2")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP2X_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let trussMemberP2Y_TextBlock = 
+        let tb = TextBlock(Text = "Y2")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP2Y_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb 
+    let trussMemberP2_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
             sp.Children.Add(trussMemberP2X_TextBlock) |> ignore
             sp.Children.Add(trussMemberP2X_TextBox) |> ignore
             sp.Children.Add(trussMemberP2Y_TextBlock) |> ignore
             sp.Children.Add(trussMemberP2Y_TextBox) |> ignore
+            sp.Visibility <- Visibility.Collapsed
+        sp
+
+    let trussMemberBuilder_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMemberP1_StackPanel) |> ignore
+            sp.Children.Add(trussMemberP2_StackPanel) |> ignore
             sp.Visibility <- Visibility.Visible
         sp
     // Force builder    
@@ -598,8 +625,11 @@ type TrussAnalysis() as this  =
         sp
     
     let trussControls_Border = 
-        let border = Border()
+        let border = Border()            
         do  border.BorderBrush <- black
+            border.Cursor <- System.Windows.Input.Cursors.Arrow
+            border.Background <- clear
+            border.IsHitTestVisible <- true
             border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
             border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
         let sp = StackPanel()
@@ -624,8 +654,10 @@ type TrussAnalysis() as this  =
             sp.HorizontalAlignment <- HorizontalAlignment.Left
         sp
     let canvas = 
-        let c = Canvas(ClipToBounds = true)        
+        let c = Canvas()        
         do  c.Background <- System.Windows.Media.Brushes.White 
+            c.ClipToBounds <- true
+            c.Cursor <- System.Windows.Input.Cursors.Cross
             c.Children.Add(label) |> ignore 
         c
     let screen_Grid =
@@ -636,7 +668,13 @@ type TrussAnalysis() as this  =
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
     
-    (*Actions*)        
+    (*Actions*) 
+    let adjustMouseButtonEventArgPoint (e:Input.MouseButtonEventArgs) = 
+        let p = e.GetPosition(this)
+        System.Windows.Point(p.X,(p.Y - 0.04)) // not sure why the mouse position adds this to the point
+    let adjustMouseEventArgPoint (e:Input.MouseEventArgs) = 
+        let p = e.GetPosition(this)
+        System.Windows.Point(p.X,(p.Y - 0.04)) // not sure why the mouse position adds this to the point
     let getBitmapFrom visual = 
         let bitmap = 
             RenderTargetBitmap(
@@ -704,7 +742,8 @@ type TrussAnalysis() as this  =
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
 
     let handleMouseDown (e : Input.MouseButtonEventArgs) =
-        let p1 = e.MouseDevice.GetPosition(this)
+        
+        let p1 = adjustMouseButtonEventArgPoint e
         let joint = getJointIndex p1
         let p = 
             match joint with
@@ -713,10 +752,7 @@ type TrussAnalysis() as this  =
                 let joints = getJointsFrom state
                 let p2 = Seq.item i joints
                 p2
-        let check = forceBuilder_RadioButton.IsMouseOver ||
-                    memberBuilder_RadioButton.IsMouseOver ||
-                    trussControls_Border.IsMouseOver
-        match check with 
+        match trussControls_Border.IsMouseOver with 
         | true ->             
             let newState = 
                 match forceBuilder_RadioButton.IsChecked.Value, 
@@ -740,7 +776,8 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 
-                | _ -> TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
+                | _ -> state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
+            
             do  state <- newState
                 label.Text <- state.ToString() 
         | false -> 
@@ -751,6 +788,9 @@ type TrussAnalysis() as this  =
                     let newState = sendPointToMemberBuilder p state
                     do  drawBuildJoint p1
                         state <- newState
+                        trussMemberP1X_TextBox.IsReadOnly <- true
+                        trussMemberP1Y_TextBox.IsReadOnly <- true
+                        trussMemberP2_StackPanel.Visibility <- Visibility.Visible
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
                 | TrussDomain.TrussMode.ForceBuild ->                     
                     match joint with
@@ -770,6 +810,11 @@ type TrussAnalysis() as this  =
                     let newState = sendPointToMemberBuilder p state
                     do  drawTruss newState
                         state <- newState
+                        trussMemberP1X_TextBox.IsReadOnly <- true
+                        trussMemberP1Y_TextBox.IsReadOnly <- true
+                        trussMemberP2X_TextBox.IsReadOnly <- true
+                        trussMemberP2Y_TextBox.IsReadOnly <- true
+                        trussMemberP2_StackPanel.Visibility <- Visibility.Collapsed
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)) .ToString()
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
@@ -777,11 +822,19 @@ type TrussAnalysis() as this  =
             | TrussDomain.ErrorState es -> ()
 
     let handleMouseMove (e : Input.MouseEventArgs) =
-        let p2 = e.MouseDevice.GetPosition(this)        
+        let p2 = adjustMouseEventArgPoint e        
         match state with
         | TrussDomain.TrussState ts -> 
             match ts.mode with
-            | TrussDomain.TrussMode.MemberBuild -> ()
+            | TrussDomain.TrussMode.MemberBuild -> 
+                match trussControls_Border.IsMouseOver with 
+                | false -> 
+                    match trussMemberP1X_TextBox.IsReadOnly && trussMemberP1Y_TextBox.IsReadOnly with
+                    | false -> ()
+                    | true -> 
+                        do  trussMemberP1X_TextBox.Text <- p2.X.ToString()
+                            trussMemberP1Y_TextBox.Text <- p2.Y.ToString()
+                | true -> ()
             | TrussDomain.TrussMode.ForceBuild -> ()
             | TrussDomain.TrussMode.SupportBuild -> ()
             | TrussDomain.TrussMode.Delete -> ()
@@ -791,24 +844,103 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildMember bm ->
                 let p1 = trussServices.getPointFromMemberBuilder bm                
                 let memberBuilder = trussMember (p1,p2)
-                match Input.Mouse.LeftButton = Input.MouseButtonState.Pressed with
-                | false -> ()                        
-                | true ->
+                match Input.Mouse.LeftButton = Input.MouseButtonState.Pressed,
+                      trussControls_Border.IsMouseOver with                
+                | false, false -> 
+                    match trussControls_Border.IsMouseOver with 
+                    | false -> 
+                        match trussMemberP2X_TextBox.IsReadOnly && trussMemberP2Y_TextBox.IsReadOnly with
+                        | false -> ()
+                        | true -> 
+                            do  trussMemberP2X_TextBox.Text <- p2.X.ToString()
+                                trussMemberP2Y_TextBox.Text <- p2.Y.ToString()
+                    | true -> ()
+                | true, false ->
                     do  memberBuilder.StrokeThickness <- 1.
                         drawTruss state
                         drawBuildJoint p1                    
-                        canvas.Children.Add(memberBuilder) |> ignore                    
+                        canvas.Children.Add(memberBuilder) |> ignore   
+                | true, true 
+                | false, true -> ()
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> ()
         | TrussDomain.ErrorState es -> ()
 
+    let handleEnterDown (e:Input.KeyEventArgs) =
+        match e.Key with 
+        | Input.Key.Enter -> 
+            let x1b,x1 = Double.TryParse trussMemberP1X_TextBox.Text
+            let y1b,y1 = Double.TryParse trussMemberP1Y_TextBox.Text
+            let x2b,x2 = Double.TryParse trussMemberP2X_TextBox.Text
+            let y2b,y2 = Double.TryParse trussMemberP2Y_TextBox.Text
+            let p1 = 
+                match x1b, y1b with 
+                | true, true -> Some (System.Windows.Point(x1,y1))
+                | true, false -> None
+                | false, true -> None
+                | false, false -> None
+            let p2 = 
+                match x2b, y2b with 
+                | true, true -> Some (System.Windows.Point(x2,y2))
+                | true, false -> None
+                | false, true -> None
+                | false, false -> None
+            
+            match state with
+            | TrussDomain.TrussState ts -> 
+                match ts.mode with
+                | TrussDomain.TrussMode.MemberBuild ->                
+                    match p1 with 
+                    | Some p ->
+                        let newState = sendPointToMemberBuilder p state
+                        do  drawBuildJoint p
+                            state <- newState
+                            trussMemberP1X_TextBox.IsReadOnly <- true
+                            trussMemberP1X_TextBox.IsReadOnly <- true
+                            trussMemberP2_StackPanel.Visibility <- Visibility.Visible
+                            label.Text <- state.ToString()
+                    | None -> label.Text <- state.ToString()
+                | TrussDomain.TrussMode.ForceBuild ->
+                    match p1 with
+                    | None -> 
+                        state <- TrussDomain.ErrorState {errors = [TrussDomain.NoJointSelected]; truss = getTrussFrom state}
+                        label.Text <- state.ToString()
+                    | Some p -> 
+                        let newState = sendPointToForceBuilder p state
+                        state <- newState
+                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
+                | TrussDomain.TrussMode.SupportBuild -> ()
+                | TrussDomain.TrussMode.Delete -> ()
+                | TrussDomain.TrussMode.Select -> ()
+            | TrussDomain.BuildState bs -> 
+                match bs.buildOp with
+                | TrussDomain.BuildMember bm ->                 
+                    match p2 with
+                    | None -> ()
+                    | Some p -> 
+                        let newState = sendPointToMemberBuilder p state
+                        do  drawTruss newState
+                            state <- newState
+                            trussMemberP1X_TextBox.IsReadOnly <- true
+                            trussMemberP1Y_TextBox.IsReadOnly <- true
+                            trussMemberP2X_TextBox.IsReadOnly <- true
+                            trussMemberP2Y_TextBox.IsReadOnly <- true
+                            trussMemberP2_StackPanel.Visibility <- Visibility.Collapsed
+                            label.Text <- state.ToString()
+                | TrussDomain.BuildForce bf -> ()
+                | TrussDomain.BuildSupport bs -> ()
+            | TrussDomain.SelectionState ss -> ()
+            | TrussDomain.ErrorState es -> ()
+        | _ -> () // logic for other keys
+
     (*Initialize*)
     // label.Text <- state.ToString()
     do  this.Content <- screen_Grid        
         setGraphicsFromKernel kernel
-    
-    (*add event handlers*)
+        
+    (*add event handlers*)        
+        this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleEnterDown(e)))
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
