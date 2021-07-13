@@ -86,6 +86,7 @@ module TrussDomain =
     type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
     type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
     type GetTrussFromState = TrussAnalysisState -> Truss
+    type GetPointFromForceBuilder = ForceBuilder -> System.Windows.Point
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -98,6 +99,7 @@ module TrussDomain =
         {getJointSeqFromTruss:GetJointSeqFromTruss;
          getMemberSeqFromTruss:GetMemberSeqFromTruss;
          getPointFromMemberBuilder:GetPointFromMemberBuilder;
+         getPointFromForceBuilder:GetPointFromForceBuilder
          getTrussFromState:GetTrussFromState;
          sendPointToMemberBuilder:SendPointToMemberBuilder;
          sendPointToForceBuilder:SendPointToForceBuilder;
@@ -308,6 +310,9 @@ module TrussServices =
         let j,_ = mb
         let p = System.Windows.Point(getXFrom j, getYFrom j)
         p
+    let getPointFromForceBuilder (fb:ForceBuilder) =         
+        let p = System.Windows.Point(getXFrom fb.joint, getYFrom fb.joint)
+        p
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -333,9 +338,7 @@ module TrussServices =
                 let op = addDirectionToForceBuilder (makeVectorFrom point) fb
                 match op with
                 | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = ForceBuild} |> TrussState
-                | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
-                 
-                                             
+                | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState                                     
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
@@ -404,6 +407,7 @@ module TrussServices =
         getMemberSeqFromTruss = getMemberSeqFromTruss;
         getPointFromMemberBuilder = getPointFromMemberBuilder;
         getTrussFromState = getTrussFromState
+        getPointFromForceBuilder = getPointFromForceBuilder
         sendPointToMemberBuilder = sendPointToMemberBuilder;
         sendPointToForceBuilder = sendPointToForceBuilder;
         sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder;
@@ -412,8 +416,6 @@ module TrussServices =
         sendMagnitudeToSupportBuilder = sendMagnitudeToSupportBuilder;
         setTrussMode = setTrussMode}
 
-//   UI Shell, no funtionality at the moment, 
-//\/--- but will run an exampe computation ----\/\\
 type TrussAnalysis() as this  =  
     inherit UserControl()    
     do Install() |> ignore
@@ -452,6 +454,7 @@ type TrussAnalysis() as this  =
     let blue = SolidColorBrush(Colors.Blue)
     let olive = SolidColorBrush(Colors.Olive)
     let red = SolidColorBrush(Colors.Red)
+    let green = SolidColorBrush(Colors.Green)
     let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
        
     let trussJoint (p:System.Windows.Point) = 
@@ -470,6 +473,29 @@ type TrussAnalysis() as this  =
         let l = Line()
         do  l.Stroke <- black
             l.StrokeThickness <- 0.4
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+        l
+
+    let trussForceJoint (p:System.Windows.Point) = 
+        let radius = 4.
+        let e = Ellipse()
+        let highlight () = e.Fill <- clear 
+        let unhighlight () = e.Fill <- green
+        do  e.Stroke <- blue
+            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
+            e.Width <- 2. * radius
+            e.Height <- 2. * radius
+            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+        e
+    let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
+        let l = Line()
+        do  l.Stroke <- green
+            l.StrokeThickness <- 3.0
             l.Visibility <- Visibility.Visible
             l.X1 <- p1.X
             l.Y1 <- p1.Y
@@ -700,19 +726,43 @@ type TrussAnalysis() as this  =
     let drawJoint (p:System.Windows.Point) =
         let j = trussJoint p
         do  canvas.Children.Add(j) |> ignore
+    let drawMember (p1:System.Windows.Point, p2:System.Windows.Point) =
+        let l = trussMember (p1,p2)
+        do  canvas.Children.Add(l) |> ignore    
+    
     let drawBuildJoint (p:System.Windows.Point) =
         let j = trussJoint p
         do  j.Stroke <- red
             canvas.Children.Add(j) |> ignore
-    let drawMember (p1:System.Windows.Point, p2:System.Windows.Point) =
-        let l = trussMember (p1,p2)
+    let drawBuildForceJoint (p:System.Windows.Point) =
+        let j = trussForceJoint p
+        do  //j.Stroke <- red
+            canvas.Children.Add(j) |> ignore 
+    let drawBuildForce (p1:System.Windows.Point, p2:System.Windows.Point) =
+        let l = trussForce (p1,p2)
         do  canvas.Children.Add(l) |> ignore    
-    let drawBuildForce (p:System.Windows.Point) =
-        let j = trussJoint p
-        do  j.Stroke <- olive
-            j.StrokeThickness <- 2.
-            canvas.Children.Add(j) |> ignore
-    
+    let drawBuildForceDirection (p:System.Windows.Point, dir:float, mag:float) =
+        let angle = 8.
+        let length = 25.
+        match mag > 0. with
+        | true -> 
+            let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle) * Math.PI/180.)), p.Y - (length * sin ((dir - angle) * Math.PI/180.)))
+            let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle) * Math.PI/180.)), p.Y - (length * sin ((dir + angle) * Math.PI/180.)))
+            let l1 = trussForce (p,p1)
+            let l2 = trussForce (p,p2)
+            let l3 = trussForce (p1,p2)
+            do  canvas.Children.Add(l1) |> ignore
+                canvas.Children.Add(l2) |> ignore
+                canvas.Children.Add(l3) |> ignore
+        | false -> 
+            let p1 = System.Windows.Point(p.X - (length * cos ((dir - angle) * Math.PI/180.)), p.Y + (length * sin ((dir - angle) * Math.PI/180.)))
+            let p2 = System.Windows.Point(p.X - (length * cos ((dir + angle) * Math.PI/180.)), p.Y + (length * sin ((dir + angle) * Math.PI/180.)))
+            let l1 = trussForce (p,p1)
+            let l2 = trussForce (p,p2)
+            let l3 = trussForce (p1,p2)
+            do  canvas.Children.Add(l1) |> ignore
+                canvas.Children.Add(l2) |> ignore
+                canvas.Children.Add(l3) |> ignore
     let drawTruss s =
         do  canvas.Children.Clear()
             canvas.Children.Add(label) |> ignore
@@ -741,8 +791,7 @@ type TrussAnalysis() as this  =
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
 
-    let handleMouseDown (e : Input.MouseButtonEventArgs) =
-        
+    let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
         let joint = getJointIndex p1
         let p = 
@@ -794,11 +843,12 @@ type TrussAnalysis() as this  =
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
                 | TrussDomain.TrussMode.ForceBuild ->                     
                     match joint with
-                    | None -> 
+                    | None ->                         
                         state <- TrussDomain.ErrorState {errors = [TrussDomain.NoJointSelected]; truss = getTrussFrom state}
                         label.Text <- state.ToString()
                     | Some i -> 
                         let newState = sendPointToForceBuilder p state
+                        drawBuildForceJoint p
                         state <- newState
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
                 | TrussDomain.TrussMode.SupportBuild -> ()
@@ -819,7 +869,40 @@ type TrussAnalysis() as this  =
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
-            | TrussDomain.ErrorState es -> ()
+            | TrussDomain.ErrorState es -> 
+                match es.errors with 
+                | [TrussDomain.NoJointSelected] -> ()
+                    | _ -> ()
+                | _ -> ()
+
+    let handleMouseUp () =         
+        match state with
+        | TrussDomain.TrussState ts -> 
+            match ts.mode with
+            | TrussDomain.TrussMode.MemberBuild -> ()
+            | TrussDomain.TrussMode.ForceBuild -> ()
+            | TrussDomain.TrussMode.SupportBuild -> ()
+            | TrussDomain.TrussMode.Delete -> ()
+            | TrussDomain.TrussMode.Select -> ()
+        | TrussDomain.BuildState bs -> 
+            match bs.buildOp with
+            | TrussDomain.BuildMember bm -> ()
+            | TrussDomain.BuildForce bf -> ()
+            | TrussDomain.BuildSupport bs -> ()
+        | TrussDomain.SelectionState ss -> ()
+        | TrussDomain.ErrorState es -> 
+            match es.errors with 
+            | [TrussDomain.NoJointSelected] -> 
+                match  forceBuilder_RadioButton.IsChecked.Value,
+                        memberBuilder_RadioButton.IsChecked.Value with 
+                | true, false -> 
+                    let newState = trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
+                    drawTruss newState
+                    state <- newState
+                    label.Text <- newState.ToString()
+                | false, true -> ()
+                | _ -> ()
+            | _ -> ()
 
     let handleMouseMove (e : Input.MouseEventArgs) =
         let p2 = adjustMouseEventArgPoint e        
@@ -867,13 +950,15 @@ type TrussAnalysis() as this  =
         | TrussDomain.SelectionState ss -> ()
         | TrussDomain.ErrorState es -> ()
 
-    let handleEnterDown (e:Input.KeyEventArgs) =
+    let handleKeyDown (e:Input.KeyEventArgs) =
         match e.Key with 
         | Input.Key.Enter -> 
             let x1b,x1 = Double.TryParse trussMemberP1X_TextBox.Text
             let y1b,y1 = Double.TryParse trussMemberP1Y_TextBox.Text
             let x2b,x2 = Double.TryParse trussMemberP2X_TextBox.Text
             let y2b,y2 = Double.TryParse trussMemberP2Y_TextBox.Text
+            let magb, mag = Double.TryParse trussForceMagnitude_TextBox.Text
+            let dirb, dir = Double.TryParse trussForceAngle_TextBox.Text
             let p1 = 
                 match x1b, y1b with 
                 | true, true -> Some (System.Windows.Point(x1,y1))
@@ -885,8 +970,7 @@ type TrussAnalysis() as this  =
                 | true, true -> Some (System.Windows.Point(x2,y2))
                 | true, false -> None
                 | false, true -> None
-                | false, false -> None
-            
+                | false, false -> None            
             match state with
             | TrussDomain.TrussState ts -> 
                 match ts.mode with
@@ -897,25 +981,17 @@ type TrussAnalysis() as this  =
                         do  drawBuildJoint p
                             state <- newState
                             trussMemberP1X_TextBox.IsReadOnly <- true
-                            trussMemberP1X_TextBox.IsReadOnly <- true
+                            trussMemberP1Y_TextBox.IsReadOnly <- true
                             trussMemberP2_StackPanel.Visibility <- Visibility.Visible
                             label.Text <- state.ToString()
                     | None -> label.Text <- state.ToString()
-                | TrussDomain.TrussMode.ForceBuild ->
-                    match p1 with
-                    | None -> 
-                        state <- TrussDomain.ErrorState {errors = [TrussDomain.NoJointSelected]; truss = getTrussFrom state}
-                        label.Text <- state.ToString()
-                    | Some p -> 
-                        let newState = sendPointToForceBuilder p state
-                        state <- newState
-                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
+                | TrussDomain.TrussMode.ForceBuild -> ()                    
                 | TrussDomain.TrussMode.SupportBuild -> ()
                 | TrussDomain.TrussMode.Delete -> ()
                 | TrussDomain.TrussMode.Select -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
-                | TrussDomain.BuildMember bm ->                 
+                | TrussDomain.BuildMember _bm ->                 
                     match p2 with
                     | None -> ()
                     | Some p -> 
@@ -928,7 +1004,32 @@ type TrussAnalysis() as this  =
                             trussMemberP2Y_TextBox.IsReadOnly <- true
                             trussMemberP2_StackPanel.Visibility <- Visibility.Collapsed
                             label.Text <- state.ToString()
-                | TrussDomain.BuildForce bf -> ()
+                | TrussDomain.BuildForce bf -> 
+                    match magb, dirb with
+                    | true, true -> 
+                        let jointPoint = TrussServices.getPointFromForceBuilder bf
+                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
+                        let arrowPoint = 
+                            match mag > 0. with 
+                            | true -> jointPoint
+                            | false -> dirPoint
+                        let newState = sendMagnitudeToForceBuilder mag state |> sendPointToForceBuilder dirPoint
+                        state <- newState
+                        drawBuildForce (jointPoint,dirPoint)
+                        drawBuildForceDirection (arrowPoint,dir,mag)
+                        label.Text <- newState.ToString()
+                    | true, false -> 
+                        let newState = sendMagnitudeToForceBuilder mag state
+                        state <- newState
+                        label.Text <- newState.ToString()
+                    | false, true -> 
+                        let jointPoint = TrussServices.getPointFromForceBuilder bf
+                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
+                        let newState = sendPointToForceBuilder dirPoint state
+                        state <- newState
+                        drawBuildForce (jointPoint,dirPoint)
+                        label.Text <- newState.ToString()
+                    | false, false -> () 
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
             | TrussDomain.ErrorState es -> ()
@@ -940,10 +1041,11 @@ type TrussAnalysis() as this  =
         setGraphicsFromKernel kernel
         
     (*add event handlers*)        
-        this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleEnterDown(e)))
+        this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
+        this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleMouseUp()))
         this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
 module TrussAnalysis = 
     let window =
