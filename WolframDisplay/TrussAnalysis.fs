@@ -87,6 +87,8 @@ module TrussDomain =
     type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
     type GetTrussFromState = TrussAnalysisState -> Truss
     type GetPointFromForceBuilder = ForceBuilder -> System.Windows.Point
+    type GetPointFromForce = Force -> System.Windows.Point
+    type GetDirectionFromForce = Force -> float
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -99,7 +101,9 @@ module TrussDomain =
         {getJointSeqFromTruss:GetJointSeqFromTruss;
          getMemberSeqFromTruss:GetMemberSeqFromTruss;
          getPointFromMemberBuilder:GetPointFromMemberBuilder;
-         getPointFromForceBuilder:GetPointFromForceBuilder
+         getPointFromForceBuilder:GetPointFromForceBuilder;
+         getPointFromForce:GetPointFromForce
+         getDirectionFromForce:GetDirectionFromForce;
          getTrussFromState:GetTrussFromState;
          sendPointToMemberBuilder:SendPointToMemberBuilder;
          sendPointToForceBuilder:SendPointToForceBuilder;
@@ -313,6 +317,12 @@ module TrussServices =
     let getPointFromForceBuilder (fb:ForceBuilder) =         
         let p = System.Windows.Point(getXFrom fb.joint, getYFrom fb.joint)
         p
+    let getDirectionFromForce (f:Force) =
+        let y = f.direction.Y - (getYFrom f.joint)
+        let x = f.direction.X - (getXFrom f.joint)
+        Math.Atan2(y,x) * (-180./Math.PI)
+    let getPointFromForce (force:Force) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
+        
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -406,8 +416,10 @@ module TrussServices =
        {getJointSeqFromTruss = getJointSeqFromTruss;
         getMemberSeqFromTruss = getMemberSeqFromTruss;
         getPointFromMemberBuilder = getPointFromMemberBuilder;
-        getTrussFromState = getTrussFromState
+        getTrussFromState = getTrussFromState;
         getPointFromForceBuilder = getPointFromForceBuilder
+        getPointFromForce = getPointFromForce
+        getDirectionFromForce = getDirectionFromForce
         sendPointToMemberBuilder = sendPointToMemberBuilder;
         sendPointToForceBuilder = sendPointToForceBuilder;
         sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder;
@@ -495,7 +507,7 @@ type TrussAnalysis() as this  =
     let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
         do  l.Stroke <- green
-            l.StrokeThickness <- 3.0
+            l.StrokeThickness <- 2.0
             l.Visibility <- Visibility.Visible
             l.X1 <- p1.X
             l.Y1 <- p1.Y
@@ -714,7 +726,8 @@ type TrussAnalysis() as this  =
         bitmap
     let getTrussFrom s = trussServices.getTrussFromState s
     let getJointsFrom s = trussServices.getJointSeqFromTruss (getTrussFrom s)
-    let getmembersFrom s = trussServices.getMemberSeqFromTruss (getTrussFrom s)    
+    let getMembersFrom s = trussServices.getMemberSeqFromTruss (getTrussFrom s)
+    let getForcesFrom s = (TrussServices.getTrussFromState s).forces 
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (getJointsFrom state)
@@ -738,7 +751,7 @@ type TrussAnalysis() as this  =
         let j = trussForceJoint p
         do  //j.Stroke <- red
             canvas.Children.Add(j) |> ignore 
-    let drawBuildForce (p1:System.Windows.Point, p2:System.Windows.Point) =
+    let drawBuildForceLine (p1:System.Windows.Point, p2:System.Windows.Point) =
         let l = trussForce (p1,p2)
         do  canvas.Children.Add(l) |> ignore    
     let drawBuildForceDirection (p:System.Windows.Point, dir:float, mag:float) =
@@ -763,14 +776,28 @@ type TrussAnalysis() as this  =
             do  canvas.Children.Add(l1) |> ignore
                 canvas.Children.Add(l2) |> ignore
                 canvas.Children.Add(l3) |> ignore
+    let drawForce (force:TrussDomain.Force) =  
+        let p = TrussServices.getPointFromForce force
+        let vp = System.Windows.Point(force.direction.X,force.direction.Y)        
+        let arrowPoint = 
+            match force.magnitude > 0. with 
+            | true -> p
+            | false -> vp
+        let dir = TrussServices.getDirectionFromForce force
+        do  drawBuildForceJoint p
+            drawBuildForceLine (p,vp)
+            drawBuildForceDirection (arrowPoint,dir,force.magnitude)
+
     let drawTruss s =
         do  canvas.Children.Clear()
             canvas.Children.Add(label) |> ignore
             canvas.Children.Add(trussControls_Border) |> ignore
         let joints = getJointsFrom s
-        let members = getmembersFrom s    
+        let members = getMembersFrom s 
+        let forces = List.toSeq (getForcesFrom s)
         Seq.iter (fun m -> drawMember m) members
-        Seq.iter (fun j -> drawJoint j) joints    
+        Seq.iter (fun j -> drawJoint j) joints
+        Seq.iter (fun f -> drawForce f) forces
     
     let setGraphicsFromKernel (k:MathKernel) =
         let rec getImages i =
@@ -1006,7 +1033,7 @@ type TrussAnalysis() as this  =
                             label.Text <- state.ToString()
                 | TrussDomain.BuildForce bf -> 
                     match magb, dirb with
-                    | true, true -> 
+                    | true, true when bf._direction = None -> 
                         let jointPoint = TrussServices.getPointFromForceBuilder bf
                         let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
                         let arrowPoint = 
@@ -1015,20 +1042,32 @@ type TrussAnalysis() as this  =
                             | false -> dirPoint
                         let newState = sendMagnitudeToForceBuilder mag state |> sendPointToForceBuilder dirPoint
                         state <- newState
-                        drawBuildForce (jointPoint,dirPoint)
+                        drawBuildForceLine (jointPoint,dirPoint)
                         drawBuildForceDirection (arrowPoint,dir,mag)
-                        label.Text <- newState.ToString()
+                        label.Text <- "3" + newState.ToString()
+                    | true, true -> 
+                        let jointPoint = TrussServices.getPointFromForceBuilder bf
+                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
+                        let arrowPoint = 
+                            match mag > 0. with 
+                            | true -> jointPoint
+                            | false -> dirPoint
+                        let newState = sendMagnitudeToForceBuilder mag state //|> sendPointToForceBuilder dirPoint
+                        state <- newState
+                        drawBuildForceLine (jointPoint,dirPoint)
+                        drawBuildForceDirection (arrowPoint,dir,mag)
+                        label.Text <- "4" + newState.ToString()
                     | true, false -> 
                         let newState = sendMagnitudeToForceBuilder mag state
                         state <- newState
-                        label.Text <- newState.ToString()
+                        label.Text <- "2" + newState.ToString()
                     | false, true -> 
                         let jointPoint = TrussServices.getPointFromForceBuilder bf
                         let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
                         let newState = sendPointToForceBuilder dirPoint state
                         state <- newState
-                        drawBuildForce (jointPoint,dirPoint)
-                        label.Text <- newState.ToString()
+                        drawBuildForceLine (jointPoint,dirPoint)
+                        label.Text <- "1" + newState.ToString()
                     | false, false -> () 
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
