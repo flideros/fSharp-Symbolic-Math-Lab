@@ -481,8 +481,7 @@ type TrussAnalysis() as this  =
     let olive = SolidColorBrush(Colors.Olive)
     let red = SolidColorBrush(Colors.Red)
     let green = SolidColorBrush(Colors.Green)
-    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5)
-       
+    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5) 
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
         let e = Ellipse()
@@ -505,7 +504,6 @@ type TrussAnalysis() as this  =
             l.X2 <- p2.X
             l.Y2 <- p2.Y
         l
-
     let trussForceJoint (p:System.Windows.Point) = 
         let radius = 4.
         let e = Ellipse()
@@ -528,7 +526,6 @@ type TrussAnalysis() as this  =
             l.X2 <- p2.X
             l.Y2 <- p2.Y
         l
-
     let trussSupportJoint (p:System.Windows.Point) = 
         let radius = 8.
         let e = Ellipse()
@@ -541,7 +538,14 @@ type TrussAnalysis() as this  =
             e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         e
-    
+    let support () =
+        let path = Path()            
+        do  path.Stroke <- black
+            path.Fill <- olive
+            path.Opacity <- 0.5
+            path.StrokeThickness <- 1.
+        path
+
     do  bluePen.Freeze()
         redPen.Freeze()
         blackPen.Freeze() 
@@ -704,14 +708,32 @@ type TrussAnalysis() as this  =
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let trussForceAngle_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.), Text="0")
+        let tb = TextBox()
+        let mouseDown () = 
+            match Double.TryParse tb.Text with
+            | false,_ -> tb.Text <- ""
+            | true,_ -> ()
+        do  tb.MaxLines <- 15
+            tb.TabIndex <- 0
+            tb.IsReadOnly <- false
+            tb.BorderThickness <- Thickness(3.)
+            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
         tb
     let trussForceMagnitude_TextBlock = 
         let tb = TextBlock(Text = "Magnitude")
         do tb.SetValue(Grid.RowProperty,0)
         tb
     let trussForceMagnitude_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = false, BorderThickness = Thickness(3.), Text="0")
+        let tb = TextBox()
+        let mouseDown () = 
+            match Double.TryParse tb.Text with
+            | false,_ -> tb.Text <- ""
+            | true,_ -> ()
+        do  tb.MaxLines <- 15
+            tb.TabIndex <- 0
+            tb.IsReadOnly <- false
+            tb.BorderThickness <- Thickness(3.)
+            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
         tb    
     let trussForceBuilder_StackPanel = 
         let sp = StackPanel()
@@ -856,7 +878,7 @@ type TrussAnalysis() as this  =
         let length = 25.         
         let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir - angle - 90.) * Math.PI/180.)))
         let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir + angle - 90.) * Math.PI/180.)))
-        let path =             
+        let support =             
             let pg = PathGeometry()
             let pfc = PathFigureCollection()
             let pf = PathFigure()
@@ -865,12 +887,8 @@ type TrussAnalysis() as this  =
             let l2 = LineSegment(Point=p2)
             let a2 = ArcSegment(Point=p2,IsLargeArc=false,Size=Size(30.,30.))
             let l3 = LineSegment(Point=p)
-            let path = Path()            
-            do  path.Stroke <- black
-                path.Fill <- olive
-                path.Opacity <- 0.5
-                path.StrokeThickness <- 1.
-                psc.Add(l1)
+            let support = support ()            
+            do  psc.Add(l1)
                 match rollerSupport_RadioButton.IsChecked.Value with
                 | true -> psc.Add(a2)
                 | false -> psc.Add(l2)                    
@@ -879,9 +897,9 @@ type TrussAnalysis() as this  =
                 pf.StartPoint <- p
                 pfc.Add(pf)
                 pg.Figures <- pfc
-                path.Data <- pg
-            path
-        do  canvas.Children.Add(path) |> ignore
+                support.Data <- pg
+            support
+        do  canvas.Children.Add(support) |> ignore
     let drawSupport (support:TrussDomain.Support) = 
         let p = TrussServices.getPointFromSupport support
         let dir = TrussServices.getDirectionFromSupport support
@@ -956,6 +974,9 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- false
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceAngle_TextBox.Text <- "Enter Angle"
+                    trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
+                    trussForceMagnitude_TextBox.Text <- "Enter magnitude"
                     trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
                 | true, false, false, false, true, false 
                 | false, true, false, false, true, false
@@ -971,6 +992,8 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     supportType_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true
+                    trussForceAngle_TextBox.Text <- "Enter Angle"
+                    trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
                 | _ -> state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
