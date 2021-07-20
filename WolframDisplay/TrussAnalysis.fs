@@ -89,6 +89,8 @@ module TrussDomain =
     type GetPointFromForceBuilder = ForceBuilder -> System.Windows.Point
     type GetPointFromForce = Force -> System.Windows.Point
     type GetDirectionFromForce = Force -> float
+    type GetPointFromSupport = Support -> System.Windows.Point
+    type GetDirectionFromSupport = Support -> float
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -102,7 +104,9 @@ module TrussDomain =
          getMemberSeqFromTruss:GetMemberSeqFromTruss;
          getPointFromMemberBuilder:GetPointFromMemberBuilder;
          getPointFromForceBuilder:GetPointFromForceBuilder;
-         getPointFromForce:GetPointFromForce
+         getPointFromSupport:GetPointFromSupport;
+         getDirectionFromSupport:GetDirectionFromSupport;
+         getPointFromForce:GetPointFromForce;
          getDirectionFromForce:GetDirectionFromForce;
          getTrussFromState:GetTrussFromState;
          sendPointToMemberBuilder:SendPointToMemberBuilder;
@@ -322,7 +326,15 @@ module TrussServices =
         let x = f.direction.X - (getXFrom f.joint)
         Math.Atan2(y,x) * (-180./Math.PI)
     let getPointFromForce (force:Force) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
-        
+    let getPointFromSupport (support:Support) = 
+        match support with
+        | Pin (f,_) -> getPointFromForce f
+        | Roller f -> getPointFromForce f
+    let getDirectionFromSupport (support:Support) = 
+        match support with
+        | Pin (f,_) -> (getDirectionFromForce f) - 90.
+        | Roller f -> (getDirectionFromForce f) - 90.
+
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -420,6 +432,8 @@ module TrussServices =
         getPointFromForceBuilder = getPointFromForceBuilder
         getPointFromForce = getPointFromForce
         getDirectionFromForce = getDirectionFromForce
+        getPointFromSupport = getPointFromSupport;
+        getDirectionFromSupport = getDirectionFromSupport;
         sendPointToMemberBuilder = sendPointToMemberBuilder;
         sendPointToForceBuilder = sendPointToForceBuilder;
         sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder;
@@ -535,7 +549,7 @@ type TrussAnalysis() as this  =
     (*Controls*)      
     let label =
         let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 480., Top = 50., Right = 0., Bottom = 0.)
+        do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
             l.MaxWidth <- 500.
@@ -781,6 +795,7 @@ type TrussAnalysis() as this  =
     let getJointsFrom s = trussServices.getJointSeqFromTruss (getTrussFrom s)
     let getMembersFrom s = trussServices.getMemberSeqFromTruss (getTrussFrom s)
     let getForcesFrom s = (trussServices.getTrussFromState s).forces 
+    let getSupportsFrom s = (trussServices.getTrussFromState s).supports
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (getJointsFrom state)
@@ -867,7 +882,11 @@ type TrussAnalysis() as this  =
                 path.Data <- pg
             path
         do  canvas.Children.Add(path) |> ignore
-    
+    let drawSupport (support:TrussDomain.Support) = 
+        let p = TrussServices.getPointFromSupport support
+        let dir = TrussServices.getDirectionFromSupport support
+        do  drawBuildSupportJoint p
+            drawBuildSupport (p,dir)
     let drawForce (force:TrussDomain.Force) =  
         let p = TrussServices.getPointFromForce force
         let vp = System.Windows.Point(force.direction.X,force.direction.Y)        
@@ -886,9 +905,11 @@ type TrussAnalysis() as this  =
         let joints = getJointsFrom s
         let members = getMembersFrom s 
         let forces = List.toSeq (getForcesFrom s)
+        let supports = List.toSeq (getSupportsFrom s)
         Seq.iter (fun m -> drawMember m) members
         Seq.iter (fun j -> drawJoint j) joints
         Seq.iter (fun f -> drawForce f) forces
+        Seq.iter (fun s -> drawSupport s) supports
         // Set
     let setGraphicsFromKernel (k:MathKernel) =
         let rec getImages i =
