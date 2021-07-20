@@ -841,13 +841,32 @@ type TrussAnalysis() as this  =
         let length = 25.         
         let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir - angle - 90.) * Math.PI/180.)))
         let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir + angle - 90.) * Math.PI/180.)))
-        let l1 = trussForce (p,p1)
-        let l2 = trussForce (p,p2)
-        let l3 = trussForce (p1,p2)
-        do  canvas.Children.Add(l1) |> ignore
-            canvas.Children.Add(l2) |> ignore
-            canvas.Children.Add(l3) |> ignore
-       
+        let path =             
+            let pg = PathGeometry()
+            let pfc = PathFigureCollection()
+            let pf = PathFigure()
+            let psc = PathSegmentCollection()
+            let l1 = LineSegment(Point=p1)
+            let l2 = LineSegment(Point=p2)
+            let a2 = ArcSegment(Point=p2,IsLargeArc=false,Size=Size(30.,30.))
+            let l3 = LineSegment(Point=p)
+            let path = Path()            
+            do  path.Stroke <- black
+                path.Fill <- olive
+                path.Opacity <- 0.5
+                path.StrokeThickness <- 1.
+                psc.Add(l1)
+                match rollerSupport_RadioButton.IsChecked.Value with
+                | true -> psc.Add(a2)
+                | false -> psc.Add(l2)                    
+                psc.Add(l3)
+                pf.Segments <- psc
+                pf.StartPoint <- p
+                pfc.Add(pf)
+                pg.Figures <- pfc
+                path.Data <- pg
+            path
+        do  canvas.Children.Add(path) |> ignore
     
     let drawForce (force:TrussDomain.Force) =  
         let p = TrussServices.getPointFromForce force
@@ -1171,7 +1190,10 @@ type TrussAnalysis() as this  =
                             | TrussDomain.Pin (f,_) -> TrussServices.getPointFromForceBuilder f
                         let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos ((dir + 90.) * Math.PI/180.)), jointPoint.Y - (50.0 * sin ((dir + 90.) * Math.PI/180.)))  
                         let arrowPoint = jointPoint                            
-                        let newState = sendMagnitudeToSupportBuilder (mag,None) state |> sendPointToForceBuilder dirPoint
+                        let newState = 
+                            match rollerSupport_RadioButton.IsChecked.Value with
+                            | true -> sendMagnitudeToSupportBuilder (mag,None) state |> sendPointToRollerSupportBuilder dirPoint
+                            | false -> sendMagnitudeToSupportBuilder (mag,Some mag) state |> sendPointToPinSupportBuilder dirPoint
                         state <- newState
                         drawBuildSupport (arrowPoint,dir)
                         label.Text <-  newState.ToString()
