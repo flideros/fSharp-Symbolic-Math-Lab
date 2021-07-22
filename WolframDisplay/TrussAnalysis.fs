@@ -52,8 +52,8 @@ module TrussDomain =
         | TrussBuildOp of TrussBuildOp
 
     type TrussMode =
-        | Select
-        | Delete
+        | Selection
+        | Analysis
         | MemberBuild
         | ForceBuild
         | SupportBuild
@@ -1039,8 +1039,8 @@ type TrussAnalysis() as this  =
                             drawBuildSupportJoint p
                             state <- newState
                             label.Text <- state.ToString()
-                | TrussDomain.TrussMode.Delete -> ()
-                | TrussDomain.TrussMode.Select -> ()
+                | TrussDomain.TrussMode.Analysis -> ()
+                | TrussDomain.TrussMode.Selection -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
                 | TrussDomain.BuildMember bm ->                 
@@ -1067,8 +1067,8 @@ type TrussAnalysis() as this  =
             | TrussDomain.TrussMode.MemberBuild -> ()
             | TrussDomain.TrussMode.ForceBuild -> ()
             | TrussDomain.TrussMode.SupportBuild -> ()
-            | TrussDomain.TrussMode.Delete -> ()
-            | TrussDomain.TrussMode.Select -> ()
+            | TrussDomain.TrussMode.Analysis -> ()
+            | TrussDomain.TrussMode.Selection -> ()
         | TrussDomain.BuildState bs -> 
             match bs.buildOp with
             | TrussDomain.BuildMember bm -> ()
@@ -1104,8 +1104,8 @@ type TrussAnalysis() as this  =
                 | true -> ()
             | TrussDomain.TrussMode.ForceBuild -> ()
             | TrussDomain.TrussMode.SupportBuild -> ()
-            | TrussDomain.TrussMode.Delete -> ()
-            | TrussDomain.TrussMode.Select -> ()
+            | TrussDomain.TrussMode.Analysis -> ()
+            | TrussDomain.TrussMode.Selection -> ()
         | TrussDomain.BuildState bs ->
             match bs.buildOp with
             | TrussDomain.BuildMember bm ->
@@ -1170,8 +1170,8 @@ type TrussAnalysis() as this  =
                     | None -> label.Text <- state.ToString()
                 | TrussDomain.TrussMode.ForceBuild -> ()                    
                 | TrussDomain.TrussMode.SupportBuild -> ()
-                | TrussDomain.TrussMode.Delete -> ()
-                | TrussDomain.TrussMode.Select -> ()
+                | TrussDomain.TrussMode.Analysis -> ()
+                | TrussDomain.TrussMode.Selection -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
                 | TrussDomain.BuildMember _bm ->                 
