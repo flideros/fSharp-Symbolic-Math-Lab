@@ -15,3 +15,4 @@ Sincerely,
 
 FLideros
 
+7/21/21 -- If you want to run this repository, you will need the Wolfram Kernel. If you edit Symbolic Math UI Program to exclude the Wolfram Display project. I am curently writing a truss analysis program and I intend to use the wolfram engine in it.
