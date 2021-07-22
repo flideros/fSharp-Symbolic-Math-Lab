@@ -33,24 +33,26 @@ module TrussDomain =
     type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
     type Support = | Roller of Force | Pin of (Force*Force)    
     type Truss = {members:Member list; forces:Force list; supports:Support list}
-    type TrussStability = | Stable | NotEnoughReactions | ReactionsAreParallel 
-                          | ReactionsAreConcurrent | InternalCollapseMechanism
-    type TrussDeterminacy = | Determinate | Indeterminate
-    
+    type TrussStability = 
+        | Stable 
+        | NotEnoughReactions 
+        | ReactionsAreParallel 
+        | ReactionsAreConcurrent 
+        | InternalCollapseMechanism
+    type TrussDeterminacy = 
+        | Determinate 
+        | Indeterminate
     type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
         | Member of Member
         | Force of Force
         | Support of Support
-    
     type TrussBuildOp =
         | BuildMember of MemberBuilder
         | BuildForce of ForceBuilder
         | BuildSupport of SupportBuilder
-
     type BuildOpResult =
         | TrussPart of TrussPart
         | TrussBuildOp of TrussBuildOp
-
     type TrussMode =
         | Selection
         | Analysis
@@ -82,6 +84,7 @@ module TrussDomain =
         | ErrorState of ErrorStateData
     
     // Services
+    type CheckSupportTypeIsRoller = Support -> bool
     type GetJointSeqFromTruss = Truss -> System.Windows.Point seq
     type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
     type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
@@ -100,7 +103,8 @@ module TrussDomain =
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
-        {getJointSeqFromTruss:GetJointSeqFromTruss;
+        {checkSupportTypeIsRoller:CheckSupportTypeIsRoller
+         getJointSeqFromTruss:GetJointSeqFromTruss;
          getMemberSeqFromTruss:GetMemberSeqFromTruss;
          getPointFromMemberBuilder:GetPointFromMemberBuilder;
          getPointFromForceBuilder:GetPointFromForceBuilder;
@@ -293,6 +297,8 @@ module TrussServices =
     open TrussDomain
     open TrussImplementation
 
+    let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false
+
     let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
     let makeVectorFrom (point :System.Windows.Point) = Vector(x = point.X, y = point.Y)
 
@@ -425,7 +431,8 @@ module TrussServices =
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
 
     let createServices () = 
-       {getJointSeqFromTruss = getJointSeqFromTruss;
+       {checkSupportTypeIsRoller = checkSupportTypeIsRoller
+        getJointSeqFromTruss = getJointSeqFromTruss;
         getMemberSeqFromTruss = getMemberSeqFromTruss;
         getPointFromMemberBuilder = getPointFromMemberBuilder;
         getTrussFromState = getTrussFromState;
@@ -887,7 +894,7 @@ type TrussAnalysis() as this  =
             do  canvas.Children.Add(l1) |> ignore
                 canvas.Children.Add(l2) |> ignore
                 canvas.Children.Add(l3) |> ignore    
-    let drawBuildSupport (p:System.Windows.Point, dir:float) =
+    let drawBuildSupport (p:System.Windows.Point, dir:float, isRollerSupportType: bool) =
         let angle = 45.
         let length = 25.         
         let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir - angle - 90.) * Math.PI/180.)))
@@ -903,7 +910,7 @@ type TrussAnalysis() as this  =
             let l3 = LineSegment(Point=p)
             let support = support ()            
             do  psc.Add(l1)
-                match rollerSupport_RadioButton.IsChecked.Value with
+                match rollerSupport_RadioButton.IsChecked.Value || isRollerSupportType with
                 | true -> psc.Add(a2)
                 | false -> psc.Add(l2)                    
                 psc.Add(l3)
@@ -917,8 +924,9 @@ type TrussAnalysis() as this  =
     let drawSupport (support:TrussDomain.Support) = 
         let p = TrussServices.getPointFromSupport support
         let dir = TrussServices.getDirectionFromSupport support
+        let isRollerSupportType = TrussServices.checkSupportTypeIsRoller support
         do  drawBuildSupportJoint p
-            drawBuildSupport (p,dir)
+            drawBuildSupport (p,dir,isRollerSupportType)
     let drawForce (force:TrussDomain.Force) =  
         let p = TrussServices.getPointFromForce force
         let vp = System.Windows.Point(force.direction.X,force.direction.Y)        
@@ -1020,7 +1028,17 @@ type TrussAnalysis() as this  =
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
-                | _ -> state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
+                | _ -> 
+                    match rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver, 
+                          rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver with 
+                    | true,false, true,false
+                    | false,true, true,false -> rollerSupport_RadioButton.IsChecked <- Nullable true
+                                                pinSupport_RadioButton.IsChecked <- Nullable false
+                    | true,false, false,true
+                    | false,true, false,true -> rollerSupport_RadioButton.IsChecked <- Nullable false 
+                                                pinSupport_RadioButton.IsChecked <- Nullable true
+                    | _ -> ()
+                    state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
             
             do  state <- newState
                 label.Text <- state.ToString() 
@@ -1263,7 +1281,7 @@ type TrussAnalysis() as this  =
                             | true -> sendMagnitudeToSupportBuilder (mag,None) state |> sendPointToRollerSupportBuilder dirPoint
                             | false -> sendMagnitudeToSupportBuilder (mag,Some mag) state |> sendPointToPinSupportBuilder dirPoint
                         state <- newState
-                        drawBuildSupport (arrowPoint,dir)
+                        drawBuildSupport (arrowPoint,dir,false)
                         label.Text <-  newState.ToString()
                     | false -> 
                         let newState = sendMagnitudeToSupportBuilder (mag,None) state
