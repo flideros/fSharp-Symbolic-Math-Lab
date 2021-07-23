@@ -482,11 +482,11 @@ type TrussAnalysis() as this  =
     let image = Image()
     do  image.SetValue(Panel.ZIndexProperty, -100)    
     let visual = DrawingVisual()     
-    let clear = SolidColorBrush(Colors.Transparent)
+    let clear = SolidColorBrush(Colors.White)
     let black = SolidColorBrush(Colors.Black) 
-    let blue = SolidColorBrush(Colors.Blue)
+    let blue =  SolidColorBrush(Colors.Blue)
     let olive = SolidColorBrush(Colors.Olive)
-    let red = SolidColorBrush(Colors.Red)
+    let red =   SolidColorBrush(Colors.Red)
     let green = SolidColorBrush(Colors.Green)
     let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5) 
     let trussJoint (p:System.Windows.Point) = 
@@ -552,6 +552,63 @@ type TrussAnalysis() as this  =
             path.Opacity <- 0.5
             path.StrokeThickness <- 1.
         path
+    let gridLines (p:System.Windows.Point) = 
+        let yInterval,xInterval = 5,5
+        let yOffset, xOffset = p.Y, p.X
+        let lines = Image()        
+        do  lines.SetValue(Panel.ZIndexProperty, -100)
+    
+        let gridLinesVisual = DrawingVisual() 
+        let context = gridLinesVisual.RenderOpen()
+        
+        let pen1, pen2 = Pen(red, 0.2), Pen(blue, 0.1)
+        do  pen1.Freeze()
+            pen2.Freeze()
+    
+        let rows = (int)(SystemParameters.PrimaryScreenHeight)
+        let columns = (int)(SystemParameters.PrimaryScreenWidth)
+
+        let x = System.Windows.Point(0., 0.)
+        let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
+        let y = System.Windows.Point(0.,0.)        
+        let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
+         
+        //lines
+        let horozontalLines = 
+            seq{for i in 0..rows -> 
+                    match i % yInterval = 0 with //Interval
+                    | true -> context.DrawLine(pen1,x,x')
+                              x.Offset(0.,yOffset)
+                              x'.Offset(0.,yOffset)
+                    | false -> context.DrawLine(pen2,x,x')
+                               x.Offset(0.,yOffset)
+                               x'.Offset(0.,yOffset)}
+        let verticalLines = 
+            seq{for i in 0..columns -> 
+                    match i % xInterval = 0 with //Interval
+                    | true -> context.DrawLine(pen1,y,y')
+                              y.Offset(xOffset,0.)
+                              y'.Offset(xOffset,0.)
+                    | false -> context.DrawLine(pen2,y,y')
+                               y.Offset(xOffset,0.)
+                               y'.Offset(xOffset,0.)}        
+        do  
+            Seq.iter (fun x -> x) horozontalLines
+            Seq.iter (fun y -> y) verticalLines
+            context.Close()
+
+        let bitmap = 
+            RenderTargetBitmap(
+                (int)SystemParameters.PrimaryScreenWidth,
+                (int)SystemParameters.PrimaryScreenHeight, 
+                96.,
+                96.,
+                PixelFormats.Pbgra32)        
+        do  
+            bitmap.Render(gridLinesVisual)
+            bitmap.Freeze()
+            lines.Source <- bitmap
+        lines
 
     do  bluePen.Freeze()
         redPen.Freeze()
@@ -774,6 +831,7 @@ type TrussAnalysis() as this  =
         do  border.BorderBrush <- black
             border.Cursor <- System.Windows.Input.Cursors.Arrow
             border.Background <- clear
+            border.Opacity <- 0.8
             border.IsHitTestVisible <- true
             border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
             border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
@@ -939,7 +997,10 @@ type TrussAnalysis() as this  =
             drawBuildForceLine (p,vp)
             drawBuildForceDirection (arrowPoint,dir,force.magnitude)
     let drawTruss s =
+        let testPoint = System.Windows.Point(20.,20.)
+        let g = gridLines testPoint
         do  canvas.Children.Clear()
+            canvas.Children.Add(g) |> ignore
             canvas.Children.Add(label) |> ignore
             canvas.Children.Add(trussControls_Border) |> ignore
         let joints = getJointsFrom s
