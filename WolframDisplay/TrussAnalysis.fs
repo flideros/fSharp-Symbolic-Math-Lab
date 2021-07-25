@@ -488,7 +488,10 @@ type TrussAnalysis() as this  =
     let olive = SolidColorBrush(Colors.Olive)
     let red =   SolidColorBrush(Colors.Red)
     let green = SolidColorBrush(Colors.Green)
-    let bluePen, redPen, blackPen = Pen(blue, 0.5), Pen(red, 0.5), Pen(black, 0.5) 
+    let bluePen, blueGridline, redPen, redGridline, blackPen = Pen(blue, 0.5), Pen(blue, 0.2), Pen(red, 0.5), Pen(red, 0.1), Pen(black, 0.5) 
+    do  bluePen.Freeze()
+        redPen.Freeze()
+        blackPen.Freeze()
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
         let e = Ellipse()
@@ -560,11 +563,7 @@ type TrussAnalysis() as this  =
     
         let gridLinesVisual = DrawingVisual() 
         let context = gridLinesVisual.RenderOpen()
-        
-        let pen1, pen2 = Pen(red, 0.2), Pen(blue, 0.1)
-        do  pen1.Freeze()
-            pen2.Freeze()
-    
+            
         let rows = (int)(SystemParameters.PrimaryScreenHeight)
         let columns = (int)(SystemParameters.PrimaryScreenWidth)
 
@@ -577,19 +576,19 @@ type TrussAnalysis() as this  =
         let horozontalLines = 
             seq{for i in 0..rows -> 
                     match i % yInterval = 0 with //Interval
-                    | true -> context.DrawLine(pen1,x,x')
+                    | true -> context.DrawLine(blueGridline,x,x')
                               x.Offset(0.,yOffset)
                               x'.Offset(0.,yOffset)
-                    | false -> context.DrawLine(pen2,x,x')
+                    | false -> context.DrawLine(redGridline,x,x')
                                x.Offset(0.,yOffset)
                                x'.Offset(0.,yOffset)}
         let verticalLines = 
             seq{for i in 0..columns -> 
                     match i % xInterval = 0 with //Interval
-                    | true -> context.DrawLine(pen1,y,y')
+                    | true -> context.DrawLine(blueGridline,y,y')
                               y.Offset(xOffset,0.)
                               y'.Offset(xOffset,0.)
-                    | false -> context.DrawLine(pen2,y,y')
+                    | false -> context.DrawLine(redGridline,y,y')
                                y.Offset(xOffset,0.)
                                y'.Offset(xOffset,0.)}        
         do  
@@ -609,10 +608,34 @@ type TrussAnalysis() as this  =
             bitmap.Freeze()
             lines.Source <- bitmap
         lines
-
-    do  bluePen.Freeze()
-        redPen.Freeze()
-        blackPen.Freeze() 
+    let orgin (p:System.Windows.Point) = 
+        let radius = 8.
+        let line1 = Line()
+        do  line1.X1 <- p.X + 15.
+            line1.X2 <- p.X - 15.
+            line1.Y1 <- p.Y
+            line1.Y2 <- p.Y
+            line1.Stroke <- black
+            line1.StrokeThickness <- 2.
+        let line2 = Line()
+        do  line2.X1 <- p.X
+            line2.X2 <- p.X
+            line2.Y1 <- p.Y + 15.
+            line2.Y2 <- p.Y - 15.
+            line2.Stroke <- black
+            line2.StrokeThickness <- 2.
+        let e = Ellipse()
+        let highlight () = e.Fill <- red
+        let unhighlight () = e.Fill <- clear
+        do  e.Stroke <- red
+            e.StrokeThickness <- 2.
+            e.Opacity <- 0.4
+            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
+            e.Width <- 2. * radius
+            e.Height <- 2. * radius
+            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+        (line1,line2,e)
     
     (*Controls*)      
     let label =
@@ -624,6 +647,103 @@ type TrussAnalysis() as this  =
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
         l
+        // Orgin point coordinates
+    let xOrgin_TextBlock =
+        let l = TextBlock()
+        do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 14.
+            l.Width <- 50.
+            l.Height <- 25.
+            l.VerticalAlignment <- VerticalAlignment.Center
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "200"
+        l
+    let xUp_Button = 
+        let b = Button()
+        do  b.Content <- "U"
+            b.VerticalAlignment <- VerticalAlignment.Center
+        b
+    let xDown_Button = 
+        let b = Button()
+        do  b.Content <- "D"
+            b.VerticalAlignment <- VerticalAlignment.Center
+        b
+    let xOrgin_StackPanel =
+        let sp = StackPanel()
+        do  sp.Height <- 30.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Horizontal            
+            sp.Children.Add(xOrgin_TextBlock) |> ignore
+            sp.Children.Add(xUp_Button) |> ignore
+            sp.Children.Add(xDown_Button) |> ignore
+        sp
+    
+    let yOrgin_TextBlock =
+        let l = TextBlock()
+        do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 14.
+            l.Width <- 50.
+            l.Height <- 25.
+            l.VerticalAlignment <- VerticalAlignment.Center
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "200"
+        l
+    let yUp_Button = 
+        let b = Button()
+        do  b.Content <- "U"
+            b.VerticalAlignment <- VerticalAlignment.Center
+        b
+    let yDown_Button = 
+        let b = Button()
+        do  b.Content <- "D"
+            b.VerticalAlignment <- VerticalAlignment.Center
+        b
+    let yOrgin_StackPanel =
+        let sp = StackPanel()
+        do  sp.Height <- 30.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Horizontal            
+            sp.Children.Add(yOrgin_TextBlock) |> ignore
+            sp.Children.Add(yUp_Button) |> ignore
+            sp.Children.Add(yDown_Button) |> ignore
+        sp
+    let orgin_StackPanel = 
+        let sp = StackPanel()
+        let x_TextBlock = 
+            let l = TextBlock()
+            do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontSize <- 14.
+                //l.Width <- 50.
+                l.Height <- 25.
+                l.VerticalAlignment <- VerticalAlignment.Center
+                l.HorizontalAlignment <- HorizontalAlignment.Left
+                //l.TextWrapping <- TextWrapping.Wrap
+                l.Text <- "Orgin Point X"
+            l
+        let y_TextBlock = 
+            let l = TextBlock()
+            do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontSize <- 14.
+                //l.Width <- 50.
+                l.Height <- 25.
+                l.VerticalAlignment <- VerticalAlignment.Center
+                //l.TextWrapping <- TextWrapping.Wrap
+                l.Text <- "Orgin Point Y"
+            l
+        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(x_TextBlock) |> ignore
+            sp.Children.Add(xOrgin_StackPanel) |> ignore
+            sp.Children.Add(y_TextBlock) |> ignore
+            sp.Children.Add(yOrgin_StackPanel) |> ignore
+            
+        sp
         // Truss mode selection
     let trussMode_Label =
         let l = TextBlock()
@@ -844,6 +964,8 @@ type TrussAnalysis() as this  =
             sp.Children.Add(trussMemberBuilder_StackPanel) |> ignore
             sp.Children.Add(supportType_StackPanel) |> ignore
             sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
+            sp.Children.Add(orgin_StackPanel) |> ignore
+
             border.Child <- sp
         border
         // Wolfram result 
@@ -909,6 +1031,11 @@ type TrussAnalysis() as this  =
     // For supports, set the initial magnitude to 0.0 until the truss reaction forces are evaluated.
     let sendMagnitudeToSupportBuilder m s = trussServices.sendMagnitudeToSupportBuilder m s
         // Draw
+    let drawOrgin (p:System.Windows.Point) = 
+        let l1,l2,e = orgin p
+        do  canvas.Children.Add(e) |> ignore
+            canvas.Children.Add(l1) |> ignore
+            canvas.Children.Add(l2) |> ignore
     let drawJoint (p:System.Windows.Point) =
         let j = trussJoint p
         do  canvas.Children.Add(j) |> ignore
@@ -998,9 +1125,12 @@ type TrussAnalysis() as this  =
             drawBuildForceDirection (arrowPoint,dir,force.magnitude)
     let drawTruss s =
         let testPoint = System.Windows.Point(20.,20.)
-        let g = gridLines testPoint
+        let orginPoint = System.Windows.Point(200.,500.)
+        let grid = gridLines testPoint
+        
         do  canvas.Children.Clear()
-            canvas.Children.Add(g) |> ignore
+            canvas.Children.Add(grid) |> ignore
+            drawOrgin orginPoint
             canvas.Children.Add(label) |> ignore
             canvas.Children.Add(trussControls_Border) |> ignore
         let joints = getJointsFrom s
