@@ -661,13 +661,23 @@ type TrussAnalysis() as this  =
         l
     let xUp_Button = 
         let b = Button()
+        let handleClick () = 
+            let x = Double.Parse xOrgin_TextBlock.Text
+            let x' = x + 100.
+            do xOrgin_TextBlock.Text <- x'.ToString()
         do  b.Content <- "U"
             b.VerticalAlignment <- VerticalAlignment.Center
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
     let xDown_Button = 
         let b = Button()
+        let handleClick () = 
+            let x = Double.Parse xOrgin_TextBlock.Text
+            let x' = x - 100.
+            do xOrgin_TextBlock.Text <- x'.ToString()
         do  b.Content <- "D"
             b.VerticalAlignment <- VerticalAlignment.Center
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
     let xOrgin_StackPanel =
         let sp = StackPanel()
@@ -678,7 +688,6 @@ type TrussAnalysis() as this  =
             sp.Children.Add(xUp_Button) |> ignore
             sp.Children.Add(xDown_Button) |> ignore
         sp
-    
     let yOrgin_TextBlock =
         let l = TextBlock()
         do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
@@ -688,17 +697,27 @@ type TrussAnalysis() as this  =
             l.Height <- 25.
             l.VerticalAlignment <- VerticalAlignment.Center
             l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "200"
+            l.Text <- "500"
         l
     let yUp_Button = 
         let b = Button()
+        let handleClick () = 
+            let y = Double.Parse yOrgin_TextBlock.Text
+            let y' = y + 100.
+            do yOrgin_TextBlock.Text <- y'.ToString()
         do  b.Content <- "U"
             b.VerticalAlignment <- VerticalAlignment.Center
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
     let yDown_Button = 
         let b = Button()
+        let handleClick () = 
+            let y = Double.Parse yOrgin_TextBlock.Text
+            let y' = y - 100.
+            do yOrgin_TextBlock.Text <- y'.ToString()
         do  b.Content <- "D"
             b.VerticalAlignment <- VerticalAlignment.Center
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
     let yOrgin_StackPanel =
         let sp = StackPanel()
@@ -1125,7 +1144,10 @@ type TrussAnalysis() as this  =
             drawBuildForceDirection (arrowPoint,dir,force.magnitude)
     let drawTruss s =
         let testPoint = System.Windows.Point(20.,20.)
-        let orginPoint = System.Windows.Point(200.,500.)
+        let orginPoint = 
+            let x = Double.Parse xOrgin_TextBlock.Text
+            let y = Double.Parse yOrgin_TextBlock.Text
+            System.Windows.Point(x,y)
         let grid = gridLines testPoint
         
         do  canvas.Children.Clear()
@@ -1481,6 +1503,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.SelectionState ss -> ()
             | TrussDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
+    let handleOrginPointChange () = drawTruss state
 
     (*Initialize*)
     // label.Text <- state.ToString()
@@ -1494,6 +1517,10 @@ type TrussAnalysis() as this  =
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
         this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> handleMouseUp()))
         this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
+        xUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+        xDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+        yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+        yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
 
 module TrussAnalysis = 
     let window =
