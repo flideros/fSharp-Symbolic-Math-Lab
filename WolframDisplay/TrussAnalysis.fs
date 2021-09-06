@@ -2,7 +2,7 @@
 
 open System
 open System.Numerics
-open System.Windows       
+open System.Windows
 open System.Windows.Controls  
 open System.Windows.Shapes  
 open System.Windows.Media
@@ -54,6 +54,7 @@ module TrussDomain =
         | TrussPart of TrussPart
         | TrussBuildOp of TrussBuildOp
     type TrussMode =
+        | Settings
         | Selection
         | Analysis
         | MemberBuild
@@ -555,59 +556,6 @@ type TrussAnalysis() as this  =
             path.Opacity <- 0.5
             path.StrokeThickness <- 1.
         path
-    let gridLines (p:System.Windows.Point) = 
-        let yInterval,xInterval = 5,5
-        let yOffset, xOffset = p.Y, p.X
-        let lines = Image()        
-        do  lines.SetValue(Panel.ZIndexProperty, -100)
-    
-        let gridLinesVisual = DrawingVisual() 
-        let context = gridLinesVisual.RenderOpen()
-            
-        let rows = (int)(SystemParameters.PrimaryScreenHeight)
-        let columns = (int)(SystemParameters.PrimaryScreenWidth)
-
-        let x = System.Windows.Point(0., 0.)
-        let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
-        let y = System.Windows.Point(0.,0.)        
-        let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
-         
-        //lines
-        let horozontalLines = 
-            seq{for i in 0..rows -> 
-                    match i % yInterval = 0 with //Interval
-                    | true -> context.DrawLine(blueGridline,x,x')
-                              x.Offset(0.,yOffset)
-                              x'.Offset(0.,yOffset)
-                    | false -> context.DrawLine(redGridline,x,x')
-                               x.Offset(0.,yOffset)
-                               x'.Offset(0.,yOffset)}
-        let verticalLines = 
-            seq{for i in 0..columns -> 
-                    match i % xInterval = 0 with //Interval
-                    | true -> context.DrawLine(blueGridline,y,y')
-                              y.Offset(xOffset,0.)
-                              y'.Offset(xOffset,0.)
-                    | false -> context.DrawLine(redGridline,y,y')
-                               y.Offset(xOffset,0.)
-                               y'.Offset(xOffset,0.)}        
-        do  
-            Seq.iter (fun x -> x) horozontalLines
-            Seq.iter (fun y -> y) verticalLines
-            context.Close()
-
-        let bitmap = 
-            RenderTargetBitmap(
-                (int)SystemParameters.PrimaryScreenWidth,
-                (int)SystemParameters.PrimaryScreenHeight, 
-                96.,
-                96.,
-                PixelFormats.Pbgra32)        
-        do  
-            bitmap.Render(gridLinesVisual)
-            bitmap.Freeze()
-            lines.Source <- bitmap
-        lines
     let orgin (p:System.Windows.Point) = 
         let radius = 8.
         let line1 = Line()
@@ -636,7 +584,63 @@ type TrussAnalysis() as this  =
             e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         (line1,line2,e)
-    
+    let grid = 
+        let gridLines (p:System.Windows.Point) = 
+            let yInterval,xInterval = 5,5
+            let yOffset, xOffset = p.Y, p.X
+            let lines = Image()        
+            do  lines.SetValue(Panel.ZIndexProperty, -100)
+        
+            let gridLinesVisual = DrawingVisual() 
+            let context = gridLinesVisual.RenderOpen()
+                
+            let rows = (int)(SystemParameters.PrimaryScreenHeight)
+            let columns = (int)(SystemParameters.PrimaryScreenWidth)
+
+            let x = System.Windows.Point(0., 0.)
+            let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
+            let y = System.Windows.Point(0.,0.)        
+            let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
+             
+            //lines
+            let horozontalLines = 
+                seq{for i in 0..rows -> 
+                        match i % yInterval = 0 with //Interval
+                        | true -> context.DrawLine(blueGridline,x,x')
+                                  x.Offset(0.,yOffset)
+                                  x'.Offset(0.,yOffset)
+                        | false -> context.DrawLine(redGridline,x,x')
+                                   x.Offset(0.,yOffset)
+                                   x'.Offset(0.,yOffset)}
+            let verticalLines = 
+                seq{for i in 0..columns -> 
+                        match i % xInterval = 0 with //Interval
+                        | true -> context.DrawLine(blueGridline,y,y')
+                                  y.Offset(xOffset,0.)
+                                  y'.Offset(xOffset,0.)
+                        | false -> context.DrawLine(redGridline,y,y')
+                                   y.Offset(xOffset,0.)
+                                   y'.Offset(xOffset,0.)}        
+            do  
+                Seq.iter (fun x -> x) horozontalLines
+                Seq.iter (fun y -> y) verticalLines
+                context.Close()
+
+            let bitmap = 
+                RenderTargetBitmap(
+                    (int)SystemParameters.PrimaryScreenWidth,
+                    (int)SystemParameters.PrimaryScreenHeight, 
+                    96.,
+                    96.,
+                    PixelFormats.Pbgra32)        
+            do  
+                bitmap.Render(gridLinesVisual)
+                bitmap.Freeze()
+                lines.Source <- bitmap
+            lines
+        let startPoint = System.Windows.Point(20.,20.)
+        let gl = gridLines startPoint
+        gl
     (*Controls*)      
     let label =
         let l = TextBlock()
@@ -761,7 +765,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(xOrgin_StackPanel) |> ignore
             sp.Children.Add(y_TextBlock) |> ignore
             sp.Children.Add(yOrgin_StackPanel) |> ignore
-            
+            sp.Visibility <- Visibility.Collapsed
         sp
         // Truss mode selection
     let trussMode_Label =
@@ -802,6 +806,12 @@ type TrussAnalysis() as this  =
         do  r.Content <- tb
             r.IsChecked <- false |> Nullable<bool>
         r
+    let settings_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Settings",FontSize=15.)        
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
     let trussMode_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
@@ -814,6 +824,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(supportBuilder_RadioButton) |> ignore
             sp.Children.Add(selection_RadioButton) |> ignore
             sp.Children.Add(analysis_RadioButton) |> ignore
+            sp.Children.Add(settings_RadioButton) |> ignore
         sp
         // Support type selection
     let supportType_Label =
@@ -1021,6 +1032,8 @@ type TrussAnalysis() as this  =
     let adjustMouseEventArgPoint (e:Input.MouseEventArgs) = 
         let p = e.GetPosition(this)
         System.Windows.Point(p.X,(p.Y - 0.04)) // not sure why the mouse position adds this to the point
+    let adjustPointToOrgin (p:System.Windows.Point) =
+        ()
         // Get
     let getBitmapFrom visual = 
         let bitmap = 
@@ -1143,13 +1156,10 @@ type TrussAnalysis() as this  =
             drawBuildForceLine (p,vp)
             drawBuildForceDirection (arrowPoint,dir,force.magnitude)
     let drawTruss s =
-        let testPoint = System.Windows.Point(20.,20.)
         let orginPoint = 
             let x = Double.Parse xOrgin_TextBlock.Text
             let y = Double.Parse yOrgin_TextBlock.Text
-            System.Windows.Point(x,y)
-        let grid = gridLines testPoint
-        
+            System.Windows.Point(x,y)        
         do  canvas.Children.Clear()
             canvas.Children.Add(grid) |> ignore
             drawOrgin orginPoint
@@ -1201,46 +1211,69 @@ type TrussAnalysis() as this  =
                       supportBuilder_RadioButton.IsChecked.Value,
                       selection_RadioButton.IsChecked.Value,
                       analysis_RadioButton.IsChecked.Value,                                            
+                      settings_RadioButton.IsChecked.Value,                      
                       forceBuilder_RadioButton.IsMouseOver,
                       memberBuilder_RadioButton.IsMouseOver,                                            
                       supportBuilder_RadioButton.IsMouseOver,
                       selection_RadioButton.IsMouseOver,
-                      analysis_RadioButton.IsMouseOver with
-                | true,false,false,false,false, true,false,false,false,false
-                | false,true,false,false,false, true,false,false,false,false
-                | false,false,true,false,false, true,false,false,false,false
-                | false,false,false,true,false, true,false,false,false,false
-                | false,false,false,false,true, true,false,false,false,false ->                 
+                      analysis_RadioButton.IsMouseOver, 
+                      settings_RadioButton.IsMouseOver with
+                | true,false,false,false,false,false, true,false,false,false,false,false
+                | false,true,false,false,false,false, true,false,false,false,false,false
+                | false,false,true,false,false,false, true,false,false,false,false,false
+                | false,false,false,true,false,false, true,false,false,false,false,false
+                | false,false,false,false,true,false, true,false,false,false,false,false                
+                | false,false,false,false,false,true, true,false,false,false,false,false ->    
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- false
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
+                    orgin_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
                     trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
-                | true,false,false,false,false, false,true,false,false,false
-                | false,true,false,false,false, false,true,false,false,false
-                | false,false,true,false,false, false,true,false,false,false
-                | false,false,false,true,false, false,true,false,false,false
-                | false,false,false,false,true, false,true,false,false,false -> 
+                | true,false,false,false,false,false, false,true,false,false,false,false
+                | false,true,false,false,false,false, false,true,false,false,false,false
+                | false,false,true,false,false,false, false,true,false,false,false,false
+                | false,false,false,true,false,false, false,true,false,false,false,false
+                | false,false,false,false,true,false, false,true,false,false,false,false
+                | false,false,false,false,false,true, false,true,false,false,false,false -> 
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
+                    orgin_StackPanel.Visibility <- Visibility.Collapsed
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
-                | true,false,false,false,false, false,false,true,false,false
-                | false,true,false,false,false, false,false,true,false,false
-                | false,false,true,false,false, false,false,true,false,false
-                | false,false,false,true,false, false,false,true,false,false
-                | false,false,false,false,true, false,false,true,false,false -> 
+                | true,false,false,false,false,false,  false,false,true,false,false,false
+                | false,true,false,false,false,false,  false,false,true,false,false,false
+                | false,false,true,false,false,false,  false,false,true,false,false,false
+                | false,false,false,true,false,false,  false,false,true,false,false,false
+                | false,false,false,false,true,false,  false,false,true,false,false,false 
+                | false,false,false,false,false,true,  false,false,true,false,false,false -> 
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     supportType_StackPanel.Visibility <- Visibility.Visible
+                    orgin_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
+                | true,false,false,false,false,false,  false,false,false,false,false,true
+                | false,true,false,false,false,false,  false,false,false,false,false,true
+                | false,false,true,false,false,false,  false,false,false,false,false,true
+                | false,false,false,true,false,false,  false,false,false,false,false,true
+                | false,false,false,false,true,false,  false,false,false,false,false,true 
+                | false,false,false,false,false,true,  false,false,false,false,false,true -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportType_StackPanel.Visibility <- Visibility.Collapsed
+                    orgin_StackPanel.Visibility <- Visibility.Visible
+                    trussForceMagnitude_TextBox.IsReadOnly <- true
+                    trussForceAngle_TextBox.Text <- "Enter Angle"
+                    trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
+                    trussForceMagnitude_TextBox.Text <- "0"
+                    trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state
                 | _ -> 
                     match rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver, 
                           rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver with 
@@ -1296,6 +1329,7 @@ type TrussAnalysis() as this  =
                             label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Analysis -> ()
                 | TrussDomain.TrussMode.Selection -> ()
+                | TrussDomain.TrussMode.Settings -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
                 | TrussDomain.BuildMember bm ->                 
@@ -1324,6 +1358,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.TrussMode.SupportBuild -> ()
             | TrussDomain.TrussMode.Analysis -> ()
             | TrussDomain.TrussMode.Selection -> ()
+            | TrussDomain.TrussMode.Settings -> ()
         | TrussDomain.BuildState bs -> 
             match bs.buildOp with
             | TrussDomain.BuildMember bm -> ()
@@ -1361,6 +1396,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.TrussMode.SupportBuild -> ()
             | TrussDomain.TrussMode.Analysis -> ()
             | TrussDomain.TrussMode.Selection -> ()
+            | TrussDomain.TrussMode.Settings -> ()
         | TrussDomain.BuildState bs ->
             match bs.buildOp with
             | TrussDomain.BuildMember bm ->
@@ -1427,6 +1463,7 @@ type TrussAnalysis() as this  =
                 | TrussDomain.TrussMode.SupportBuild -> ()
                 | TrussDomain.TrussMode.Analysis -> ()
                 | TrussDomain.TrussMode.Selection -> ()
+                | TrussDomain.TrussMode.Settings -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
                 | TrussDomain.BuildMember _bm ->                 
@@ -1503,7 +1540,6 @@ type TrussAnalysis() as this  =
             | TrussDomain.SelectionState ss -> ()
             | TrussDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
-    let handleOrginPointChange () = drawTruss state
 
     (*Initialize*)
     // label.Text <- state.ToString()
