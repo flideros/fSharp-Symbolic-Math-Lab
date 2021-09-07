@@ -489,10 +489,15 @@ type TrussAnalysis() as this  =
     let olive = SolidColorBrush(Colors.Olive)
     let red =   SolidColorBrush(Colors.Red)
     let green = SolidColorBrush(Colors.Green)
-    let bluePen, blueGridline, redPen, redGridline, blackPen = Pen(blue, 0.5), Pen(blue, 0.2), Pen(red, 0.5), Pen(red, 0.1), Pen(black, 0.5) 
+    let bluePen, blueGridline, redPen, 
+        redGridline, blackPen = 
+            Pen(blue, 0.5), Pen(blue, 0.2), Pen(red, 0.5), 
+            Pen(red, 0.1), Pen(black, 0.5) 
     do  bluePen.Freeze()
         redPen.Freeze()
         blackPen.Freeze()
+        redGridline.Freeze()
+        blueGridline.Freeze()
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
         let e = Ellipse()
@@ -507,13 +512,21 @@ type TrussAnalysis() as this  =
         e
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
+        let highlight () = 
+            l.Stroke <- blue 
+            l.StrokeThickness <- 4.0
+        let unhighlight () = 
+            l.Stroke <- black
+            l.StrokeThickness <- 1.0
         do  l.Stroke <- black
-            l.StrokeThickness <- 0.4
+            l.StrokeThickness <- 1.0
             l.Visibility <- Visibility.Visible
             l.X1 <- p1.X
             l.Y1 <- p1.Y
             l.X2 <- p2.X
             l.Y2 <- p2.Y
+            l.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            l.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         l
     let trussForceJoint (p:System.Windows.Point) = 
         let radius = 4.
@@ -641,6 +654,7 @@ type TrussAnalysis() as this  =
         let startPoint = System.Windows.Point(20.,20.)
         let gl = gridLines startPoint
         gl
+    
     (*Controls*)      
     let label =
         let l = TextBlock()
