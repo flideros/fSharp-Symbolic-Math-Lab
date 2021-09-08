@@ -478,7 +478,10 @@ type TrussAnalysis() as this  =
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
         k
-
+    
+    (*Truss Services*)
+    let trussServices = TrussServices.createServices()
+    
     (*Model*)        
     let image = Image()
     do  image.SetValue(Panel.ZIndexProperty, -100)    
@@ -512,6 +515,10 @@ type TrussAnalysis() as this  =
         e
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
+        let sendLineToState l s =  
+            let newState = state //trussServices.sendLineToMState l s
+            do  state <- newState
+            ()
         let highlight () = 
             l.Stroke <- blue 
             l.StrokeThickness <- 4.0
@@ -654,7 +661,7 @@ type TrussAnalysis() as this  =
         let startPoint = System.Windows.Point(20.,20.)
         let gl = gridLines startPoint
         gl
-    
+   
     (*Controls*)      
     let label =
         let l = TextBlock()
@@ -1036,9 +1043,6 @@ type TrussAnalysis() as this  =
         do  g.Children.Add(canvas) |> ignore
         g
     
-    (*Truss Services*)
-    let trussServices = TrussServices.createServices()
-    
     (*Actions*) 
     let adjustMouseButtonEventArgPoint (e:Input.MouseButtonEventArgs) = 
         let p = e.GetPosition(this)
@@ -1046,8 +1050,6 @@ type TrussAnalysis() as this  =
     let adjustMouseEventArgPoint (e:Input.MouseEventArgs) = 
         let p = e.GetPosition(this)
         System.Windows.Point(p.X,(p.Y - 0.04)) // not sure why the mouse position adds this to the point
-    let adjustPointToOrgin (p:System.Windows.Point) =
-        ()
         // Get
     let getBitmapFrom visual = 
         let bitmap = 
@@ -1074,6 +1076,7 @@ type TrussAnalysis() as this  =
     let sendPointToPinSupportBuilder (p:System.Windows.Point) s = trussServices.sendPointToPinSupportBuilder p s
     let sendPointToRollerSupportBuilder (p:System.Windows.Point) s = trussServices.sendPointToRollerSupportBuilder p s
     let sendMagnitudeToForceBuilder m s = trussServices.sendMagnitudeToForceBuilder m s
+    
     // For supports, set the initial magnitude to 0.0 until the truss reaction forces are evaluated.
     let sendMagnitudeToSupportBuilder m s = trussServices.sendMagnitudeToSupportBuilder m s
         // Draw
@@ -1273,6 +1276,30 @@ type TrussAnalysis() as this  =
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
+                | true,false,false,false,false,false,  false,false,false,true,false,false
+                | false,true,false,false,false,false,  false,false,false,true,false,false
+                | false,false,true,false,false,false,  false,false,false,true,false,false
+                | false,false,false,true,false,false,  false,false,false,true,false,false
+                | false,false,false,false,true,false,  false,false,false,true,false,false 
+                | false,false,false,false,false,true,  false,false,false,true,false,false -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportType_StackPanel.Visibility <- Visibility.Collapsed
+                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceMagnitude_TextBox.IsReadOnly <- true                    
+                    trussServices.setTrussMode TrussDomain.TrussMode.Selection state
+                | true,false,false,false,false,false,  false,false,false,false,true,false
+                | false,true,false,false,false,false,  false,false,false,false,true,false
+                | false,false,true,false,false,false,  false,false,false,false,true,false
+                | false,false,false,true,false,false,  false,false,false,false,true,false
+                | false,false,false,false,true,false,  false,false,false,false,true,false 
+                | false,false,false,false,false,true,  false,false,false,false,true,false -> 
+                    trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportType_StackPanel.Visibility <- Visibility.Collapsed
+                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    trussForceMagnitude_TextBox.IsReadOnly <- true
+                    trussServices.setTrussMode TrussDomain.TrussMode.Analysis state
                 | true,false,false,false,false,false,  false,false,false,false,false,true
                 | false,true,false,false,false,false,  false,false,false,false,false,true
                 | false,false,true,false,false,false,  false,false,false,false,false,true
@@ -1284,10 +1311,7 @@ type TrussAnalysis() as this  =
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true
-                    trussForceAngle_TextBox.Text <- "Enter Angle"
-                    trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
-                    trussForceMagnitude_TextBox.Text <- "0"
-                    trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state
+                    trussServices.setTrussMode TrussDomain.TrussMode.Settings state
                 | _ -> 
                     match rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver, 
                           rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver with 
@@ -1342,7 +1366,10 @@ type TrussAnalysis() as this  =
                             state <- newState
                             label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Analysis -> ()
-                | TrussDomain.TrussMode.Selection -> ()
+                | TrussDomain.TrussMode.Selection -> 
+                    // TODO
+                    
+                    ()
                 | TrussDomain.TrussMode.Settings -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
