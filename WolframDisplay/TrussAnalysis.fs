@@ -86,6 +86,7 @@ module TrussDomain =
     
     // Services
     type CheckSupportTypeIsRoller = Support -> bool
+    
     type GetJointSeqFromTruss = Truss -> System.Windows.Point seq
     type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
     type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
@@ -94,13 +95,14 @@ module TrussDomain =
     type GetPointFromForce = Force -> System.Windows.Point
     type GetDirectionFromForce = Force -> float
     type GetPointFromSupport = Support -> System.Windows.Point
-    type GetDirectionFromSupport = Support -> float
+    type GetDirectionFromSupport = Support -> float    
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToRollerSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToPinSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState    
+    type SendMemberToState = System.Windows.Shapes.Line -> TrussAnalysisState -> TrussAnalysisState
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
@@ -120,7 +122,8 @@ module TrussDomain =
          sendPointToRollerSupportBuilder:SendPointToRollerSupportBuilder;
          sendPointToPinSupportBuilder:SendPointToPinSupportBuilder;
          sendMagnitudeToSupportBuilder:SendMagnitudeToSupportBuilder;
-         setTrussMode:SetTrussMode}
+         setTrussMode:SetTrussMode;
+         sendMemberToState:SendMemberToState}
 
 module TrussImplementation = 
     open TrussDomain
@@ -428,6 +431,20 @@ module TrussServices =
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    let sendMemberToState (l:System.Windows.Shapes.Line) (state :TrussAnalysisState) = 
+        let m =  ({x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y})
+        match state with 
+        | TrussState  ts -> 
+            match ts.mode with
+            | Settings -> state
+            | Selection -> {truss = ts.truss; members = Some m; forces = None; supports = None} |> SelectionState
+            | Analysis -> state
+            | MemberBuild -> state
+            | ForceBuild -> state
+            | SupportBuild -> state         
+        | BuildState  bs -> state
+        | SelectionState  ss -> ss |> SelectionState
+        | ErrorState  es -> state
 
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
 
@@ -448,7 +465,8 @@ module TrussServices =
         sendPointToRollerSupportBuilder = sendPointToRollerSupportBuilder;
         sendPointToPinSupportBuilder = sendPointToPinSupportBuilder;
         sendMagnitudeToSupportBuilder = sendMagnitudeToSupportBuilder;
-        setTrussMode = setTrussMode}
+        setTrussMode = setTrussMode;
+        sendMemberToState = sendMemberToState}
 
 type TrussAnalysis() as this  =  
     inherit UserControl()    
@@ -501,6 +519,18 @@ type TrussAnalysis() as this  =
         blackPen.Freeze()
         redGridline.Freeze()
         blueGridline.Freeze()
+   
+    (*Controls*)      
+    let label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- state.ToString()
+        l
+        // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
         let e = Ellipse()
@@ -514,11 +544,11 @@ type TrussAnalysis() as this  =
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         e
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
-        let l = Line()
+        let l = Line() 
         let sendLineToState l s =  
-            let newState = state //trussServices.sendLineToMState l s
+            let newState = trussServices.sendMemberToState l s
             do  state <- newState
-            ()
+                label.Text <- state.ToString()
         let highlight () = 
             l.Stroke <- blue 
             l.StrokeThickness <- 4.0
@@ -534,7 +564,8 @@ type TrussAnalysis() as this  =
             l.Y2 <- p2.Y
             l.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             l.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
-        l
+            l.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendLineToState l state ))
+        l    
     let trussForceJoint (p:System.Windows.Point) = 
         let radius = 4.
         let e = Ellipse()
@@ -576,6 +607,7 @@ type TrussAnalysis() as this  =
             path.Opacity <- 0.5
             path.StrokeThickness <- 1.
         path
+        // Orgin ang grid
     let orgin (p:System.Windows.Point) = 
         let radius = 8.
         let line1 = Line()
@@ -660,18 +692,7 @@ type TrussAnalysis() as this  =
             lines
         let startPoint = System.Windows.Point(20.,20.)
         let gl = gridLines startPoint
-        gl
-   
-    (*Controls*)      
-    let label =
-        let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.
-            l.MaxWidth <- 500.
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- state.ToString()
-        l
+        gl    
         // Orgin point coordinates
     let xOrgin_TextBlock =
         let l = TextBlock()
@@ -1367,9 +1388,7 @@ type TrussAnalysis() as this  =
                             label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Analysis -> ()
                 | TrussDomain.TrussMode.Selection -> 
-                    // TODO
-                    
-                    ()
+                    label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Settings -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
