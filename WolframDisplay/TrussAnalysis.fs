@@ -60,6 +60,10 @@ module TrussDomain =
         | MemberBuild
         | ForceBuild
         | SupportBuild
+    type TrussSelectionMode =
+        | Delete
+        | Modify
+        | Analyze        
 
     // Types to describe error results
     type Error = 
@@ -74,7 +78,7 @@ module TrussDomain =
     // Data associated with each state     
     type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
-    type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option}    
+    type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option; mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     
     // States
@@ -437,7 +441,9 @@ module TrussServices =
         | TrussState  ts -> 
             match ts.mode with
             | Settings -> state
-            | Selection -> {truss = ts.truss; members = Some m; forces = None; supports = None} |> SelectionState
+            | Selection -> // I need to add some controls to capture truss selection mode \/
+                {truss = ts.truss; members = Some m; forces = None; supports = None; mode = TrussSelectionMode.Modify} 
+                |> SelectionState
             | Analysis -> state
             | MemberBuild -> state
             | ForceBuild -> state
@@ -900,6 +906,45 @@ type TrussAnalysis() as this  =
             sp.Children.Add(rollerSupport_RadioButton) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
+    // Support type selection
+    let selectionMode_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Selection Mode"
+        l
+    let delete_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Delete", FontSize=15.)        
+        do  r.Content <- tb
+            r.IsChecked <- true |> Nullable<bool>
+        r
+    let analyze_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Analyze", FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r    
+    let modify_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Modify", FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
+    let selectionMode_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(selectionMode_Label) |> ignore
+            sp.Children.Add(delete_RadioButton) |> ignore
+            sp.Children.Add(analyze_RadioButton) |> ignore
+            sp.Children.Add(modify_RadioButton) |> ignore
+            sp.Visibility <- Visibility.Collapsed
+        sp
         // Member builder P1
     let trussMemberP1X_TextBlock = 
         let tb = TextBlock(Text = "X1")
@@ -1037,7 +1082,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(supportType_StackPanel) |> ignore
             sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
             sp.Children.Add(orgin_StackPanel) |> ignore
-
+            sp.Children.Add(selectionMode_StackPanel) |> ignore
             border.Child <- sp
         border
         // Wolfram result 
@@ -1243,7 +1288,7 @@ type TrussAnalysis() as this  =
                 p2
         match trussControls_Border.IsMouseOver with 
         | true ->             
-            let newState = 
+            let newState = // Logic for Truss Mode radio buttons
                 match forceBuilder_RadioButton.IsChecked.Value, 
                       memberBuilder_RadioButton.IsChecked.Value,                                            
                       supportBuilder_RadioButton.IsChecked.Value,
@@ -1267,6 +1312,7 @@ type TrussAnalysis() as this  =
                     trussForceMagnitude_TextBox.IsReadOnly <- false
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
@@ -1281,6 +1327,7 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 | true,false,false,false,false,false,  false,false,true,false,false,false
                 | false,true,false,false,false,false,  false,false,true,false,false,false
@@ -1292,6 +1339,7 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     supportType_StackPanel.Visibility <- Visibility.Visible
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
@@ -1307,6 +1355,7 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     trussServices.setTrussMode TrussDomain.TrussMode.Selection state
                 | true,false,false,false,false,false,  false,false,false,false,true,false
@@ -1319,6 +1368,7 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     trussServices.setTrussMode TrussDomain.TrussMode.Analysis state
                 | true,false,false,false,false,false,  false,false,false,false,false,true
@@ -1331,18 +1381,47 @@ type TrussAnalysis() as this  =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Visible
+                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     trussServices.setTrussMode TrussDomain.TrussMode.Settings state
-                | _ -> 
-                    match rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver, 
-                          rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver with 
+                | _ -> // Logic for Support Type radio buttons
+                    match rollerSupport_RadioButton.IsChecked.Value, pinSupport_RadioButton.IsChecked.Value, 
+                          rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver 
+                          with 
                     | true,false, true,false
                     | false,true, true,false -> rollerSupport_RadioButton.IsChecked <- Nullable true
                                                 pinSupport_RadioButton.IsChecked <- Nullable false
                     | true,false, false,true
                     | false,true, false,true -> rollerSupport_RadioButton.IsChecked <- Nullable false 
                                                 pinSupport_RadioButton.IsChecked <- Nullable true
-                    | _ -> ()
+                    | _ -> // Logic for Selection Mode radio buttons
+                        match delete_RadioButton.IsChecked.Value, 
+                              analyze_RadioButton.IsChecked.Value, 
+                              modify_RadioButton.IsChecked.Value, 
+                              delete_RadioButton.IsMouseOver, 
+                              analyze_RadioButton.IsMouseOver,
+                              modify_RadioButton.IsMouseOver
+                              with 
+                        | true,false,false, true,false,false
+                        | false,true,false, true,false,false 
+                        | false,false,true, true,false,false ->  
+                            delete_RadioButton.IsChecked <- Nullable true
+                            analyze_RadioButton.IsChecked <- Nullable false
+                            modify_RadioButton.IsChecked <- Nullable false
+                        | true,false,false, false,true,false
+                        | false,true,false, false,true,false 
+                        | false,false,true, false,true,false ->                        
+                            delete_RadioButton.IsChecked <- Nullable false 
+                            analyze_RadioButton.IsChecked <- Nullable true
+                            modify_RadioButton.IsChecked <- Nullable false
+                        | true,false,false, false,false,true
+                        | false,true,false, false,false,true 
+                        | false,false,true, false,false,true ->                        
+                            delete_RadioButton.IsChecked <- Nullable false 
+                            analyze_RadioButton.IsChecked <- Nullable false
+                            modify_RadioButton.IsChecked <- Nullable true
+                        | _ -> ()
+                            
                     state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
             
             do  state <- newState
