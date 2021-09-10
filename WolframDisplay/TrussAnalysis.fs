@@ -63,7 +63,7 @@ module TrussDomain =
     type TrussSelectionMode =
         | Delete
         | Modify
-        | Analyze        
+        | Inspect        
 
     // Types to describe error results
     type Error = 
@@ -106,7 +106,7 @@ module TrussDomain =
     type SendPointToRollerSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToPinSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState    
-    type SendMemberToState = System.Windows.Shapes.Line -> TrussAnalysisState -> TrussAnalysisState
+    type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
@@ -154,7 +154,6 @@ module TrussImplementation =
         match sb with
         | SupportBuilder.Roller r -> r.joint
         | SupportBuilder.Pin (p,_) -> p.joint
-
 
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -435,14 +434,14 @@ module TrussServices =
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
-    let sendMemberToState (l:System.Windows.Shapes.Line) (state :TrussAnalysisState) = 
+    let sendMemberToState (l:System.Windows.Shapes.Line) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
         let m =  ({x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y})
         match state with 
         | TrussState  ts -> 
             match ts.mode with
             | Settings -> state
             | Selection -> // I need to add some controls to capture truss selection mode \/
-                {truss = ts.truss; members = Some m; forces = None; supports = None; mode = TrussSelectionMode.Modify} 
+                {truss = ts.truss; members = Some m; forces = None; supports = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
             | MemberBuild -> state
@@ -536,83 +535,7 @@ type TrussAnalysis() as this  =
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
         l
-        // Truss parts
-    let trussJoint (p:System.Windows.Point) = 
-        let radius = 6.
-        let e = Ellipse()
-        let highlight () = e.Fill <- blue 
-        let unhighlight () = e.Fill <- clear
-        do  e.Stroke <- blue
-            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
-            e.Width <- 2. * radius
-            e.Height <- 2. * radius
-            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
-            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
-        e
-    let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
-        let l = Line() 
-        let sendLineToState l s =  
-            let newState = trussServices.sendMemberToState l s
-            do  state <- newState
-                label.Text <- state.ToString()
-        let highlight () = 
-            l.Stroke <- blue 
-            l.StrokeThickness <- 4.0
-        let unhighlight () = 
-            l.Stroke <- black
-            l.StrokeThickness <- 1.0
-        do  l.Stroke <- black
-            l.StrokeThickness <- 1.0
-            l.Visibility <- Visibility.Visible
-            l.X1 <- p1.X
-            l.Y1 <- p1.Y
-            l.X2 <- p2.X
-            l.Y2 <- p2.Y
-            l.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
-            l.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
-            l.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendLineToState l state ))
-        l    
-    let trussForceJoint (p:System.Windows.Point) = 
-        let radius = 4.
-        let e = Ellipse()
-        let highlight () = e.Fill <- clear 
-        let unhighlight () = e.Fill <- green
-        do  e.Stroke <- blue
-            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
-            e.Width <- 2. * radius
-            e.Height <- 2. * radius
-            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
-            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
-        e
-    let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
-        let l = Line()
-        do  l.Stroke <- green
-            l.StrokeThickness <- 2.0
-            l.Visibility <- Visibility.Visible
-            l.X1 <- p1.X
-            l.Y1 <- p1.Y
-            l.X2 <- p2.X
-            l.Y2 <- p2.Y
-        l
-    let trussSupportJoint (p:System.Windows.Point) = 
-        let radius = 8.
-        let e = Ellipse()
-        let highlight () = e.Fill <- olive 
-        let unhighlight () = e.Fill <- clear
-        do  e.Stroke <- blue
-            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
-            e.Width <- 2. * radius
-            e.Height <- 2. * radius
-            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
-            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
-        e
-    let support () =
-        let path = Path()            
-        do  path.Stroke <- black
-            path.Fill <- olive
-            path.Opacity <- 0.5
-            path.StrokeThickness <- 1.
-        path
+        
         // Orgin ang grid
     let orgin (p:System.Windows.Point) = 
         let radius = 8.
@@ -906,7 +829,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(rollerSupport_RadioButton) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
-    // Support type selection
+        // Selection mode selection
     let selectionMode_Label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -921,9 +844,9 @@ type TrussAnalysis() as this  =
         do  r.Content <- tb
             r.IsChecked <- true |> Nullable<bool>
         r
-    let analyze_RadioButton = 
+    let inspect_RadioButton = 
         let r = RadioButton()
-        let tb = TextBlock(Text="Analyze", FontSize=15.)            
+        let tb = TextBlock(Text="Inspect", FontSize=15.)            
         do  r.Content <- tb
             r.IsChecked <- false |> Nullable<bool>
         r    
@@ -941,7 +864,7 @@ type TrussAnalysis() as this  =
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(selectionMode_Label) |> ignore
             sp.Children.Add(delete_RadioButton) |> ignore
-            sp.Children.Add(analyze_RadioButton) |> ignore
+            sp.Children.Add(inspect_RadioButton) |> ignore
             sp.Children.Add(modify_RadioButton) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
@@ -1085,6 +1008,90 @@ type TrussAnalysis() as this  =
             sp.Children.Add(selectionMode_StackPanel) |> ignore
             border.Child <- sp
         border
+        // Truss parts
+    let trussJoint (p:System.Windows.Point) = 
+        let radius = 6.
+        let e = Ellipse()
+        let highlight () = e.Fill <- blue 
+        let unhighlight () = e.Fill <- clear
+        do  e.Stroke <- blue
+            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
+            e.Width <- 2. * radius
+            e.Height <- 2. * radius
+            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+        e
+    let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
+        let l = Line() 
+        let sendLineToState l s =  
+            let newState = 
+                match delete_RadioButton.IsChecked.Value, 
+                      inspect_RadioButton.IsChecked.Value, 
+                      modify_RadioButton.IsChecked.Value with
+                | true,false,false -> trussServices.sendMemberToState l TrussDomain.TrussSelectionMode.Delete s
+                | false,true,false -> trussServices.sendMemberToState l TrussDomain.TrussSelectionMode.Inspect s
+                | false,false,true -> trussServices.sendMemberToState l TrussDomain.TrussSelectionMode.Modify s
+                | _ -> s //add code to throw an error here.
+            do  state <- newState
+                label.Text <- state.ToString()
+        let highlight () = 
+            l.Stroke <- blue 
+            l.StrokeThickness <- 4.0
+        let unhighlight () = 
+            l.Stroke <- black
+            l.StrokeThickness <- 1.0
+        do  l.Stroke <- black
+            l.StrokeThickness <- 1.0
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+            l.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            l.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+            l.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendLineToState l state ))
+        l    
+    let trussForceJoint (p:System.Windows.Point) = 
+        let radius = 4.
+        let e = Ellipse()
+        let highlight () = e.Fill <- clear 
+        let unhighlight () = e.Fill <- green
+        do  e.Stroke <- blue
+            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
+            e.Width <- 2. * radius
+            e.Height <- 2. * radius
+            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+        e
+    let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
+        let l = Line()
+        do  l.Stroke <- green
+            l.StrokeThickness <- 2.0
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+        l
+    let trussSupportJoint (p:System.Windows.Point) = 
+        let radius = 8.
+        let e = Ellipse()
+        let highlight () = e.Fill <- olive 
+        let unhighlight () = e.Fill <- clear
+        do  e.Stroke <- blue
+            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
+            e.Width <- 2. * radius
+            e.Height <- 2. * radius
+            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+        e
+    let support () =
+        let path = Path()            
+        do  path.Stroke <- black
+            path.Fill <- olive
+            path.Opacity <- 0.5
+            path.StrokeThickness <- 1.
+        path
         // Wolfram result 
     let result_Viewbox image =                    
         let vb = Viewbox()   
@@ -1141,8 +1148,7 @@ type TrussAnalysis() as this  =
     let sendPointToForceBuilder (p:System.Windows.Point) s = trussServices.sendPointToForceBuilder p s
     let sendPointToPinSupportBuilder (p:System.Windows.Point) s = trussServices.sendPointToPinSupportBuilder p s
     let sendPointToRollerSupportBuilder (p:System.Windows.Point) s = trussServices.sendPointToRollerSupportBuilder p s
-    let sendMagnitudeToForceBuilder m s = trussServices.sendMagnitudeToForceBuilder m s
-    
+    let sendMagnitudeToForceBuilder m s = trussServices.sendMagnitudeToForceBuilder m s    
     // For supports, set the initial magnitude to 0.0 until the truss reaction forces are evaluated.
     let sendMagnitudeToSupportBuilder m s = trussServices.sendMagnitudeToSupportBuilder m s
         // Draw
@@ -1396,29 +1402,29 @@ type TrussAnalysis() as this  =
                                                 pinSupport_RadioButton.IsChecked <- Nullable true
                     | _ -> // Logic for Selection Mode radio buttons
                         match delete_RadioButton.IsChecked.Value, 
-                              analyze_RadioButton.IsChecked.Value, 
+                              inspect_RadioButton.IsChecked.Value, 
                               modify_RadioButton.IsChecked.Value, 
                               delete_RadioButton.IsMouseOver, 
-                              analyze_RadioButton.IsMouseOver,
+                              inspect_RadioButton.IsMouseOver,
                               modify_RadioButton.IsMouseOver
                               with 
                         | true,false,false, true,false,false
                         | false,true,false, true,false,false 
                         | false,false,true, true,false,false ->  
                             delete_RadioButton.IsChecked <- Nullable true
-                            analyze_RadioButton.IsChecked <- Nullable false
+                            inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable false
                         | true,false,false, false,true,false
                         | false,true,false, false,true,false 
                         | false,false,true, false,true,false ->                        
                             delete_RadioButton.IsChecked <- Nullable false 
-                            analyze_RadioButton.IsChecked <- Nullable true
+                            inspect_RadioButton.IsChecked <- Nullable true
                             modify_RadioButton.IsChecked <- Nullable false
                         | true,false,false, false,false,true
                         | false,true,false, false,false,true 
                         | false,false,true, false,false,true ->                        
                             delete_RadioButton.IsChecked <- Nullable false 
-                            analyze_RadioButton.IsChecked <- Nullable false
+                            inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable true
                         | _ -> ()
                             
