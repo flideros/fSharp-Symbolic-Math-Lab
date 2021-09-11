@@ -107,6 +107,7 @@ module TrussDomain =
     type SendPointToPinSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState    
     type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
@@ -127,7 +128,8 @@ module TrussDomain =
          sendPointToPinSupportBuilder:SendPointToPinSupportBuilder;
          sendMagnitudeToSupportBuilder:SendMagnitudeToSupportBuilder;
          setTrussMode:SetTrussMode;
-         sendMemberToState:SendMemberToState}
+         sendMemberToState:SendMemberToState;
+         sendForceToState:SendForceToState}
 
 module TrussImplementation = 
     open TrussDomain
@@ -440,7 +442,7 @@ module TrussServices =
         | TrussState  ts -> 
             match ts.mode with
             | Settings -> state
-            | Selection -> // I need to add some controls to capture truss selection mode \/
+            | Selection -> 
                 {truss = ts.truss; members = Some m; forces = None; supports = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
@@ -448,9 +450,51 @@ module TrussServices =
             | ForceBuild -> state
             | SupportBuild -> state         
         | BuildState  bs -> state
-        | SelectionState  ss -> ss |> SelectionState
+        | SelectionState  ss -> 
+            {truss = ss.truss; members = Some m; forces = None; supports = None; mode = sm} 
+            |> SelectionState
+            
         | ErrorState  es -> state
-
+    let sendForceToState (l:System.Windows.Shapes.Line) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
+        let p1,p2 =  {x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y}                    
+        match state with 
+        | TrussState  ts -> 
+            match ts.mode with
+            | Settings -> state
+            | Selection -> 
+                let f = 
+                    let t1 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p2 && x.direction.Y = getYFrom p2) ts.truss.forces                    
+                    let t2 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p2 && x.direction.Y = getYFrom p2) ts.truss.forces
+                    let t3 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ts.truss.forces                    
+                    let t4 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ts.truss.forces
+                    match t1,t2,t3,t4 with
+                    | Some _f, None, None, None -> t1
+                    | None, Some _f, None, None -> t2
+                    | None, None, Some _f, None -> t3
+                    | None, None, None, Some _f -> t4                    
+                    | _ -> None
+                {truss = ts.truss; members = None; forces = f; supports = None; mode = sm} 
+                |> SelectionState
+            | Analysis -> state
+            | MemberBuild -> state
+            | ForceBuild -> state
+            | SupportBuild -> state         
+        | BuildState  bs -> state
+        | SelectionState  ss -> 
+            let f = 
+                let t1 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p2 && x.direction.Y = getYFrom p2) ss.truss.forces                    
+                let t2 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p2 && x.direction.Y = getYFrom p2) ss.truss.forces
+                let t3 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ss.truss.forces                    
+                let t4 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ss.truss.forces
+                match t1,t2,t3,t4 with
+                | Some _f, None, None, None -> t1
+                | None, Some _f, None, None -> t2
+                | None, None, Some _f, None -> t3
+                | None, None, None, Some _f -> t4                    
+                | _ -> None
+            {truss = ss.truss; members = None; forces = f; supports = None; mode = sm} 
+            |> SelectionState
+        | ErrorState  es -> state
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
 
     let createServices () = 
@@ -471,7 +515,8 @@ module TrussServices =
         sendPointToPinSupportBuilder = sendPointToPinSupportBuilder;
         sendMagnitudeToSupportBuilder = sendMagnitudeToSupportBuilder;
         setTrussMode = setTrussMode;
-        sendMemberToState = sendMemberToState}
+        sendMemberToState = sendMemberToState;
+        sendForceToState = sendForceToState}
 
 type TrussAnalysis() as this  =  
     inherit UserControl()    
@@ -534,9 +579,8 @@ type TrussAnalysis() as this  =
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
-        l
-        
-        // Orgin ang grid
+        l        
+        // Orgin and grid
     let orgin (p:System.Windows.Point) = 
         let radius = 8.
         let line1 = Line()
@@ -1065,6 +1109,36 @@ type TrussAnalysis() as this  =
         e
     let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
+        let sendLineToState l s =  
+            let newState = 
+                match delete_RadioButton.IsChecked.Value, 
+                      inspect_RadioButton.IsChecked.Value, 
+                      modify_RadioButton.IsChecked.Value with
+                | true,false,false -> trussServices.sendForceToState l TrussDomain.TrussSelectionMode.Delete s
+                | false,true,false -> trussServices.sendForceToState l TrussDomain.TrussSelectionMode.Inspect s
+                | false,false,true -> trussServices.sendForceToState l TrussDomain.TrussSelectionMode.Modify s
+                | _ -> s //add code to throw an error here.
+            do  state <- newState
+                label.Text <- state.ToString()
+        let highlight () = 
+            l.Stroke <- red 
+            l.StrokeThickness <- 4.0
+        let unhighlight () = 
+            l.Stroke <- black
+            l.StrokeThickness <- 2.0
+        do  l.Stroke <- green
+            l.StrokeThickness <- 2.0
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+            l.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            l.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+            l.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendLineToState l state ))
+        l
+    let trussForceDirection (p1:System.Windows.Point, p2:System.Windows.Point) = 
+        let l = Line()        
         do  l.Stroke <- green
             l.StrokeThickness <- 2.0
             l.Visibility <- Visibility.Visible
@@ -1185,18 +1259,18 @@ type TrussAnalysis() as this  =
         | true -> 
             let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle) * Math.PI/180.)), p.Y - (length * sin ((dir - angle) * Math.PI/180.)))
             let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle) * Math.PI/180.)), p.Y - (length * sin ((dir + angle) * Math.PI/180.)))
-            let l1 = trussForce (p,p1)
-            let l2 = trussForce (p,p2)
-            let l3 = trussForce (p1,p2)
+            let l1 = trussForceDirection (p,p1)
+            let l2 = trussForceDirection (p,p2)
+            let l3 = trussForceDirection (p1,p2)
             do  canvas.Children.Add(l1) |> ignore
                 canvas.Children.Add(l2) |> ignore
                 canvas.Children.Add(l3) |> ignore
         | false -> 
             let p1 = System.Windows.Point(p.X - (length * cos ((dir - angle) * Math.PI/180.)), p.Y + (length * sin ((dir - angle) * Math.PI/180.)))
             let p2 = System.Windows.Point(p.X - (length * cos ((dir + angle) * Math.PI/180.)), p.Y + (length * sin ((dir + angle) * Math.PI/180.)))
-            let l1 = trussForce (p,p1)
-            let l2 = trussForce (p,p2)
-            let l3 = trussForce (p1,p2)
+            let l1 = trussForceDirection (p,p1)
+            let l2 = trussForceDirection (p,p2)
+            let l3 = trussForceDirection (p1,p2)
             do  canvas.Children.Add(l1) |> ignore
                 canvas.Children.Add(l2) |> ignore
                 canvas.Children.Add(l3) |> ignore    
