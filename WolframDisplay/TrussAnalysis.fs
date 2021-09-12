@@ -109,6 +109,7 @@ module TrussDomain =
     type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
         {checkSupportTypeIsRoller:CheckSupportTypeIsRoller
@@ -129,7 +130,8 @@ module TrussDomain =
          sendMagnitudeToSupportBuilder:SendMagnitudeToSupportBuilder;
          setTrussMode:SetTrussMode;
          sendMemberToState:SendMemberToState;
-         sendForceToState:SendForceToState}
+         sendForceToState:SendForceToState;
+         sendSupportToState:SendSupportToState}
 
 module TrussImplementation = 
     open TrussDomain
@@ -495,6 +497,52 @@ module TrussServices =
             {truss = ss.truss; members = None; forces = f; supports = None; mode = sm} 
             |> SelectionState
         | ErrorState  es -> state
+    let sendSupportToState (path:System.Windows.Shapes.Path) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
+        //let p1,p2 =  {x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y}                    
+        let p = path.Tag :?> System.Windows.Point
+        let j = makeJointFrom p
+        match state with 
+        | TrussState  ts -> 
+            match ts.mode with
+            | Settings -> state
+            | Selection -> 
+                let spt = 
+                    List.tryFind (                     
+                        fun x -> 
+                            let f = 
+                                match x with
+                                | Roller r -> r
+                                | Pin (p1,_) -> p1
+                            f.joint = j                            
+                            ) ts.truss.supports
+                let s =  
+                    match spt with
+                    | Some _s -> spt                    
+                    | _ -> None
+                {truss = ts.truss; members = None; forces = None; supports = s; mode = sm} 
+                |> SelectionState
+            | Analysis -> state
+            | MemberBuild -> state
+            | ForceBuild -> state
+            | SupportBuild -> state         
+        | BuildState  bs -> state
+        | SelectionState  ss -> 
+            let spt = 
+                List.tryFind (                     
+                    fun x -> 
+                        let f = 
+                            match x with
+                            | Roller r -> r
+                            | Pin (p1,_) -> p1
+                        f.joint = j                            
+                        ) ss.truss.supports
+            let s =  
+                match spt with
+                | Some _s -> spt                    
+                | _ -> None
+            {truss = ss.truss; members = None; forces = None; supports = s; mode = sm} 
+            |> SelectionState
+        | ErrorState  es -> state
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
 
     let createServices () = 
@@ -516,7 +564,8 @@ module TrussServices =
         sendMagnitudeToSupportBuilder = sendMagnitudeToSupportBuilder;
         setTrussMode = setTrussMode;
         sendMemberToState = sendMemberToState;
-        sendForceToState = sendForceToState}
+        sendForceToState = sendForceToState;
+        sendSupportToState = sendSupportToState}
 
 type TrussAnalysis() as this  =  
     inherit UserControl()    
@@ -1161,10 +1210,30 @@ type TrussAnalysis() as this  =
         e
     let support () =
         let path = Path()            
+        let sendPathToState p s =  
+            let newState = 
+                match delete_RadioButton.IsChecked.Value, 
+                      inspect_RadioButton.IsChecked.Value, 
+                      modify_RadioButton.IsChecked.Value with
+                | true,false,false -> trussServices.sendSupportToState p TrussDomain.TrussSelectionMode.Delete s
+                | false,true,false -> trussServices.sendSupportToState p TrussDomain.TrussSelectionMode.Inspect s
+                | false,false,true -> trussServices.sendSupportToState p TrussDomain.TrussSelectionMode.Modify s
+                | _ -> s //add code to throw an error here.
+            do  state <- newState
+                label.Text <- state.ToString()
+        let highlight () = 
+            path.Stroke <- red 
+            path.StrokeThickness <- 4.0
+        let unhighlight () = 
+            path.Stroke <- black
+            path.StrokeThickness <- 2.0
         do  path.Stroke <- black
             path.Fill <- olive
             path.Opacity <- 0.5
             path.StrokeThickness <- 1.
+            path.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
+            path.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
+            path.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendPathToState path state ))
         path
         // Wolfram result 
     let result_Viewbox image =                    
@@ -1299,6 +1368,7 @@ type TrussAnalysis() as this  =
                 pfc.Add(pf)
                 pg.Figures <- pfc
                 support.Data <- pg
+                support.Tag <- p
             support
         do  canvas.Children.Add(support) |> ignore
     let drawSupport (support:TrussDomain.Support) = 
