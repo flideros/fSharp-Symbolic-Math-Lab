@@ -101,8 +101,9 @@ module TrussDomain =
     type GetPointFromSupport = Support -> System.Windows.Point
     type GetDirectionFromSupport = Support -> float    
     type GetSelectedMemberFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
-    type GetSelectedForceFromState = TrussAnalysisState -> Force option
-    type GetSelectedSupportFromState = TrussAnalysisState -> Support option
+    type GetSelectedForceFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
+    type GetSelectedSupportFromState = TrussAnalysisState -> (System.Windows.Point * float * bool) option
+    
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -111,8 +112,10 @@ module TrussDomain =
     type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState    
     type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
-    type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    
+    type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
+    type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
         {checkSupportTypeIsRoller:CheckSupportTypeIsRoller
@@ -134,10 +137,12 @@ module TrussDomain =
          sendPointToRollerSupportBuilder:SendPointToRollerSupportBuilder;
          sendPointToPinSupportBuilder:SendPointToPinSupportBuilder;
          sendMagnitudeToSupportBuilder:SendMagnitudeToSupportBuilder;
-         setTrussMode:SetTrussMode;
          sendMemberToState:SendMemberToState;
          sendForceToState:SendForceToState;
-         sendSupportToState:SendSupportToState}
+         sendSupportToState:SendSupportToState;
+         setTrussMode:SetTrussMode;
+         setSelectionMode:SetSelectionMode
+         }
 
 module TrussImplementation = 
     open TrussDomain
@@ -341,13 +346,13 @@ module TrussServices =
         match state with
         | TrussDomain.TrussState ts -> None
         | TrussDomain.BuildState bs-> None
-        | TrussDomain.SelectionState ss -> ss.forces
-        | TrussDomain.ErrorState es -> None
-    let getSelectedSupportFromState (state :TrussAnalysisState) = 
-        match state with
-        | TrussDomain.TrussState ts -> None
-        | TrussDomain.BuildState bs-> None
-        | TrussDomain.SelectionState ss -> ss.supports
+        | TrussDomain.SelectionState ss -> 
+            match ss.forces with
+            | None -> None
+            | Some f -> 
+                let a,b = f.joint,f.direction
+                (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
+                 System.Windows.Point (x = (b.X),y = (b.Y))) |> Some
         | TrussDomain.ErrorState es -> None
     let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
@@ -381,7 +386,25 @@ module TrussServices =
         match support with
         | Pin (f,_) -> (getDirectionFromForce f) - 90.
         | Roller f -> (getDirectionFromForce f) - 90.
+    let getSelectedSupportFromState (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState ts -> None
+        | TrussDomain.BuildState bs-> None
+        | TrussDomain.SelectionState ss -> 
+            match ss.supports with
+            | None -> None
+            | Some spt -> 
+                match spt with
+                | Roller r -> 
+                    let p = System.Windows.Point (x = getXFrom r.joint, y = getYFrom r.joint)
+                    let d = getDirectionFromSupport spt
+                    Some (p,d,true)
+                | Pin (p1,p2) -> 
+                    let p = System.Windows.Point (x = getXFrom p1.joint, y = getYFrom p1.joint)
+                    let d = getDirectionFromSupport spt
+                    Some (p,d,true)
 
+        | TrussDomain.ErrorState es -> None
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -574,7 +597,12 @@ module TrussServices =
             |> SelectionState
         | ErrorState  es -> state
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
-
+    let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
+        match state with 
+        | TrussState ts -> state
+        | BuildState ts -> state
+        | SelectionState ts -> SelectionState {ts with mode = mode}
+        | ErrorState ts -> state
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         getJointSeqFromTruss = getJointSeqFromTruss;
@@ -595,10 +623,12 @@ module TrussServices =
         sendPointToRollerSupportBuilder = sendPointToRollerSupportBuilder;
         sendPointToPinSupportBuilder = sendPointToPinSupportBuilder;
         sendMagnitudeToSupportBuilder = sendMagnitudeToSupportBuilder;
-        setTrussMode = setTrussMode;
         sendMemberToState = sendMemberToState;
         sendForceToState = sendForceToState;
-        sendSupportToState = sendSupportToState}
+        sendSupportToState = sendSupportToState;
+        setSelectionMode = setSelectionMode;
+        setTrussMode = setTrussMode
+        }
 
 type TrussAnalysis() as this  =  
     inherit UserControl()    
@@ -1200,6 +1230,17 @@ type TrussAnalysis() as this  =
             e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         e
+    let trussForceSelected (p1:System.Windows.Point, p2:System.Windows.Point) = 
+        let l = Line() 
+        do  l.Stroke <- red
+            l.StrokeThickness <- 4.0
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+            
+        l    
     let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
         let sendLineToState l s =  
@@ -1252,6 +1293,13 @@ type TrussAnalysis() as this  =
             e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         e
+    let trussSupportSelected () =
+        let path = Path()  
+        do  path.Stroke <- red
+            path.Fill <- olive
+            path.Opacity <- 0.5
+            path.StrokeThickness <- 4.
+        path
     let support () =
         let path = Path()            
         let sendPathToState p s =  
@@ -1440,6 +1488,47 @@ type TrussAnalysis() as this  =
             let p1,p2 = m
             let l = trussMemberSelected (p1,p2)
             do  canvas.Children.Add(l) |> ignore
+    let drawSelectedForce s =
+        let selectedForce = TrussServices.getSelectedForceFromState
+        match selectedForce s with 
+        | None -> () 
+        | Some f -> 
+            let p1,p2 = f
+            let l = trussForceSelected (p1,p2)
+            do  canvas.Children.Add(l) |> ignore
+    let drawSelectedSupport s =
+        let selectedSupport = TrussServices.getSelectedSupportFromState
+        match selectedSupport s with 
+        | None -> () 
+        | Some s -> 
+            let p,dir,isRollerSupportType = s
+            let angle = 45.
+            let length = 25.         
+            let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir - angle - 90.) * Math.PI/180.)))
+            let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir + angle - 90.) * Math.PI/180.)))
+            let support =             
+                let pg = PathGeometry()
+                let pfc = PathFigureCollection()
+                let pf = PathFigure()
+                let psc = PathSegmentCollection()
+                let l1 = LineSegment(Point=p1)
+                let l2 = LineSegment(Point=p2)
+                let a2 = ArcSegment(Point=p2,IsLargeArc=false,Size=Size(30.,30.))
+                let l3 = LineSegment(Point=p)
+                let support = trussSupportSelected ()            
+                do  psc.Add(l1)
+                    match rollerSupport_RadioButton.IsChecked.Value || isRollerSupportType with
+                    | true -> psc.Add(a2)
+                    | false -> psc.Add(l2)                    
+                    psc.Add(l3)
+                    pf.Segments <- psc
+                    pf.StartPoint <- p
+                    pfc.Add(pf)
+                    pg.Figures <- pfc
+                    support.Data <- pg
+                    //support.Tag <- p
+                support
+            do  canvas.Children.Add(support) |> ignore
     let drawTruss s =
         let orginPoint = 
             let x = Double.Parse xOrgin_TextBlock.Text
@@ -1459,7 +1548,8 @@ type TrussAnalysis() as this  =
         Seq.iter (fun f -> drawForce f) forces
         Seq.iter (fun s -> drawSupport s) supports
         drawSelectedMember s
-        
+        drawSelectedForce s
+        drawSelectedSupport s
         // Set
     let setGraphicsFromKernel (k:MathKernel) =
         let rec getImages i =
@@ -1595,9 +1685,11 @@ type TrussAnalysis() as this  =
                     | true,false, true,false
                     | false,true, true,false -> rollerSupport_RadioButton.IsChecked <- Nullable true
                                                 pinSupport_RadioButton.IsChecked <- Nullable false
+                                                state
                     | true,false, false,true
                     | false,true, false,true -> rollerSupport_RadioButton.IsChecked <- Nullable false 
                                                 pinSupport_RadioButton.IsChecked <- Nullable true
+                                                state
                     | _ -> // Logic for Selection Mode radio buttons
                         match delete_RadioButton.IsChecked.Value, 
                               inspect_RadioButton.IsChecked.Value, 
@@ -1612,21 +1704,25 @@ type TrussAnalysis() as this  =
                             delete_RadioButton.IsChecked <- Nullable true
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable false
+                            trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Delete state
                         | true,false,false, false,true,false
                         | false,true,false, false,true,false 
                         | false,false,true, false,true,false ->                        
                             delete_RadioButton.IsChecked <- Nullable false 
                             inspect_RadioButton.IsChecked <- Nullable true
                             modify_RadioButton.IsChecked <- Nullable false
+                            trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
+
                         | true,false,false, false,false,true
                         | false,true,false, false,false,true 
                         | false,false,true, false,false,true ->                        
                             delete_RadioButton.IsChecked <- Nullable false 
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable true
-                        | _ -> ()
+                            trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Modify state
+                        | _ -> state
                             
-                    state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
+                    //state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
             
             do  state <- newState
                 label.Text <- state.ToString() 
