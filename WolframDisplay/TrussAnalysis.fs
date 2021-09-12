@@ -100,6 +100,9 @@ module TrussDomain =
     type GetDirectionFromForce = Force -> float
     type GetPointFromSupport = Support -> System.Windows.Point
     type GetDirectionFromSupport = Support -> float    
+    type GetSelectedMemberFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
+    type GetSelectedForceFromState = TrussAnalysisState -> Force option
+    type GetSelectedSupportFromState = TrussAnalysisState -> Support option
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -122,6 +125,9 @@ module TrussDomain =
          getPointFromForce:GetPointFromForce;
          getDirectionFromForce:GetDirectionFromForce;
          getTrussFromState:GetTrussFromState;
+         getSelectedMemberFromState:GetSelectedMemberFromState
+         getSelectedForceFromState:GetSelectedForceFromState
+         getSelectedSupportFromState:GetSelectedSupportFromState
          sendPointToMemberBuilder:SendPointToMemberBuilder;
          sendPointToForceBuilder:SendPointToForceBuilder;
          sendMagnitudeToForceBuilder:SendMagnitudeToForceBuilder;
@@ -319,18 +325,42 @@ module TrussServices =
         | TrussDomain.BuildState bs-> bs.truss
         | TrussDomain.SelectionState ss -> ss.truss
         | TrussDomain.ErrorState es -> es.truss
+    let getSelectedMemberFromState (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState ts -> None
+        | TrussDomain.BuildState bs-> None
+        | TrussDomain.SelectionState ss -> 
+            match ss.members with
+            | None -> None
+            | Some m -> 
+                let a,b = m
+                (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
+                 System.Windows.Point (x = (getXFrom b),y = (getYFrom b))) |> Some
+        | TrussDomain.ErrorState es -> None
+    let getSelectedForceFromState (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState ts -> None
+        | TrussDomain.BuildState bs-> None
+        | TrussDomain.SelectionState ss -> ss.forces
+        | TrussDomain.ErrorState es -> None
+    let getSelectedSupportFromState (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState ts -> None
+        | TrussDomain.BuildState bs-> None
+        | TrussDomain.SelectionState ss -> ss.supports
+        | TrussDomain.ErrorState es -> None
     let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
        let l = List.map (fun x -> pointMap x ) j
        List.toSeq l
     let getMemberSeqFromTruss (t:Truss) =
-       let memberMap (m:Member) = 
+        let memberMap (m:Member) = 
            let a,b = m
            (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
             System.Windows.Point (x = (getXFrom b),y = (getYFrom b)))
-       let l = List.map (fun x -> memberMap x ) t.members
-       List.toSeq l
+        let l = List.map (fun x -> memberMap x ) t.members
+        List.toSeq l
     let getPointFromMemberBuilder (mb:MemberBuilder) = 
         let j,_ = mb
         let p = System.Windows.Point(getXFrom j, getYFrom j)
@@ -546,16 +576,19 @@ module TrussServices =
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
 
     let createServices () = 
-       {checkSupportTypeIsRoller = checkSupportTypeIsRoller
+       {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         getJointSeqFromTruss = getJointSeqFromTruss;
         getMemberSeqFromTruss = getMemberSeqFromTruss;
         getPointFromMemberBuilder = getPointFromMemberBuilder;
         getTrussFromState = getTrussFromState;
-        getPointFromForceBuilder = getPointFromForceBuilder
-        getPointFromForce = getPointFromForce
-        getDirectionFromForce = getDirectionFromForce
+        getPointFromForceBuilder = getPointFromForceBuilder;
+        getPointFromForce = getPointFromForce;
+        getDirectionFromForce = getDirectionFromForce;
         getPointFromSupport = getPointFromSupport;
         getDirectionFromSupport = getDirectionFromSupport;
+        getSelectedMemberFromState = getSelectedMemberFromState;
+        getSelectedForceFromState = getSelectedForceFromState;
+        getSelectedSupportFromState = getSelectedSupportFromState;
         sendPointToMemberBuilder = sendPointToMemberBuilder;
         sendPointToForceBuilder = sendPointToForceBuilder;
         sendMagnitudeToForceBuilder = sendMagnitudeToForceBuilder;
@@ -1114,6 +1147,17 @@ type TrussAnalysis() as this  =
             e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
             e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
         e
+    let trussMemberSelected (p1:System.Windows.Point, p2:System.Windows.Point) = 
+        let l = Line() 
+        do  l.Stroke <- black
+            l.StrokeThickness <- 4.0
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y
+            
+        l    
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line() 
         let sendLineToState l s =  
@@ -1388,6 +1432,14 @@ type TrussAnalysis() as this  =
         do  drawBuildForceJoint p
             drawBuildForceLine (p,vp)
             drawBuildForceDirection (arrowPoint,dir,force.magnitude)
+    let drawSelectedMember s =
+        let selectedMember = TrussServices.getSelectedMemberFromState
+        match selectedMember s with 
+        | None -> () 
+        | Some m -> 
+            let p1,p2 = m
+            let l = trussMemberSelected (p1,p2)
+            do  canvas.Children.Add(l) |> ignore
     let drawTruss s =
         let orginPoint = 
             let x = Double.Parse xOrgin_TextBlock.Text
@@ -1406,6 +1458,8 @@ type TrussAnalysis() as this  =
         Seq.iter (fun j -> drawJoint j) joints
         Seq.iter (fun f -> drawForce f) forces
         Seq.iter (fun s -> drawSupport s) supports
+        drawSelectedMember s
+        
         // Set
     let setGraphicsFromKernel (k:MathKernel) =
         let rec getImages i =
@@ -1653,7 +1707,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildMember bm -> ()
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
-        | TrussDomain.SelectionState ss -> ()
+        | TrussDomain.SelectionState ss -> drawTruss state
         | TrussDomain.ErrorState es -> 
             match es.errors with 
             | [TrussDomain.NoJointSelected] -> 
