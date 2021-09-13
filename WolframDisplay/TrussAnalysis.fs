@@ -78,7 +78,7 @@ module TrussDomain =
     // Data associated with each state     
     type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
-    type SelectionStateData = {truss:Truss; members:Member option; forces:Force option; supports:Support option; mode:TrussSelectionMode}    
+    type SelectionStateData = {truss:Truss; members:Member list option; forces:Force list option; supports:Support list option; mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     
     // States
@@ -117,6 +117,8 @@ module TrussDomain =
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
 
+    type RemoveTrussPartFromTruss = TrussAnalysisState -> TrussAnalysisState
+
     type TrussServices = 
         {checkSupportTypeIsRoller:CheckSupportTypeIsRoller
          getJointSeqFromTruss:GetJointSeqFromTruss;
@@ -141,7 +143,8 @@ module TrussDomain =
          sendForceToState:SendForceToState;
          sendSupportToState:SendSupportToState;
          setTrussMode:SetTrussMode;
-         setSelectionMode:SetSelectionMode
+         setSelectionMode:SetSelectionMode;
+         removeTrussPartFromTruss:RemoveTrussPartFromTruss
          }
 
 module TrussImplementation = 
@@ -176,6 +179,19 @@ module TrussImplementation =
         | Force f -> {t with forces = f::t.forces}
         | Support s -> {t with supports = s::t.supports}
     
+    let removeTrussPartFromTruss (t:Truss) (p:TrussPart option)  = 
+        match p with 
+        | Some (Member m) -> 
+            let mOut = List.except [m] t.members
+            {t with members = mOut}        
+        | Some (Force f) -> 
+            let fOut = List.except [f] t.forces
+            {t with forces = fOut}
+        | Some (Support s) -> 
+            let sOut = List.except [s] t.supports
+            {t with supports = sOut}
+        | None -> t
+
     // Workflow for building a member
     let makeMemberBuilderFrom (j:Joint) = MemberBuilder (j,None)
     let addJointToMemberBuilder (j:Joint) (mb:MemberBuilder) = 
@@ -338,7 +354,7 @@ module TrussServices =
             match ss.members with
             | None -> None
             | Some m -> 
-                let a,b = m
+                let a,b = m.Head
                 (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
                  System.Windows.Point (x = (getXFrom b),y = (getYFrom b))) |> Some
         | TrussDomain.ErrorState es -> None
@@ -350,7 +366,7 @@ module TrussServices =
             match ss.forces with
             | None -> None
             | Some f -> 
-                let a,b = f.joint,f.direction
+                let a,b = f.Head.joint,f.Head.direction
                 (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
                  System.Windows.Point (x = (b.X),y = (b.Y))) |> Some
         | TrussDomain.ErrorState es -> None
@@ -394,17 +410,18 @@ module TrussServices =
             match ss.supports with
             | None -> None
             | Some spt -> 
-                match spt with
+                match spt.Head with
                 | Roller r -> 
                     let p = System.Windows.Point (x = getXFrom r.joint, y = getYFrom r.joint)
-                    let d = getDirectionFromSupport spt
+                    let d = getDirectionFromSupport spt.Head
                     Some (p,d,true)
-                | Pin (p1,p2) -> 
+                | Pin (p1,_p2) -> 
                     let p = System.Windows.Point (x = getXFrom p1.joint, y = getYFrom p1.joint)
-                    let d = getDirectionFromSupport spt
-                    Some (p,d,true)
+                    let d = getDirectionFromSupport spt.Head
+                    Some (p,d,false)
 
         | TrussDomain.ErrorState es -> None
+    
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -498,7 +515,7 @@ module TrussServices =
             match ts.mode with
             | Settings -> state
             | Selection -> 
-                {truss = ts.truss; members = Some m; forces = None; supports = None; mode = sm} 
+                {truss = ts.truss; members = Some [m]; forces = None; supports = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
             | MemberBuild -> state
@@ -506,7 +523,7 @@ module TrussServices =
             | SupportBuild -> state         
         | BuildState  bs -> state
         | SelectionState  ss -> 
-            {truss = ss.truss; members = Some m; forces = None; supports = None; mode = sm} 
+            {truss = ss.truss; members = Some [m]; forces = None; supports = None; mode = sm} 
             |> SelectionState
             
         | ErrorState  es -> state
@@ -523,11 +540,12 @@ module TrussServices =
                     let t3 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ts.truss.forces                    
                     let t4 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ts.truss.forces
                     match t1,t2,t3,t4 with
-                    | Some _f, None, None, None -> t1
-                    | None, Some _f, None, None -> t2
-                    | None, None, Some _f, None -> t3
-                    | None, None, None, Some _f -> t4                    
+                    | Some f, None, None, None -> Some [f]
+                    | None, Some f, None, None -> Some [f]
+                    | None, None, Some f, None -> Some [f]
+                    | None, None, None, Some f -> Some [f]                    
                     | _ -> None
+                
                 {truss = ts.truss; members = None; forces = f; supports = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
@@ -542,10 +560,10 @@ module TrussServices =
                 let t3 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ss.truss.forces                    
                 let t4 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p1 && x.direction.Y = getYFrom p1) ss.truss.forces
                 match t1,t2,t3,t4 with
-                | Some _f, None, None, None -> t1
-                | None, Some _f, None, None -> t2
-                | None, None, Some _f, None -> t3
-                | None, None, None, Some _f -> t4                    
+                | Some f, None, None, None -> Some [f]
+                | None, Some f, None, None -> Some [f]
+                | None, None, Some f, None -> Some [f]
+                | None, None, None, Some f -> Some [f]                    
                 | _ -> None
             {truss = ss.truss; members = None; forces = f; supports = None; mode = sm} 
             |> SelectionState
@@ -570,7 +588,7 @@ module TrussServices =
                             ) ts.truss.supports
                 let s =  
                     match spt with
-                    | Some _s -> spt                    
+                    | Some s -> Some [s]                    
                     | _ -> None
                 {truss = ts.truss; members = None; forces = None; supports = s; mode = sm} 
                 |> SelectionState
@@ -591,11 +609,12 @@ module TrussServices =
                         ) ss.truss.supports
             let s =  
                 match spt with
-                | Some _s -> spt                    
+                | Some s -> Some [s]                    
                 | _ -> None
             {truss = ss.truss; members = None; forces = None; supports = s; mode = sm} 
             |> SelectionState
         | ErrorState  es -> state
+    
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
         match state with 
@@ -603,6 +622,22 @@ module TrussServices =
         | BuildState ts -> state
         | SelectionState ts -> SelectionState {ts with mode = mode}
         | ErrorState ts -> state
+    
+    let removeTrussPart (state :TrussAnalysisState) =
+        match state with 
+        | SelectionState ss -> 
+            let part = 
+                match ss.members, ss.forces, ss.supports with
+                | Some m,None,None -> Some (Member m.Head)
+                | None,Some f,None -> Some (Force f.Head)
+                | None,None,Some s -> Some (Support s.Head)
+                | _ -> None
+            let newTruss = removeTrussPartFromTruss ss.truss part
+            
+            {truss = newTruss; mode = Selection} |> TrussState
+            
+        | _ -> state
+
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         getJointSeqFromTruss = getJointSeqFromTruss;
@@ -627,7 +662,8 @@ module TrussServices =
         sendForceToState = sendForceToState;
         sendSupportToState = sendSupportToState;
         setSelectionMode = setSelectionMode;
-        setTrussMode = setTrussMode
+        setTrussMode = setTrussMode;
+        removeTrussPartFromTruss = removeTrussPart
         }
 
 type TrussAnalysis() as this  =  
@@ -1005,13 +1041,23 @@ type TrussAnalysis() as this  =
         let tb = TextBlock(Text="Inspect", FontSize=15.)            
         do  r.Content <- tb
             r.IsChecked <- false |> Nullable<bool>
-        r    
+        r
     let modify_RadioButton = 
         let r = RadioButton()
         let tb = TextBlock(Text="Modify", FontSize=15.)            
         do  r.Content <- tb
             r.IsChecked <- false |> Nullable<bool>
         r
+    let delete_Button = 
+        let b = Button()
+        let handleClick () = 
+            let newState = trussServices.removeTrussPartFromTruss state            
+            do  state <- newState 
+                label.Text <- newState.ToString()
+        do  b.Content <- "delete"
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b
     let selectionMode_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
@@ -1022,6 +1068,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(delete_RadioButton) |> ignore
             sp.Children.Add(inspect_RadioButton) |> ignore
             sp.Children.Add(modify_RadioButton) |> ignore
+            sp.Children.Add(delete_Button) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
         // Member builder P1
@@ -1704,6 +1751,7 @@ type TrussAnalysis() as this  =
                             delete_RadioButton.IsChecked <- Nullable true
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable false
+                            delete_Button.Visibility <- Visibility.Visible
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Delete state
                         | true,false,false, false,true,false
                         | false,true,false, false,true,false 
@@ -1711,6 +1759,7 @@ type TrussAnalysis() as this  =
                             delete_RadioButton.IsChecked <- Nullable false 
                             inspect_RadioButton.IsChecked <- Nullable true
                             modify_RadioButton.IsChecked <- Nullable false
+                            delete_Button.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
 
                         | true,false,false, false,false,true
@@ -1719,11 +1768,9 @@ type TrussAnalysis() as this  =
                             delete_RadioButton.IsChecked <- Nullable false 
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable true
+                            delete_Button.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Modify state
-                        | _ -> state
-                            
-                    //state //TrussDomain.ErrorState {errors = [TrussDomain.TrussModeError]; truss = getTrussFrom state}
-            
+                        | _ -> state                            
             do  state <- newState
                 label.Text <- state.ToString() 
         | false -> 
@@ -1803,7 +1850,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildMember bm -> ()
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
-        | TrussDomain.SelectionState ss -> drawTruss state
+        | TrussDomain.SelectionState ss -> () //drawTruss state
         | TrussDomain.ErrorState es -> 
             match es.errors with 
             | [TrussDomain.NoJointSelected] -> 
@@ -1996,6 +2043,8 @@ type TrussAnalysis() as this  =
         xDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+        delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+      
 
 module TrussAnalysis = 
     let window =
