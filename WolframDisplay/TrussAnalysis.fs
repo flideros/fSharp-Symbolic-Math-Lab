@@ -1850,7 +1850,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildMember bm -> ()
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
-        | TrussDomain.SelectionState ss -> () //drawTruss state
+        | TrussDomain.SelectionState ss -> drawTruss state
         | TrussDomain.ErrorState es -> 
             match es.errors with 
             | [TrussDomain.NoJointSelected] -> 
