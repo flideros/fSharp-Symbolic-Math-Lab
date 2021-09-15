@@ -95,14 +95,14 @@ module TrussDomain =
     
     // Analysis States
     type AnalysisState =
-        | Truss of TrussStateData
+        | Truss
         | MethodOfJoints of MethodOfJointsAnalysisStateData
     
     type AnalysisStateData = 
-        {truss:Truss; 
-         stability:TrussStability; 
+        {stability:TrussStability list; 
          determinancy:TrussDeterminacy;
-         analysis:AnalysisState}
+         analysis:AnalysisState;
+         truss:Truss}
     
     // States
     type TrussAnalysisState =
@@ -114,7 +114,8 @@ module TrussDomain =
     
     // Services
     type CheckSupportTypeIsRoller = Support -> bool
-    
+    type CheckTruss = Truss -> TrussAnalysisState
+
     type GetJointSeqFromTruss = Truss -> System.Windows.Point seq
     type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
     type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
@@ -144,7 +145,8 @@ module TrussDomain =
     type RemoveTrussPartFromTruss = TrussAnalysisState -> TrussAnalysisState
 
     type TrussServices = 
-        {checkSupportTypeIsRoller:CheckSupportTypeIsRoller
+        {checkSupportTypeIsRoller:CheckSupportTypeIsRoller;
+         checkTruss:CheckTruss;
          getJointSeqFromTruss:GetJointSeqFromTruss;
          getMemberSeqFromTruss:GetMemberSeqFromTruss;
          getPointFromMemberBuilder:GetPointFromMemberBuilder;
@@ -360,6 +362,11 @@ module TrussServices =
     open TrussImplementation
 
     let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false
+    let checkTruss (truss:Truss) = 
+        {truss = truss; 
+         stability = checkTrussStability truss; 
+         determinancy = checkTrussDeterminacy truss;
+         analysis = Truss} |> TrussAnalysisState.AnalysisState
 
     let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
     let makeVectorFrom (point :System.Windows.Point) = Vector(x = point.X, y = point.Y)
@@ -677,6 +684,7 @@ module TrussServices =
 
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
+        checkTruss = checkTruss;
         getJointSeqFromTruss = getJointSeqFromTruss;
         getMemberSeqFromTruss = getMemberSeqFromTruss;
         getPointFromMemberBuilder = getPointFromMemberBuilder;
@@ -1750,7 +1758,7 @@ type TrussAnalysis() as this  =
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
-                    trussServices.setTrussMode TrussDomain.TrussMode.Analysis state
+                    trussServices.checkTruss (trussServices.getTrussFromState state)                    
                 | true,false,false,false,false,false,  false,false,false,false,false,true
                 | false,true,false,false,false,false,  false,false,false,false,false,true
                 | false,false,true,false,false,false,  false,false,false,false,false,true
