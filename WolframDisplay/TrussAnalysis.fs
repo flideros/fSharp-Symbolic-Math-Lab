@@ -63,7 +63,7 @@ module TrussDomain =
     type TrussSelectionMode =
         | Delete
         | Modify
-        | Inspect        
+        | Inspect  
 
     // Types to describe error results
     type Error = 
@@ -74,18 +74,42 @@ module TrussDomain =
         | WrongStateData
         | NoJointSelected
         | Other of string
- 
+
     // Data associated with each state     
     type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
-    type SelectionStateData = {truss:Truss; members:Member list option; forces:Force list option; supports:Support list option; mode:TrussSelectionMode}    
+    type SelectionStateData = 
+        {truss:Truss; 
+         members:Member list option; 
+         forces:Force list option; 
+         supports:Support list option; 
+         mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     
+    // Data associated with each analysis state
+    type MethodOfJointsAnalysisStateData = 
+        {sumForcesX: float;
+         sumForcesY: float;
+         sumMoments: float;
+         memberForce: float list}
+    
+    // Analysis States
+    type AnalysisState =
+        | Truss of TrussStateData
+        | MethodOfJoints of MethodOfJointsAnalysisStateData
+    
+    type AnalysisStateData = 
+        {truss:Truss; 
+         stability:TrussStability; 
+         determinancy:TrussDeterminacy;
+         analysis:AnalysisState}
+    
     // States
-    type TrussAnalysisState =         
+    type TrussAnalysisState =
         | TrussState of TrussStateData
         | BuildState of TrussBuildData
         | SelectionState of SelectionStateData
+        | AnalysisState  of AnalysisStateData
         | ErrorState of ErrorStateData
     
     // Services
@@ -345,6 +369,7 @@ module TrussServices =
         | TrussDomain.TrussState ts -> ts.truss
         | TrussDomain.BuildState bs-> bs.truss
         | TrussDomain.SelectionState ss -> ss.truss
+        | TrussDomain.AnalysisState s -> s.truss
         | TrussDomain.ErrorState es -> es.truss
     let getSelectedMemberFromState (state :TrussAnalysisState) = 
         match state with
@@ -357,6 +382,7 @@ module TrussServices =
                 let a,b = m.Head
                 (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
                  System.Windows.Point (x = (getXFrom b),y = (getYFrom b))) |> Some
+        | TrussDomain.AnalysisState s -> None
         | TrussDomain.ErrorState es -> None
     let getSelectedForceFromState (state :TrussAnalysisState) = 
         match state with
@@ -369,6 +395,7 @@ module TrussServices =
                 let a,b = f.Head.joint,f.Head.direction
                 (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
                  System.Windows.Point (x = (b.X),y = (b.Y))) |> Some
+        | TrussDomain.AnalysisState s -> None
         | TrussDomain.ErrorState es -> None
     let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
@@ -420,6 +447,7 @@ module TrussServices =
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,false)
 
+        | TrussDomain.AnalysisState s -> None
         | TrussDomain.ErrorState es -> None
     
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
@@ -436,6 +464,7 @@ module TrussServices =
                | TrussBuildOp bo -> {buildOp = bo; truss = bs.truss} |> BuildState
            | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}           
        | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+       | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
        | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendPointToForceBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
         match state with 
@@ -450,6 +479,7 @@ module TrussServices =
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState                                     
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendMagnitudeToForceBuilder magnitude (state :TrussAnalysisState) =       
         match state with 
@@ -463,6 +493,7 @@ module TrussServices =
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState       
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendPointToRollerSupportBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
         match state with 
@@ -477,6 +508,7 @@ module TrussServices =
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendPointToPinSupportBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
         match state with 
@@ -494,6 +526,7 @@ module TrussServices =
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendMagnitudeToSupportBuilder magnitude (state :TrussAnalysisState) =       
         match state with 
@@ -507,6 +540,7 @@ module TrussServices =
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState       
             | _ -> ErrorState {errors = [TrussBuildOpFailure]; truss = bs.truss}
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendMemberToState (l:System.Windows.Shapes.Line) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
         let m =  ({x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y})
@@ -525,7 +559,7 @@ module TrussServices =
         | SelectionState  ss -> 
             {truss = ss.truss; members = Some [m]; forces = None; supports = None; mode = sm} 
             |> SelectionState
-            
+        | AnalysisState s -> state    
         | ErrorState  es -> state
     let sendForceToState (l:System.Windows.Shapes.Line) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
         let p1,p2 =  {x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y}                    
@@ -567,6 +601,7 @@ module TrussServices =
                 | _ -> None
             {truss = ss.truss; members = None; forces = f; supports = None; mode = sm} 
             |> SelectionState
+        | AnalysisState s -> state
         | ErrorState  es -> state
     let sendSupportToState (path:System.Windows.Shapes.Path) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
         //let p1,p2 =  {x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y}                    
@@ -613,6 +648,7 @@ module TrussServices =
                 | _ -> None
             {truss = ss.truss; members = None; forces = None; supports = s; mode = sm} 
             |> SelectionState
+        | AnalysisState s -> state
         | ErrorState  es -> state
     
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
@@ -621,6 +657,7 @@ module TrussServices =
         | TrussState ts -> state
         | BuildState ts -> state
         | SelectionState ts -> SelectionState {ts with mode = mode}
+        | AnalysisState s -> state
         | ErrorState ts -> state
     
     let removeTrussPart (state :TrussAnalysisState) =
@@ -1054,7 +1091,9 @@ type TrussAnalysis() as this  =
             let newState = trussServices.removeTrussPartFromTruss state            
             do  state <- newState 
                 label.Text <- newState.ToString()
-        do  b.Content <- "delete"
+        do  b.Content <- "Delete"
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Bold
             b.VerticalAlignment <- VerticalAlignment.Center
             b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
@@ -1831,6 +1870,7 @@ type TrussAnalysis() as this  =
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
+            | TrussDomain.AnalysisState s -> ()
             | TrussDomain.ErrorState es -> 
                 match es.errors with 
                 | [TrussDomain.NoJointSelected] -> ()                    
@@ -1851,6 +1891,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> drawTruss state
+        | TrussDomain.AnalysisState s -> ()
         | TrussDomain.ErrorState es -> 
             match es.errors with 
             | [TrussDomain.NoJointSelected] -> 
@@ -1909,6 +1950,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> ()
+        | TrussDomain.AnalysisState s -> ()
         | TrussDomain.ErrorState es -> ()
     let handleKeyDown (e:Input.KeyEventArgs) =
         match e.Key with 
@@ -2024,6 +2066,7 @@ type TrussAnalysis() as this  =
                         state <- newState
                         label.Text <- newState.ToString()                    
             | TrussDomain.SelectionState ss -> ()
+            | TrussDomain.AnalysisState s -> ()
             | TrussDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
 
@@ -2044,8 +2087,7 @@ type TrussAnalysis() as this  =
         yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
-      
-
+ 
 module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        
