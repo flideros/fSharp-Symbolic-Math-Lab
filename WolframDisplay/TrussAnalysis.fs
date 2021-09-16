@@ -1332,8 +1332,7 @@ type TrussAnalysis() as this  =
             l.X1 <- p1.X
             l.Y1 <- p1.Y
             l.X2 <- p2.X
-            l.Y2 <- p2.Y
-            
+            l.Y2 <- p2.Y            
         l    
     let trussForce (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line()
@@ -1545,7 +1544,7 @@ type TrussAnalysis() as this  =
             let l3 = LineSegment(Point=p)
             let support = support ()            
             do  psc.Add(l1)
-                match rollerSupport_RadioButton.IsChecked.Value || isRollerSupportType with
+                match isRollerSupportType with
                 | true -> psc.Add(a2)
                 | false -> psc.Add(l2)                    
                 psc.Add(l3)
@@ -1611,7 +1610,7 @@ type TrussAnalysis() as this  =
                 let l3 = LineSegment(Point=p)
                 let support = trussSupportSelected ()            
                 do  psc.Add(l1)
-                    match rollerSupport_RadioButton.IsChecked.Value || isRollerSupportType with
+                    match isRollerSupportType with
                     | true -> psc.Add(a2)
                     | false -> psc.Add(l2)                    
                     psc.Add(l3)
@@ -2067,7 +2066,7 @@ type TrussAnalysis() as this  =
                             | true -> sendMagnitudeToSupportBuilder (mag,None) state |> sendPointToRollerSupportBuilder dirPoint
                             | false -> sendMagnitudeToSupportBuilder (mag,Some mag) state |> sendPointToPinSupportBuilder dirPoint
                         state <- newState
-                        drawBuildSupport (arrowPoint,dir,false)
+                        drawBuildSupport (arrowPoint,dir,rollerSupport_RadioButton.IsChecked.Value)
                         label.Text <-  newState.ToString()
                     | false -> 
                         let newState = sendMagnitudeToSupportBuilder (mag,None) state
