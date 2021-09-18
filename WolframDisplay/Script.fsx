@@ -17,8 +17,8 @@ open Math.Presentation.WolframEngine
 open TrussDomain
 open TrussImplementation
 
-let x0,x1,x2,x3,x4 = TrussDomain.X 240., TrussDomain.X 100., TrussDomain.X 200., TrussDomain.X 137., TrussDomain.X 499.
-let y0,y1,y2,y3,y4 = TrussDomain.Y 360., TrussDomain.Y 166., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
+let x0,x1,x2,x3,x4 = TrussDomain.X 240., TrussDomain.X 100., TrussDomain.X 200., TrussDomain.X 0., TrussDomain.X 499.
+let y0,y1,y2,y3,y4 = TrussDomain.Y 0., TrussDomain.Y 166., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
    
 let j1 = {TrussDomain.x=x3;TrussDomain.y=y0}
 let j2 = {TrussDomain.x=x0;TrussDomain.y=y1}
@@ -37,9 +37,9 @@ let m7 = j4,j5
 let m8 = j4,j6
 let m9 = j5,j6
 
-let f1 = {magnitude = 1.; direction = Vector (x=1.,y=1.); joint = j1}
-let f2 = {magnitude = 1.; direction = Vector (x=1.,y=0.); joint = j1}
-let f3 = {magnitude = 1.; direction = Vector (x=1.,y=1.); joint = j3}
+let f1 = {magnitude = 100.; direction = Vector (x=12.,y = 6.); joint = j1}
+let f2 = {magnitude = 100.; direction = Vector (x=1.,y = 0.); joint = j1}
+let f3 = {magnitude = 1.; direction = Vector (x=1.,y = 1.); joint = j3}
 let f4 = {magnitude = 1.; direction = Vector (x=1.,y = -2.); joint = j3}
 let f5 = {magnitude = 1.; direction = Vector (x=0.,y = 2.); joint = j5}
 
@@ -55,7 +55,7 @@ checkTrussStability truss
 
 getReactionForcesFrom sList |> getDirectionsFrom
 
-
+getComponentForcesFrom f1
 
 
 

@@ -28,8 +28,9 @@ module TrussDomain =
     type Joint = {x:X; y:Y} //; z:Z}
     type MemberBuilder = (Joint*(Joint option))
     type Member = (Joint*Joint)
+    type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
     type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
-    type Force = {magnitude:float; direction:Vector; joint:Joint}
+    type Force = {magnitude:float; direction:Vector; joint:Joint}    
     type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
     type Support = | Roller of Force | Pin of (Force*Force)    
     type Truss = {members:Member list; forces:Force list; supports:Support list}
@@ -178,33 +179,62 @@ module TrussImplementation =
     
     let getYFrom (j:Joint) = match j.y with | Y y -> y
     let getXFrom (j:Joint) = match j.x with | X x -> x
-    let getJointListFrom (members: Member list) = 
-        let (l1,l2) = List.unzip members
+    let getReactionForcesFrom (s: Support list) = 
+        List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin (f1,f2) -> f1::f2::acc) [] s
+    
+    let getMembersAt (j:Joint) (m:Member list) = 
+        List.choose (fun (p1,p2) -> match p1 = j || p2 = j with | true -> Some (Member (p1,p2)) | false -> None) m
+    let getForcesAt (j:Joint) (f:Force list) = 
+        List.choose (fun force -> 
+            match force.joint = j with 
+            | true ->  Some (Force force)
+            | false -> None) f
+    let getSupportsAt (j:Joint) (s:Support list) = 
+        List.choose (fun spt -> 
+            match spt with 
+            | Roller f when f.joint = j -> Some (Support spt) 
+            | Pin (f,_f) when f.joint = j -> Some (Support spt)
+            | _ -> None) s
+     
+    let getJointListFrom (m: Member list) = 
+        let (l1,l2) = List.unzip m
         List.concat [l1;l2] |> List.distinct    
-    let getReactionForcesFrom (supports: Support list) = 
-        List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin (f1,f2) -> f1::f2::acc) [] supports
-    let getDirectionsFrom (forces:Force list) = List.map (fun x -> 
+    let getJointPartListFrom (t:Truss) =
+        let joints = getJointListFrom t.members
+        let jointPartsTo j =
+            List.concat [(getMembersAt j t.members);(getForcesAt j t.forces);(getSupportsAt j t.supports)]
+        List.map jointPartsTo joints
+    
+    let getDirectionsFrom (f:Force list) = List.map (fun x -> 
         Vector(
             x = x.direction.X - (getXFrom x.joint), 
-            y = x.direction.Y - (getYFrom x.joint))) forces
-    let getLineOfActionFrom (force:Force) = 
-        match (force.direction.X - (getXFrom force.joint)) = 0. with 
+            y = x.direction.Y - (getYFrom x.joint))) f
+    let getLineOfActionFrom (f:Force) = 
+        match (f.direction.X - (getXFrom f.joint)) = 0. with 
         | true -> 
-            let m = (force.direction.Y - (getYFrom force.joint)) / (force.direction.X - (getXFrom force.joint))                   
-            let b = (getYFrom force.joint) - (m * (getXFrom force.joint))
+            let m = (f.direction.Y - (getYFrom f.joint)) / (f.direction.X - (getXFrom f.joint))                   
+            let b = (getYFrom f.joint) - (m * (getXFrom f.joint))
             (m,b)
-        | false -> (0.,(getYFrom force.joint))
+        | false -> (0.,(getYFrom f.joint))
+    let getComponentForcesFrom (f:Force) =
+        let x = f.direction.X - (getXFrom f.joint)
+        let y = f.direction.Y - (getYFrom f.joint)
+        let d = Math.Sqrt (x*x + y*y) 
+        {joint = f.joint; magnitudeX = f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
+    
+
+
     let getJointFromSupportBuilder (sb:SupportBuilder) = 
         match sb with
         | SupportBuilder.Roller r -> r.joint
         | SupportBuilder.Pin (p,_) -> p.joint
 
+    // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
         | Member m -> {t with members = m::t.members}
         | Force f -> {t with forces = f::t.forces}
-        | Support s -> {t with supports = s::t.supports}
-    
+        | Support s -> {t with supports = s::t.supports}    
     let removeTrussPartFromTruss (t:Truss) (p:TrussPart option)  = 
         match p with 
         | Some (Member m) -> 
