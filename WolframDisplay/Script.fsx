@@ -41,7 +41,7 @@ let f2 = {magnitude = 100.; direction = Vector (x=1.,y = 0.); joint = j1}
 let f3 = {magnitude = 1.; direction = Vector (x=6.,y = 1.); joint = j3}
 
 
-let f4 = {magnitude = -12.; direction = Vector (x=3.,y = 3.); joint = j4}
+let f4 = {magnitude = 12.; direction = Vector (x=3.,y = 3.); joint = j4}
 
 let f5 = {magnitude = 3.; direction = Vector (x=7.,y = 0.); joint = j5}
 
@@ -58,7 +58,7 @@ checkTrussStability truss
 
 getReactionForcesFrom sList |> getDirectionsFrom
 
-getComponentForcesFrom f4
+getComponentForcesFrom f5
 
 let partList = [Force f4;Force f5;Support s1;Support s2]
 

@@ -247,12 +247,12 @@ module TrussImplementation =
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
         let getForceMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArmX fj = getYFrom j - getYFrom fj
-            let getMomentArmY fj = getXFrom j - getXFrom fj
+            let getMomentArmY fj = getYFrom j - getYFrom fj
+            let getMomentArmX fj = getXFrom j - getXFrom fj
             List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArm sj = getXFrom j - getXFrom sj            
+            let getMomentArm sj = getXFrom sj - getXFrom j           
             List.mapi (fun i x -> (getJointFromSupport x |> getMomentArm),"R" + i.ToString()) supports
         List.map (fun x -> createEquation (getForceMoments x) (getSupportMoments x)) supports
 
