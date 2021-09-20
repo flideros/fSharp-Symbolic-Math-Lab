@@ -17,37 +17,40 @@ open Math.Presentation.WolframEngine
 open TrussDomain
 open TrussImplementation
 
-let x0,x1,x2,x3,x4 = TrussDomain.X 240., TrussDomain.X 100., TrussDomain.X 200., TrussDomain.X 0., TrussDomain.X 499.
-let y0,y1,y2,y3,y4 = TrussDomain.Y 0., TrussDomain.Y 166., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
+let x0,x1,x2,x3,x4 = TrussDomain.X 0., TrussDomain.X 3., TrussDomain.X 6., TrussDomain.X 0., TrussDomain.X 499.
+let y0,y1,y2,y3,y4 = TrussDomain.Y 4., TrussDomain.Y 0., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
    
-let j1 = {TrussDomain.x=x3;TrussDomain.y=y0}
-let j2 = {TrussDomain.x=x0;TrussDomain.y=y1}
-let j3 = {TrussDomain.x=x1;TrussDomain.y=y2}
-let j4 = {TrussDomain.x=x1;TrussDomain.y=y3}
-let j5 = {TrussDomain.x=x2;TrussDomain.y=y4}
-let j6 = {TrussDomain.x=x4;TrussDomain.y=y1}
+let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
+let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}
+let j3 = {TrussDomain.x=x2;TrussDomain.y=y0}
+let j4 = {TrussDomain.x=x1;TrussDomain.y=y1}
+let j5 = {TrussDomain.x=x2;TrussDomain.y=y1}
+
 
 let m1 = j1,j2
-let m2 = j1,j3
+let m2 = j1,j4
 let m3 = j2,j4
-let m4 = j1,j4
-let m5 = j4,j3
-let m6 = j3,j5
-let m7 = j4,j5
-let m8 = j4,j6
-let m9 = j5,j6
+let m4 = j4,j5
+let m5 = j2,j3
+let m6 = j2,j5
+let m7 = j3,j5
 
-let f1 = {magnitude = 100.; direction = Vector (x=12.,y = 6.); joint = j1}
+let f1 = {magnitude = 100.; direction = Vector (x=0.,y = 1.); joint = j1}
 let f2 = {magnitude = 100.; direction = Vector (x=1.,y = 0.); joint = j1}
-let f3 = {magnitude = 1.; direction = Vector (x=1.,y = 1.); joint = j3}
-let f4 = {magnitude = 1.; direction = Vector (x=1.,y = -2.); joint = j3}
-let f5 = {magnitude = 1.; direction = Vector (x=0.,y = 2.); joint = j5}
 
-let s1,s2,s3,s4 = Pin (f1,f2), Roller f1,  Roller f3, Roller f5
+let f3 = {magnitude = 1.; direction = Vector (x=6.,y = 1.); joint = j3}
 
-let mList = [m1;m2;m3;m4;m5;m6;m7;m8;m9]
-let fList = [f4]
-let sList = [s1;s4]
+
+let f4 = {magnitude = -12.; direction = Vector (x=3.,y = 3.); joint = j4}
+
+let f5 = {magnitude = 3.; direction = Vector (x=7.,y = 0.); joint = j5}
+
+let s1,s2 = Pin (f1,f2), Roller f3
+
+let mList = [m1;m2;m3;m4;m5;m6;m7]
+
+let fList = [f4;f5]
+let sList = [s1;s2]
 
 let truss = {members=mList;forces=fList;supports=sList}
 
@@ -55,9 +58,11 @@ checkTrussStability truss
 
 getReactionForcesFrom sList |> getDirectionsFrom
 
-getComponentForcesFrom f1
+getComponentForcesFrom f4
 
+let partList = [Force f4;Force f5;Support s1;Support s2]
 
+getSupportReactionEquations partList
 
 
 

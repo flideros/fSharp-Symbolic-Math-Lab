@@ -13,9 +13,19 @@ open Wolfram.NETLink
 (*Truss analysis: This project will explore the mathematics of truss analysis. 
 ->  Task 1 - Domain Model and implementation
 ->  Task 2 - UI controls
-    Task 3 - Develop Wolfram Language Stucture and Interactions
+->  Task 3 - Develop Wolfram Language Stucture and Interactions
     Task 4 - Continuous Development of features
 *)
+
+module WolframServices =
+    let test = "Solve[{x + y == 1, x - y == 2}, {x, y}]"
+    
+    // create helper functions to assemble Wolfram code
+    let createEquation (constant:float) (variables:(float*string) list) = 
+        let variableExpressions = List.fold (fun acc x-> acc + (fst x).ToString() + "*" + (snd x) + " + ") "" variables
+        variableExpressions + constant.ToString() + " == 0"
+    
+    // create helper functions to parse Wolfram code
 
 module TrussDomain =
     
@@ -28,8 +38,10 @@ module TrussDomain =
     type Joint = {x:X; y:Y} //; z:Z}
     type MemberBuilder = (Joint*(Joint option))
     type Member = (Joint*Joint)
-    type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
+    
+    
     type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
+    type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
     type Force = {magnitude:float; direction:Vector; joint:Joint}    
     type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
     type Support = | Roller of Force | Pin of (Force*Force)    
@@ -65,7 +77,8 @@ module TrussDomain =
         | Delete
         | Modify
         | Inspect  
-
+    type ReactionForce = {support:Support; magnitud:float}
+    
     // Types to describe error results
     type Error = 
         | LazyCoder  
@@ -75,7 +88,7 @@ module TrussDomain =
         | WrongStateData
         | NoJointSelected
         | Other of string
-
+  
     // Data associated with each state     
     type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
@@ -176,6 +189,7 @@ module TrussDomain =
 
 module TrussImplementation = 
     open TrussDomain
+    open WolframServices
     
     let getYFrom (j:Joint) = match j.y with | Y y -> y
     let getXFrom (j:Joint) = match j.x with | X x -> x
@@ -222,12 +236,25 @@ module TrussImplementation =
         let d = Math.Sqrt (x*x + y*y) 
         {joint = f.joint; magnitudeX = f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
     
-
-
     let getJointFromSupportBuilder (sb:SupportBuilder) = 
         match sb with
         | SupportBuilder.Roller r -> r.joint
         | SupportBuilder.Pin (p,_) -> p.joint
+    let getJointFromSupport (s:Support) = match s with | Pin (p,_) -> p.joint | Roller r -> r.joint
+    
+    let getSupportReactionEquations (p:TrussPart list) = 
+        let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
+        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
+        let getForceMoments (s:Support) = 
+            let j = getJointFromSupport s
+            let getMomentArmX fj = getYFrom j - getYFrom fj
+            let getMomentArmY fj = getXFrom j - getXFrom fj
+            List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
+        let getSupportMoments (s:Support) = 
+            let j = getJointFromSupport s
+            let getMomentArm sj = getXFrom j - getXFrom sj            
+            List.mapi (fun i x -> (getJointFromSupport x |> getMomentArm),"R" + i.ToString()) supports
+        List.map (fun x -> createEquation (getForceMoments x) (getSupportMoments x)) supports
 
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
