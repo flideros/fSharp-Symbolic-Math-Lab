@@ -17,9 +17,27 @@ open Math.Presentation.WolframEngine
 open TrussDomain
 open TrussImplementation
 
-let x0,x1,x2,x3,x4 = TrussDomain.X 0., TrussDomain.X 3., TrussDomain.X 6., TrussDomain.X 0., TrussDomain.X 499.
-let y0,y1,y2,y3,y4 = TrussDomain.Y 4., TrussDomain.Y 0., TrussDomain.Y 200., TrussDomain.Y 327., TrussDomain.Y 349.
+let x0,x1,x2 = TrussDomain.X 0., TrussDomain.X 3., TrussDomain.X 6.
+let y0,y1 = TrussDomain.Y 4., TrussDomain.Y 0.
    
+let x3,x4,x5 = TrussDomain.X 0., TrussDomain.X 4.,TrussDomain.X 8.
+let y2,y3 = TrussDomain.Y 5., TrussDomain.Y 0.
+let jC = {TrussDomain.x=x3;TrussDomain.y=y2}
+let jB = {TrussDomain.x=x4;TrussDomain.y=y2}
+let jA = {TrussDomain.x=x5;TrussDomain.y=y2}
+let jF = {TrussDomain.x=x5;TrussDomain.y=y3}
+let rFC = {magnitude = 0.; direction = Vector (x=9.,y = 0.); joint = jF}
+let rFB = {magnitude = 0.; direction = Vector (x=0.,y = -1.); joint = jF}
+let rA = {magnitude = 1.; direction = Vector (x=9.,y = 5.); joint = jA}
+let fC = {magnitude = -80.; direction = Vector (x=0.,y = 6.); joint = jC}
+let fB = {magnitude = -60.; direction = Vector (x=4.,y = 6.); joint = jB}
+let sF,sA = Pin (rFC,rFB), Roller rA
+let partList2 = [Force fC;Force fB;Support sF;Support sA]
+
+getSupportReactionEquations partList2
+
+
+
 let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
 let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}
 let j3 = {TrussDomain.x=x2;TrussDomain.y=y0}
@@ -43,7 +61,7 @@ let f3 = {magnitude = 1.; direction = Vector (x=6.,y = 1.); joint = j3}
 
 let f4 = {magnitude = 12.; direction = Vector (x=3.,y = 3.); joint = j4}
 
-let f5 = {magnitude = 3.; direction = Vector (x=7.,y = 0.); joint = j5}
+let f5 = {magnitude = -3.; direction = Vector (x=7.,y = 0.); joint = j5}
 
 let s1,s2 = Pin (f1,f2), Roller f3
 
@@ -62,8 +80,7 @@ getComponentForcesFrom f5
 
 let partList = [Force f4;Force f5;Support s1;Support s2]
 
-getSupportReactionEquations partList
-
+getSupportNormalReactionEquations partList
 
 
 

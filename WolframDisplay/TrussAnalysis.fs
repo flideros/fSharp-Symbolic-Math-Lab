@@ -242,18 +242,21 @@ module TrussImplementation =
         | SupportBuilder.Pin (p,_) -> p.joint
     let getJointFromSupport (s:Support) = match s with | Pin (p,_) -> p.joint | Roller r -> r.joint
     
-    let getSupportReactionEquations (p:TrussPart list) = 
+    let getSupportNormalReactionEquations (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
         let getForceMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArmY fj = getYFrom j - getYFrom fj
-            let getMomentArmX fj = getXFrom j - getXFrom fj
+            let getMomentArmY fj = getYFrom fj - getYFrom j
+            let getMomentArmX fj = getXFrom fj - getXFrom j
             List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArm sj = getXFrom sj - getXFrom j           
-            List.mapi (fun i x -> (getJointFromSupport x |> getMomentArm),"R" + i.ToString()) supports
+            let getMomentArmX sj = getXFrom j - getXFrom sj           
+            let getMomentArmY sj = getYFrom j - getYFrom sj            
+            let horz = List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmX),"R" + i.ToString()) supports
+            let vert = List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmY),"R" + i.ToString()) supports
+            List.concat [horz;vert]
         List.map (fun x -> createEquation (getForceMoments x) (getSupportMoments x)) supports
 
     // Basic operations on truss
