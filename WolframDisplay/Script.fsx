@@ -19,7 +19,8 @@ open TrussImplementation
 
 let x0,x1,x2 = TrussDomain.X 0., TrussDomain.X 3., TrussDomain.X 6.
 let y0,y1 = TrussDomain.Y 4., TrussDomain.Y 0.
-   
+
+//truss1   
 let x3,x4,x5 = TrussDomain.X 0., TrussDomain.X 4.,TrussDomain.X 8.
 let y2,y3 = TrussDomain.Y 5., TrussDomain.Y 0.
 let jC = {TrussDomain.x=x3;TrussDomain.y=y2}
@@ -34,9 +35,27 @@ let fB = {magnitude = -60.; direction = Vector (x=4.,y = 6.); joint = jB}
 let sF,sA = Pin (rFC,rFB), Roller rA
 let partList2 = [Force fC;Force fB;Support sF;Support sA]
 
-getSupportReactionEquations partList2
+getYSupportReactionEquations partList2
+getXSupportReactionEquations partList2
+
+//truss2   
+let x3a,x4a,x5a,x6a = TrussDomain.X 0., TrussDomain.X 12.,TrussDomain.X 18.,TrussDomain.X 24.
+let y2a,y3a = TrussDomain.Y 8., TrussDomain.Y 0.
+let jCa = {TrussDomain.x=x6a;TrussDomain.y=y3a}
+let jBa = {TrussDomain.x=x4a;TrussDomain.y=y3a}
+let jAa = {TrussDomain.x=x3a;TrussDomain.y=y3a}
+let jEa = {TrussDomain.x=x5a;TrussDomain.y=y2a}
+let rFCa = {magnitude = 0.; direction = Vector (x=25.,y = 0.); joint = jCa}
+let rFBa = {magnitude = 0.; direction = Vector (x=25.,y = -1.); joint = jCa}
+let rAa = {magnitude = 1.; direction = Vector (x=18.,y = 5.); joint = jEa}
+let fCa = {magnitude = 2000.; direction = Vector (x=0.,y = 6.); joint = jAa}
+let fBa = {magnitude = 1000.; direction = Vector (x=12.,y = 6.); joint = jBa}
+let sFa,sAa = Pin (rFCa,rFBa), Roller rAa
+let partList2a = [Force fCa;Force fBa;Support sFa;Support sAa]
 
 
+getYSupportReactionEquations partList2a
+getXSupportReactionEquations partList2a
 
 let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
 let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}
@@ -80,7 +99,7 @@ getComponentForcesFrom f5
 
 let partList = [Force f4;Force f5;Support s1;Support s2]
 
-getSupportNormalReactionEquations partList
+getYSupportReactionEquations partList
 
 
 
