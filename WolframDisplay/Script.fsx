@@ -57,6 +57,26 @@ let partList2a = [Force fCa;Force fBa;Support sFa;Support sAa]
 getYSupportReactionEquations partList2a
 getXSupportReactionEquations partList2a
 
+//truss3   
+let xx3,xx4,xx5,xx6,xx7 = TrussDomain.X 0., TrussDomain.X 3.,TrussDomain.X 6.,TrussDomain.X 9.,TrussDomain.X 12.
+let yy2,yy3 = TrussDomain.Y 4., TrussDomain.Y 0.
+let jjC = {TrussDomain.x=xx7;TrussDomain.y=yy3}
+let jjB = {TrussDomain.x=xx5;TrussDomain.y=yy3}
+let jjA = {TrussDomain.x=xx3;TrussDomain.y=yy3}
+let jjE = {TrussDomain.x=xx6;TrussDomain.y=yy2}
+let rrFCY = {magnitude = 0.; direction = Vector (x=9.,y = 0.); joint = jjC}
+let rrFCX = {magnitude = 0.; direction = Vector (x=0.,y = -1.); joint = jjC}
+let rrE = {magnitude = 1.; direction = Vector (x=9.,y = 5.); joint = jjE}
+let ffC = {magnitude = 10.; direction = Vector (x=0.,y = 6.); joint = jjA}
+let ffB = {magnitude = 5.; direction = Vector (x=6.,y = 6.); joint = jjB}
+let ssF,ssA = Pin (rrFCY,rrFCX), Roller rrE
+let partList3 = [Force ffC;Force ffB;Support ssF;Support ssA]
+
+getYSupportReactionEquations partList3
+getXSupportReactionEquations partList3
+
+
+
 let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
 let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}
 let j3 = {TrussDomain.x=x2;TrussDomain.y=y0}
