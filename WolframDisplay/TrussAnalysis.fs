@@ -233,68 +233,87 @@ module TrussImplementation =
     let getComponentForcesFrom (f:Force) =
         let x = f.direction.X - (getXFrom f.joint)
         let y = f.direction.Y - (getYFrom f.joint)
-        let d = Math.Sqrt (x*x + y*y) 
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
         {joint = f.joint; magnitudeX = f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
     let getSupportComponentForcesFrom (s:Support) =
         match s with
         | Pin (p1,p2) ->              
             let x = p1.direction.X - (getXFrom p1.joint)
             let y = p2.direction.Y - (getYFrom p2.joint)
-            let d = Math.Sqrt (x*x + y*y) 
+            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
             {joint = p1.joint; magnitudeX = p1.magnitude*(x/d); magnitudeY = p2.magnitude*(y/d)}
         | Roller r -> 
             let x = r.direction.X - (getXFrom r.joint)
             let y = r.direction.Y - (getYFrom r.joint)
-            let d = Math.Sqrt (x*x + y*y) 
+            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
             {joint = r.joint; magnitudeX = r.magnitude*(x/d); magnitudeY = r.magnitude*(y/d)}
-
-        
 
     let getJointFromSupportBuilder (sb:SupportBuilder) = 
         match sb with
         | SupportBuilder.Roller r -> r.joint
         | SupportBuilder.Pin (p,_) -> p.joint
     let getJointFromSupport (s:Support) = match s with | Pin (p,_) -> p.joint | Roller r -> r.joint
-    
-    
-    
-    let getSumForcesX (p:TrussPart list) = 
+            
+    let sumForcesX (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         List.fold (fun acc x -> x.magnitudeX + acc ) 0. forces
-    let getSumForcesY (p:TrussPart list) = 
+    let sumForcesY (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         List.fold (fun acc y -> y.magnitudeY + acc ) 0. forces
-
-    
-    
-    let getYSupportReactionEquations (p:TrussPart list) = 
+    let sumForceMoments (s:Support) (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
-        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
-        let getForceMoments (s:Support) = 
-            let j = getJointFromSupport s
-            let getMomentArmY fj = getYFrom fj - getYFrom j
-            let getMomentArmX fj = getXFrom fj - getXFrom j
-            List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
+        let j = getJointFromSupport s
+        let getMomentArmY fj = getYFrom fj - getYFrom j
+        let getMomentArmX fj = getXFrom fj - getXFrom j
+        List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
+    
+    //
+    let getYSupportReactionEquations (p:TrussPart list) =         
+        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmX sj = getXFrom j - getXFrom sj           
-            List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmX),"R" + i.ToString()) supports            
-        List.map (fun x -> createEquation (getForceMoments x) (getSupportMoments x)) supports
-    let getXSupportReactionEquations (p:TrussPart list) = 
-        let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
+            List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmX),"Ry" + i.ToString()) supports
+        List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
+    let getXSupportReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
-        let getForceMoments (s:Support) = 
-            let j = getJointFromSupport s
-            let getMomentArmY fj = getYFrom fj - getYFrom j
-            let getMomentArmX fj = getXFrom fj - getXFrom j
-            List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmY sj = getYFrom j - getYFrom sj            
-            List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmY),"R" + i.ToString()) supports
-        List.map (fun x -> createEquation (getForceMoments x) (getSupportMoments x)) supports
-
-
+            List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
+        List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports
+    
+    let getXForceReactionEquation (p:TrussPart list) =         
+        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
+        let reactions = List.mapi (fun i x -> 
+            match x with 
+            | Pin (p1,_p2) -> 
+                let x = p1.direction.X - (getXFrom p1.joint)
+                let y = p1.direction.Y - (getYFrom p1.joint)
+                let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
+                x/d,"Rx" + i.ToString()
+            | Roller r -> 
+                let x = r.direction.X - (getXFrom r.joint)
+                let y = r.direction.Y - (getYFrom r.joint)
+                let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
+                x/d,"Rx" + i.ToString()) supports // handle direction here 
+        createEquation (sumForcesX p) reactions
+    let getYForceReactionEquation (p:TrussPart list) =   
+        let supports = List.choose (fun y -> match y with | Support s -> Some s | _ -> None) p        
+        let reactions = List.mapi (fun i y -> 
+            match y with 
+            | Pin (_p1,p2) -> 
+                let x = p2.direction.X - (getXFrom p2.joint)
+                let y = p2.direction.Y - (getYFrom p2.joint)
+                let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
+                y/d,"Ry" + i.ToString()            
+            | Roller r -> 
+                let x = r.direction.X - (getXFrom r.joint)
+                let y = r.direction.Y - (getYFrom r.joint)
+                let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
+                y/d,"Ry" + i.ToString()) supports 
+        createEquation (sumForcesY p) reactions
+    
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 

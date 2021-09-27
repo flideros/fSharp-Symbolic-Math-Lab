@@ -20,25 +20,33 @@ open TrussImplementation
 let x0,x1,x2 = TrussDomain.X 0., TrussDomain.X 3., TrussDomain.X 6.
 let y0,y1 = TrussDomain.Y 4., TrussDomain.Y 0.
 
-//truss1   
-let x3,x4,x5 = TrussDomain.X 0., TrussDomain.X 4.,TrussDomain.X 8.
-let y2,y3 = TrussDomain.Y 5., TrussDomain.Y 0.
-let jC = {TrussDomain.x=x3;TrussDomain.y=y2}
+//truss1 -- supports joints alligned verticaly, 2 reactions in x direction   
+let x3,x4,x5,x6 = TrussDomain.X 0., TrussDomain.X 2.,TrussDomain.X 4.,TrussDomain.X 6.
+let y2,y3 = TrussDomain.Y 0., TrussDomain.Y 25.
+let jD = {TrussDomain.x=x6;TrussDomain.y=y2}
+let jC = {TrussDomain.x=x5;TrussDomain.y=y2}
 let jB = {TrussDomain.x=x4;TrussDomain.y=y2}
-let jA = {TrussDomain.x=x5;TrussDomain.y=y2}
-let jF = {TrussDomain.x=x5;TrussDomain.y=y3}
-let rFC = {magnitude = 0.; direction = Vector (x=9.,y = 0.); joint = jF}
-let rFB = {magnitude = 0.; direction = Vector (x=0.,y = -1.); joint = jF}
-let rA = {magnitude = 1.; direction = Vector (x=9.,y = 5.); joint = jA}
-let fC = {magnitude = -80.; direction = Vector (x=0.,y = 6.); joint = jC}
-let fB = {magnitude = -60.; direction = Vector (x=4.,y = 6.); joint = jB}
+let jA = {TrussDomain.x=x3;TrussDomain.y=y2}
+let jF = {TrussDomain.x=x3;TrussDomain.y=y3}
+
+let rFC = {magnitude = 0.; direction = Vector (x = 1.,y = 0.); joint = jA}
+let rFB = {magnitude = 0.; direction = Vector (x = 0.,y = 1.); joint = jA}
+let rA = {magnitude = 0.; direction = Vector (x = -1.,y = 25.); joint = jF}
+
+let fD = {magnitude = 12.5; direction = Vector (x=6.,y = 1.); joint = jD}
+let fC = {magnitude = 12.5; direction = Vector (x=4.,y = 1.); joint = jC}
+let fB = {magnitude = 12.5; direction = Vector (x=2.,y = 1.); joint = jB}
+let fA = {magnitude = 12.5; direction = Vector (x=0.,y = 1.); joint = jA}
+
 let sF,sA = Pin (rFC,rFB), Roller rA
-let partList2 = [Force fC;Force fB;Support sF;Support sA]
+let partList2 = [Force fA;Force fB;Force fC;Force fD;Support sF;Support sA]
 
-getYSupportReactionEquations partList2
+//getYSupportReactionEquations partList2
 getXSupportReactionEquations partList2
+getYForceReactionEquation partList2
+getXForceReactionEquation partList2
 
-//truss2   
+//truss2 -- reactions not aligned on any axis, 2 reactions in y direction
 let x3a,x4a,x5a,x6a = TrussDomain.X 0., TrussDomain.X 12.,TrussDomain.X 18.,TrussDomain.X 24.
 let y2a,y3a = TrussDomain.Y 8., TrussDomain.Y 0.
 let jCa = {TrussDomain.x=x6a;TrussDomain.y=y3a}
@@ -55,25 +63,30 @@ let partList2a = [Force fCa;Force fBa;Support sFa;Support sAa]
 
 
 getYSupportReactionEquations partList2a
-getXSupportReactionEquations partList2a
+//getXSupportReactionEquations partList2a
+getYForceReactionEquation partList2a
+getXForceReactionEquation partList2a
 
-//truss3   
+//truss3 -- reactions not aligned on any axis, 2 reactions in y direction
 let xx3,xx4,xx5,xx6,xx7 = TrussDomain.X 0., TrussDomain.X 3.,TrussDomain.X 6.,TrussDomain.X 9.,TrussDomain.X 12.
 let yy2,yy3 = TrussDomain.Y 4., TrussDomain.Y 0.
 let jjC = {TrussDomain.x=xx7;TrussDomain.y=yy3}
 let jjB = {TrussDomain.x=xx5;TrussDomain.y=yy3}
 let jjA = {TrussDomain.x=xx3;TrussDomain.y=yy3}
 let jjE = {TrussDomain.x=xx6;TrussDomain.y=yy2}
-let rrFCY = {magnitude = 0.; direction = Vector (x=9.,y = 0.); joint = jjC}
-let rrFCX = {magnitude = 0.; direction = Vector (x=0.,y = -1.); joint = jjC}
-let rrE = {magnitude = 1.; direction = Vector (x=9.,y = 5.); joint = jjE}
-let ffC = {magnitude = 10.; direction = Vector (x=0.,y = 6.); joint = jjA}
-let ffB = {magnitude = 5.; direction = Vector (x=6.,y = 6.); joint = jjB}
-let ssF,ssA = Pin (rrFCY,rrFCX), Roller rrE
+let rrFCY = {magnitude = 0.; direction = Vector (x=12.,y = -1.); joint = jjC}
+let rrFCX = {magnitude = 0.; direction = Vector (x=11.,y = 0.); joint = jjC}
+let rrE = {magnitude = 1.; direction = Vector (x=9.,y = 3.); joint = jjE}
+let ffC = {magnitude = 10.; direction = Vector (x=0.,y = 1.); joint = jjA}
+let ffB = {magnitude = 5.; direction = Vector (x=6.,y = 1.); joint = jjB}
+let ssF,ssA = Pin (rrFCX,rrFCY), Roller rrE
 let partList3 = [Force ffC;Force ffB;Support ssF;Support ssA]
 
 getYSupportReactionEquations partList3
-getXSupportReactionEquations partList3
+//getXSupportReactionEquations partList3
+getYForceReactionEquation partList3
+getXForceReactionEquation partList3
+
 
 
 
