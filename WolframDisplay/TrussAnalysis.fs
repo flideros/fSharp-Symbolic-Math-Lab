@@ -18,7 +18,7 @@ open Wolfram.NETLink
 *)
 
 module WolframServices =
-    let test = "Solve[{x + y == 1, x - y == 2}, {x, y}]"
+    let test = "Solve[{0*Ry0 + 3*Ry1 + -150 == 0,-3*Ry0 + 0*Ry1 + -105 == 0,-1*Rx0 + 0*Rx1 + 0 == 0,-1*Ry0 + -1*Ry1 + 15 == 0}, { Ry0, Ry1,Rx1,Rx0}]"
     
     // create helper functions to assemble Wolfram code
     let createEquation (constant:float) (variables:(float*string) list) = 
@@ -267,22 +267,21 @@ module TrussImplementation =
         let getMomentArmX fj = getXFrom fj - getXFrom j
         List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
     
-    //
-    let getYSupportReactionEquations (p:TrussPart list) =         
+    // Support Reaction Equations
+    let getYMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmX sj = getXFrom j - getXFrom sj           
             List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmX),"Ry" + i.ToString()) supports
         List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
-    let getXSupportReactionEquations (p:TrussPart list) =         
+    let getXMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmY sj = getYFrom j - getYFrom sj            
             List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
-        List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports
-    
+        List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports    
     let getXForceReactionEquation (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i x -> 
@@ -314,6 +313,8 @@ module TrussImplementation =
                 y/d,"Ry" + i.ToString()) supports 
         createEquation (sumForcesY p) reactions
     
+
+
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -641,7 +642,7 @@ module TrussServices =
             | BuildSupport sb -> 
                 let j = getJointFromSupportBuilder sb
                 let x,y = getXFrom j, getYFrom j
-                let point' = System.Windows.Point(x + point.Y,y - point.X)
+                let point' = System.Windows.Point(x + (point.Y-y),y - (point.X-x))
                 let op = addDirectionToSupportBuilder (makeVectorFrom point,Some (makeVectorFrom point')) sb
                 match op with
                 | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
@@ -1646,8 +1647,8 @@ type TrussAnalysis() as this  =
     let drawBuildSupport (p:System.Windows.Point, dir:float, isRollerSupportType: bool) =
         let angle = 45.
         let length = 25.         
-        let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir - angle - 90.) * Math.PI/180.)))
-        let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir + angle - 90.) * Math.PI/180.)))
+        let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle) * Math.PI/180.)), p.Y - (length * sin ((dir - angle) * Math.PI/180.)))
+        let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle) * Math.PI/180.)), p.Y - (length * sin ((dir + angle) * Math.PI/180.)))
         let support =             
             let pg = PathGeometry()
             let pfc = PathFigureCollection()
@@ -1712,8 +1713,8 @@ type TrussAnalysis() as this  =
             let p,dir,isRollerSupportType = s
             let angle = 45.
             let length = 25.         
-            let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir - angle - 90.) * Math.PI/180.)))
-            let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle - 90.) * Math.PI/180.)), p.Y - (length * sin ((dir + angle - 90.) * Math.PI/180.)))
+            let p1 = System.Windows.Point(p.X + (length * cos ((dir - angle ) * Math.PI/180.)), p.Y - (length * sin ((dir - angle) * Math.PI/180.)))
+            let p2 = System.Windows.Point(p.X + (length * cos ((dir + angle ) * Math.PI/180.)), p.Y - (length * sin ((dir + angle) * Math.PI/180.)))
             let support =             
                 let pg = PathGeometry()
                 let pfc = PathFigureCollection()
@@ -2174,14 +2175,14 @@ type TrussAnalysis() as this  =
                             match bs with 
                             | TrussDomain.Roller f -> TrussServices.getPointFromForceBuilder f
                             | TrussDomain.Pin (f,_) -> TrussServices.getPointFromForceBuilder f
-                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos ((dir + 90.) * Math.PI/180.)), jointPoint.Y - (50.0 * sin ((dir + 90.) * Math.PI/180.)))  
+                        let dirPoint = System.Windows.Point(jointPoint.X + (1.0 * cos ((dir) * Math.PI/180.)), jointPoint.Y - (1.0 * sin ((dir) * Math.PI/180.)))  
                         let arrowPoint = jointPoint                            
                         let newState = 
                             match rollerSupport_RadioButton.IsChecked.Value with
                             | true -> sendMagnitudeToSupportBuilder (mag,None) state |> sendPointToRollerSupportBuilder dirPoint
                             | false -> sendMagnitudeToSupportBuilder (mag,Some mag) state |> sendPointToPinSupportBuilder dirPoint
                         state <- newState
-                        drawBuildSupport (arrowPoint,dir,rollerSupport_RadioButton.IsChecked.Value)
+                        drawBuildSupport (arrowPoint,dir - 90.,rollerSupport_RadioButton.IsChecked.Value)
                         label.Text <-  newState.ToString()
                     | false -> 
                         let newState = sendMagnitudeToSupportBuilder (mag,None) state

@@ -41,8 +41,8 @@ let fA = {magnitude = 12.5; direction = Vector (x=0.,y = 1.); joint = jA}
 let sF,sA = Pin (rFC,rFB), Roller rA
 let partList2 = [Force fA;Force fB;Force fC;Force fD;Support sF;Support sA]
 
-//getYSupportReactionEquations partList2
-getXSupportReactionEquations partList2
+//getYMomentReactionEquations partList2
+getXMomentReactionEquations partList2
 getYForceReactionEquation partList2
 getXForceReactionEquation partList2
 
@@ -62,8 +62,8 @@ let sFa,sAa = Pin (rFCa,rFBa), Roller rAa
 let partList2a = [Force fCa;Force fBa;Support sFa;Support sAa]
 
 
-getYSupportReactionEquations partList2a
-//getXSupportReactionEquations partList2a
+getYMomentReactionEquations partList2a
+//getXMomentReactionEquations partList2a
 getYForceReactionEquation partList2a
 getXForceReactionEquation partList2a
 
@@ -82,8 +82,8 @@ let ffB = {magnitude = 5.; direction = Vector (x=6.,y = 1.); joint = jjB}
 let ssF,ssA = Pin (rrFCX,rrFCY), Roller rrE
 let partList3 = [Force ffC;Force ffB;Support ssF;Support ssA]
 
-getYSupportReactionEquations partList3
-//getXSupportReactionEquations partList3
+getYMomentReactionEquations partList3
+//getXMomentReactionEquations partList3
 getYForceReactionEquation partList3
 getXForceReactionEquation partList3
 
@@ -132,7 +132,7 @@ getComponentForcesFrom f5
 
 let partList = [Force f4;Force f5;Support s1;Support s2]
 
-getYSupportReactionEquations partList
+getYMomentReactionEquations partList
 
 
 
