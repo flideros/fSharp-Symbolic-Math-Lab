@@ -101,15 +101,16 @@ module TrussDomain =
     type ErrorStateData = {errors : Error list; truss : Truss}
     
     // Data associated with each analysis state
-    type MethodOfJointsAnalysisStateData = 
-        {sumForcesX: float;
-         sumForcesY: float;
-         sumMoments: float;
-         memberForce: float list}
+    type SupportReactionStateData = 
+        {momentEquations: string list;
+         forceXEquation: string
+         forceYEquation: string}
+    type MethodOfJointsAnalysisStateData = {tbd: string}
     
     // Analysis States
     type AnalysisState =
         | Truss
+        | SupportReactions of SupportReactionStateData
         | MethodOfJoints of MethodOfJointsAnalysisStateData
     
     type AnalysisStateData = 
@@ -312,9 +313,7 @@ module TrussImplementation =
                 let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
                 y/d,"Ry" + i.ToString()) supports 
         createEquation (sumForcesY p) reactions
-    
-
-
+        
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -572,6 +571,8 @@ module TrussServices =
 
         | TrussDomain.AnalysisState s -> None
         | TrussDomain.ErrorState es -> None
+
+    let getSupportReactionsFromState (state :TrussAnalysisState) = ()
     
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
@@ -888,7 +889,38 @@ type TrussAnalysis() as this  =
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
-        l        
+        l 
+        // Reaction forces and moments
+    let reaction_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Moment Axis"
+        l
+    let xAxis_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="X Axis",FontSize=15.)        
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
+    let yAxis_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Y Axis",FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- true |> Nullable<bool>
+        r
+    let momentAxis_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(reaction_Label) |> ignore
+            sp.Children.Add(xAxis_RadioButton) |> ignore
+            sp.Children.Add(yAxis_RadioButton) |> ignore
+        sp
         // Orgin and grid
     let orgin (p:System.Windows.Point) = 
         let radius = 8.
@@ -1252,7 +1284,7 @@ type TrussAnalysis() as this  =
         let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
         let toggleIsReadOnly () = tb.IsReadOnly <- false
         do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
-        tb    
+        tb
     let trussMemberP1_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -1372,6 +1404,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
             sp.Children.Add(orgin_StackPanel) |> ignore
             sp.Children.Add(selectionMode_StackPanel) |> ignore
+            sp.Children.Add(momentAxis_StackPanel) |> ignore
             border.Child <- sp
         border
         // Truss parts
@@ -1546,6 +1579,8 @@ type TrussAnalysis() as this  =
         let sp = StackPanel()
         do  sp.Orientation <- Orientation.Vertical
             sp.HorizontalAlignment <- HorizontalAlignment.Left
+            sp.Margin <- Thickness(Left = 200., Top = 10., Right = 0., Bottom = 0.)
+            sp.Visibility <- Visibility.Collapsed
         sp
         // Main canvas    
     let canvas = 
@@ -1554,6 +1589,7 @@ type TrussAnalysis() as this  =
             c.ClipToBounds <- true
             c.Cursor <- System.Windows.Input.Cursors.Cross
             c.Children.Add(label) |> ignore 
+            c.Children.Add(result_StackPanel) |> ignore
         c
     let screen_Grid =
         let g = Grid()              
@@ -1747,6 +1783,7 @@ type TrussAnalysis() as this  =
             canvas.Children.Add(grid) |> ignore
             drawOrgin orginPoint
             canvas.Children.Add(label) |> ignore
+            canvas.Children.Add(result_StackPanel) |> ignore
             canvas.Children.Add(trussControls_Border) |> ignore
         let joints = getJointsFrom s
         let members = getMembersFrom s 
@@ -1760,7 +1797,7 @@ type TrussAnalysis() as this  =
         drawSelectedForce s
         drawSelectedSupport s
         // Set
-    let setGraphicsFromKernel (k:MathKernel) =
+    let setGraphicsFromKernel (k:MathKernel) =        
         let rec getImages i =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
@@ -1774,7 +1811,7 @@ type TrussAnalysis() as this  =
             getImages 0             
         | false -> 
           result_StackPanel.Children.Clear()
-          let graphics = link.EvaluateToImage("Factor[x^2- 4x + 1]", width = 400, height = 400)
+          let graphics = link.EvaluateToImage("Style[Factor[x^2 + 2x + 1],FontSize ->50]", width = 0, height = 0)
           let image = Image()            
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
@@ -1810,6 +1847,8 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false, true,false,false,false,false,false
                 | false,false,false,false,true,false, true,false,false,false,false,false                
                 | false,false,false,false,false,true, true,false,false,false,false,false ->    
+                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    momentAxis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- false
@@ -1826,6 +1865,8 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false, false,true,false,false,false,false
                 | false,false,false,false,true,false, false,true,false,false,false,false
                 | false,false,false,false,false,true, false,true,false,false,false,false -> 
+                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    momentAxis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -1838,6 +1879,8 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false,  false,false,true,false,false,false
                 | false,false,false,false,true,false,  false,false,true,false,false,false 
                 | false,false,false,false,false,true,  false,false,true,false,false,false -> 
+                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    momentAxis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     supportType_StackPanel.Visibility <- Visibility.Visible
@@ -1854,6 +1897,8 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false,  false,false,false,true,false,false
                 | false,false,false,false,true,false,  false,false,false,true,false,false 
                 | false,false,false,false,false,true,  false,false,false,true,false,false -> 
+                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    momentAxis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -1867,6 +1912,8 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false,  false,false,false,false,true,false
                 | false,false,false,false,true,false,  false,false,false,false,true,false 
                 | false,false,false,false,false,true,  false,false,false,false,true,false -> 
+                    result_StackPanel.Visibility <- Visibility.Visible
+                    momentAxis_StackPanel.Visibility <- Visibility.Visible
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -1880,6 +1927,8 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false,  false,false,false,false,false,true
                 | false,false,false,false,true,false,  false,false,false,false,false,true 
                 | false,false,false,false,false,true,  false,false,false,false,false,true -> 
+                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    momentAxis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -1923,7 +1972,6 @@ type TrussAnalysis() as this  =
                             modify_RadioButton.IsChecked <- Nullable false
                             delete_Button.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
-
                         | true,false,false, false,false,true
                         | false,true,false, false,false,true 
                         | false,false,true, false,false,true ->                        
@@ -1974,7 +2022,7 @@ type TrussAnalysis() as this  =
                             drawBuildSupportJoint p
                             state <- newState
                             label.Text <- state.ToString()
-                | TrussDomain.TrussMode.Analysis -> ()
+                | TrussDomain.TrussMode.Analysis -> ()//setGraphicsFromKernel kernel 
                 | TrussDomain.TrussMode.Selection -> 
                     label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Settings -> ()
@@ -1993,7 +2041,7 @@ type TrussAnalysis() as this  =
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
-            | TrussDomain.AnalysisState s -> ()
+            | TrussDomain.AnalysisState s -> setGraphicsFromKernel kernel //()
             | TrussDomain.ErrorState es -> 
                 match es.errors with 
                 | [TrussDomain.NoJointSelected] -> ()                    
