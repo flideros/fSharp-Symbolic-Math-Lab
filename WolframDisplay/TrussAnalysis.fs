@@ -143,7 +143,8 @@ module TrussDomain =
     type GetSelectedMemberFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
     type GetSelectedForceFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
     type GetSelectedSupportFromState = TrussAnalysisState -> (System.Windows.Point * float * bool) option
-    
+    type GetSupportReactionEquationssFromState = bool -> TrussAnalysisState -> TrussAnalysisState
+
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -186,6 +187,7 @@ module TrussDomain =
          setTrussMode:SetTrussMode;
          setSelectionMode:SetSelectionMode;
          removeTrussPartFromTruss:RemoveTrussPartFromTruss
+         getSupportReactionEquationssFromState:GetSupportReactionEquationssFromState
          }
 
 module TrussImplementation = 
@@ -210,7 +212,7 @@ module TrussImplementation =
             | Roller f when f.joint = j -> Some (Support spt) 
             | Pin (f,_f) when f.joint = j -> Some (Support spt)
             | _ -> None) s
-     
+        
     let getJointListFrom (m: Member list) = 
         let (l1,l2) = List.unzip m
         List.concat [l1;l2] |> List.distinct    
@@ -219,7 +221,11 @@ module TrussImplementation =
         let jointPartsTo j =
             List.concat [(getMembersAt j t.members);(getForcesAt j t.forces);(getSupportsAt j t.supports)]
         List.map jointPartsTo joints
-    
+    let getPartListFrom (t:Truss) =
+        getJointPartListFrom t
+        |> List.concat 
+        |> List.distinct
+
     let getDirectionsFrom (f:Force list) = List.map (fun x -> 
         Vector(
             x = x.direction.X - (getXFrom x.joint), 
@@ -539,8 +545,8 @@ module TrussServices =
         let p = System.Windows.Point(getXFrom fb.joint, getYFrom fb.joint)
         p
     let getDirectionFromForce (f:Force) =
-        let y = f.direction.Y - (getYFrom f.joint)
-        let x = f.direction.X - (getXFrom f.joint)
+        let y = (getYFrom f.joint) - f.direction.Y
+        let x = (getXFrom f.joint) - f.direction.X
         Math.Atan2(y,x) * (-180./Math.PI)
     let getPointFromForce (force:Force) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
     let getPointFromSupport (support:Support) = 
@@ -549,8 +555,8 @@ module TrussServices =
         | Roller f -> getPointFromForce f
     let getDirectionFromSupport (support:Support) = 
         match support with
-        | Pin (f,_) -> (getDirectionFromForce f) - 90.
-        | Roller f -> (getDirectionFromForce f) - 90.
+        | Pin (_,f) -> (getDirectionFromForce f)
+        | Roller f -> (getDirectionFromForce f) 
     let getSelectedSupportFromState (state :TrussAnalysisState) = 
         match state with
         | TrussDomain.TrussState ts -> None
@@ -571,8 +577,42 @@ module TrussServices =
 
         | TrussDomain.AnalysisState s -> None
         | TrussDomain.ErrorState es -> None
-
-    let getSupportReactionsFromState (state :TrussAnalysisState) = ()
+    let getSupportReactionEquationssFromState (yAxis: bool) (state :TrussAnalysisState) = 
+        let truss = getTrussFromState state        
+        let parts = getPartListFrom truss
+        match yAxis with
+        | true -> 
+            match state with
+            | TrussDomain.TrussState ts -> state
+            | TrussDomain.BuildState bs-> state
+            | TrussDomain.SelectionState ss -> state
+            | TrussDomain.AnalysisState s -> 
+                match List.contains Stable s.stability with
+                | true ->                 
+                    {s with analysis = 
+                            {momentEquations = getYMomentReactionEquations parts;
+                             forceXEquation = getXForceReactionEquation parts;
+                             forceYEquation = getYForceReactionEquation parts} 
+                             |> SupportReactions} 
+                             |> AnalysisState
+                | false -> state
+            | TrussDomain.ErrorState es -> state
+        | false -> 
+            match state with
+            | TrussDomain.TrussState ts -> state
+            | TrussDomain.BuildState bs-> state
+            | TrussDomain.SelectionState ss -> state
+            | TrussDomain.AnalysisState s -> 
+                match List.contains Stable s.stability with
+                | true ->                 
+                    {s with analysis = 
+                            {momentEquations = getXMomentReactionEquations parts;
+                             forceXEquation = getXForceReactionEquation parts;
+                             forceYEquation = getYForceReactionEquation parts} 
+                             |> SupportReactions} 
+                             |> AnalysisState
+                | false -> state
+            | TrussDomain.ErrorState es -> state
     
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
@@ -626,7 +666,10 @@ module TrussServices =
         | BuildState bs-> 
             match bs.buildOp with
             | BuildSupport sb -> 
-                let op = addDirectionToSupportBuilder (makeVectorFrom point,None) sb
+                let j = getJointFromSupportBuilder sb
+                let x,y = getXFrom j, getYFrom j
+                let point' = System.Windows.Point(x + (point.Y-y),y - (point.X-x))
+                let op = addDirectionToSupportBuilder (makeVectorFrom point',None) sb
                 match op with
                 | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
                 | TrussBuildOp tb -> {buildOp = tb; truss = bs.truss} |> BuildState
@@ -826,6 +869,7 @@ module TrussServices =
         setSelectionMode = setSelectionMode;
         setTrussMode = setTrussMode;
         removeTrussPartFromTruss = removeTrussPart
+        getSupportReactionEquationssFromState = getSupportReactionEquationssFromState
         }
 
 type TrussAnalysis() as this  =  
@@ -920,6 +964,7 @@ type TrussAnalysis() as this  =
             sp.Children.Add(reaction_Label) |> ignore
             sp.Children.Add(xAxis_RadioButton) |> ignore
             sp.Children.Add(yAxis_RadioButton) |> ignore
+            sp.Visibility <- Visibility.Collapsed
         sp
         // Orgin and grid
     let orgin (p:System.Windows.Point) = 
@@ -1841,6 +1886,7 @@ type TrussAnalysis() as this  =
                       selection_RadioButton.IsMouseOver,
                       analysis_RadioButton.IsMouseOver, 
                       settings_RadioButton.IsMouseOver with
+                // Force
                 | true,false,false,false,false,false, true,false,false,false,false,false
                 | false,true,false,false,false,false, true,false,false,false,false,false
                 | false,false,true,false,false,false, true,false,false,false,false,false
@@ -1859,6 +1905,7 @@ type TrussAnalysis() as this  =
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
                     trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
+                // Member
                 | true,false,false,false,false,false, false,true,false,false,false,false
                 | false,true,false,false,false,false, false,true,false,false,false,false
                 | false,false,true,false,false,false, false,true,false,false,false,false
@@ -1873,6 +1920,7 @@ type TrussAnalysis() as this  =
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
+                // Support
                 | true,false,false,false,false,false,  false,false,true,false,false,false
                 | false,true,false,false,false,false,  false,false,true,false,false,false
                 | false,false,true,false,false,false,  false,false,true,false,false,false
@@ -1891,6 +1939,7 @@ type TrussAnalysis() as this  =
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
+                // Selection
                 | true,false,false,false,false,false,  false,false,false,true,false,false
                 | false,true,false,false,false,false,  false,false,false,true,false,false
                 | false,false,true,false,false,false,  false,false,false,true,false,false
@@ -1906,6 +1955,7 @@ type TrussAnalysis() as this  =
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     trussServices.setTrussMode TrussDomain.TrussMode.Selection state
+                // Analysis
                 | true,false,false,false,false,false,  false,false,false,false,true,false
                 | false,true,false,false,false,false,  false,false,false,false,true,false
                 | false,false,true,false,false,false,  false,false,false,false,true,false
@@ -1920,7 +1970,9 @@ type TrussAnalysis() as this  =
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
-                    trussServices.checkTruss (trussServices.getTrussFromState state)                    
+                    trussServices.checkTruss (trussServices.getTrussFromState state)
+                    |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                // Settings
                 | true,false,false,false,false,false,  false,false,false,false,false,true
                 | false,true,false,false,false,false,  false,false,false,false,false,true
                 | false,false,true,false,false,false,  false,false,false,false,false,true
@@ -1980,9 +2032,27 @@ type TrussAnalysis() as this  =
                             modify_RadioButton.IsChecked <- Nullable true
                             delete_Button.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Modify state
-                        | _ -> state                            
+                        | _ -> // Logic for Analysis Mode radio buttons                            
+                            match xAxis_RadioButton.IsChecked.Value, 
+                                  yAxis_RadioButton.IsChecked.Value,                                   
+                                  xAxis_RadioButton.IsMouseOver, 
+                                  yAxis_RadioButton.IsMouseOver
+                                  with 
+                            | true,false, true,false
+                            | false,true, true,false -> 
+                                xAxis_RadioButton.IsChecked <- Nullable true 
+                                yAxis_RadioButton.IsChecked <- Nullable false
+                                trussServices.checkTruss (trussServices.getTrussFromState state)
+                                |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                            | true,false, false,true
+                            | false,true, false,true -> 
+                                xAxis_RadioButton.IsChecked <- Nullable false 
+                                yAxis_RadioButton.IsChecked <- Nullable true                                
+                                trussServices.checkTruss (trussServices.getTrussFromState state)
+                                |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                            | _ -> state
             do  state <- newState
-                label.Text <- state.ToString() 
+                label.Text <- newState.ToString() 
         | false -> 
             match state with
             | TrussDomain.TrussState ts -> 

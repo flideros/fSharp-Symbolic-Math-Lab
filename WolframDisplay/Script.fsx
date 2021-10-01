@@ -124,6 +124,9 @@ let sList = [s1;s2]
 
 let truss = {members=mList;forces=fList;supports=sList}
 
+getPartListFrom truss
+getJointPartListFrom truss
+
 checkTrussStability truss
 
 getReactionForcesFrom sList |> getDirectionsFrom
