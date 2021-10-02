@@ -88,7 +88,7 @@ getYForceReactionEquation partList3
 getXForceReactionEquation partList3
 
 
-
+List.concat [for i in 0..3 -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
 
 let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
 let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}

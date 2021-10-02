@@ -21,10 +21,22 @@ module WolframServices =
     let test = "Solve[{0*Ry0 + 3*Ry1 + -150 == 0,-3*Ry0 + 0*Ry1 + -105 == 0,-1*Rx0 + 0*Rx1 + 0 == 0,-1*Ry0 + -1*Ry1 + 15 == 0}, { Ry0, Ry1,Rx1,Rx0}]"
     
     // create helper functions to assemble Wolfram code
+    let floatToString (f:float) = 
+        let f' = f.ToString()
+        match String.exists (fun x -> x = '.') f' with
+        | true -> f'
+        | false -> f' + ".0"
+
     let createEquation (constant:float) (variables:(float*string) list) = 
-        let variableExpressions = List.fold (fun acc x-> acc + (fst x).ToString() + "*" + (snd x) + " + ") "" variables
-        variableExpressions + constant.ToString() + " == 0"
+        let variableExpressions = List.fold (fun acc x-> acc + floatToString(fst x) + "*" + (snd x) + " + ") "" variables
+        variableExpressions + constant.ToString() + " == 0.0"
     
+    let solveEquations (eq:string list) (v:string list) = 
+        let eq' = List.filter (fun x -> x<>"") eq
+        "Solve[{" + 
+        (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" eq') + "},{" +
+        (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" v) + "}]"
+
     // create helper functions to parse Wolfram code
 
 module TrussDomain =
@@ -77,7 +89,7 @@ module TrussDomain =
         | Delete
         | Modify
         | Inspect  
-    type ReactionForce = {support:Support; magnitud:float}
+    type ReactionForce = {support:Support; magnitude:float}
     
     // Types to describe error results
     type Error = 
@@ -144,6 +156,7 @@ module TrussDomain =
     type GetSelectedForceFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
     type GetSelectedSupportFromState = TrussAnalysisState -> (System.Windows.Point * float * bool) option
     type GetSupportReactionEquationssFromState = bool -> TrussAnalysisState -> TrussAnalysisState
+    type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
 
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
@@ -186,8 +199,9 @@ module TrussDomain =
          sendSupportToState:SendSupportToState;
          setTrussMode:SetTrussMode;
          setSelectionMode:SetSelectionMode;
-         removeTrussPartFromTruss:RemoveTrussPartFromTruss
-         getSupportReactionEquationssFromState:GetSupportReactionEquationssFromState
+         removeTrussPartFromTruss:RemoveTrussPartFromTruss;
+         getSupportReactionEquationssFromState:GetSupportReactionEquationssFromState;
+         getSupportReactionSolve:GetSupportReactionSolve
          }
 
 module TrussImplementation = 
@@ -237,6 +251,7 @@ module TrussImplementation =
             let b = (getYFrom f.joint) - (m * (getXFrom f.joint))
             (m,b)
         | false -> (0.,(getYFrom f.joint))
+    
     let getComponentForcesFrom (f:Force) =
         let x = f.direction.X - (getXFrom f.joint)
         let y = f.direction.Y - (getYFrom f.joint)
@@ -319,7 +334,7 @@ module TrussImplementation =
                 let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
                 y/d,"Ry" + i.ToString()) supports 
         createEquation (sumForcesY p) reactions
-        
+    
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -390,8 +405,8 @@ module TrussImplementation =
 
     // Inspect truss
     let checkTrussStability (truss:Truss) = 
-        let m = truss.members.Length 
-        let r = List.fold (fun acc r -> match r with | Pin _-> acc + 2 | Roller _ -> acc + 1) 0 truss.supports
+        let m = truss.members.Length
+        let r = List.fold (fun acc r -> match r with | Pin _-> acc + 2 | Roller _ -> acc + 1) 0 truss.supports        
         let j = (getJointListFrom truss.members).Length
         let checkNotEnoughReactions = m + r < 2 * j
         let checkForParallelReactions = 
@@ -545,8 +560,8 @@ module TrussServices =
         let p = System.Windows.Point(getXFrom fb.joint, getYFrom fb.joint)
         p
     let getDirectionFromForce (f:Force) =
-        let y = (getYFrom f.joint) - f.direction.Y
-        let x = (getXFrom f.joint) - f.direction.X
+        let y = f.direction.Y - (getYFrom f.joint)
+        let x = f.direction.X - (getXFrom f.joint)
         Math.Atan2(y,x) * (-180./Math.PI)
     let getPointFromForce (force:Force) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
     let getPointFromSupport (support:Support) = 
@@ -555,8 +570,8 @@ module TrussServices =
         | Roller f -> getPointFromForce f
     let getDirectionFromSupport (support:Support) = 
         match support with
-        | Pin (_,f) -> (getDirectionFromForce f)
-        | Roller f -> (getDirectionFromForce f) 
+        | Pin (_,f) -> -(getDirectionFromForce f)
+        | Roller f -> -(getDirectionFromForce f) 
     let getSelectedSupportFromState (state :TrussAnalysisState) = 
         match state with
         | TrussDomain.TrussState ts -> None
@@ -592,7 +607,7 @@ module TrussServices =
                     {s with analysis = 
                             {momentEquations = getYMomentReactionEquations parts;
                              forceXEquation = getXForceReactionEquation parts;
-                             forceYEquation = getYForceReactionEquation parts} 
+                             forceYEquation = getYForceReactionEquation parts} //""}//
                              |> SupportReactions} 
                              |> AnalysisState
                 | false -> state
@@ -607,7 +622,7 @@ module TrussServices =
                 | true ->                 
                     {s with analysis = 
                             {momentEquations = getXMomentReactionEquations parts;
-                             forceXEquation = getXForceReactionEquation parts;
+                             forceXEquation = getXForceReactionEquation parts; //"";//
                              forceYEquation = getYForceReactionEquation parts} 
                              |> SupportReactions} 
                              |> AnalysisState
@@ -842,6 +857,27 @@ module TrussServices =
             
         | _ -> state
 
+    let getSupportReactionSolve (yAxis: bool) (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState ts -> ""
+        | TrussDomain.BuildState bs-> ""
+        | TrussDomain.SelectionState ss -> ""
+        | TrussDomain.ErrorState es -> ""
+        | TrussDomain.AnalysisState a -> 
+            match a.analysis with
+            | Truss -> ""
+            | MethodOfJoints mj -> ""
+            | SupportReactions sr -> 
+                let eq = 
+                    match yAxis with
+                    | true -> sr.forceXEquation :: sr.momentEquations
+                    | false -> sr.forceYEquation :: sr.momentEquations
+                let v = 
+                    match sr.momentEquations.Length > 1 with
+                    | true -> List.concat [for i in 0..(sr.momentEquations.Length - 1) -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
+                    | false -> []
+                (WolframServices.solveEquations eq v)
+
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         checkTruss = checkTruss;
@@ -870,6 +906,7 @@ module TrussServices =
         setTrussMode = setTrussMode;
         removeTrussPartFromTruss = removeTrussPart
         getSupportReactionEquationssFromState = getSupportReactionEquationssFromState
+        getSupportReactionSolve = getSupportReactionSolve
         }
 
 type TrussAnalysis() as this  =  
@@ -926,7 +963,7 @@ type TrussAnalysis() as this  =
    
     (*Controls*)      
     let label =
-        let l = TextBlock()
+        let l = TextBox()
         do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 20.
@@ -954,7 +991,25 @@ type TrussAnalysis() as this  =
         let tb = TextBlock(Text="Y Axis",FontSize=15.)            
         do  r.Content <- tb
             r.IsChecked <- true |> Nullable<bool>
+            r.Margin <- Thickness(Left = 5., Top = 0., Right = 0., Bottom = 0.)
         r
+    let momentAxisRadio_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Horizontal
+            sp.Children.Add(xAxis_RadioButton) |> ignore
+            sp.Children.Add(yAxis_RadioButton) |> ignore
+        sp
+    let Compute_Button = 
+        let b = Button()        
+        do  b.Content <- "Compute Reactions"
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Bold
+            b.VerticalAlignment <- VerticalAlignment.Center
+            //b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b
     let momentAxis_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
@@ -962,8 +1017,8 @@ type TrussAnalysis() as this  =
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(reaction_Label) |> ignore
-            sp.Children.Add(xAxis_RadioButton) |> ignore
-            sp.Children.Add(yAxis_RadioButton) |> ignore
+            sp.Children.Add(momentAxisRadio_StackPanel) |> ignore
+            sp.Children.Add(Compute_Button) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
         // Orgin and grid
@@ -1843,6 +1898,7 @@ type TrussAnalysis() as this  =
         drawSelectedSupport s
         // Set
     let setGraphicsFromKernel (k:MathKernel) =        
+        let code = trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value state //WolframServices.test //
         let rec getImages i =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
@@ -1856,10 +1912,11 @@ type TrussAnalysis() as this  =
             getImages 0             
         | false -> 
           result_StackPanel.Children.Clear()
-          let graphics = link.EvaluateToImage("Style[Factor[x^2 + 2x + 1],FontSize ->50]", width = 0, height = 0)
+          let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
           let image = Image()            
           do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
               result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+              label.Text <- code
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
@@ -2328,7 +2385,7 @@ type TrussAnalysis() as this  =
         yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
- 
+        Compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
 module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        
