@@ -167,6 +167,7 @@ module TrussDomain =
     type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
     
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
@@ -201,7 +202,8 @@ module TrussDomain =
          setSelectionMode:SetSelectionMode;
          removeTrussPartFromTruss:RemoveTrussPartFromTruss;
          getSupportReactionEquationssFromState:GetSupportReactionEquationssFromState;
-         getSupportReactionSolve:GetSupportReactionSolve
+         getSupportReactionSolve:GetSupportReactionSolve;
+         sendStateToSupportBuilder:SendStateToSupportBuilder
          }
 
 module TrussImplementation = 
@@ -585,8 +587,8 @@ module TrussServices =
                     let p = System.Windows.Point (x = getXFrom r.joint, y = getYFrom r.joint)
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,true)
-                | Pin (p1,_p2) -> 
-                    let p = System.Windows.Point (x = getXFrom p1.joint, y = getYFrom p1.joint)
+                | Pin (_p1,p2) -> 
+                    let p = System.Windows.Point (x = getXFrom p2.joint, y = getYFrom p2.joint)
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,false)
 
@@ -832,7 +834,28 @@ module TrussServices =
             |> SelectionState
         | AnalysisState s -> state
         | ErrorState  es -> state
-    
+    let sendStateToSupportBuilder toPin (state :TrussAnalysisState) =
+        match state with 
+        | TrussState es -> ErrorState {errors = [WrongStateData]; truss = es.truss}
+        | BuildState bs-> 
+            match bs.buildOp with
+            | BuildMember _bm -> state
+            | BuildForce _bf -> state
+            | BuildSupport bs -> 
+                match bs with
+                | SupportBuilder.Roller {_magnitude = m; _direction = v; joint = j} -> 
+                    match toPin with 
+                    | true -> sendPointToPinSupportBuilder (System.Windows.Point (getXFrom j,getYFrom j)) (TrussState {truss = getTrussFromState state;mode = SupportBuild}) 
+                    | false -> state
+                | SupportBuilder.Pin 
+                    ({_magnitude = m1; _direction = v1; joint = j1},
+                     {_magnitude = m2; _direction = v2; joint = j2}) -> 
+                        match toPin with 
+                        | true -> state 
+                        | false -> sendPointToRollerSupportBuilder (System.Windows.Point (getXFrom j2,getYFrom j2)) (TrussState {truss = getTrussFromState state;mode = SupportBuild})        
+        | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
+        | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
         match state with 
@@ -904,9 +927,10 @@ module TrussServices =
         sendSupportToState = sendSupportToState;
         setSelectionMode = setSelectionMode;
         setTrussMode = setTrussMode;
-        removeTrussPartFromTruss = removeTrussPart
-        getSupportReactionEquationssFromState = getSupportReactionEquationssFromState
-        getSupportReactionSolve = getSupportReactionSolve
+        removeTrussPartFromTruss = removeTrussPart;
+        getSupportReactionEquationssFromState = getSupportReactionEquationssFromState;
+        getSupportReactionSolve = getSupportReactionSolve;
+        sendStateToSupportBuilder = sendStateToSupportBuilder
         }
 
 type TrussAnalysis() as this  =  
@@ -966,10 +990,12 @@ type TrussAnalysis() as this  =
         let l = TextBox()
         do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.
+            l.FontSize <- 15.
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- state.ToString()
+            l.BorderBrush <- SolidColorBrush(Colors.Transparent)
+            l.Opacity <- 0.5
         l 
         // Reaction forces and moments
     let reaction_Label =
@@ -2052,11 +2078,11 @@ type TrussAnalysis() as this  =
                     | true,false, true,false
                     | false,true, true,false -> rollerSupport_RadioButton.IsChecked <- Nullable true
                                                 pinSupport_RadioButton.IsChecked <- Nullable false
-                                                state
+                                                TrussServices.sendStateToSupportBuilder false state
                     | true,false, false,true
                     | false,true, false,true -> rollerSupport_RadioButton.IsChecked <- Nullable false 
                                                 pinSupport_RadioButton.IsChecked <- Nullable true
-                                                state
+                                                TrussServices.sendStateToSupportBuilder true state
                     | _ -> // Logic for Selection Mode radio buttons
                         match delete_RadioButton.IsChecked.Value, 
                               inspect_RadioButton.IsChecked.Value, 
