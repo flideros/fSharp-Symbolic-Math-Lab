@@ -685,7 +685,7 @@ module TrussServices =
             | BuildSupport sb -> 
                 let j = getJointFromSupportBuilder sb
                 let x,y = getXFrom j, getYFrom j
-                let point' = System.Windows.Point(x + (point.Y-y),y - (point.X-x))
+                let point' = System.Windows.Point(x + (y-point.Y),y - (point.X-x))
                 let op = addDirectionToSupportBuilder (makeVectorFrom point',None) sb
                 match op with
                 | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
@@ -703,7 +703,7 @@ module TrussServices =
             | BuildSupport sb -> 
                 let j = getJointFromSupportBuilder sb
                 let x,y = getXFrom j, getYFrom j
-                let point' = System.Windows.Point(x + (point.Y-y),y - (point.X-x))
+                let point' = System.Windows.Point(x + (y-point.Y),y - (point.X-x))
                 let op = addDirectionToSupportBuilder (makeVectorFrom point,Some (makeVectorFrom point')) sb
                 match op with
                 | TrussPart tp -> {truss = addTrussPartToTruss bs.truss tp; mode = SupportBuild} |> TrussState
@@ -1701,6 +1701,16 @@ type TrussAnalysis() as this  =
         do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
             vb.Child <- image
         vb
+    let code_TextBlock = 
+        let l = TextBlock()
+        do  //l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 15.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "TextString[Today]"
+            l.Visibility <- Visibility.Collapsed
+        l 
     let result_StackPanel = 
         let sp = StackPanel()
         do  sp.Orientation <- Orientation.Vertical
@@ -1924,7 +1934,7 @@ type TrussAnalysis() as this  =
         drawSelectedSupport s
         // Set
     let setGraphicsFromKernel (k:MathKernel) =        
-        let code = trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value state //WolframServices.test //
+        let code = code_TextBlock.Text // trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value state  //
         let rec getImages i =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
@@ -1935,14 +1945,16 @@ type TrussAnalysis() as this  =
         match k.Graphics.Length > 0 with                
         | true ->                                        
             result_StackPanel.Children.Clear()            
-            getImages 0             
+            getImages 0
+            result_StackPanel.Children.Add(code_TextBlock) |> ignore
         | false -> 
-          result_StackPanel.Children.Clear()
-          let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
-          let image = Image()            
-          do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
-              result_StackPanel.Children.Add(result_Viewbox image) |> ignore
-              label.Text <- code
+            result_StackPanel.Children.Clear()
+            let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
+            let image = Image()            
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+                result_StackPanel.Children.Add(code_TextBlock) |> ignore
+                
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
@@ -1987,7 +1999,8 @@ type TrussAnalysis() as this  =
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
-                    trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
+                    code_TextBlock.Text <- "TextString[Today]"
+                    trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state                    
                 // Member
                 | true,false,false,false,false,false, false,true,false,false,false,false
                 | false,true,false,false,false,false, false,true,false,false,false,false
@@ -2002,6 +2015,7 @@ type TrussAnalysis() as this  =
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
+                    code_TextBlock.Text <- "TextString[Today]"
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 // Support
                 | true,false,false,false,false,false,  false,false,true,false,false,false
@@ -2021,6 +2035,7 @@ type TrussAnalysis() as this  =
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
+                    code_TextBlock.Text <- "TextString[Today]"
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
                 // Selection
                 | true,false,false,false,false,false,  false,false,false,true,false,false
@@ -2037,6 +2052,7 @@ type TrussAnalysis() as this  =
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
+                    code_TextBlock.Text <- "TextString[Today]"
                     trussServices.setTrussMode TrussDomain.TrussMode.Selection state
                 // Analysis
                 | true,false,false,false,false,false,  false,false,false,false,true,false
@@ -2045,6 +2061,7 @@ type TrussAnalysis() as this  =
                 | false,false,false,true,false,false,  false,false,false,false,true,false
                 | false,false,false,false,true,false,  false,false,false,false,true,false 
                 | false,false,false,false,false,true,  false,false,false,false,true,false -> 
+                    setGraphicsFromKernel kernel
                     result_StackPanel.Visibility <- Visibility.Visible
                     momentAxis_StackPanel.Visibility <- Visibility.Visible
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
@@ -2052,9 +2069,13 @@ type TrussAnalysis() as this  =
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
-                    trussForceMagnitude_TextBox.IsReadOnly <- true
-                    trussServices.checkTruss (trussServices.getTrussFromState state)
-                    |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                    trussForceMagnitude_TextBox.IsReadOnly <- true                    
+                    let newState = 
+                        trussServices.checkTruss (trussServices.getTrussFromState state)
+                        |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                    code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
+                    newState
+                    //
                 // Settings
                 | true,false,false,false,false,false,  false,false,false,false,false,true
                 | false,true,false,false,false,false,  false,false,false,false,false,true
@@ -2070,6 +2091,7 @@ type TrussAnalysis() as this  =
                     orgin_StackPanel.Visibility <- Visibility.Visible
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
+                    code_TextBlock.Text <- "TextString[Today]"
                     trussServices.setTrussMode TrussDomain.TrussMode.Settings state
                 | _ -> // Logic for Support Type radio buttons
                     match rollerSupport_RadioButton.IsChecked.Value, pinSupport_RadioButton.IsChecked.Value, 
@@ -2125,14 +2147,20 @@ type TrussAnalysis() as this  =
                             | false,true, true,false -> 
                                 xAxis_RadioButton.IsChecked <- Nullable true 
                                 yAxis_RadioButton.IsChecked <- Nullable false
-                                trussServices.checkTruss (trussServices.getTrussFromState state)
-                                |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                                let newState = 
+                                    trussServices.checkTruss (trussServices.getTrussFromState state)
+                                    |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                                code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
+                                newState
                             | true,false, false,true
                             | false,true, false,true -> 
                                 xAxis_RadioButton.IsChecked <- Nullable false 
                                 yAxis_RadioButton.IsChecked <- Nullable true                                
-                                trussServices.checkTruss (trussServices.getTrussFromState state)
-                                |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                                let newState = 
+                                    trussServices.checkTruss (trussServices.getTrussFromState state)
+                                    |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                                code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
+                                newState
                             | _ -> state
             do  state <- newState
                 label.Text <- newState.ToString() 
@@ -2175,7 +2203,7 @@ type TrussAnalysis() as this  =
                             drawBuildSupportJoint p
                             state <- newState
                             label.Text <- state.ToString()
-                | TrussDomain.TrussMode.Analysis -> ()//setGraphicsFromKernel kernel 
+                | TrussDomain.TrussMode.Analysis -> setGraphicsFromKernel kernel //()//
                 | TrussDomain.TrussMode.Selection -> 
                     label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Settings -> ()
@@ -2194,7 +2222,7 @@ type TrussAnalysis() as this  =
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
-            | TrussDomain.AnalysisState s -> setGraphicsFromKernel kernel //()
+            | TrussDomain.AnalysisState s -> ()
             | TrussDomain.ErrorState es -> 
                 match es.errors with 
                 | [TrussDomain.NoJointSelected] -> ()                    
@@ -2412,6 +2440,7 @@ type TrussAnalysis() as this  =
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         Compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
+
 module TrussAnalysis = 
     let window =
         "Needs[\"NETLink`\"]        
