@@ -258,7 +258,7 @@ module TrussImplementation =
         let x = f.direction.X - (getXFrom f.joint)
         let y = f.direction.Y - (getYFrom f.joint)
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-        {joint = f.joint; magnitudeX = f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
+        {joint = f.joint; magnitudeX = -f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
     let getSupportComponentForcesFrom (s:Support) =
         match s with
         | Pin (p1,p2) ->              
@@ -296,14 +296,14 @@ module TrussImplementation =
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArmX sj = getXFrom j - getXFrom sj           
+            let getMomentArmX sj = getXFrom sj - getXFrom j         
             List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmX),"Ry" + i.ToString()) supports
         List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
     let getXMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArmY sj = getYFrom j - getYFrom sj            
+            let getMomentArmY sj = getYFrom sj - getYFrom j           
             List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
         List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports    
     let getXForceReactionEquation (p:TrussPart list) =         
@@ -836,7 +836,7 @@ module TrussServices =
         | ErrorState  es -> state
     let sendStateToSupportBuilder toPin (state :TrussAnalysisState) =
         match state with 
-        | TrussState es -> ErrorState {errors = [WrongStateData]; truss = es.truss}
+        | TrussState es -> state
         | BuildState bs-> 
             match bs.buildOp with
             | BuildMember _bm -> state
