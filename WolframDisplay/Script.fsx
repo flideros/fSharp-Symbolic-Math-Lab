@@ -17,17 +17,17 @@ open Math.Presentation.WolframEngine
 open TrussDomain
 open TrussImplementation
 
-let x0,x1,x2 = TrussDomain.X 0., TrussDomain.X 3., TrussDomain.X 6.
-let y0,y1 = TrussDomain.Y 4., TrussDomain.Y 0.
+let x0,x1,x2,x3 = TrussDomain.X 0., TrussDomain.X 1., TrussDomain.X 2., TrussDomain.X 3.
+let y0,y1,y2,y3 = TrussDomain.Y 0., TrussDomain.Y 1.,TrussDomain.Y 2., TrussDomain.Y 3.
 
 //truss1 -- supports joints alligned verticaly, 2 reactions in x direction   
-let x3,x4,x5,x6 = TrussDomain.X 0., TrussDomain.X 2.,TrussDomain.X 4.,TrussDomain.X 6.
-let y2,y3 = TrussDomain.Y 0., TrussDomain.Y 25.
-let jD = {TrussDomain.x=x6;TrussDomain.y=y2}
-let jC = {TrussDomain.x=x5;TrussDomain.y=y2}
-let jB = {TrussDomain.x=x4;TrussDomain.y=y2}
-let jA = {TrussDomain.x=x3;TrussDomain.y=y2}
-let jF = {TrussDomain.x=x3;TrussDomain.y=y3}
+let x33,x4,x5,x6 = TrussDomain.X 0., TrussDomain.X 2.,TrussDomain.X 4.,TrussDomain.X 6.
+let y22,y33 = TrussDomain.Y 0., TrussDomain.Y 25.
+let jD = {TrussDomain.x=x6;TrussDomain.y=y22}
+let jC = {TrussDomain.x=x5;TrussDomain.y=y22}
+let jB = {TrussDomain.x=x4;TrussDomain.y=y22}
+let jA = {TrussDomain.x=x33;TrussDomain.y=y22}
+let jF = {TrussDomain.x=x33;TrussDomain.y=y33}
 
 let rFC = {magnitude = 0.; direction = Vector (x = 1.,y = 0.); joint = jA}
 let rFB = {magnitude = 0.; direction = Vector (x = 0.,y = 1.); joint = jA}
@@ -91,14 +91,14 @@ getXForceReactionEquation partList3
 List.concat [for i in 0..3 -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
 
 let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
-let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}
-let j3 = {TrussDomain.x=x2;TrussDomain.y=y0}
-let j4 = {TrussDomain.x=x1;TrussDomain.y=y1}
+let j2 = {TrussDomain.x=x1;TrussDomain.y=y1}
+let j3 = {TrussDomain.x=x2;TrussDomain.y=y2}
+let j4 = {TrussDomain.x=x3;TrussDomain.y=y3}
 let j5 = {TrussDomain.x=x2;TrussDomain.y=y1}
 
 
 let m1 = j1,j2
-let m2 = j1,j4
+let m2 = j3,j4
 let m3 = j2,j4
 let m4 = j4,j5
 let m5 = j2,j3
@@ -137,7 +137,9 @@ let partList = [Force f4;Force f5;Support s1;Support s2]
 
 getYMomentReactionEquations partList
 
+let checkCase_1  m1 m2 = (getMemberLineOfActionFrom m1) = (getMemberLineOfActionFrom m2)
 
+checkCase_1 m1 m2
 
 //////////////////////////////////////////////////////
 

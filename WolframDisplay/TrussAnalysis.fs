@@ -235,10 +235,11 @@ module TrussImplementation =
     let getJointPartListFrom (t:Truss) =
         let joints = getJointListFrom t.members
         let jointPartsTo j =
-            List.concat [(getMembersAt j t.members);(getForcesAt j t.forces);(getSupportsAt j t.supports)]
+            j,List.concat [(getMembersAt j t.members);(getForcesAt j t.forces);(getSupportsAt j t.supports)]
         List.map jointPartsTo joints
     let getPartListFrom (t:Truss) =
         getJointPartListFrom t
+        |> List.map (fun (_p,l) -> l)
         |> List.concat 
         |> List.distinct
 
@@ -248,11 +249,19 @@ module TrussImplementation =
             y = x.direction.Y - (getYFrom x.joint))) f
     let getLineOfActionFrom (f:Force) = 
         match (f.direction.X - (getXFrom f.joint)) = 0. with 
-        | true -> 
+        | false -> 
             let m = (f.direction.Y - (getYFrom f.joint)) / (f.direction.X - (getXFrom f.joint))                   
             let b = (getYFrom f.joint) - (m * (getXFrom f.joint))
             (m,b)
-        | false -> (0.,(getYFrom f.joint))
+        | true -> (1.,0.)
+    let getMemberLineOfActionFrom (m:Member) = 
+        let j1,j2 = m
+        match ((getXFrom j2) - (getXFrom j1)) = 0. with 
+        | false -> 
+            let m = ((getYFrom j2) - (getYFrom j1)) / ((getXFrom j2) - (getXFrom j1))                   
+            let b = (getYFrom j1) - (m * (getXFrom j1))
+            (m,b)
+        | true -> (1.,0.)
     
     let getComponentForcesFrom (f:Force) =
         let x = f.direction.X - (getXFrom f.joint)
@@ -337,6 +346,45 @@ module TrussImplementation =
                 y/d,"Ry" + i.ToString()) supports 
         createEquation (sumForcesY p) reactions
     
+    let isColinear (p1:TrussPart) (p2:TrussPart) = 
+        match p1, p2 with
+        | Member m1, Member m2 -> (getMemberLineOfActionFrom m1) = (getMemberLineOfActionFrom m2)
+        | Member m1, Force f 
+        | Force f, Member m1 -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom f)
+        | Support (Roller r), Member m1 
+        | Member m1,Support (Roller r) -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom r)
+        | Support (Pin (f1,f2)), Member m1 
+        | Member m1,Support (Pin (f1,f2)) -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom f1) ||
+                                             (getMemberLineOfActionFrom m1) = (getLineOfActionFrom f2) 
+        | _ -> false
+
+    let getZeroForceMembers (t:Truss) =
+        let jointParts = getJointPartListFrom t
+        let getZFM  (p:TrussPart list) = 
+            match p with 
+            // case 1 -- no load, 2 non-colinear members, both members are zero force
+            | [Member m1;Member m2] when (isColinear (Member m1) (Member m2)) = false -> [Member m1;Member m2]                     
+            // case 2 -- no load, 3 members, 2 colinear members, non-colinear member is zero force        
+            | [Member m1;Member m2;Member m3] when (isColinear (Member m1) (Member m2)) && ((isColinear (Member m1) (Member m3)) = false) -> [Member m3]
+            | [Member m1;Member m2;Member m3] when (isColinear (Member m1) (Member m3)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]
+            | [Member m1;Member m2;Member m3] when (isColinear (Member m3) (Member m2)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
+            // case 3 -- applied load colinear with 1 of 2 members, non-colinear member is zero force
+            | [Member m1;Member m2;Force f]
+            | [Member m1;Force f;Member m2]
+            | [Force f;Member m1;Member m2] when (isColinear (Member m1) (Force f)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]            
+            | [Member m1;Member m2;Force f] 
+            | [Member m1;Force f;Member m2]
+            | [Force f;Member m1;Member m2] when (isColinear (Member m2) (Force f)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
+            | [Member m1;Member m2;Support s]
+            | [Member m1;Support s;Member m2]
+            | [Support s;Member m1;Member m2] when (isColinear (Member m1) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]            
+            | [Member m1;Member m2;Support s] 
+            | [Member m1;Support s;Member m2]
+            | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
+            | _ -> []
+        
+        ()
+
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -1034,7 +1082,7 @@ type TrussAnalysis() as this  =
             b.FontSize <- 12.
             b.FontWeight <- FontWeights.Bold
             b.VerticalAlignment <- VerticalAlignment.Center
-            //b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
         b
     let momentAxis_StackPanel = 
         let sp = StackPanel()
@@ -1709,7 +1757,7 @@ type TrussAnalysis() as this  =
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- "TextString[Today]"
-            l.Visibility <- Visibility.Collapsed
+            l.Visibility <- Visibility.Visible
         l 
     let result_StackPanel = 
         let sp = StackPanel()
@@ -2419,6 +2467,32 @@ type TrussAnalysis() as this  =
                         label.Text <- newState.ToString()                    
             | TrussDomain.SelectionState ss -> ()
             | TrussDomain.AnalysisState s -> ()
+            | TrussDomain.ErrorState es -> ()
+        | Input.Key.Delete -> 
+            match state with
+            | TrussDomain.TrussState ts -> 
+                match ts.mode with
+                | TrussDomain.TrussMode.MemberBuild -> ()
+                | TrussDomain.TrussMode.ForceBuild -> ()                    
+                | TrussDomain.TrussMode.SupportBuild -> ()
+                | TrussDomain.TrussMode.Analysis -> ()
+                | TrussDomain.TrussMode.Selection -> ()
+                | TrussDomain.TrussMode.Settings -> ()
+            | TrussDomain.BuildState bs -> 
+                match bs.buildOp with
+                | TrussDomain.BuildMember _bm -> ()
+                | TrussDomain.BuildForce bf -> ()
+                | TrussDomain.BuildSupport bs -> ()        
+            | TrussDomain.SelectionState ss -> 
+                match ss.mode with
+                | TrussDomain.TrussSelectionMode.Delete -> 
+                    let newState = trussServices.removeTrussPartFromTruss state            
+                    do  state <- newState 
+                        label.Text <- newState.ToString()
+                        drawTruss newState
+                | TrussDomain.TrussSelectionMode.Modify  -> ()
+                | TrussDomain.TrussSelectionMode.Inspect -> ()
+            | TrussDomain.AnalysisState s -> ()                
             | TrussDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
 
