@@ -17,8 +17,6 @@ open Math.Presentation.WolframEngine
 open TrussDomain
 open TrussImplementation
 
-let x0,x1,x2,x3 = TrussDomain.X 0., TrussDomain.X 1., TrussDomain.X 2., TrussDomain.X 3.
-let y0,y1,y2,y3 = TrussDomain.Y 0., TrussDomain.Y 1.,TrussDomain.Y 2., TrussDomain.Y 3.
 
 //truss1 -- supports joints alligned verticaly, 2 reactions in x direction   
 let x33,x4,x5,x6 = TrussDomain.X 0., TrussDomain.X 2.,TrussDomain.X 4.,TrussDomain.X 6.
@@ -90,25 +88,29 @@ getXForceReactionEquation partList3
 
 List.concat [for i in 0..3 -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
 
+let x0,x1,x2,x3 = TrussDomain.X 0., TrussDomain.X 1., TrussDomain.X 2., TrussDomain.X 3.
+let y0,y1,y2,y3 = TrussDomain.Y 0., TrussDomain.Y 1.,TrussDomain.Y 2., TrussDomain.Y 3.
+
+
 let j1 = {TrussDomain.x=x0;TrussDomain.y=y0}
-let j2 = {TrussDomain.x=x1;TrussDomain.y=y1}
-let j3 = {TrussDomain.x=x2;TrussDomain.y=y2}
-let j4 = {TrussDomain.x=x3;TrussDomain.y=y3}
-let j5 = {TrussDomain.x=x2;TrussDomain.y=y1}
+let j2 = {TrussDomain.x=x1;TrussDomain.y=y0}
+let j3 = {TrussDomain.x=x2;TrussDomain.y=y0}
+let j4 = {TrussDomain.x=x1;TrussDomain.y=y3}
+let j5 = {TrussDomain.x=x2;TrussDomain.y=y3}
 
 
 let m1 = j1,j2
-let m2 = j3,j4
-let m3 = j2,j4
-let m4 = j4,j5
-let m5 = j2,j3
-let m6 = j2,j5
-let m7 = j3,j5
+let m2 = j2,j3
+let m3 = j4,j5
+let m4 = j1,j4
+let m5 = j4,j2
+let m6 = j5,j3
+let m7 = j3,j4
 
 let f1 = {magnitude = 100.; direction = Vector (x=0.,y = 1.); joint = j1}
 let f2 = {magnitude = 100.; direction = Vector (x=1.,y = 0.); joint = j1}
 
-let f3 = {magnitude = 1.; direction = Vector (x=6.,y = 1.); joint = j3}
+let f3 = {magnitude = 100.; direction = Vector (x=2.,y = 1.); joint = j4}
 
 
 let f4 = {magnitude = 12.; direction = Vector (x=3.,y = 3.); joint = j4}
@@ -119,7 +121,7 @@ let s1,s2 = Pin (f1,f2), Roller f3
 
 let mList = [m1;m2;m3;m4;m5;m6;m7]
 
-let fList = [f4;f5]
+let fList = [f3]
 let sList = [s1;s2]
 
 let truss = {members=mList;forces=fList;supports=sList}
@@ -140,6 +142,47 @@ getYMomentReactionEquations partList
 let checkCase_1  m1 m2 = (getMemberLineOfActionFrom m1) = (getMemberLineOfActionFrom m2)
 
 checkCase_1 m1 m2
+
+let getZeroForceMembers (t:Truss) =
+    let jointParts = getJointPartListFrom t
+    let getZFM  (tpl:TrussPart list) = 
+        match tpl with 
+        // case 1 -- no load, 2 non-colinear members, both members are zero force
+        | [Member m1;Member m2] when (isColinear (Member m1) (Member m2)) = false -> [Member m1;Member m2]                     
+        // case 2 -- no load, 3 members, 2 colinear members, non-colinear member is zero force        
+        | [Member m1;Member m2;Member m3] when (isColinear (Member m1) (Member m2)) && ((isColinear (Member m1) (Member m3)) = false) -> [Member m3]
+        | [Member m1;Member m2;Member m3] when (isColinear (Member m1) (Member m3)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]
+        | [Member m1;Member m2;Member m3] when (isColinear (Member m3) (Member m2)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
+        // case 3 -- applied load colinear with 1 of 2 members, non-colinear member is zero force
+        | [Member m1;Member m2;Force f]
+        | [Member m1;Force f;Member m2]
+        | [Force f;Member m1;Member m2] when (isColinear (Member m1) (Force f)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]            
+        | [Member m1;Member m2;Force f] 
+        | [Member m1;Force f;Member m2]
+        | [Force f;Member m1;Member m2] when (isColinear (Member m2) (Force f)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
+        | [Member m1;Member m2;Support s]
+        | [Member m1;Support s;Member m2]
+        | [Support s;Member m1;Member m2] when (isColinear (Member m1) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]            
+        | [Member m1;Member m2;Support s] 
+        | [Member m1;Support s;Member m2]
+        | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
+        | _ -> []
+    let partitionZFM  (tpl:(Joint*TrussPart list)list) = 
+        List.map (fun (j,pl) -> 
+            let zfm = getZFM pl
+            let pl' = List.except zfm pl
+            let rec recurse pl zfm = 
+                match getZFM pl with
+                | [] -> j,pl',zfm
+                | x -> 
+                    let zfm' = (List.concat [zfm; x])
+                    let pl'' = List.except zfm' pl'
+                    recurse pl'' zfm' 
+            recurse pl' zfm) tpl
+    partitionZFM jointParts
+
+getZeroForceMembers truss
+
 
 //////////////////////////////////////////////////////
 
