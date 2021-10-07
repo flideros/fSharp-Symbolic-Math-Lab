@@ -143,44 +143,6 @@ let checkCase_1  m1 m2 = (getMemberLineOfActionFrom m1) = (getMemberLineOfAction
 
 checkCase_1 m1 m2
 
-let getZeroForceMembers (t:Truss) =
-    let jointParts = getJointPartListFrom t
-    let getZFM  (tpl:TrussPart list) = 
-        match tpl with 
-        // case 1 -- no load, 2 non-colinear members, both members are zero force
-        | [Member m1;Member m2] when (isColinear (Member m1) (Member m2)) = false -> [Member m1;Member m2]                     
-        // case 2 -- no load, 3 members, 2 colinear members, non-colinear member is zero force        
-        | [Member m1;Member m2;Member m3] when (isColinear (Member m1) (Member m2)) && ((isColinear (Member m1) (Member m3)) = false) -> [Member m3]
-        | [Member m1;Member m2;Member m3] when (isColinear (Member m1) (Member m3)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]
-        | [Member m1;Member m2;Member m3] when (isColinear (Member m3) (Member m2)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
-        // case 3 -- applied load colinear with 1 of 2 members, non-colinear member is zero force
-        | [Member m1;Member m2;Force f]
-        | [Member m1;Force f;Member m2]
-        | [Force f;Member m1;Member m2] when (isColinear (Member m1) (Force f)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]            
-        | [Member m1;Member m2;Force f] 
-        | [Member m1;Force f;Member m2]
-        | [Force f;Member m1;Member m2] when (isColinear (Member m2) (Force f)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
-        | [Member m1;Member m2;Support s]
-        | [Member m1;Support s;Member m2]
-        | [Support s;Member m1;Member m2] when (isColinear (Member m1) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m2]            
-        | [Member m1;Member m2;Support s] 
-        | [Member m1;Support s;Member m2]
-        | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
-        | _ -> []
-    let partitionZFM  (tpl:(Joint*TrussPart list)list) = 
-        List.map (fun (j,pl) -> 
-            let zfm = getZFM pl
-            let pl' = List.except zfm pl
-            let rec recurse pl zfm = 
-                match getZFM pl with
-                | [] -> j,pl',zfm
-                | x -> 
-                    let zfm' = (List.concat [zfm; x])
-                    let pl'' = List.except zfm' pl'
-                    recurse pl'' zfm' 
-            recurse pl' zfm) tpl
-    partitionZFM jointParts
-
 getZeroForceMembers truss
 
 
