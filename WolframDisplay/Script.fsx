@@ -18,6 +18,57 @@ open TrussDomain
 open TrussImplementation
 
 
+let testResult = "{{Ry0 -> -13.2124, Rx1 -> 70.7107, Ry1 -> 100.561}}" //
+let testReaction = "Ry1 -> -13.2124"
+
+let parseReaction (r:string) =
+    let r' = r.Trim()
+    let index = 
+        match r.Contains("->") with
+        | false -> false,0
+        | true -> r'.Substring(2,r.IndexOf(" ->")-2) |> System.Int32.TryParse
+    let reaction = 
+        match r.Contains("->") with
+        | false -> ""
+        | true -> r'.Substring(0,2)
+    let magnitude = 
+        match r.Contains("->") with
+        | false -> false,0.0
+        | true -> r'.Substring(r.LastIndexOf(">")+1) |> System.Double.TryParse
+    match r' with 
+    | "Unable to compute result" -> (0,"",0.0)
+    | _ -> (snd index),reaction,(snd magnitude)
+
+parseReaction testReaction
+
+let parseReactions (r:string) = 
+    let r' = r |> String.filter (fun c -> (c = '{') = false) |> String.filter (fun c -> (c = '}') = false)
+    let reactions = 
+        match r with 
+        | "{}" -> ["Unable to compute result"]
+        |  "" -> ["Unable to compute result"]
+        |  _ -> Array.toList (r'.Split(','))
+    let parseReaction (r:string) =
+        let r' = r.Trim()
+        let index = 
+            match r.Contains("->") with
+            | false -> false,0
+            | true -> r'.Substring(2,r.IndexOf(" ->")-2) |> System.Int32.TryParse
+        let reaction = 
+            match r.Contains("->") with
+            | false -> ""
+            | true -> r'.Substring(0,2)
+        let magnitude = 
+            match r.Contains("->") with
+            | false -> false,0.0
+            | true -> r'.Substring(r.LastIndexOf(">")+1) |> System.Double.TryParse
+        match r' with 
+        | "Unable to compute result" -> (0,"",0.0)
+        | _ -> (snd index),reaction,(snd magnitude)
+    List.map parseReaction reactions
+
+parseReactions testResult
+
 //truss1 -- supports joints alligned verticaly, 2 reactions in x direction   
 let x33,x4,x5,x6 = TrussDomain.X 0., TrussDomain.X 2.,TrussDomain.X 4.,TrussDomain.X 6.
 let y22,y33 = TrussDomain.Y 0., TrussDomain.Y 25.

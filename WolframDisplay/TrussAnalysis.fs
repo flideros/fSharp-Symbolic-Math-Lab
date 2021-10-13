@@ -19,7 +19,8 @@ open Wolfram.NETLink
 
 module WolframServices =
     let test = "Solve[{0*Ry0 + 3*Ry1 + -150 == 0,-3*Ry0 + 0*Ry1 + -105 == 0,-1*Rx0 + 0*Rx1 + 0 == 0,-1*Ry0 + -1*Ry1 + 15 == 0}, { Ry0, Ry1,Rx1,Rx0}]"
-    
+    let testResult = "{{Ry0 -> -13.2124, Rx1 -> 70.7107, Ry1 -> 100.561}}"
+
     // create helper functions to assemble Wolfram code
     let floatToString (f:float) = 
         let f' = f.ToString()
@@ -39,6 +40,32 @@ module WolframServices =
 
     // create helper functions to parse Wolfram code
 
+    let parseReactions (r:string) = 
+        let r' = r |> String.filter (fun c -> (c = '{') = false) |> String.filter (fun c -> (c = '}') = false)
+        let reactions = 
+            match r with 
+            | "{}" -> ["Unable to compute result"]
+            |  "" -> ["Unable to compute result"]
+            |  _ -> Array.toList (r'.Split(','))
+        let parseReaction (r:string) =
+            let r' = r.Trim()
+            let index = 
+                match r.Contains("->") with
+                | false -> false,0
+                | true -> r'.Substring(2,r.IndexOf(" ->")-2) |> System.Int32.TryParse
+            let reaction = 
+                match r.Contains("->") with
+                | false -> "Unable to compute result"
+                | true -> r'.Substring(0,2)
+            let magnitude = 
+                match r.Contains("->") with
+                | false -> false,0.0
+                | true -> r'.Substring(r.LastIndexOf(">")+1) |> System.Double.TryParse
+            match r' with 
+            | "Unable to compute result" -> (0,"Unable to compute result",0.0)
+            | _ -> (snd index),reaction,(snd magnitude)
+        List.map parseReaction reactions
+
 module TrussDomain =
     
     // Parameters
@@ -51,12 +78,12 @@ module TrussDomain =
     type MemberBuilder = (Joint*(Joint option))
     type Member = (Joint*Joint)
     
-    
     type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
     type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
     type Force = {magnitude:float; direction:Vector; joint:Joint}    
     type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
-    type Support = | Roller of Force | Pin of (Force*Force)    
+    type Pin = {tangent:Force;normal:Force}
+    type Support = | Roller of Force | Pin of Pin  
     type Truss = {members:Member list; forces:Force list; supports:Support list}
     type TrussStability = 
         | Stable 
@@ -89,7 +116,7 @@ module TrussDomain =
         | Delete
         | Modify
         | Inspect  
-    type ReactionForce = {support:Support; magnitude:float}
+    
     
     // Types to describe error results
     type Error = 
@@ -113,10 +140,19 @@ module TrussDomain =
     type ErrorStateData = {errors : Error list; truss : Truss}
     
     // Data associated with each analysis state
-    type SupportReactionStateData = 
+    type SupportReactionEquationStateData = 
         {momentEquations: string list;
          forceXEquation: string
          forceYEquation: string}
+    
+    type SupportReactionResult = 
+        {support: Support;
+         xReactionForce: Force option;
+         yReactionForce: Force option}
+    
+    type SupportReactionResultStateData = 
+        {reactions : SupportReactionResult list}
+
     type MethodOfJointsAnalysisStateData = 
         {zeroForceMembers: TrussPart list;
          tensionMembers: (float*TrussPart) list;
@@ -125,7 +161,8 @@ module TrussDomain =
     // Analysis States
     type AnalysisState =
         | Truss
-        | SupportReactions of SupportReactionStateData
+        | SupportReactionEquations of SupportReactionEquationStateData
+        | SupportReactionResult of SupportReactionResultStateData
         | MethodOfJoints of MethodOfJointsAnalysisStateData
     
     type AnalysisStateData = 
@@ -171,6 +208,7 @@ module TrussDomain =
     type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
+    type SendReactionResultToState = string -> TrussAnalysisState -> TrussAnalysisState
     
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
@@ -206,7 +244,8 @@ module TrussDomain =
          removeTrussPartFromTruss:RemoveTrussPartFromTruss;
          getSupportReactionEquationssFromState:GetSupportReactionEquationssFromState;
          getSupportReactionSolve:GetSupportReactionSolve;
-         sendStateToSupportBuilder:SendStateToSupportBuilder
+         sendStateToSupportBuilder:SendStateToSupportBuilder;
+         sendReactionResultToState:SendReactionResultToState
          }
 
 module TrussImplementation = 
@@ -216,7 +255,7 @@ module TrussImplementation =
     let getYFrom (j:Joint) = match j.y with | Y y -> y
     let getXFrom (j:Joint) = match j.x with | X x -> x
     let getReactionForcesFrom (s: Support list) = 
-        List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin (f1,f2) -> f1::f2::acc) [] s
+        List.fold (fun acc r -> match r with | Roller f -> f::acc  | Pin p -> p.tangent::p.normal::acc) [] s
     
     let getMembersAt (j:Joint) (m:Member list) = 
         List.choose (fun (p1,p2) -> match p1 = j || p2 = j with | true -> Some (Member (p1,p2)) | false -> None) m
@@ -229,7 +268,7 @@ module TrussImplementation =
         List.choose (fun spt -> 
             match spt with 
             | Roller f when f.joint = j -> Some (Support spt) 
-            | Pin (f,_f) when f.joint = j -> Some (Support spt)
+            | Pin p when p.normal.joint = j -> Some (Support spt)
             | _ -> None) s
         
     let getJointListFrom (m: Member list) = 
@@ -273,11 +312,11 @@ module TrussImplementation =
         {joint = f.joint; magnitudeX = -f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
     let getSupportComponentForcesFrom (s:Support) =
         match s with
-        | Pin (p1,p2) ->              
-            let x = p1.direction.X - (getXFrom p1.joint)
-            let y = p2.direction.Y - (getYFrom p2.joint)
+        | Pin p ->              
+            let x = p.tangent.direction.X - (getXFrom p.tangent.joint)
+            let y = p.normal.direction.Y - (getYFrom p.normal.joint)
             let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-            {joint = p1.joint; magnitudeX = p1.magnitude*(x/d); magnitudeY = p2.magnitude*(y/d)}
+            {joint = p.tangent.joint; magnitudeX = p.tangent.magnitude*(x/d); magnitudeY = p.normal.magnitude*(y/d)}
         | Roller r -> 
             let x = r.direction.X - (getXFrom r.joint)
             let y = r.direction.Y - (getYFrom r.joint)
@@ -288,7 +327,7 @@ module TrussImplementation =
         match sb with
         | SupportBuilder.Roller r -> r.joint
         | SupportBuilder.Pin (p,_) -> p.joint
-    let getJointFromSupport (s:Support) = match s with | Pin (p,_) -> p.joint | Roller r -> r.joint
+    let getJointFromSupport (s:Support) = match s with | Pin p -> p.normal.joint | Roller r -> r.joint
             
     let sumForcesX (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
@@ -322,24 +361,24 @@ module TrussImplementation =
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i x -> 
             match x with 
-            | Pin (p1,_p2) -> 
-                let x = p1.direction.X - (getXFrom p1.joint)
-                let y = p1.direction.Y - (getYFrom p1.joint)
+            | Pin p -> 
+                let x = p.tangent.direction.X - (getXFrom p.tangent.joint)
+                let y = p.tangent.direction.Y - (getYFrom p.tangent.joint)
                 let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
                 x/d,"Rx" + i.ToString()
             | Roller r -> 
                 let x = r.direction.X - (getXFrom r.joint)
                 let y = r.direction.Y - (getYFrom r.joint)
                 let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
-                x/d,"Rx" + i.ToString()) supports // handle direction here 
+                x/d,"Rx" + i.ToString()) supports 
         createEquation (sumForcesX p) reactions
     let getYForceReactionEquation (p:TrussPart list) =   
         let supports = List.choose (fun y -> match y with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i y -> 
             match y with 
-            | Pin (_p1,p2) -> 
-                let x = p2.direction.X - (getXFrom p2.joint)
-                let y = p2.direction.Y - (getYFrom p2.joint)
+            | Pin p -> 
+                let x = p.normal.direction.X - (getXFrom p.normal.joint)
+                let y = p.normal.direction.Y - (getYFrom p.normal.joint)
                 let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
                 y/d,"Ry" + i.ToString()            
             | Roller r -> 
@@ -356,10 +395,10 @@ module TrussImplementation =
         | Force f, Member m1 -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom f)
         | Support (Roller r), Member m1 
         | Member m1,Support (Roller r) -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom r)
-        | Support (Pin (f1,f2)), Member m1 
-        | Member m1,Support (Pin (f1,f2)) -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom f1) 
+        | Support (Pin p), Member m1 
+        | Member m1,Support (Pin (p)) -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom p.normal) 
         | _ -> false
-    let getZFM  (tpl:TrussPart list) = 
+    let getZFM (tpl:TrussPart list) = 
         match tpl with 
         // case 1 -- no load, 2 non-colinear members, both members are zero force
         | [Member m1;Member m2] when (isColinear (Member m1) (Member m2)) = false -> [Member m1;Member m2]                     
@@ -397,6 +436,7 @@ module TrussImplementation =
         let jointParts = getJointPartListFrom t        
         let partition = partitionZFM jointParts
         List.fold (fun acc x -> match x with | (_j,_pl,zfm) -> List.concat[zfm;acc]) [] partition
+    let addReactionsForcesToTruss = ()
 
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -450,8 +490,8 @@ module TrussImplementation =
             let f1,f2 = fb 
             match f1._magnitude.IsSome && f2._magnitude.IsSome && v2.IsSome with
             | false -> SupportBuilder.Pin ({f1 with  _direction = Some v1},{f2 with _direction = v2 }) |> BuildSupport |> TrussBuildOp
-            | true -> ({magnitude = f1._magnitude.Value; direction = v1; joint = f1.joint},
-                       {magnitude = f2._magnitude.Value; direction = v2.Value; joint = f2.joint}) |> Pin |> Support |> TrussPart
+            | true -> {tangent = {magnitude = f1._magnitude.Value; direction = v1; joint = f1.joint};
+                       normal = {magnitude = f2._magnitude.Value; direction = v2.Value; joint = f2.joint}} |> Pin |> Support |> TrussPart
     let addMagnitudeToSupportBuilder (m:float*(float option)) (sb:SupportBuilder) =
         let m1,m2 = m
         match sb with 
@@ -463,8 +503,8 @@ module TrussImplementation =
             let f1,f2 = fb 
             match f1._direction.IsSome && f2._direction.IsSome && m2.IsSome with
             | false -> SupportBuilder.Pin ({f1 with  _magnitude = Some m1},{f2 with _magnitude = m2 }) |> BuildSupport |> TrussBuildOp
-            | true -> ({magnitude = m1; direction = f1._direction.Value; joint = f1.joint},
-                       {magnitude = m2.Value; direction = f2._direction.Value; joint = f2.joint}) |> Pin |> Support |> TrussPart
+            | true -> {tangent = {magnitude = m1; direction = f1._direction.Value; joint = f1.joint};
+                       normal = {magnitude = m2.Value; direction = f2._direction.Value; joint = f2.joint}} |> Pin |> Support |> TrussPart
 
     // Inspect truss
     let checkTrussStability (truss:Truss) = 
@@ -629,11 +669,11 @@ module TrussServices =
     let getPointFromForce (force:Force) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
     let getPointFromSupport (support:Support) = 
         match support with
-        | Pin (f,_) -> getPointFromForce f
+        | Pin p -> getPointFromForce p.normal
         | Roller f -> getPointFromForce f
     let getDirectionFromSupport (support:Support) = 
         match support with
-        | Pin (_,f) -> -(getDirectionFromForce f)
+        | Pin p -> -(getDirectionFromForce p.normal)
         | Roller f -> -(getDirectionFromForce f) 
     let getSelectedSupportFromState (state :TrussAnalysisState) = 
         match state with
@@ -648,8 +688,8 @@ module TrussServices =
                     let p = System.Windows.Point (x = getXFrom r.joint, y = getYFrom r.joint)
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,true)
-                | Pin (_p1,p2) -> 
-                    let p = System.Windows.Point (x = getXFrom p2.joint, y = getYFrom p2.joint)
+                | Pin p -> 
+                    let p = System.Windows.Point (x = getXFrom p.tangent.joint, y = getYFrom p.normal.joint)
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,false)
 
@@ -670,8 +710,8 @@ module TrussServices =
                     {s with analysis = 
                             {momentEquations = getYMomentReactionEquations parts;
                              forceXEquation = getXForceReactionEquation parts;
-                             forceYEquation = getYForceReactionEquation parts} //""}//
-                             |> SupportReactions} 
+                             forceYEquation = getYForceReactionEquation parts} 
+                             |> SupportReactionEquations} 
                              |> AnalysisState
                 | false -> state
             | TrussDomain.ErrorState es -> state
@@ -685,9 +725,9 @@ module TrussServices =
                 | true ->                 
                     {s with analysis = 
                             {momentEquations = getXMomentReactionEquations parts;
-                             forceXEquation = getXForceReactionEquation parts; //"";//
+                             forceXEquation = getXForceReactionEquation parts; 
                              forceYEquation = getYForceReactionEquation parts} 
-                             |> SupportReactions} 
+                             |> SupportReactionEquations} 
                              |> AnalysisState
                 | false -> state
             | TrussDomain.ErrorState es -> state
@@ -863,7 +903,7 @@ module TrussServices =
                             let f = 
                                 match x with
                                 | Roller r -> r
-                                | Pin (p1,_) -> p1
+                                | Pin p -> p.normal
                             f.joint = j                            
                             ) ts.truss.supports
                 let s =  
@@ -884,7 +924,7 @@ module TrussServices =
                         let f = 
                             match x with
                             | Roller r -> r
-                            | Pin (p1,_) -> p1
+                            | Pin p -> p.normal
                         f.joint = j                            
                         ) ss.truss.supports
             let s =  
@@ -917,6 +957,7 @@ module TrussServices =
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
+    
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
         match state with 
@@ -926,6 +967,66 @@ module TrussServices =
         | AnalysisState s -> state
         | ErrorState ts -> state
     
+    let tryParseReactionResult (s:string) = 
+        let reactions = WolframServices.parseReactions s
+        match List.contains (0,"Unable to compute result",0.0) reactions with
+        | true -> None
+        | false -> 
+            Some (reactions)
+    let sendReactionResultToState (s:string) (state:TrussAnalysisState)  =        
+        let result = tryParseReactionResult s
+        match result with
+        | None -> state
+        | Some rList ->             
+            match state with
+            | TrussDomain.TrussState _ts -> state
+            | TrussDomain.BuildState _bs-> state
+            | TrussDomain.SelectionState _ss -> state
+            | TrussDomain.ErrorState _es -> state
+            | TrussDomain.AnalysisState a -> 
+                let parts = getPartListFrom a.truss
+                let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) parts
+                let findReaction i' r' = List.tryFind (fun x -> match x with | i, r,_m  when i=i' && r=r'-> true | _ -> false) rList
+                let getReactionForce s r m =                    
+                    let j = getJointFromSupport s
+                    match r with 
+                    | "Rx" ->                         
+                        let x' = 
+                            match m < 0.0 with
+                            | false -> (getXFrom j) - 1.0
+                            | true -> (getXFrom j) + 1.0
+                        Some {magnitude = System.Math.Abs m; direction = Vector (x = x', y = getYFrom j); joint = j}                    
+                    | "Ry" -> 
+                        let y' = 
+                            match m < 0.0 with
+                            | false -> (getXFrom j) + 1.0
+                            | true -> (getXFrom j) - 1.0
+                        Some {magnitude = System.Math.Abs m; direction = Vector (x = getXFrom j, y = y'); joint = j}
+                    | _ -> None                
+                let reactionResults = 
+                    {reactions =
+                        List.mapi (
+                            (fun i x -> 
+                                {support = x;
+                                 xReactionForce = 
+                                    match findReaction i "Rx" with 
+                                    | None -> None;
+                                    | Some (_i,r,m) -> getReactionForce x r m 
+                                 yReactionForce = 
+                                    match findReaction i "Ry" with 
+                                    | None -> None
+                                    | Some (_i,r,m) -> getReactionForce x r m
+                                    })
+                            ) supports} |> SupportReactionResult
+                let newState = {a with analysis = reactionResults} |> AnalysisState            
+                    
+                match a.analysis with
+                | Truss -> state
+                | MethodOfJoints _mj -> state
+                | SupportReactionEquations _sr -> newState
+                | SupportReactionResult _sr -> state
+                
+
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
         | SelectionState ss -> 
@@ -940,7 +1041,6 @@ module TrussServices =
             {truss = newTruss; mode = Selection} |> TrussState
             
         | _ -> state
-
     let getSupportReactionSolve (yAxis: bool) (state :TrussAnalysisState) = 
         match state with
         | TrussDomain.TrussState ts -> ""
@@ -951,7 +1051,8 @@ module TrussServices =
             match a.analysis with
             | Truss -> ""
             | MethodOfJoints mj -> ""
-            | SupportReactions sr -> 
+            | SupportReactionResult sr -> ""
+            | SupportReactionEquations sr -> 
                 let eq = 
                     match yAxis with
                     | true -> sr.forceXEquation :: sr.momentEquations
@@ -991,10 +1092,11 @@ module TrussServices =
         removeTrussPartFromTruss = removeTrussPart;
         getSupportReactionEquationssFromState = getSupportReactionEquationssFromState;
         getSupportReactionSolve = getSupportReactionSolve;
-        sendStateToSupportBuilder = sendStateToSupportBuilder
+        sendStateToSupportBuilder = sendStateToSupportBuilder;
+        sendReactionResultToState = sendReactionResultToState
         }
 
-type TrussAnalysis() as this  =  
+type TrussAnalysis() as this =  
     inherit UserControl()    
     do Install() |> ignore
 
@@ -1089,9 +1191,17 @@ type TrussAnalysis() as this  =
             sp.Children.Add(xAxis_RadioButton) |> ignore
             sp.Children.Add(yAxis_RadioButton) |> ignore
         sp
-    let Compute_Button = 
+    let compute_Button = 
         let b = Button()        
         do  b.Content <- "Compute Reactions"
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Bold
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+        b
+    let commitReactions_Button = 
+        let b = Button()        
+        do  b.Content <- "Commit Reactions"
             b.FontSize <- 12.
             b.FontWeight <- FontWeights.Bold
             b.VerticalAlignment <- VerticalAlignment.Center
@@ -1105,7 +1215,8 @@ type TrussAnalysis() as this  =
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(reaction_Label) |> ignore
             sp.Children.Add(momentAxisRadio_StackPanel) |> ignore
-            sp.Children.Add(Compute_Button) |> ignore
+            sp.Children.Add(compute_Button) |> ignore
+            sp.Children.Add(commitReactions_Button) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
         // Orgin and grid
@@ -1763,13 +1874,23 @@ type TrussAnalysis() as this  =
             vb.Child <- image
         vb
     let code_TextBlock = 
-        let l = TextBlock()
+        let l = TextBox()
         do  //l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
             l.FontSize <- 15.
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- "TextString[Today]"
+            l.Visibility <- Visibility.Visible
+        l 
+    let result_TextBlock = 
+        let l = TextBox()
+        do  //l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 15.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "today's date"
             l.Visibility <- Visibility.Visible
         l 
     let result_StackPanel = 
@@ -1820,14 +1941,6 @@ type TrussAnalysis() as this  =
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (getJointsFrom state)
-        // Send
-    let sendPointToMemberBuilder (p:System.Windows.Point) s = trussServices.sendPointToMemberBuilder p s
-    let sendPointToForceBuilder (p:System.Windows.Point) s = trussServices.sendPointToForceBuilder p s
-    let sendPointToPinSupportBuilder (p:System.Windows.Point) s = trussServices.sendPointToPinSupportBuilder p s
-    let sendPointToRollerSupportBuilder (p:System.Windows.Point) s = trussServices.sendPointToRollerSupportBuilder p s
-    let sendMagnitudeToForceBuilder m s = trussServices.sendMagnitudeToForceBuilder m s    
-    // For supports, set the initial magnitude to 0.0 until the truss reaction forces are evaluated.
-    let sendMagnitudeToSupportBuilder m s = trussServices.sendMagnitudeToSupportBuilder m s
         // Draw
     let drawOrgin (p:System.Windows.Point) = 
         let l1,l2,e = orgin p
@@ -1906,24 +2019,24 @@ type TrussAnalysis() as this  =
             support
         do  canvas.Children.Add(support) |> ignore
     let drawSupport (support:TrussDomain.Support) = 
-        let p = TrussServices.getPointFromSupport support
-        let dir = TrussServices.getDirectionFromSupport support
-        let isRollerSupportType = TrussServices.checkSupportTypeIsRoller support
+        let p = trussServices.getPointFromSupport support
+        let dir = trussServices.getDirectionFromSupport support
+        let isRollerSupportType = trussServices.checkSupportTypeIsRoller support
         do  drawBuildSupportJoint p
             drawBuildSupport (p,dir,isRollerSupportType)
     let drawForce (force:TrussDomain.Force) =  
-        let p = TrussServices.getPointFromForce force
+        let p = trussServices.getPointFromForce force
         let vp = System.Windows.Point(force.direction.X,force.direction.Y)        
         let arrowPoint = 
             match force.magnitude > 0. with 
             | true -> p
             | false -> vp
-        let dir = TrussServices.getDirectionFromForce force
+        let dir = trussServices.getDirectionFromForce force
         do  drawBuildForceJoint p
             drawBuildForceLine (p,vp)
             drawBuildForceDirection (arrowPoint,dir,force.magnitude)
     let drawSelectedMember s =
-        let selectedMember = TrussServices.getSelectedMemberFromState
+        let selectedMember = trussServices.getSelectedMemberFromState
         match selectedMember s with 
         | None -> () 
         | Some m -> 
@@ -1931,7 +2044,7 @@ type TrussAnalysis() as this  =
             let l = trussMemberSelected (p1,p2)
             do  canvas.Children.Add(l) |> ignore
     let drawSelectedForce s =
-        let selectedForce = TrussServices.getSelectedForceFromState
+        let selectedForce = trussServices.getSelectedForceFromState
         match selectedForce s with 
         | None -> () 
         | Some f -> 
@@ -1939,7 +2052,7 @@ type TrussAnalysis() as this  =
             let l = trussForceSelected (p1,p2)
             do  canvas.Children.Add(l) |> ignore
     let drawSelectedSupport s =
-        let selectedSupport = TrussServices.getSelectedSupportFromState
+        let selectedSupport = trussServices.getSelectedSupportFromState
         match selectedSupport s with 
         | None -> () 
         | Some s -> 
@@ -2005,17 +2118,33 @@ type TrussAnalysis() as this  =
             | false -> getImages (i+1)
         match k.Graphics.Length > 0 with                
         | true ->                                        
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
             result_StackPanel.Children.Clear()            
             getImages 0
+            result_TextBlock.Text <- text
             result_StackPanel.Children.Add(code_TextBlock) |> ignore
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
         | false -> 
             result_StackPanel.Children.Clear()
             let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
+                result_TextBlock.Text <- text
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
                 result_StackPanel.Children.Add(code_TextBlock) |> ignore
-                
+                result_StackPanel.Children.Add(result_TextBlock) |> ignore
+    let setStateFromReactionResult s =
+        do  setGraphicsFromKernel kernel
+        let newState = trussServices.sendReactionResultToState result_TextBlock.Text s
+        do  state <- newState
+            label.Text <- newState.ToString()
+    let setStateFromReactionResult2 s =
+        let code = code_TextBlock.Text
+        let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
+        let newState = trussServices.sendReactionResultToState text s
+        do  state <- newState
+            label.Text <- newState.ToString()
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
@@ -2161,11 +2290,11 @@ type TrussAnalysis() as this  =
                     | true,false, true,false
                     | false,true, true,false -> rollerSupport_RadioButton.IsChecked <- Nullable true
                                                 pinSupport_RadioButton.IsChecked <- Nullable false
-                                                TrussServices.sendStateToSupportBuilder false state
+                                                trussServices.sendStateToSupportBuilder false state
                     | true,false, false,true
                     | false,true, false,true -> rollerSupport_RadioButton.IsChecked <- Nullable false 
                                                 pinSupport_RadioButton.IsChecked <- Nullable true
-                                                TrussServices.sendStateToSupportBuilder true state
+                                                trussServices.sendStateToSupportBuilder true state
                     | _ -> // Logic for Selection Mode radio buttons
                         match delete_RadioButton.IsChecked.Value, 
                               inspect_RadioButton.IsChecked.Value, 
@@ -2230,7 +2359,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.TrussState ts -> 
                 match ts.mode with
                 | TrussDomain.TrussMode.MemberBuild ->                
-                    let newState = sendPointToMemberBuilder p state
+                    let newState = trussServices.sendPointToMemberBuilder p state
                     do  drawBuildJoint p1
                         state <- newState
                         trussMemberP1X_TextBox.IsReadOnly <- true
@@ -2243,7 +2372,7 @@ type TrussAnalysis() as this  =
                         state <- TrussDomain.ErrorState {errors = [TrussDomain.NoJointSelected]; truss = getTrussFrom state}
                         label.Text <- state.ToString()
                     | Some i -> 
-                        let newState = sendPointToForceBuilder p state
+                        let newState = trussServices.sendPointToForceBuilder p state
                         drawBuildForceJoint p
                         state <- newState
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
@@ -2255,12 +2384,12 @@ type TrussAnalysis() as this  =
                     | Some i -> 
                         match pinSupport_RadioButton.IsChecked.Value with
                         | true -> 
-                            let newState = sendPointToPinSupportBuilder p state
+                            let newState = trussServices.sendPointToPinSupportBuilder p state
                             drawBuildSupportJoint p
                             state <- newState
                             label.Text <- state.ToString()
                         | false -> 
-                            let newState = sendPointToRollerSupportBuilder p state
+                            let newState = trussServices.sendPointToRollerSupportBuilder p state
                             drawBuildSupportJoint p
                             state <- newState
                             label.Text <- state.ToString()
@@ -2271,7 +2400,7 @@ type TrussAnalysis() as this  =
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
                 | TrussDomain.BuildMember bm ->                 
-                    let newState = sendPointToMemberBuilder p state
+                    let newState = trussServices.sendPointToMemberBuilder p state
                     do  drawTruss newState
                         state <- newState
                         trussMemberP1X_TextBox.IsReadOnly <- true
@@ -2392,7 +2521,7 @@ type TrussAnalysis() as this  =
                 | TrussDomain.TrussMode.MemberBuild ->                
                     match p1 with 
                     | Some p ->
-                        let newState = sendPointToMemberBuilder p state
+                        let newState = trussServices.sendPointToMemberBuilder p state
                         do  drawBuildJoint p
                             state <- newState
                             trussMemberP1X_TextBox.IsReadOnly <- true
@@ -2411,7 +2540,7 @@ type TrussAnalysis() as this  =
                     match p2 with
                     | None -> ()
                     | Some p -> 
-                        let newState = sendPointToMemberBuilder p state
+                        let newState = trussServices.sendPointToMemberBuilder p state
                         do  drawTruss newState
                             state <- newState
                             trussMemberP1X_TextBox.IsReadOnly <- true
@@ -2423,37 +2552,37 @@ type TrussAnalysis() as this  =
                 | TrussDomain.BuildForce bf -> 
                     match magb, dirb with
                     | true, true when bf._direction = None -> 
-                        let jointPoint = TrussServices.getPointFromForceBuilder bf
+                        let jointPoint = trussServices.getPointFromForceBuilder bf
                         let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
                         let arrowPoint = 
                             match mag > 0. with 
                             | true -> jointPoint
                             | false -> dirPoint
-                        let newState = sendMagnitudeToForceBuilder mag state |> sendPointToForceBuilder dirPoint
+                        let newState = trussServices.sendMagnitudeToForceBuilder mag state |> trussServices.sendPointToForceBuilder dirPoint
                         state <- newState
                         drawBuildForceLine (jointPoint,dirPoint)
                         drawBuildForceDirection (arrowPoint,dir,mag)
                         label.Text <- newState.ToString()
                     | true, true -> 
-                        let jointPoint = TrussServices.getPointFromForceBuilder bf
+                        let jointPoint = trussServices.getPointFromForceBuilder bf
                         let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
                         let arrowPoint = 
                             match mag > 0. with 
                             | true -> jointPoint
                             | false -> dirPoint
-                        let newState = sendMagnitudeToForceBuilder mag state //|> sendPointToForceBuilder dirPoint
+                        let newState = trussServices.sendMagnitudeToForceBuilder mag state
                         state <- newState
                         drawBuildForceLine (jointPoint,dirPoint)
                         drawBuildForceDirection (arrowPoint,dir,mag)
                         label.Text <-  newState.ToString()
                     | true, false -> 
-                        let newState = sendMagnitudeToForceBuilder mag state
+                        let newState = trussServices.sendMagnitudeToForceBuilder mag state
                         state <- newState
                         label.Text <- newState.ToString()
                     | false, true -> 
-                        let jointPoint = TrussServices.getPointFromForceBuilder bf
+                        let jointPoint = trussServices.getPointFromForceBuilder bf
                         let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
-                        let newState = sendPointToForceBuilder dirPoint state
+                        let newState = trussServices.sendPointToForceBuilder dirPoint state
                         state <- newState
                         drawBuildForceLine (jointPoint,dirPoint)
                         label.Text <- newState.ToString()
@@ -2463,19 +2592,19 @@ type TrussAnalysis() as this  =
                     | true -> 
                         let jointPoint = 
                             match bs with 
-                            | TrussDomain.Roller f -> TrussServices.getPointFromForceBuilder f
-                            | TrussDomain.Pin (f,_) -> TrussServices.getPointFromForceBuilder f
+                            | TrussDomain.Roller f -> trussServices.getPointFromForceBuilder f
+                            | TrussDomain.Pin (f,_) -> trussServices.getPointFromForceBuilder f
                         let dirPoint = System.Windows.Point(jointPoint.X + (1.0 * cos ((dir) * Math.PI/180.)), jointPoint.Y - (1.0 * sin ((dir) * Math.PI/180.)))  
                         let arrowPoint = jointPoint                            
                         let newState = 
                             match rollerSupport_RadioButton.IsChecked.Value with
-                            | true -> sendMagnitudeToSupportBuilder (mag,None) state |> sendPointToRollerSupportBuilder dirPoint
-                            | false -> sendMagnitudeToSupportBuilder (mag,Some mag) state |> sendPointToPinSupportBuilder dirPoint
+                            | true -> trussServices.sendMagnitudeToSupportBuilder (mag,None) state |> trussServices.sendPointToRollerSupportBuilder dirPoint
+                            | false -> trussServices.sendMagnitudeToSupportBuilder (mag,Some mag) state |> trussServices.sendPointToPinSupportBuilder dirPoint
                         state <- newState
                         drawBuildSupport (arrowPoint,dir - 90.,rollerSupport_RadioButton.IsChecked.Value)
                         label.Text <-  newState.ToString()
                     | false -> 
-                        let newState = sendMagnitudeToSupportBuilder (mag,None) state
+                        let newState = trussServices.sendMagnitudeToSupportBuilder (mag,None) state
                         state <- newState
                         label.Text <- newState.ToString()                    
             | TrussDomain.SelectionState ss -> ()
@@ -2526,7 +2655,8 @@ type TrussAnalysis() as this  =
         yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
-        Compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setGraphicsFromKernel kernel))
+        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromReactionResult state))
+        //commitReactions_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromReactionResult2 state))
 
 module TrussAnalysis = 
     let window =
