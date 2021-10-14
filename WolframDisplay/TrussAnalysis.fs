@@ -195,8 +195,9 @@ module TrussDomain =
     type GetSelectedMemberFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
     type GetSelectedForceFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
     type GetSelectedSupportFromState = TrussAnalysisState -> (System.Windows.Point * float * bool) option
-    type GetSupportReactionEquationssFromState = bool -> TrussAnalysisState -> TrussAnalysisState
+    type GetSupportReactionEquationsFromState = bool -> TrussAnalysisState -> TrussAnalysisState
     type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
+    type GetReactionForcesFromState = TrussAnalysisState -> Force list
 
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
@@ -242,10 +243,11 @@ module TrussDomain =
          setTrussMode:SetTrussMode;
          setSelectionMode:SetSelectionMode;
          removeTrussPartFromTruss:RemoveTrussPartFromTruss;
-         getSupportReactionEquationssFromState:GetSupportReactionEquationssFromState;
+         getSupportReactionEquationsFromState:GetSupportReactionEquationsFromState;
          getSupportReactionSolve:GetSupportReactionSolve;
          sendStateToSupportBuilder:SendStateToSupportBuilder;
-         sendReactionResultToState:SendReactionResultToState
+         sendReactionResultToState:SendReactionResultToState;
+         getReactionForcesFromState:GetReactionForcesFromState
          }
 
 module TrussImplementation = 
@@ -695,7 +697,7 @@ module TrussServices =
 
         | TrussDomain.AnalysisState s -> None
         | TrussDomain.ErrorState es -> None
-    let getSupportReactionEquationssFromState (yAxis: bool) (state :TrussAnalysisState) = 
+    let getSupportReactionEquationsFromState (yAxis: bool) (state :TrussAnalysisState) = 
         let truss = getTrussFromState state        
         let parts = getPartListFrom truss
         match yAxis with
@@ -731,7 +733,25 @@ module TrussServices =
                              |> AnalysisState
                 | false -> state
             | TrussDomain.ErrorState es -> state
-    
+    let getReactionForcesFromState (state :TrussAnalysisState) =         
+        match state with
+        | TrussDomain.TrussState ts -> []
+        | TrussDomain.BuildState bs-> []
+        | TrussDomain.SelectionState ss -> []
+        | TrussDomain.AnalysisState s -> 
+            match s.analysis with
+            | Truss -> []
+            | SupportReactionEquations sre -> []
+            | SupportReactionResult srr -> 
+                List.fold (fun acc r -> 
+                    match r.xReactionForce,  r.yReactionForce with
+                    | Some a, Some b -> a::b::acc
+                    | None, Some b -> b::acc
+                    | Some a, None -> a::acc
+                    | None, None -> acc) [] srr.reactions
+            | MethodOfJoints mj -> []
+        | TrussDomain.ErrorState es -> []
+
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -993,14 +1013,14 @@ module TrussServices =
                     | "Rx" ->                         
                         let x' = 
                             match m < 0.0 with
-                            | false -> (getXFrom j) - 1.0
-                            | true -> (getXFrom j) + 1.0
+                            | false -> (getXFrom j) - 50.0
+                            | true -> (getXFrom j) + 50.0
                         Some {magnitude = System.Math.Abs m; direction = Vector (x = x', y = getYFrom j); joint = j}                    
                     | "Ry" -> 
                         let y' = 
                             match m < 0.0 with
-                            | false -> (getXFrom j) + 1.0
-                            | true -> (getXFrom j) - 1.0
+                            | false -> (getYFrom j) + 50.0
+                            | true -> (getYFrom j) - 50.0
                         Some {magnitude = System.Math.Abs m; direction = Vector (x = getXFrom j, y = y'); joint = j}
                     | _ -> None                
                 let reactionResults = 
@@ -1090,10 +1110,11 @@ module TrussServices =
         setSelectionMode = setSelectionMode;
         setTrussMode = setTrussMode;
         removeTrussPartFromTruss = removeTrussPart;
-        getSupportReactionEquationssFromState = getSupportReactionEquationssFromState;
+        getSupportReactionEquationsFromState = getSupportReactionEquationsFromState;
         getSupportReactionSolve = getSupportReactionSolve;
         sendStateToSupportBuilder = sendStateToSupportBuilder;
-        sendReactionResultToState = sendReactionResultToState
+        sendReactionResultToState = sendReactionResultToState;
+        getReactionForcesFromState = getReactionForcesFromState
         }
 
 type TrussAnalysis() as this =  
@@ -2139,12 +2160,7 @@ type TrussAnalysis() as this =
         let newState = trussServices.sendReactionResultToState result_TextBlock.Text s
         do  state <- newState
             label.Text <- newState.ToString()
-    let setStateFromReactionResult2 s =
-        let code = code_TextBlock.Text
-        let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
-        let newState = trussServices.sendReactionResultToState text s
-        do  state <- newState
-            label.Text <- newState.ToString()
+            Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce f) (trussServices.getReactionForcesFromState newState)
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
@@ -2190,6 +2206,7 @@ type TrussAnalysis() as this =
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
                     code_TextBlock.Text <- "TextString[Today]"
+                    drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state                    
                 // Member
                 | true,false,false,false,false,false, false,true,false,false,false,false
@@ -2206,6 +2223,7 @@ type TrussAnalysis() as this =
                     orgin_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     code_TextBlock.Text <- "TextString[Today]"
+                    drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 // Support
                 | true,false,false,false,false,false,  false,false,true,false,false,false
@@ -2226,6 +2244,7 @@ type TrussAnalysis() as this =
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
                     code_TextBlock.Text <- "TextString[Today]"
+                    drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
                 // Selection
                 | true,false,false,false,false,false,  false,false,false,true,false,false
@@ -2243,6 +2262,7 @@ type TrussAnalysis() as this =
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     code_TextBlock.Text <- "TextString[Today]"
+                    drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.Selection state
                 // Analysis
                 | true,false,false,false,false,false,  false,false,false,false,true,false
@@ -2262,10 +2282,9 @@ type TrussAnalysis() as this =
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     let newState = 
                         trussServices.checkTruss (trussServices.getTrussFromState state)
-                        |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                        |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
                     code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
                     newState
-                    //
                 // Settings
                 | true,false,false,false,false,false,  false,false,false,false,false,true
                 | false,true,false,false,false,false,  false,false,false,false,false,true
@@ -2282,6 +2301,7 @@ type TrussAnalysis() as this =
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     code_TextBlock.Text <- "TextString[Today]"
+                    drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.Settings state
                 | _ -> // Logic for Support Type radio buttons
                     match rollerSupport_RadioButton.IsChecked.Value, pinSupport_RadioButton.IsChecked.Value, 
@@ -2339,7 +2359,7 @@ type TrussAnalysis() as this =
                                 yAxis_RadioButton.IsChecked <- Nullable false
                                 let newState = 
                                     trussServices.checkTruss (trussServices.getTrussFromState state)
-                                    |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                                    |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
                                 code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
                                 newState
                             | true,false, false,true
@@ -2348,7 +2368,7 @@ type TrussAnalysis() as this =
                                 yAxis_RadioButton.IsChecked <- Nullable true                                
                                 let newState = 
                                     trussServices.checkTruss (trussServices.getTrussFromState state)
-                                    |> trussServices.getSupportReactionEquationssFromState yAxis_RadioButton.IsChecked.Value
+                                    |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
                                 code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
                                 newState
                             | _ -> state
