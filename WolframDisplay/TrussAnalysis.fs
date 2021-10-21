@@ -77,13 +77,12 @@ module TrussDomain =
     type Joint = {x:X; y:Y} //; z:Z}
     type MemberBuilder = (Joint*(Joint option))
     type Member = (Joint*Joint)
-    
     type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
     type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
     type Force = {magnitude:float; direction:Vector; joint:Joint}    
     type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
     type Pin = {tangent:Force;normal:Force}
-    type Support = | Roller of Force | Pin of Pin  
+    type Support = | Roller of Force | Pin of Pin 
     type Truss = {members:Member list; forces:Force list; supports:Support list}
     type TrussStability = 
         | Stable 
@@ -312,7 +311,47 @@ module TrussImplementation =
         let y = f.direction.Y - (getYFrom f.joint)
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
         {joint = f.joint; magnitudeX = -f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
-    let getSupportComponentForcesFrom (s:Support) =
+    let getResultantForcesFrom (r:SupportReactionResult) =        
+        match r with 
+        | {support = Roller r; xReactionForce = Some x; yReactionForce = None} -> 
+            {magnitude = x.magnitude; direction = x.direction ; joint = r.joint}
+        | {support = Pin p; xReactionForce = Some x; yReactionForce = None} -> 
+            {magnitude = x.magnitude; direction = x.direction ; joint = p.normal.joint}        
+        | {support = Roller r; xReactionForce = None; yReactionForce = Some y} -> 
+            {magnitude = y.magnitude; direction = y.direction ; joint = r.joint}
+        | {support = Pin p; xReactionForce = None; yReactionForce = Some y} -> 
+            {magnitude = y.magnitude; direction = p.normal.direction ; joint = p.normal.joint}        
+        | {support = Roller r; xReactionForce = Some x; yReactionForce = Some y} ->             
+            let magXY = 
+                let out = Math.Sqrt(x.magnitude*x.magnitude + y.magnitude*y.magnitude)
+                match out with 
+                | x when x = 0. -> 1.
+                | x -> x
+            let direction = 
+                let x' = x.direction.X - (getXFrom x.joint)
+                let y' = y.direction.Y - (getYFrom y.joint)
+                Vector(x = ((getXFrom x.joint) + x'*(x.magnitude/magXY)), y = ((getYFrom y.joint) + y'*(y.magnitude/magXY)))
+            {magnitude = magXY; direction = direction ; joint = r.joint}
+        | {support = Pin p; xReactionForce = Some x; yReactionForce = Some y} -> 
+
+            let magXY = 
+                let out = Math.Sqrt(x.magnitude*x.magnitude + y.magnitude*y.magnitude)
+                match out with 
+                | x when x = 0. -> 1.
+                | x -> x
+            let direction = 
+                let x' = x.direction.X - (getXFrom x.joint)
+                let y' = y.direction.Y - (getYFrom y.joint)
+                Vector(x = ((getXFrom x.joint) + x'*(x.magnitude/magXY)), y = ((getYFrom y.joint) + y'*(y.magnitude/magXY)))                
+                
+
+            {magnitude = magXY; direction = direction ; joint = p.normal.joint}
+        | {support = Roller r; xReactionForce = None; yReactionForce = None} -> 
+            {magnitude = r.magnitude; direction = r.direction ; joint = r.joint}
+        | {support = Pin p; xReactionForce = None; yReactionForce = None} -> 
+            {magnitude = 0.0; direction = p.normal.direction ; joint = p.normal.joint}
+       
+    let getSupportComponentForcesFrom (s:Support) = // need to refactor this function
         match s with
         | Pin p ->              
             let x = p.tangent.direction.X - (getXFrom p.tangent.joint)
@@ -743,12 +782,15 @@ module TrussServices =
             | Truss -> []
             | SupportReactionEquations sre -> []
             | SupportReactionResult srr -> 
+                //
                 List.fold (fun acc r -> 
+                    let result = getResultantForcesFrom r
                     match r.xReactionForce,  r.yReactionForce with
-                    | Some a, Some b -> a::b::acc
-                    | None, Some b -> b::acc
-                    | Some a, None -> a::acc
+                    | Some a, Some b -> result::a::b::acc
+                    | None, Some b -> result::b::acc
+                    | Some a, None -> result::a::acc
                     | None, None -> acc) [] srr.reactions
+            
             | MethodOfJoints mj -> []
         | TrussDomain.ErrorState es -> []
 
@@ -1045,7 +1087,6 @@ module TrussServices =
                 | MethodOfJoints _mj -> state
                 | SupportReactionEquations _sr -> newState
                 | SupportReactionResult _sr -> state
-                
 
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
@@ -2676,7 +2717,6 @@ type TrussAnalysis() as this =
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromReactionResult state))
-        //commitReactions_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromReactionResult2 state))
 
 module TrussAnalysis = 
     let window =
