@@ -87,7 +87,7 @@ let fC = {magnitude = 12.5; direction = Vector (x=4.,y = 1.); joint = jC}
 let fB = {magnitude = 12.5; direction = Vector (x=2.,y = 1.); joint = jB}
 let fA = {magnitude = 12.5; direction = Vector (x=0.,y = 1.); joint = jA}
 
-let sF,sA = Pin (rFC,rFB), Roller rA
+let sF,sA = Pin {tangent=rFC;normal=rFB}, Roller rA
 let partList2 = [Force fA;Force fB;Force fC;Force fD;Support sF;Support sA]
 
 //getYMomentReactionEquations partList2
@@ -107,7 +107,7 @@ let rFBa = {magnitude = 0.; direction = Vector (x=25.,y = -1.); joint = jCa}
 let rAa = {magnitude = 1.; direction = Vector (x=18.,y = 5.); joint = jEa}
 let fCa = {magnitude = 2000.; direction = Vector (x=0.,y = 6.); joint = jAa}
 let fBa = {magnitude = 1000.; direction = Vector (x=12.,y = 6.); joint = jBa}
-let sFa,sAa = Pin (rFCa,rFBa), Roller rAa
+let sFa,sAa = Pin {tangent=rFCa;normal=rFBa}, Roller rAa
 let partList2a = [Force fCa;Force fBa;Support sFa;Support sAa]
 
 
@@ -128,7 +128,7 @@ let rrFCX = {magnitude = 0.; direction = Vector (x=11.,y = 0.); joint = jjC}
 let rrE = {magnitude = 1.; direction = Vector (x=9.,y = 3.); joint = jjE}
 let ffC = {magnitude = 10.; direction = Vector (x=0.,y = 1.); joint = jjA}
 let ffB = {magnitude = 5.; direction = Vector (x=6.,y = 1.); joint = jjB}
-let ssF,ssA = Pin (rrFCX,rrFCY), Roller rrE
+let ssF,ssA = Pin {tangent=rrFCX;normal=rrFCY}, Roller rrE
 let partList3 = [Force ffC;Force ffB;Support ssF;Support ssA]
 
 getYMomentReactionEquations partList3
@@ -161,14 +161,14 @@ let m7 = j3,j4
 let f1 = {magnitude = 100.; direction = Vector (x=0.,y = 1.); joint = j1}
 let f2 = {magnitude = 100.; direction = Vector (x=1.,y = 0.); joint = j1}
 
-let f3 = {magnitude = 100.; direction = Vector (x=2.,y = 1.); joint = j4}
+let f3 = {magnitude = 100.; direction = Vector (x=2.,y = 11.); joint = j4}
 
 
 let f4 = {magnitude = 12.; direction = Vector (x=3.,y = 3.); joint = j4}
 
 let f5 = {magnitude = -3.; direction = Vector (x=7.,y = 0.); joint = j5}
 
-let s1,s2 = Pin (f1,f2), Roller f3
+let s1,s2 = Pin {tangent=f1;normal=f2}, Roller f3
 
 let mList = [m1;m2;m3;m4;m5;m6;m7]
 
@@ -195,6 +195,18 @@ let checkCase_1  m1 m2 = (getMemberLineOfActionFrom m1) = (getMemberLineOfAction
 checkCase_1 m1 m2
 
 getZeroForceMembers truss
+
+let ee = getJointPartList truss
+ee.Length
+ee
+
+
+
+
+
+
+
+
 
 
 //////////////////////////////////////////////////////

@@ -116,7 +116,6 @@ module TrussDomain =
         | Modify
         | Inspect  
     
-    
     // Types to describe error results
     type Error = 
         | LazyCoder  
@@ -155,7 +154,8 @@ module TrussDomain =
     type MethodOfJointsAnalysisStateData = 
         {zeroForceMembers: TrussPart list;
          tensionMembers: (float*TrussPart) list;
-         compressionMembers: (float*TrussPart) list}
+         compressionMembers: (float*TrussPart) list;
+         reactions : SupportReactionResult list}
     
     // Analysis States
     type AnalysisState =
@@ -428,7 +428,8 @@ module TrussImplementation =
                 let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
                 y/d,"Ry" + i.ToString()) supports 
         createEquation (sumForcesY p) reactions
-    
+
+    // Method of Joints
     let isColinear (p1:TrussPart) (p2:TrussPart) = 
         match p1, p2 with
         | Member m1, Member m2 -> (getMemberLineOfActionFrom m1) = (getMemberLineOfActionFrom m2)
@@ -461,7 +462,7 @@ module TrussImplementation =
         | [Member m1;Support s;Member m2]
         | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
         | _ -> []     
-    let partitionZFM  (tpl:(Joint*TrussPart list)list) = 
+    let partitionZFM (tpl:(Joint*TrussPart list)list) = 
         List.map (fun (j,pl) -> 
             let zfm = getZFM pl
             let pl' = List.except zfm pl
@@ -476,8 +477,21 @@ module TrussImplementation =
     let getZeroForceMembers (t:Truss) =
         let jointParts = getJointPartListFrom t        
         let partition = partitionZFM jointParts
-        List.fold (fun acc x -> match x with | (_j,_pl,zfm) -> List.concat[zfm;acc]) [] partition
-    let addReactionsForcesToTruss = ()
+        List.fold (fun acc x -> match x with | (_j,_pl,zfm) -> List.concat[zfm;acc]) [] partition   
+    let getJointPartList (t:Truss) =
+        let jointParts = getJointPartListFrom t        
+        let partition = partitionZFM jointParts
+        let zfm = getZeroForceMembers t
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> (j,List.except zfm pl)::acc) [] partition
+    let getMemberExpressions (m:Member) (index:int) =
+        let p1,p2 = m
+        let x = System.Math.Abs((getXFrom p1) - (getXFrom p2))
+        let y = System.Math.Abs((getYFrom p1) - (getYFrom p2))
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
+        let name = "M" + index.ToString()
+        [(x/d,name);(y/d,name)]
+    let getJointReactionEquations (t:Truss) (r:SupportReactionResult) = 
+        ()
 
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -772,7 +786,7 @@ module TrussServices =
                              |> AnalysisState
                 | false -> state
             | TrussDomain.ErrorState es -> state
-    let getReactionForcesFromState showComponents (state :TrussAnalysisState) =         
+    let getReactionForcesFromState showComponents (state :TrussAnalysisState)  =         
         match state with
         | TrussDomain.TrussState ts -> []
         | TrussDomain.BuildState bs-> []
@@ -789,9 +803,9 @@ module TrussServices =
                     | None, Some b, false -> result::acc
                     | Some a, None, false -> result::acc
                     | None, None, false -> acc
-                    | Some a, Some b, true -> (*result::*)a::b::acc
-                    | None, Some b, true -> (*result::*)b::acc
-                    | Some a, None, true -> (*result::*)a::acc
+                    | Some a, Some b, true -> a::b::acc
+                    | None, Some b, true -> b::acc
+                    | Some a, None, true -> a::acc
                     | None, None, true -> acc) [] srr.reactions            
             | MethodOfJoints mj -> []
         | TrussDomain.ErrorState es -> []
@@ -1212,7 +1226,6 @@ type TrussAnalysis() as this =
         redGridline.Freeze()
         blueGridline.Freeze()
    
-
     (*Controls*)      
     let label =
         let l = TextBox()
@@ -1226,7 +1239,7 @@ type TrussAnalysis() as this =
             l.Opacity <- 0.5
         l 
         // Reaction forces and moments
-    let reaction_Label =
+    let axis_Label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             l.FontStyle <- FontStyles.Normal
@@ -1286,12 +1299,21 @@ type TrussAnalysis() as this =
             r.IsChecked <- true |> Nullable<bool>
             r.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
         r
+    let reaction_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Reaction View"
+        l
     let reactionRadio_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(reaction_Label) |> ignore
             sp.Children.Add(resultant_RadioButton) |> ignore
             sp.Children.Add(components_RadioButton) |> ignore
             sp.Visibility <- Visibility.Collapsed
@@ -1302,7 +1324,7 @@ type TrussAnalysis() as this =
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(reaction_Label) |> ignore
+            sp.Children.Add(axis_Label) |> ignore
             sp.Children.Add(momentAxisRadio_StackPanel) |> ignore
             sp.Children.Add(compute_Button) |> ignore
             sp.Children.Add(reactionRadio_StackPanel) |> ignore
@@ -2216,7 +2238,7 @@ type TrussAnalysis() as this =
             result_StackPanel.Children.Add(code_TextBlock) |> ignore
             result_StackPanel.Children.Add(result_TextBlock) |> ignore
         | false -> 
-            result_StackPanel.Children.Clear()
+            result_StackPanel.Children.Clear()             
             let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
             let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
             let image = Image()            

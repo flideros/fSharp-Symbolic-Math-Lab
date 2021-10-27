@@ -13,7 +13,7 @@ type WolframCanvas() as this  =
     inherit UserControl()    
     do Install() |> ignore
     
-    let mutable fontSizePoints = ControlLibrary.SharedValue(44)
+    let mutable fontSizePoints = ControlLibrary.SharedValue(34)
     
     (*Wolfram Kernel*)
     let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
