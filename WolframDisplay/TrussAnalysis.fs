@@ -115,7 +115,8 @@ module TrussDomain =
         | Delete
         | Modify
         | Inspect  
-    
+    type Node = (Joint*TrussPart list)
+
     // Types to describe error results
     type Error = 
         | LazyCoder  
@@ -149,7 +150,8 @@ module TrussDomain =
          yReactionForce: Force option}
     
     type SupportReactionResultStateData = 
-        {reactions : SupportReactionResult list}
+        {reactions : SupportReactionResult list;
+         memberEquations : string list}
 
     type MethodOfJointsAnalysisStateData = 
         {zeroForceMembers: TrussPart list;
@@ -462,7 +464,7 @@ module TrussImplementation =
         | [Member m1;Support s;Member m2]
         | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
         | _ -> []     
-    let partitionZFM (tpl:(Joint*TrussPart list)list) = 
+    let partitionNode (tpl:Node list) = 
         List.map (fun (j,pl) -> 
             let zfm = getZFM pl
             let pl' = List.except zfm pl
@@ -476,22 +478,56 @@ module TrussImplementation =
             recurse pl' zfm) tpl
     let getZeroForceMembers (t:Truss) =
         let jointParts = getJointPartListFrom t        
-        let partition = partitionZFM jointParts
-        List.fold (fun acc x -> match x with | (_j,_pl,zfm) -> List.concat[zfm;acc]) [] partition   
-    let getJointPartList (t:Truss) =
+        let partition = partitionNode jointParts
+        List.fold (fun acc x -> match x with | (_j,_pl,zfm) -> List.concat[zfm;acc]) [] partition 
+    let getNodeList (t:Truss) =
         let jointParts = getJointPartListFrom t        
-        let partition = partitionZFM jointParts
+        let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
-        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> (j,List.except zfm pl)::acc) [] partition
-    let getMemberExpressions (m:Member) (index:int) =
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition
+    let getMemberExpressionsX (m:Member) (index:int) =
         let p1,p2 = m
         let x = System.Math.Abs((getXFrom p1) - (getXFrom p2))
         let y = System.Math.Abs((getYFrom p1) - (getYFrom p2))
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
         let name = "M" + index.ToString()
-        [(x/d,name);(y/d,name)]
-    let getJointReactionEquations (t:Truss) (r:SupportReactionResult) = 
-        ()
+        (x/d,name)
+    let getMemberExpressionsY (m:Member) (index:int) =
+        let p1,p2 = m
+        let x = System.Math.Abs((getXFrom p1) - (getXFrom p2))
+        let y = System.Math.Abs((getYFrom p1) - (getYFrom p2))
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
+        let name = "M" + index.ToString()
+        (y/d,name)
+    let getMemberIndex (m:Member) (t:Truss) =
+        let i = List.tryFindIndex (fun x -> x = m) t.members
+        match i with | Some n -> n | None -> -1
+    let getMemberEquations (t:Truss) (r:SupportReactionResult list) = 
+        let nl = getNodeList t
+        let processNode (n:Node) = 
+            let _j,pl = n
+            let supportReactions = 
+                let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
+                match s with
+                | Some (Support spt) -> List.tryFind (fun x -> x.support = spt) r
+                | _ -> None
+            let sfx, sfy = 
+                match supportReactions with 
+                | None -> 0.,0. 
+                | Some {support=_spt; xReactionForce = Some xf; yReactionForce = Some yf} -> xf.magnitude,yf.magnitude
+                | Some {support=_spt; xReactionForce = None; yReactionForce = Some yf} -> 0.,yf.magnitude
+                | Some {support=_spt; xReactionForce = Some xf; yReactionForce = None} -> xf.magnitude,0.
+                | Some {support=_spt; xReactionForce = None; yReactionForce = None} -> 0.,0.
+            let sumfx, sumfy = (sumForcesX pl) + sfx, (sumForcesY pl) + sfy
+            let membersX = 
+                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun x -> getMemberExpressionsX x (getMemberIndex x t))                
+            let membersY = 
+                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun x -> getMemberExpressionsY x (getMemberIndex x t))  
+            [createEquation sumfx membersX;createEquation sumfy membersY]            
+        List.map (fun x -> processNode x) nl
+        |> List.concat
 
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -1082,7 +1118,7 @@ module TrussServices =
                         Some {magnitude = System.Math.Abs m; direction = Vector (x = getXFrom j, y = y'); joint = j}
                     | _ -> None                
                 let reactionResults = 
-                    {reactions =
+                    let reactions =
                         List.mapi (
                             (fun i x -> 
                                 {support = x;
@@ -1095,7 +1131,9 @@ module TrussServices =
                                     | None -> None
                                     | Some (_i,r,m) -> getReactionForce x r m
                                     })
-                            ) supports} |> SupportReactionResult
+                            ) supports
+                    {reactions = reactions;
+                     memberEquations = getMemberEquations a.truss reactions} |> SupportReactionResult
                 let newState = {a with analysis = reactionResults} |> AnalysisState            
                     
                 match a.analysis with
@@ -1139,7 +1177,22 @@ module TrussServices =
                     | true -> List.concat [for i in 0..(sr.momentEquations.Length - 1) -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
                     | false -> []
                 (WolframServices.solveEquations eq v)
-
+    let getMemberSolve (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState ts -> ""
+        | TrussDomain.BuildState bs-> ""
+        | TrussDomain.SelectionState ss -> ""
+        | TrussDomain.ErrorState es -> ""
+        | TrussDomain.AnalysisState a -> 
+            match a.analysis with
+            | Truss -> ""
+            | MethodOfJoints mj -> ""
+            | SupportReactionResult sr ->
+                let eq = sr.memberEquations
+                let v = []                    
+                (WolframServices.solveEquations eq v)
+            | SupportReactionEquations sr -> ""
+                
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         checkTruss = checkTruss;
@@ -2253,6 +2306,7 @@ type TrussAnalysis() as this =
         do  state <- newState
             reactionRadio_StackPanel.Visibility <- Visibility.Visible
             label.Text <- newState.ToString()
+            //code_TextBlock.Text <- newState.ToString()
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        

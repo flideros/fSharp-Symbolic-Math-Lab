@@ -172,7 +172,7 @@ let s1,s2 = Pin {tangent=f1;normal=f2}, Roller f3
 
 let mList = [m1;m2;m3;m4;m5;m6;m7]
 
-let fList = [f3]
+let fList = [f4; f5]
 let sList = [s1;s2]
 
 let truss = {members=mList;forces=fList;supports=sList}
@@ -186,7 +186,7 @@ getReactionForcesFrom sList |> getDirectionsFrom
 
 getComponentForcesFrom f5
 
-let partList = [Force f4;Force f5;Support s1;Support s2]
+let partList = [Force f4;Force f5;Support s1;Support s2;Member m1]
 
 getYMomentReactionEquations partList
 
@@ -196,14 +196,21 @@ checkCase_1 m1 m2
 
 getZeroForceMembers truss
 
-let ee = getJointPartList truss
+let ee = getNodeList truss
 ee.Length
 ee
 
+let members = List.choose (fun x -> match x with | Member m -> Some m | _ -> None) partList
 
+let resultants = 
+   [{support=s1;
+     xReactionForce = Some f1;
+     yReactionForce = Some f2};
+    {support=s2;
+     xReactionForce = None;
+     yReactionForce = Some f3}]
 
-
-
+getJointReactionEquations truss resultants
 
 
 
