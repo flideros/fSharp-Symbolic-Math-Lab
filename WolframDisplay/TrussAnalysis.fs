@@ -34,9 +34,9 @@ module WolframServices =
     
     let solveEquations (eq:string list) (v:string list) = 
         let eq' = List.filter (fun x -> x<>"") eq
-        "Solve[{" + 
+        "DecimalForm[Solve[{" + 
         (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" eq') + "},{" +
-        (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" v) + "}]"
+        (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" v) + "}]]"
 
     // create helper functions to parse Wolfram code
 
@@ -151,7 +151,8 @@ module TrussDomain =
     
     type SupportReactionResultStateData = 
         {reactions : SupportReactionResult list;
-         memberEquations : string list}
+         memberEquations : string list
+         variables : string list}
 
     type MethodOfJointsAnalysisStateData = 
         {zeroForceMembers: TrussPart list;
@@ -490,14 +491,14 @@ module TrussImplementation =
         let x = System.Math.Abs((getXFrom p1) - (getXFrom p2))
         let y = System.Math.Abs((getYFrom p1) - (getYFrom p2))
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-        let name = "M" + index.ToString()
+        let name = "Mx" + index.ToString()
         (x/d,name)
     let getMemberExpressionsY (m:Member) (index:int) =
         let p1,p2 = m
         let x = System.Math.Abs((getXFrom p1) - (getXFrom p2))
         let y = System.Math.Abs((getYFrom p1) - (getYFrom p2))
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-        let name = "M" + index.ToString()
+        let name = "My" + index.ToString()
         (y/d,name)
     let getMemberIndex (m:Member) (t:Truss) =
         let i = List.tryFindIndex (fun x -> x = m) t.members
@@ -528,6 +529,20 @@ module TrussImplementation =
             [createEquation sumfx membersX;createEquation sumfy membersY]            
         List.map (fun x -> processNode x) nl
         |> List.concat
+    let getMemberVariables (t:Truss) =
+        let nl = getNodeList t
+        let processNode (n:Node) = 
+            let _j,pl = n            
+            let membersX = 
+                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun x -> "Mx" + (getMemberIndex x t).ToString())            
+            let membersY = 
+                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun x -> "My" + (getMemberIndex x t).ToString())
+            List.concat [membersX;membersY]
+        List.map (fun x -> processNode x) nl
+        |> List.concat
+        |> List.distinct
 
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -1133,7 +1148,8 @@ module TrussServices =
                                     })
                             ) supports
                     {reactions = reactions;
-                     memberEquations = getMemberEquations a.truss reactions} |> SupportReactionResult
+                     memberEquations = getMemberEquations a.truss reactions;
+                     variables = getMemberVariables a.truss} |> SupportReactionResult
                 let newState = {a with analysis = reactionResults} |> AnalysisState            
                     
                 match a.analysis with
@@ -2303,10 +2319,17 @@ type TrussAnalysis() as this =
     let setStateFromReactionResult s =
         do  setGraphicsFromKernel kernel
         let newState = trussServices.sendReactionResultToState result_TextBlock.Text s
+        let newCode = 
+            match newState with 
+            | TrussDomain.AnalysisState a -> 
+                match a.analysis with
+                | TrussDomain.SupportReactionResult r -> WolframServices.solveEquations r.memberEquations r.variables
+                | _ -> ""
+            | _ -> "opps"
         do  state <- newState
             reactionRadio_StackPanel.Visibility <- Visibility.Visible
             label.Text <- newState.ToString()
-            //code_TextBlock.Text <- newState.ToString()
+            code_TextBlock.Text <- newCode
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
