@@ -486,25 +486,23 @@ module TrussImplementation =
         let jointParts = getJointPartListFrom t        
         let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
-        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,(*List.except zfm*) pl)::acc) [] partition
     let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
         let p1,p2 = m
         let j' = match p1 = j with | true -> p2 | false -> p1
         let x = (getXFrom j') - (getXFrom j)         
         let y = (getYFrom j') - (getYFrom j)
-        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n         
-        let x' = match x = 0. with | true -> d | false ->  x 
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
         let name = "Mx" + index.ToString()
-        (x'/d,name)
+        (Math.Abs x/d,name)
     let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
         let p1,p2 = m
         let j' = match p1 = j with | true -> p2 | false -> p1
         let x = (getXFrom j') - (getXFrom j)
         let y = (getYFrom j') - (getYFrom j)        
-        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n 
-        let y' = match y = 0. with | true -> d | false ->  y 
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
         let name = "My" + index.ToString()
-        (y'/d,name)
+        (Math.Abs y/d,name)
     let getMemberIndex (m:Member) (t:Truss) =
         let i = List.tryFindIndex (fun x -> x = m) t.members
         match i with | Some n -> n | None -> -1
@@ -520,8 +518,8 @@ module TrussImplementation =
             let getSignY (s:Support) (f:Force) =                 
                 let y = (getYFrom <| getJointFromSupport s) - f.direction.Y 
                 match y < 0. with
-                | true -> -1.
-                | false -> 1.
+                | true -> 1.
+                | false -> -1.
             let supportReactions = 
                 let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
                 match s with
