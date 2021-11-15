@@ -40,23 +40,29 @@ module WolframServices =
 
     // create helper functions to parse Wolfram code
 
-    let parseReactions (r:string) = 
+    let parseResults (r:string) = 
         let r' = r |> String.filter (fun c -> (c = '{') = false) |> String.filter (fun c -> (c = '}') = false)
-        let reactions = 
+        let result = 
             match r with 
             | "{}" -> ["Unable to compute result"]
             |  "" -> ["Unable to compute result"]
             |  _ -> Array.toList (r'.Split(','))
-        let parseReaction (r:string) =
+        let parseResult (r:string) =
             let r' = r.Trim()
             let index = 
                 match r.Contains("->") with
                 | false -> false,0
-                | true -> r'.Substring(2,r.IndexOf(" ->")-2) |> System.Int32.TryParse
+                | true -> 
+                    match r.Contains("M") with
+                    | true -> r'.Substring(1,r.IndexOf(" ->")-2) |> System.Int32.TryParse
+                    | false -> r'.Substring(2,r.IndexOf(" ->")-2) |> System.Int32.TryParse
             let reaction = 
                 match r.Contains("->") with
                 | false -> "Unable to compute result"
-                | true -> r'.Substring(0,2)
+                | true -> 
+                    match r.Contains("M") with
+                    | true -> r'.Substring(0,1)
+                    | false -> r'.Substring(0,2)
             let magnitude = 
                 match r.Contains("->") with
                 | false -> false,0.0
@@ -64,7 +70,7 @@ module WolframServices =
             match r' with 
             | "Unable to compute result" -> (0,"Unable to compute result",0.0)
             | _ -> (snd index),reaction,(snd magnitude)
-        List.map parseReaction reactions
+        List.map parseResult result
 
 module TrussDomain =
     
@@ -382,24 +388,36 @@ module TrussImplementation =
     let sumForceMoments (s:Support) (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         let j = getJointFromSupport s
-        let getMomentArmY fj = getYFrom fj - getYFrom j
-        let getMomentArmX fj = getXFrom fj - getXFrom j
-        List.fold (fun acc x -> x.magnitudeX*(getMomentArmY x.joint) + x.magnitudeY*(getMomentArmX x.joint) + acc ) 0. forces
+        let getMomentArmY fj = (getYFrom fj - getYFrom j)
+        let getMomentArmX fj = (getXFrom fj - getXFrom j)
+        List.fold (fun acc cf -> cf.magnitudeX*(getMomentArmY cf.joint) + cf.magnitudeY*(getMomentArmX cf.joint) + acc ) 0. forces
     
     // Support Reaction Equations
     let getYMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
-            let getMomentArmX sj = getXFrom sj - getXFrom j         
-            List.mapi (fun i x -> (getJointFromSupport x |> getMomentArmX),"Ry" + i.ToString()) supports
+            let getMomentArmX sj = getXFrom sj - getXFrom j
+            let getMomentArmY sj = getYFrom sj - getYFrom j
+            let ly = List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
+            let lx = 
+                match s with 
+                | Pin _ -> []
+                | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
+            List.concat [ly;lx]
         List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
     let getXMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
+            let getMomentArmX sj = getXFrom sj - getXFrom j
             let getMomentArmY sj = getYFrom sj - getYFrom j           
-            List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
+            let lx = List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
+            let ly = 
+                match s with 
+                | Pin _ -> []
+                | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Ry" + i.ToString()) supports
+            List.concat [ly;lx]
         List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports    
     let getXForceReactionEquation (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
@@ -486,27 +504,92 @@ module TrussImplementation =
         let jointParts = getJointPartListFrom t        
         let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
-        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,(*List.except zfm*) pl)::acc) [] partition
-    let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
-        let p1,p2 = m
-        let j' = match p1 = j with | true -> p2 | false -> p1
-        let x = (getXFrom j') - (getXFrom j)         
-        let y = (getYFrom j') - (getYFrom j)
-        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
-        let name = "Mx" + index.ToString()
-        (Math.Abs x/d,name)
-    let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
-        let p1,p2 = m
-        let j' = match p1 = j with | true -> p2 | false -> p1
-        let x = (getXFrom j') - (getXFrom j)
-        let y = (getYFrom j') - (getYFrom j)        
-        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
-        let name = "My" + index.ToString()
-        (Math.Abs y/d,name)
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition    
     let getMemberIndex (m:Member) (t:Truss) =
         let i = List.tryFindIndex (fun x -> x = m) t.members
-        match i with | Some n -> n | None -> -1
-    let getMemberEquations (t:Truss) (r:SupportReactionResult list) = 
+        match i with | Some n -> n | None -> -1    
+    let getMemberEquations (t:Truss) (r:SupportReactionResult list) =         
+        let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
+            let p1,p2 = m
+            let j' = match p1 = j with | true -> p2 | false -> p1
+            let x = (getXFrom j') - (getXFrom j)         
+            let y = (getYFrom j') - (getYFrom j)
+            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
+            let name = "M" + index.ToString()
+            ( x/d,name) //Math.Abs
+        let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
+            let p1,p2 = m
+            let j' = match p1 = j with | true -> p2 | false -> p1
+            let x = (getXFrom j') - (getXFrom j)
+            let y = (getYFrom j) - (getYFrom j')        
+            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
+            let name = "M" + index.ToString()
+            ( y/d,name) //Math.Abs
+        let nl = getNodeList t
+        let processNode (n:Node) = 
+            let getReactionSignX (f:Force) = 
+                let x = (getXFrom f.joint) - f.direction.X           
+                match x < 0. with
+                | true  -> -1.
+                | false -> 1.
+            let getReactionSignY (f:Force) =                 
+                let y = (getYFrom f.joint) - f.direction.Y 
+                match y < 0. with
+                | true -> 1.
+                | false -> -1.
+            let j,pl = n
+            let supportReactions = 
+                let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
+                match s with
+                | Some (Support spt) -> List.tryFind (fun x -> x.support = spt) r
+                | _ -> None
+            let sfx, sfy = 
+                match supportReactions with 
+                | None -> 0.,0. 
+                | Some {support=_spt; xReactionForce = Some xf; yReactionForce = Some yf} -> (getReactionSignX xf)*xf.magnitude, (getReactionSignY yf)*yf.magnitude
+                | Some {support=_spt; xReactionForce = None; yReactionForce = Some yf} -> 0., (getReactionSignY yf)*yf.magnitude
+                | Some {support=_spt; xReactionForce = Some xf; yReactionForce = None} -> (getReactionSignX xf)*xf.magnitude,0.
+                | Some {support=_spt; xReactionForce = None; yReactionForce = None} -> 0.,0.
+            let sumfx, sumfy = (sumForcesX pl) + sfx, (sumForcesY pl) + sfy
+            let membersX = 
+                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun x -> getMemberExpressionsX j x (getMemberIndex x t))                
+            let membersY = 
+                List.choose (fun y -> match y with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun y -> getMemberExpressionsY j y (getMemberIndex y t))  
+            [createEquation sumfx membersX;createEquation sumfy membersY]            
+        List.map (fun x -> processNode x) nl//processNode nl.Head//
+        |> List.concat //
+    let getMemberVariables (t:Truss) =
+        let nl = getNodeList t
+        let processNode (n:Node) = 
+            let _j,pl = n            
+            let members = 
+                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+                |> List.map (fun x -> "M" + (getMemberIndex x t).ToString())            
+            
+            List.concat [members] 
+        List.map (fun x -> processNode x) nl
+        |> List.concat
+        |> List.distinct
+    
+    let getMemberEquationComponents (t:Truss) (r:SupportReactionResult list) = 
+        let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
+            let p1,p2 = m
+            let j' = match p1 = j with | true -> p2 | false -> p1
+            let x = (getXFrom j') - (getXFrom j)         
+            let y = (getYFrom j') - (getYFrom j)
+            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
+            let name = "Mx" + index.ToString()
+            ( x/d,name) //Math.Abs
+        let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
+            let p1,p2 = m
+            let j' = match p1 = j with | true -> p2 | false -> p1
+            let x = (getXFrom j') - (getXFrom j)
+            let y = (getYFrom j') - (getYFrom j)        
+            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
+            let name = "My" + index.ToString()
+            ( y/d,name) //Math.Abs
         let nl = getNodeList t
         let processNode (n:Node) = 
             let j,pl = n
@@ -541,8 +624,8 @@ module TrussImplementation =
                 |> List.map (fun x -> getMemberExpressionsY j x (getMemberIndex x t))  
             [createEquation sumfx membersX;createEquation sumfy membersY]            
         List.map (fun x -> processNode x) nl
-        |> List.concat
-    let getMemberVariables (t:Truss) =
+        |> List.concat    
+    let getMemberVariableComponents (t:Truss) =
         let nl = getNodeList t
         let processNode (n:Node) = 
             let _j,pl = n            
@@ -552,7 +635,7 @@ module TrussImplementation =
             let membersY = 
                 List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
                 |> List.map (fun x -> "My" + (getMemberIndex x t).ToString())
-            List.concat [membersX;membersY]
+            List.concat [membersX;membersY] 
         List.map (fun x -> processNode x) nl
         |> List.concat
         |> List.distinct
@@ -1110,7 +1193,7 @@ module TrussServices =
         | ErrorState ts -> state
     
     let tryParseReactionResult (s:string) = 
-        let reactions = WolframServices.parseReactions s
+        let reactions = WolframServices.parseResults s
         match List.contains (0,"Unable to compute result",0.0) reactions with
         | true -> None
         | false -> 
