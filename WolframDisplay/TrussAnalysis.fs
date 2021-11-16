@@ -384,7 +384,7 @@ module TrussImplementation =
         List.fold (fun acc x -> x.magnitudeX + acc ) 0. forces
     let sumForcesY (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
-        List.fold (fun acc y -> -y.magnitudeY + acc ) 0. forces
+        List.fold (fun acc y -> y.magnitudeY + acc ) 0. forces
     let sumForceMoments (s:Support) (p:TrussPart list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         let j = getJointFromSupport s
@@ -402,7 +402,8 @@ module TrussImplementation =
             let ly = List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
             let lx = 
                 match s with 
-                | Pin _ -> []
+                | Pin _ -> [] //todo - a function to determine when to add Rx to the equation (i.e. roller angle <> 0)
+                    //List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports 
                 | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
             List.concat [ly;lx]
         List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
@@ -415,8 +416,9 @@ module TrussImplementation =
             let lx = List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
             let ly = 
                 match s with 
-                | Pin _ -> []
-                | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Ry" + i.ToString()) supports
+                | Pin _ -> [] //todo - a function to determine when to add Ry to the equation (i.e. roller angle <> 0)
+                //List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports 
+                | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
             List.concat [ly;lx]
         List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports    
     let getXForceReactionEquation (p:TrussPart list) =         
@@ -1289,7 +1291,7 @@ module TrussServices =
                     | true -> List.concat [for i in 0..(sr.momentEquations.Length - 1) -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
                     | false -> []
                 (WolframServices.solveEquations eq v)
-    let getMemberSolve (state :TrussAnalysisState) = 
+    let _getMemberSolve (state :TrussAnalysisState) = 
         match state with
         | TrussDomain.TrussState ts -> ""
         | TrussDomain.BuildState bs-> ""
@@ -2419,7 +2421,15 @@ type TrussAnalysis() as this =
             match newState with 
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
-                | TrussDomain.SupportReactionResult r -> WolframServices.solveEquations r.memberEquations r.variables
+                // Replace with trussServices.getMemberSolve once completed
+                | TrussDomain.SupportReactionResult r -> 
+                    let rec equations (e:string list) (s:string) = 
+                        match e with
+                        | [] -> s
+                        | a::b::c -> (WolframServices.solveEquations [a;b] r.variables) + "\n" + s |> equations c
+                    equations r.memberEquations ""
+                    
+
                 | _ -> ""
             | _ -> "opps"
         do  state <- newState
