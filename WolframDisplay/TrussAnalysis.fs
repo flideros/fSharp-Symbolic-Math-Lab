@@ -575,73 +575,6 @@ module TrussImplementation =
         |> List.concat
         |> List.distinct
     
-    let getMemberEquationComponents (t:Truss) (r:SupportReactionResult list) = 
-        let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
-            let p1,p2 = m
-            let j' = match p1 = j with | true -> p2 | false -> p1
-            let x = (getXFrom j') - (getXFrom j)         
-            let y = (getYFrom j') - (getYFrom j)
-            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
-            let name = "Mx" + index.ToString()
-            ( x/d,name) //Math.Abs
-        let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
-            let p1,p2 = m
-            let j' = match p1 = j with | true -> p2 | false -> p1
-            let x = (getXFrom j') - (getXFrom j)
-            let y = (getYFrom j') - (getYFrom j)        
-            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
-            let name = "My" + index.ToString()
-            ( y/d,name) //Math.Abs
-        let nl = getNodeList t
-        let processNode (n:Node) = 
-            let j,pl = n
-            let getSignX (s:Support) (f:Force) = 
-                let x = (getXFrom <| getJointFromSupport s) - f.direction.X           
-                match x < 0. with
-                | true  -> -1.
-                | false -> 1.
-            let getSignY (s:Support) (f:Force) =                 
-                let y = (getYFrom <| getJointFromSupport s) - f.direction.Y 
-                match y < 0. with
-                | true -> 1.
-                | false -> -1.
-            let supportReactions = 
-                let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
-                match s with
-                | Some (Support spt) -> List.tryFind (fun x -> x.support = spt) r
-                | _ -> None
-            let sfx, sfy = 
-                match supportReactions with 
-                | None -> 0.,0. 
-                | Some {support= spt; xReactionForce = Some xf; yReactionForce = Some yf} -> (getSignX spt xf)*xf.magnitude, (getSignY spt yf)*yf.magnitude
-                | Some {support= spt; xReactionForce = None; yReactionForce = Some yf} -> 0., (getSignY spt yf)*yf.magnitude
-                | Some {support= spt; xReactionForce = Some xf; yReactionForce = None} -> (getSignX spt xf)*xf.magnitude,0.
-                | Some {support=_spt; xReactionForce = None; yReactionForce = None} -> 0.,0.
-            let sumfx, sumfy = (sumForcesX pl) + sfx, (sumForcesY pl) + sfy
-            let membersX = 
-                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
-                |> List.map (fun x -> getMemberExpressionsX j x (getMemberIndex x t))                
-            let membersY = 
-                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
-                |> List.map (fun x -> getMemberExpressionsY j x (getMemberIndex x t))  
-            [createEquation sumfx membersX;createEquation sumfy membersY]            
-        List.map (fun x -> processNode x) nl
-        |> List.concat    
-    let getMemberVariableComponents (t:Truss) =
-        let nl = getNodeList t
-        let processNode (n:Node) = 
-            let _j,pl = n            
-            let membersX = 
-                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
-                |> List.map (fun x -> "Mx" + (getMemberIndex x t).ToString())            
-            let membersY = 
-                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
-                |> List.map (fun x -> "My" + (getMemberIndex x t).ToString())
-            List.concat [membersX;membersY] 
-        List.map (fun x -> processNode x) nl
-        |> List.concat
-        |> List.distinct
-
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
         match p with 
@@ -1698,7 +1631,7 @@ type TrussAnalysis() as this =
             sp.Children.Add(xOrgin_StackPanel) |> ignore
             sp.Children.Add(y_TextBlock) |> ignore
             sp.Children.Add(yOrgin_StackPanel) |> ignore
-            sp.Visibility <- Visibility.Collapsed
+            sp.Visibility <- Visibility.Visible
         sp
         // Truss mode selection
     let trussMode_Label =
@@ -1960,30 +1893,7 @@ type TrussAnalysis() as this =
             sp.Children.Add(trussForceMagnitude_TextBox) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
-        // Controls border
-    let trussControls_Border = 
-        let border = Border()            
-        do  border.BorderBrush <- black
-            border.Cursor <- System.Windows.Input.Cursors.Arrow
-            border.Background <- clear
-            border.Opacity <- 0.8
-            border.IsHitTestVisible <- true
-            border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
-            border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(trussMode_StackPanel) |> ignore
-            sp.Children.Add(trussMemberBuilder_StackPanel) |> ignore
-            sp.Children.Add(supportType_StackPanel) |> ignore
-            sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
-            sp.Children.Add(orgin_StackPanel) |> ignore
-            sp.Children.Add(selectionMode_StackPanel) |> ignore
-            sp.Children.Add(reaction_StackPanel) |> ignore
-            border.Child <- sp
-        border
+    
         // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
@@ -2192,7 +2102,100 @@ type TrussAnalysis() as this =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
         g
-    
+        // Settings
+    let toggleCodeText_Button = 
+        let b = Button() 
+        let onOff() = 
+            match b.Content.ToString() with 
+            | "Code Text Off" -> 
+                do  code_TextBlock.Visibility <- Visibility.Visible
+                    b.Content <- "Code Text On" 
+            | "Code Text On" -> 
+                do  code_TextBlock.Visibility <- Visibility.Collapsed
+                    b.Content <- "Code Text Off" 
+            | _ -> ()
+        do  b.Content <- "Code Text On" 
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Regular
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+            b.Visibility <- Visibility.Visible
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
+        b
+    let toggleResultText_Button = 
+        let b = Button() 
+        let onOff() = 
+            match b.Content.ToString() with 
+            | " Result Text Off" -> 
+                do  result_TextBlock.Visibility <- Visibility.Visible
+                    b.Content <- "Result Text On" 
+            | "Result Text On" -> 
+                do  result_TextBlock.Visibility <- Visibility.Collapsed
+                    b.Content <- "Result Text Off" 
+            | _ -> ()
+        do  b.Content <- "Result Text On" 
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Regular
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+            b.Visibility <- Visibility.Visible
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
+        b
+    let toggleStateText_Button = 
+        let b = Button() 
+        let onOff() = 
+            match b.Content.ToString() with 
+            | " State Text Off" -> 
+                do  label.Visibility <- Visibility.Visible
+                    b.Content <- "State Text On" 
+            | "State Text On" -> 
+                do  label.Visibility <- Visibility.Collapsed
+                    b.Content <- "State Text Off" 
+            | _ -> ()
+        do  b.Content <- "State Text On" 
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Regular
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+            b.Visibility <- Visibility.Visible
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
+        b
+    let settings_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Orientation <- Orientation.Vertical
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
+            sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            sp.Visibility <- Visibility.Collapsed
+            sp.Children.Add(toggleCodeText_Button) |> ignore
+            sp.Children.Add(toggleResultText_Button) |> ignore
+            sp.Children.Add(toggleStateText_Button) |> ignore
+            sp.Children.Add(orgin_StackPanel) |> ignore
+
+        sp  
+        // Controls border
+    let trussControls_Border = 
+        let border = Border()            
+        do  border.BorderBrush <- black
+            border.Cursor <- System.Windows.Input.Cursors.Arrow
+            border.Background <- clear
+            border.Opacity <- 0.8
+            border.IsHitTestVisible <- true
+            border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
+            border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMode_StackPanel) |> ignore
+            sp.Children.Add(trussMemberBuilder_StackPanel) |> ignore
+            sp.Children.Add(supportType_StackPanel) |> ignore
+            sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
+            sp.Children.Add(settings_StackPanel) |> ignore
+            sp.Children.Add(selectionMode_StackPanel) |> ignore
+            sp.Children.Add(reaction_StackPanel) |> ignore
+            border.Child <- sp
+        border    
     (*Actions*) 
     let adjustMouseButtonEventArgPoint (e:Input.MouseButtonEventArgs) = 
         let p = e.GetPosition(this)
@@ -2232,6 +2235,19 @@ type TrussAnalysis() as this =
     let drawMember (p1:System.Windows.Point, p2:System.Windows.Point) =
         let l = trussMember (p1,p2)
         do  canvas.Children.Add(l) |> ignore    
+    let drawMemberLabel (p1:System.Windows.Point, p2:System.Windows.Point) (i:int) =
+        let l =
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = (p1.X + p2.X)/2., Top = (p1.Y + p2.Y)/2., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Italic
+                l.FontSize <- 15.
+                l.FontWeight <- FontWeights.Bold
+                l.TextAlignment <- TextAlignment.Center
+                l.MaxWidth <- 50.                
+                l.Text <- i.ToString()                
+                l.Background <- SolidColorBrush(Colors.Transparent)
+            l 
+        do  canvas.Children.Add(l) |> ignore  
     let drawBuildJoint (p:System.Windows.Point) =
         let j = trussJoint p
         do  j.Stroke <- red
@@ -2380,6 +2396,7 @@ type TrussAnalysis() as this =
         let forces = List.toSeq (getForcesFrom s)
         let supports = List.toSeq (getSupportsFrom s)
         Seq.iter (fun m -> drawMember m) members
+        //Seq.iteri (fun i m -> drawMemberLabel m i) members
         Seq.iter (fun j -> drawJoint j) joints
         Seq.iter (fun f -> drawForce green f) forces
         Seq.iter (fun s -> drawSupport s) supports
@@ -2427,15 +2444,16 @@ type TrussAnalysis() as this =
                         match e with
                         | [] -> s
                         | a::b::c -> (WolframServices.solveEquations [a;b] r.variables) + "\n" + s |> equations c
+                        | _ -> s
                     equations r.memberEquations ""
-                    
-
                 | _ -> ""
             | _ -> "opps"
+        let members = getMembersFrom newState 
         do  state <- newState
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
+            Seq.iteri (fun i m -> drawMemberLabel m i) members
         // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
@@ -2476,7 +2494,7 @@ type TrussAnalysis() as this =
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- false
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
-                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
@@ -2497,7 +2515,7 @@ type TrussAnalysis() as this =
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
-                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     code_TextBlock.Text <- "TextString[Today]"
                     drawTruss state
@@ -2515,7 +2533,7 @@ type TrussAnalysis() as this =
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     supportType_StackPanel.Visibility <- Visibility.Visible
-                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     trussForceAngle_TextBox.Text <- "Enter Angle"
@@ -2537,7 +2555,7 @@ type TrussAnalysis() as this =
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
-                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     code_TextBlock.Text <- "TextString[Today]"
@@ -2557,7 +2575,7 @@ type TrussAnalysis() as this =
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
-                    orgin_StackPanel.Visibility <- Visibility.Collapsed
+                    settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     let newState = 
@@ -2578,7 +2596,7 @@ type TrussAnalysis() as this =
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
-                    orgin_StackPanel.Visibility <- Visibility.Visible
+                    settings_StackPanel.Visibility <- Visibility.Visible
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     code_TextBlock.Text <- "TextString[Today]"
