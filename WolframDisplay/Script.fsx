@@ -210,7 +210,7 @@ let resultants =
      xReactionForce = None;
      yReactionForce = Some f3}]
 
-getJointReactionEquations truss resultants
+//getJointReactionEquations truss resultants
 
 
 

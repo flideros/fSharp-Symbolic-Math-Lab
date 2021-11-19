@@ -160,6 +160,12 @@ module TrussDomain =
          memberEquations : string list
          variables : string list}
 
+    type MethodOfJointsCalculationStateData = 
+        {solvedMembers: (float*TrussPart) list;
+         nodes : Node list;
+         reactions : SupportReactionResult list;
+         variables : string list}
+
     type MethodOfJointsAnalysisStateData = 
         {zeroForceMembers: TrussPart list;
          tensionMembers: (float*TrussPart) list;
@@ -171,7 +177,8 @@ module TrussDomain =
         | Truss
         | SupportReactionEquations of SupportReactionEquationStateData
         | SupportReactionResult of SupportReactionResultStateData
-        | MethodOfJoints of MethodOfJointsAnalysisStateData
+        | MethodOfJointsCalculation of MethodOfJointsCalculationStateData
+        | MethodOfJointsAnalysis of MethodOfJointsAnalysisStateData 
     
     type AnalysisStateData = 
         {stability:TrussStability list; 
@@ -889,7 +896,8 @@ module TrussServices =
                     | None, Some b, true -> b::acc
                     | Some a, None, true -> a::acc
                     | None, None, true -> acc) [] srr.reactions            
-            | MethodOfJoints mj -> []
+            | MethodOfJointsCalculation mj -> []
+            | MethodOfJointsAnalysis mj -> []
         | TrussDomain.ErrorState es -> []
 
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
@@ -1185,7 +1193,8 @@ module TrussServices =
                     
                 match a.analysis with
                 | Truss -> state
-                | MethodOfJoints _mj -> state
+                | MethodOfJointsCalculation mj -> state
+                | MethodOfJointsAnalysis mj -> state
                 | SupportReactionEquations _sr -> newState
                 | SupportReactionResult _sr -> state
 
@@ -1212,7 +1221,8 @@ module TrussServices =
         | TrussDomain.AnalysisState a -> 
             match a.analysis with
             | Truss -> ""
-            | MethodOfJoints mj -> ""
+            | MethodOfJointsCalculation mj -> ""
+            | MethodOfJointsAnalysis mj -> ""
             | SupportReactionResult sr -> ""
             | SupportReactionEquations sr -> 
                 let eq = 
@@ -1233,7 +1243,8 @@ module TrussServices =
         | TrussDomain.AnalysisState a -> 
             match a.analysis with
             | Truss -> ""
-            | MethodOfJoints mj -> ""
+            | MethodOfJointsCalculation mj -> ""
+            | MethodOfJointsAnalysis mj -> ""
             | SupportReactionResult sr ->
                 let eq = sr.memberEquations
                 let v = []                    

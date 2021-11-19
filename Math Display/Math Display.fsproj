@@ -52,7 +52,6 @@
     <Compile Include="Text.fs" />
     <Compile Include="TypeSetting.fs" />
     <None Include="Script.fsx" />
-    <Content Include="packages.config" />
     <Resource Include="STIX2Math.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -68,6 +67,7 @@
     <Resource Include="STIX2Text-Regular.otf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -87,8 +87,6 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ControLibrary\ControlLibrary.fsproj">
       <Name>ControlLibrary</Name>
       <Project>{36d2be06-a4c4-449e-aabf-921975ee0fc2}</Project>
