@@ -143,17 +143,16 @@ module TrussDomain =
          supports:Support list option; 
          mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
+    type SupportReactionResult = 
+        {support: Support;
+         xReactionForce: Force option;
+         yReactionForce: Force option}    
     
     // Data associated with each analysis state
     type SupportReactionEquationStateData = 
         {momentEquations: string list;
          forceXEquation: string
-         forceYEquation: string}
-    
-    type SupportReactionResult = 
-        {support: Support;
-         xReactionForce: Force option;
-         yReactionForce: Force option}
+         forceYEquation: string} 
     
     type SupportReactionResultStateData = 
         {reactions : SupportReactionResult list;
@@ -162,6 +161,7 @@ module TrussDomain =
 
     type MethodOfJointsCalculationStateData = 
         {solvedMembers: (float*TrussPart) list;
+         memberEquations : string list;
          nodes : Node list;
          reactions : SupportReactionResult list;
          variables : string list}
@@ -224,7 +224,9 @@ module TrussDomain =
     type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
-    type SendReactionResultToState = string -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+
+    type AnalyzeReactionEquations = string -> TrussAnalysisState -> TrussAnalysisState
     
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
@@ -261,8 +263,9 @@ module TrussDomain =
          getSupportReactionEquationsFromState:GetSupportReactionEquationsFromState;
          getSupportReactionSolve:GetSupportReactionSolve;
          sendStateToSupportBuilder:SendStateToSupportBuilder;
-         sendReactionResultToState:SendReactionResultToState;
+         analyzeReactionEquations:AnalyzeReactionEquations;
          getReactionForcesFromState:GetReactionForcesFromState
+         sendPointToCalculation:SendPointToCalculation
          }
 
 module TrussImplementation = 
@@ -1125,7 +1128,8 @@ module TrussServices =
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
-    
+    let sendPointToCalculation (point :System.Windows.Point) (state :TrussAnalysisState) = state
+
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
         match state with 
@@ -1141,7 +1145,8 @@ module TrussServices =
         | true -> None
         | false -> 
             Some (reactions)
-    let sendReactionResultToState (s:string) (state:TrussAnalysisState)  =        
+    
+    let analyzeReactionEquations (s:string) (state:TrussAnalysisState)  =        
         let result = tryParseReactionResult s
         match result with
         | None -> state
@@ -1197,6 +1202,7 @@ module TrussServices =
                 | MethodOfJointsAnalysis mj -> state
                 | SupportReactionEquations _sr -> newState
                 | SupportReactionResult _sr -> state
+    
 
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
@@ -1281,8 +1287,9 @@ module TrussServices =
         getSupportReactionEquationsFromState = getSupportReactionEquationsFromState;
         getSupportReactionSolve = getSupportReactionSolve;
         sendStateToSupportBuilder = sendStateToSupportBuilder;
-        sendReactionResultToState = sendReactionResultToState;
-        getReactionForcesFromState = getReactionForcesFromState
+        analyzeReactionEquations = analyzeReactionEquations;
+        getReactionForcesFromState = getReactionForcesFromState;
+        sendPointToCalculation = sendPointToCalculation
         }
 
 type TrussAnalysis() as this =  
@@ -2442,30 +2449,38 @@ type TrussAnalysis() as this =
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
                 result_StackPanel.Children.Add(code_TextBlock) |> ignore
                 result_StackPanel.Children.Add(result_TextBlock) |> ignore
-    let setStateFromReactionResult s =
+    let setStateFromAnaysis s =
         do  setGraphicsFromKernel kernel
-        let newState = trussServices.sendReactionResultToState result_TextBlock.Text s
+        let newState = 
+            match s with 
+            | TrussDomain.AnalysisState a -> 
+                match a.analysis with
+                | TrussDomain.Truss -> s
+                | TrussDomain.SupportReactionEquations r -> trussServices.analyzeReactionEquations result_TextBlock.Text s
+                | TrussDomain.SupportReactionResult r -> s 
+                | TrussDomain.MethodOfJointsCalculation r -> s
+                | TrussDomain.MethodOfJointsAnalysis _ -> s                
+            | _ -> s        
         let newCode = 
             match newState with 
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
-                // Replace with trussServices.getMemberSolve once completed
-                | TrussDomain.SupportReactionResult r -> 
-                    let rec equations (e:string list) (s:string) = 
-                        match e with
-                        | [] -> s
-                        | a::b::c -> (WolframServices.solveEquations [a;b] r.variables) + "\n" + s |> equations c
-                        | _ -> s
-                    equations r.memberEquations ""
-                | _ -> ""
+                | TrussDomain.Truss -> ""
+                | TrussDomain.SupportReactionEquations r -> "" 
+                | TrussDomain.SupportReactionResult r -> "\"Choose a joint to begin Method of Joints analysis\""                    
+                | TrussDomain.MethodOfJointsCalculation r -> "" 
+                | TrussDomain.MethodOfJointsAnalysis _ -> ""                
             | _ -> "opps"
+        
         let members = getMembersFrom newState 
+        
         do  state <- newState
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
             Seq.iteri (fun i m -> drawMemberLabel m i) members
-        // Handle
+    
+    // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
         let p1 = adjustMouseButtonEventArgPoint e
         let joint = getJointIndex p1
@@ -2762,7 +2777,13 @@ type TrussAnalysis() as this =
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
             | TrussDomain.SelectionState ss -> ()
-            | TrussDomain.AnalysisState s -> ()
+            | TrussDomain.AnalysisState a -> 
+                match a.analysis with
+                | TrussDomain.Truss -> ()
+                | TrussDomain.SupportReactionEquations r -> () 
+                | TrussDomain.SupportReactionResult r -> () //let newState = trussServices.sendPointToCalculation p state
+                | TrussDomain.MethodOfJointsCalculation r -> () 
+                | TrussDomain.MethodOfJointsAnalysis _ -> ()
             | TrussDomain.ErrorState es -> 
                 match es.errors with 
                 | [TrussDomain.NoJointSelected] -> ()                    
@@ -3005,7 +3026,7 @@ type TrussAnalysis() as this =
         yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
-        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromReactionResult state))
+        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
 
 module TrussAnalysis = 
     let window =
