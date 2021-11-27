@@ -154,10 +154,7 @@ module TrussDomain =
          forceXEquation: string
          forceYEquation: string} 
     
-    type SupportReactionResultStateData = 
-        {reactions : SupportReactionResult list;
-         memberEquations : string list
-         variables : string list}
+    type SupportReactionResultStateData = {reactions : SupportReactionResult list}
 
     type MethodOfJointsCalculationStateData = 
         {solvedMembers: (float*TrussPart) list;
@@ -520,58 +517,6 @@ module TrussImplementation =
     let getMemberIndex (m:Member) (t:Truss) =
         let i = List.tryFindIndex (fun x -> x = m) t.members
         match i with | Some n -> n | None -> -1    
-    let getMemberEquations (t:Truss) (r:SupportReactionResult list) =         
-        let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
-            let p1,p2 = m
-            let j' = match p1 = j with | true -> p2 | false -> p1
-            let x = (getXFrom j') - (getXFrom j)         
-            let y = (getYFrom j') - (getYFrom j)
-            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
-            let name = "M" + index.ToString()
-            ( x/d,name) //Math.Abs
-        let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
-            let p1,p2 = m
-            let j' = match p1 = j with | true -> p2 | false -> p1
-            let x = (getXFrom j') - (getXFrom j)
-            let y = (getYFrom j) - (getYFrom j')        
-            let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
-            let name = "M" + index.ToString()
-            ( y/d,name) //Math.Abs
-        let nl = getNodeList t
-        let processNode (n:Node) = 
-            let getReactionSignX (f:Force) = 
-                let x = (getXFrom f.joint) - f.direction.X           
-                match x < 0. with
-                | true  -> -1.
-                | false -> 1.
-            let getReactionSignY (f:Force) =                 
-                let y = (getYFrom f.joint) - f.direction.Y 
-                match y < 0. with
-                | true -> 1.
-                | false -> -1.
-            let j,pl = n
-            let supportReactions = 
-                let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
-                match s with
-                | Some (Support spt) -> List.tryFind (fun x -> x.support = spt) r
-                | _ -> None
-            let sfx, sfy = 
-                match supportReactions with 
-                | None -> 0.,0. 
-                | Some {support=_spt; xReactionForce = Some xf; yReactionForce = Some yf} -> (getReactionSignX xf)*xf.magnitude, (getReactionSignY yf)*yf.magnitude
-                | Some {support=_spt; xReactionForce = None; yReactionForce = Some yf} -> 0., (getReactionSignY yf)*yf.magnitude
-                | Some {support=_spt; xReactionForce = Some xf; yReactionForce = None} -> (getReactionSignX xf)*xf.magnitude,0.
-                | Some {support=_spt; xReactionForce = None; yReactionForce = None} -> 0.,0.
-            let sumfx, sumfy = (sumForcesX pl) + sfx, (sumForcesY pl) + sfy
-            let membersX = 
-                List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
-                |> List.map (fun x -> getMemberExpressionsX j x (getMemberIndex x t))                
-            let membersY = 
-                List.choose (fun y -> match y with | Member m -> Some m | _ -> None) pl
-                |> List.map (fun y -> getMemberExpressionsY j y (getMemberIndex y t))  
-            [createEquation sumfx membersX;createEquation sumfy membersY]            
-        List.map (fun x -> processNode x) nl//processNode nl.Head//
-        |> List.concat //
     let getMemberVariables (t:Truss) =
         let nl = getNodeList t
         let processNode (n:Node) = 
@@ -579,11 +524,58 @@ module TrussImplementation =
             let members = 
                 List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
                 |> List.map (fun x -> "M" + (getMemberIndex x t).ToString())            
-            
             List.concat [members] 
         List.map (fun x -> processNode x) nl
         |> List.concat
         |> List.distinct
+    let getReactionSignX (f:Force) = 
+        let x = (getXFrom f.joint) - f.direction.X           
+        match x < 0. with
+        | true  -> -1.
+        | false -> 1.
+    let getReactionSignY (f:Force) =                 
+        let y = (getYFrom f.joint) - f.direction.Y 
+        match y < 0. with
+        | true -> 1.
+        | false -> -1.
+    let getMemberExpressionsX (j:Joint) (m:Member) (index:int) =
+        let p1,p2 = m
+        let j' = match p1 = j with | true -> p2 | false -> p1
+        let x = (getXFrom j') - (getXFrom j)         
+        let y = (getYFrom j') - (getYFrom j)
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n        
+        let name = "M" + index.ToString()
+        ( x/d,name) //Math.Abs
+    let getMemberExpressionsY (j:Joint) (m:Member) (index:int) =
+        let p1,p2 = m
+        let j' = match p1 = j with | true -> p2 | false -> p1
+        let x = (getXFrom j') - (getXFrom j)
+        let y = (getYFrom j) - (getYFrom j')        
+        let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
+        let name = "M" + index.ToString()
+        ( y/d,name) //Math.Abs
+    let analyzeNode (n:Node) (t:Truss) (r:SupportReactionResult list) = 
+        let j,pl = n
+        let supportReactions = 
+            let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
+            match s with
+            | Some (Support spt) -> List.tryFind (fun x -> x.support = spt) r
+            | _ -> None
+        let sfx, sfy = 
+            match supportReactions with 
+            | None -> 0.,0. 
+            | Some {support=_spt; xReactionForce = Some xf; yReactionForce = Some yf} -> (getReactionSignX xf)*xf.magnitude, (getReactionSignY yf)*yf.magnitude
+            | Some {support=_spt; xReactionForce = None; yReactionForce = Some yf} -> 0., (getReactionSignY yf)*yf.magnitude
+            | Some {support=_spt; xReactionForce = Some xf; yReactionForce = None} -> (getReactionSignX xf)*xf.magnitude,0.
+            | Some {support=_spt; xReactionForce = None; yReactionForce = None} -> 0.,0.
+        let sumfx, sumfy = (sumForcesX pl) + sfx, (sumForcesY pl) + sfy
+        let membersX = 
+            List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
+            |> List.map (fun x -> getMemberExpressionsX j x (getMemberIndex x t))
+        let membersY = 
+            List.choose (fun y -> match y with | Member m -> Some m | _ -> None) pl
+            |> List.map (fun y -> getMemberExpressionsY j y (getMemberIndex y t))
+        [createEquation sumfx membersX;createEquation sumfy membersY]
     
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -1128,7 +1120,47 @@ module TrussServices =
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
-    let sendPointToCalculation (point :System.Windows.Point) (state :TrussAnalysisState) = state
+    
+    let sendPointToCalculation (p1 :System.Windows.Point) (state :TrussAnalysisState) = 
+        let joints = getJointSeqFromTruss (getTrussFromState state)
+        let joint  = Seq.tryFind (fun (p2:System.Windows.Point) ->  (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) joints
+        
+        match joint with
+        | None -> state
+        | Some p -> 
+            match state with
+            | TrussDomain.TrussState _ts -> state
+            | TrussDomain.BuildState _bs-> state
+            | TrussDomain.SelectionState _ss -> state
+            | TrussDomain.ErrorState _es -> state
+            | TrussDomain.AnalysisState a ->                     
+                match a.analysis with
+                | Truss -> state
+                | MethodOfJointsCalculation _mj -> state
+                | MethodOfJointsAnalysis _mj -> state
+                | SupportReactionEquations _sr -> state
+                | SupportReactionResult sr -> 
+                    let nodes = getNodeList a.truss
+                    let variables = getMemberVariables a.truss
+                    let selectedNode = List.tryFind (fun (j,_pl) -> (getXFrom j) = p.X && (getYFrom j) = p.Y) nodes
+                    let memberEquations =
+                        match selectedNode with
+                        | None -> []
+                        | Some n -> analyzeNode n a.truss sr.reactions
+                    { a with analysis = 
+                        {solvedMembers = []; // (float*TrussPart) list
+                         memberEquations = memberEquations; 
+                         nodes = nodes;
+                         reactions = sr.reactions;
+                         variables = variables} |> MethodOfJointsCalculation 
+                    } |> TrussDomain.AnalysisState
+        (*
+        type MethodOfJointsAnalysisStateData = 
+            {zeroForceMembers: TrussPart list;
+             tensionMembers: (float*TrussPart) list;
+             compressionMembers: (float*TrussPart) list;
+             reactions : SupportReactionResult list}
+         *)
 
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
@@ -1191,9 +1223,7 @@ module TrussServices =
                                     | Some (_i,r,m) -> getReactionForce x r m
                                     })
                             ) supports
-                    {reactions = reactions;
-                     memberEquations = getMemberEquations a.truss reactions;
-                     variables = getMemberVariables a.truss} |> SupportReactionResult
+                    {reactions = reactions} |> SupportReactionResult
                 let newState = {a with analysis = reactionResults} |> AnalysisState            
                     
                 match a.analysis with
@@ -1202,7 +1232,6 @@ module TrussServices =
                 | MethodOfJointsAnalysis mj -> state
                 | SupportReactionEquations _sr -> newState
                 | SupportReactionResult _sr -> state
-    
 
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
@@ -1240,23 +1269,7 @@ module TrussServices =
                     | true -> List.concat [for i in 0..(sr.momentEquations.Length - 1) -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
                     | false -> []
                 (WolframServices.solveEquations eq v)
-    let _getMemberSolve (state :TrussAnalysisState) = 
-        match state with
-        | TrussDomain.TrussState ts -> ""
-        | TrussDomain.BuildState bs-> ""
-        | TrussDomain.SelectionState ss -> ""
-        | TrussDomain.ErrorState es -> ""
-        | TrussDomain.AnalysisState a -> 
-            match a.analysis with
-            | Truss -> ""
-            | MethodOfJointsCalculation mj -> ""
-            | MethodOfJointsAnalysis mj -> ""
-            | SupportReactionResult sr ->
-                let eq = sr.memberEquations
-                let v = []                    
-                (WolframServices.solveEquations eq v)
-            | SupportReactionEquations sr -> ""
-                
+                    
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         checkTruss = checkTruss;
@@ -2781,7 +2794,17 @@ type TrussAnalysis() as this =
                 match a.analysis with
                 | TrussDomain.Truss -> ()
                 | TrussDomain.SupportReactionEquations r -> () 
-                | TrussDomain.SupportReactionResult r -> () //let newState = trussServices.sendPointToCalculation p state
+                | TrussDomain.SupportReactionResult r -> 
+                    let newState = trussServices.sendPointToCalculation p state
+                    let newCode = 
+                        match newState with 
+                        | TrussDomain.AnalysisState a ->
+                            match a.analysis with
+                            | TrussDomain.MethodOfJointsCalculation r -> WolframServices.solveEquations r.memberEquations r.variables
+                            | _ -> "1"
+                        | _ -> "2"
+                    do  state <- newState
+                        code_TextBlock.Text <- newCode
                 | TrussDomain.MethodOfJointsCalculation r -> () 
                 | TrussDomain.MethodOfJointsAnalysis _ -> ()
             | TrussDomain.ErrorState es -> 
