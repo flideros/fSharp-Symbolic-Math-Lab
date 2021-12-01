@@ -3,9 +3,6 @@ namespace Math.Pure.Quantity
 open Math.Pure.Objects
 open System.Numerics
 
-open Math.Pure.Objects
-open System.Numerics
-
 type Fraction = 
     {numerator: BigInteger; denominator: BigInteger}
     with

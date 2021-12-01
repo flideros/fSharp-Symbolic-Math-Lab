@@ -223,7 +223,7 @@ module TrussDomain =
     type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
 
-    type AnalyzeReactionEquations = string -> TrussAnalysisState -> TrussAnalysisState
+    type AnalyzeEquations = string -> TrussAnalysisState -> TrussAnalysisState
     
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
@@ -260,7 +260,7 @@ module TrussDomain =
          getSupportReactionEquationsFromState:GetSupportReactionEquationsFromState;
          getSupportReactionSolve:GetSupportReactionSolve;
          sendStateToSupportBuilder:SendStateToSupportBuilder;
-         analyzeReactionEquations:AnalyzeReactionEquations;
+         analyzeEquations:AnalyzeEquations;
          getReactionForcesFromState:GetReactionForcesFromState
          sendPointToCalculation:SendPointToCalculation
          }
@@ -1206,14 +1206,14 @@ module TrussServices =
         | AnalysisState s -> state
         | ErrorState ts -> state
     
-    let tryParseReactionResult (s:string) = 
-        let reactions = WolframServices.parseResults s
-        match List.contains (0,"Unable to compute result",0.0) reactions with
+    let tryParseResult (s:string) = 
+        let results = WolframServices.parseResults s
+        match List.contains (0,"Unable to compute result",0.0) results  with
         | true -> None
-        | false -> Some (reactions)
+        | false -> Some (results)
     
-    let analyzeReactionEquations (s:string) (state:TrussAnalysisState)  =        
-        let result = tryParseReactionResult s
+    let analyzeEquations (s:string) (state:TrussAnalysisState)  =        
+        let result = tryParseResult s
         match result with
         | None -> state
         | Some rList ->             
@@ -1223,49 +1223,50 @@ module TrussServices =
             | TrussDomain.SelectionState _ss -> state
             | TrussDomain.ErrorState _es -> state
             | TrussDomain.AnalysisState a -> 
-                let parts = getPartListFrom a.truss
-                let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) parts
-                let findReaction i' r' = List.tryFind (fun x -> match x with | i, r,_m  when i=i' && r=r'-> true | _ -> false) rList
-                let getReactionForce s r m =                    
-                    let j = getJointFromSupport s
-                    match r with 
-                    | "Rx" ->                         
-                        let x' = 
-                            match m < 0.0 with
-                            | false -> (getXFrom j) - 50.0
-                            | true -> (getXFrom j) + 50.0
-                        Some {magnitude = System.Math.Abs m; direction = Vector (x = x', y = getYFrom j); joint = j}                    
-                    | "Ry" -> 
-                        let y' = 
-                            match m < 0.0 with
-                            | false -> (getYFrom j) + 50.0
-                            | true -> (getYFrom j) - 50.0
-                        Some {magnitude = System.Math.Abs m; direction = Vector (x = getXFrom j, y = y'); joint = j}
-                    | _ -> None                
-                let reactionResults = 
-                    let reactions =
-                        List.mapi (
-                            (fun i x -> 
-                                {support = x;
-                                 xReactionForce = 
-                                    match findReaction i "Rx" with 
-                                    | None -> None;
-                                    | Some (_i,r,m) -> getReactionForce x r m 
-                                 yReactionForce = 
-                                    match findReaction i "Ry" with 
-                                    | None -> None
-                                    | Some (_i,r,m) -> getReactionForce x r m
-                                    })
-                            ) supports
-                    {reactions = reactions} |> SupportReactionResult
-                let newState = {a with analysis = reactionResults} |> AnalysisState            
-                    
                 match a.analysis with
-                | Truss -> state
-                | MethodOfJointsCalculation mj -> state
-                | MethodOfJointsAnalysis mj -> state
-                | SupportReactionEquations _sr -> newState
+                | Truss -> state                
+                | SupportReactionEquations _sr ->
+                    let parts = getPartListFrom a.truss
+                    let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) parts
+                    let findReaction i' r' = List.tryFind (fun x -> match x with | i, r,_m  when i=i' && r=r'-> true | _ -> false) rList
+                    let getReactionForce s r m =                    
+                        let j = getJointFromSupport s
+                        match r with 
+                        | "Rx" ->                         
+                            let x' = 
+                                match m < 0.0 with
+                                | false -> (getXFrom j) - 50.0
+                                | true -> (getXFrom j) + 50.0
+                            Some {magnitude = System.Math.Abs m; direction = Vector (x = x', y = getYFrom j); joint = j}                    
+                        | "Ry" -> 
+                            let y' = 
+                                match m < 0.0 with
+                                | false -> (getYFrom j) + 50.0
+                                | true -> (getYFrom j) - 50.0
+                            Some {magnitude = System.Math.Abs m; direction = Vector (x = getXFrom j, y = y'); joint = j}
+                        | _ -> None                
+                    let results = 
+                        let reactions =
+                            List.mapi (
+                                (fun i x -> 
+                                    {support = x;
+                                     xReactionForce = 
+                                        match findReaction i "Rx" with 
+                                        | None -> None;
+                                        | Some (_i,r,m) -> getReactionForce x r m 
+                                     yReactionForce = 
+                                        match findReaction i "Ry" with 
+                                        | None -> None
+                                        | Some (_i,r,m) -> getReactionForce x r m
+                                        })
+                                ) supports
+                        {reactions = reactions} |> SupportReactionResult
+                    {a with analysis = results} |> AnalysisState                    
                 | SupportReactionResult _sr -> state
+                | MethodOfJointsCalculation mj -> state
+                                
+                | MethodOfJointsAnalysis mj -> state
+    
 
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
@@ -1334,7 +1335,7 @@ module TrussServices =
         getSupportReactionEquationsFromState = getSupportReactionEquationsFromState;
         getSupportReactionSolve = getSupportReactionSolve;
         sendStateToSupportBuilder = sendStateToSupportBuilder;
-        analyzeReactionEquations = analyzeReactionEquations;
+        analyzeEquations = analyzeEquations;
         getReactionForcesFromState = getReactionForcesFromState;
         sendPointToCalculation = sendPointToCalculation
         }
@@ -2513,7 +2514,7 @@ type TrussAnalysis() as this =
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
                 | TrussDomain.Truss -> s
-                | TrussDomain.SupportReactionEquations r -> trussServices.analyzeReactionEquations result_TextBlock.Text s
+                | TrussDomain.SupportReactionEquations r -> trussServices.analyzeEquations result_TextBlock.Text s
                 | TrussDomain.SupportReactionResult r -> s 
                 | TrussDomain.MethodOfJointsCalculation r -> s
                 | TrussDomain.MethodOfJointsAnalysis _ -> s                
