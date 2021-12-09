@@ -111,6 +111,7 @@ let sFa,sAa = Pin {tangent=rFCa;normal=rFBa}, Roller rAa
 let partList2a = [Force fCa;Force fBa;Support sFa;Support sAa]
 
 
+
 getYMomentReactionEquations partList2a
 //getXMomentReactionEquations partList2a
 getYForceReactionEquation partList2a
@@ -151,7 +152,7 @@ let j5 = {TrussDomain.x=x2;TrussDomain.y=y3}
 
 
 let m1 = j1,j2
-let m2 = j2,j3
+let m2 = j1,j2
 let m3 = j4,j5
 let m4 = j1,j4
 let m5 = j4,j2
@@ -171,6 +172,11 @@ let f5 = {magnitude = -3.; direction = Vector (x=7.,y = 0.); joint = j5}
 let s1,s2 = Pin {tangent=f1;normal=f2}, Roller f3
 
 let mList = [m1;m2;m3;m4;m5;m6;m7]
+
+let part1 = Member m1
+let part2 = Member m2
+
+part1=part2
 
 let fList = [f4; f5]
 let sList = [s1;s2]

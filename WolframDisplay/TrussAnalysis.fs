@@ -51,25 +51,29 @@ module WolframServices =
             let r' = r.Trim()
             let index = 
                 match r.Contains("->") with
-                | false -> false,0
+                | false -> false,-1
                 | true -> 
-                    match r.Contains("M") with
-                    | true -> r'.Substring(1,r.IndexOf(" ->")-2) |> System.Int32.TryParse
+                    match r.Contains("M")  with
+                    | true -> r'.Substring(1,r.IndexOf(" ->")-1) |> System.Int32.TryParse
                     | false -> r'.Substring(2,r.IndexOf(" ->")-2) |> System.Int32.TryParse
-            let reaction = 
+            let part = 
                 match r.Contains("->") with
                 | false -> "Unable to compute result"
                 | true -> 
                     match r.Contains("M") with
-                    | true -> r'.Substring(0,1)
+                    | true -> 
+                        let out = r'.Substring(0,1)
+                        match out.Contains("M") with
+                        | true -> "Unable to compute result"
+                        | false -> out
                     | false -> r'.Substring(0,2)
             let magnitude = 
                 match r.Contains("->") with
                 | false -> false,0.0
                 | true -> r'.Substring(r.LastIndexOf(">")+1) |> System.Double.TryParse
             match r' with 
-            | "Unable to compute result" -> (0,"Unable to compute result",0.0)
-            | _ -> (snd index),reaction,(snd magnitude)
+            | "Unable to compute result" -> (-1,"Unable to compute result",0.0)
+            | _ -> (snd index),part,(snd magnitude)
         List.map parseResult result
 
 module TrussDomain =
@@ -82,7 +86,7 @@ module TrussDomain =
     // Domain Types
     type Joint = {x:X; y:Y} //; z:Z}
     type MemberBuilder = (Joint*(Joint option))
-    type Member = (Joint*Joint)
+    type Member = (Joint*Joint)    
     type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
     type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
     type Force = {magnitude:float; direction:Vector; joint:Joint}    
@@ -103,6 +107,7 @@ module TrussDomain =
         | Member of Member
         | Force of Force
         | Support of Support
+    type MemberForce = (float*TrussPart)
     type TrussBuildOp =
         | BuildMember of MemberBuilder
         | BuildForce of ForceBuilder
@@ -157,16 +162,16 @@ module TrussDomain =
     type SupportReactionResultStateData = {reactions : SupportReactionResult list}
 
     type MethodOfJointsCalculationStateData = 
-        {solvedMembers: (float*TrussPart) list;
+        {solvedMembers: MemberForce list;
          memberEquations : string list;
          nodes : Node list;
          reactions : SupportReactionResult list;
          variables : string list}
 
     type MethodOfJointsAnalysisStateData = 
-        {zeroForceMembers: TrussPart list;
-         tensionMembers: (float*TrussPart) list;
-         compressionMembers: (float*TrussPart) list;
+        {zeroForceMembers: MemberForce list;
+         tensionMembers: MemberForce list;
+         compressionMembers: MemberForce list;
          reactions : SupportReactionResult list}
     
     // Analysis States
@@ -576,6 +581,20 @@ module TrussImplementation =
             List.choose (fun y -> match y with | Member m -> Some m | _ -> None) pl
             |> List.map (fun y -> getMemberExpressionsY j y (getMemberIndex y t))
         [createEquation sumfx membersX;createEquation sumfy membersY]
+    let getMemberForceAtJoint (j:Joint) (m:TrussPart) (mf:MemberForce list) = 
+        let tf = List.tryFind (fun (_f,p) -> p = m ) mf 
+        match tf with 
+        | None -> m
+        | Some (f,Member p) when Member p = m->  
+            let p1,p2 = p
+            let dir = 
+                match j = p1 with 
+                | true ->  Vector(X = getXFrom p2, Y  = getYFrom p2)
+                | false -> Vector(X = getXFrom p1, Y = getYFrom p1)
+            {magnitude = -f; 
+             direction = dir; 
+             joint = j} |> Force
+        | Some _ -> m
     
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -1175,8 +1194,7 @@ module TrussServices =
                          variables = variables} |> MethodOfJointsCalculation 
                     } |> TrussDomain.AnalysisState
                 | MethodOfJointsCalculation mj ->                    
-                    let selectedNode = List.tryFind (fun (j,_pl) -> (getXFrom j) = p.X && (getYFrom j) = p.Y) mj.nodes
-                    
+                    let selectedNode = List.tryFind (fun (j,_pl) -> (getXFrom j) = p.X && (getYFrom j) = p.Y) mj.nodes                    
                     let memberEquations =
                         match selectedNode with
                         | None -> []
@@ -1208,7 +1226,7 @@ module TrussServices =
     
     let tryParseResult (s:string) = 
         let results = WolframServices.parseResults s
-        match List.contains (0,"Unable to compute result",0.0) results  with
+        match List.contains (-1,"Unable to compute result",0.0) results  with
         | true -> None
         | false -> Some (results)
     
@@ -1261,9 +1279,47 @@ module TrussServices =
                                         })
                                 ) supports
                         {reactions = reactions} |> SupportReactionResult
-                    {a with analysis = results} |> AnalysisState                    
+                    {a with analysis = results} |> AnalysisState
                 | SupportReactionResult _sr -> state
-                | MethodOfJointsCalculation mj -> state
+                | MethodOfJointsCalculation mj ->                     
+                    let truss = getTrussFromState state
+                    let getSolvedMember i = truss.members.[i] |> Member
+                    let solvedMembers = 
+                        [(List.map (fun (i,_s:string,m:float) -> (m,getSolvedMember i)) rList); mj.solvedMembers]
+                        |> List.concat 
+                        |> List.distinctBy (fun (m,p) -> (m,p))
+                        |> List.map (fun x -> MemberForce x)                    
+                    let replaceMembersWithForces (n:Node) =
+                        let (j,pl) = n
+                        let memberCount pl' = List.filter (fun x -> match x with | Member _ -> true | _ -> false) pl' |> List.length
+                        let newPl = 
+                            let rec replace pl' (sMembers:MemberForce list) = 
+                                match memberCount pl' > 2 with
+                                | false -> pl'
+                                | true -> 
+                                    match sMembers with
+                                    | [] -> pl'
+                                    | sm::smt -> 
+                                        let newPl' = 
+                                            List.map (fun x -> 
+                                            match x with 
+                                            | Member m -> 
+                                                let (_f,mb') = sm
+                                                match x = mb' with
+                                                | true -> getMemberForceAtJoint j x [sm] 
+                                                | false -> x
+                                            | _ -> x) pl'
+                                        replace newPl' smt
+                            replace pl solvedMembers                            
+                        (j,newPl)
+                    let newNodes = List.map (fun x -> replaceMembersWithForces x) mj.nodes                    
+                    { a with analysis = 
+                        {solvedMembers = solvedMembers ; 
+                         memberEquations = mj.memberEquations; 
+                         nodes = newNodes;//mj.nodes;//
+                         reactions = mj.reactions;
+                         variables = mj.variables} |> MethodOfJointsCalculation 
+                    } |> TrussDomain.AnalysisState
                                 
                 | MethodOfJointsAnalysis mj -> state
     
@@ -1403,6 +1459,7 @@ type TrussAnalysis() as this =
             l.Text <- state.ToString()
             l.BorderBrush <- SolidColorBrush(Colors.Transparent)
             l.Opacity <- 0.5
+            l.MaxLines <- 30
         l 
         // Reaction forces and moments
     let axis_Label =
@@ -2514,10 +2571,10 @@ type TrussAnalysis() as this =
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
                 | TrussDomain.Truss -> s
-                | TrussDomain.SupportReactionEquations r -> trussServices.analyzeEquations result_TextBlock.Text s
-                | TrussDomain.SupportReactionResult r -> s 
-                | TrussDomain.MethodOfJointsCalculation r -> s
-                | TrussDomain.MethodOfJointsAnalysis _ -> s                
+                | TrussDomain.SupportReactionEquations _r -> trussServices.analyzeEquations result_TextBlock.Text s
+                | TrussDomain.SupportReactionResult _r -> s 
+                | TrussDomain.MethodOfJointsCalculation _mj -> trussServices.analyzeEquations result_TextBlock.Text s
+                | TrussDomain.MethodOfJointsAnalysis _mj -> s                
             | _ -> s        
         let newCode = 
             match newState with 
@@ -2537,7 +2594,6 @@ type TrussAnalysis() as this =
             code_TextBlock.Text <- newCode
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
             Seq.iteri (fun i m -> drawMemberLabel m i) members
-    
 
     // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
