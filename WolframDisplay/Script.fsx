@@ -1,4 +1,27 @@
-﻿#r @"PresentationCore"
+﻿
+let input = [ (3.,"b"); (2.,"a"); (4.,"c"); (1.,"a"); (5.,"d")] 
+
+let inputCount = input |> List.countBy (fun (n,l) -> l)
+
+let i1 = 
+    List.choose 
+        (fun (k,n) -> 
+            match n = 1 with 
+            | true -> Some (List.find (fun (n',k') -> k' = k) input) 
+            | false -> Some ( (List.filter (fun (n',k') -> k' = k) input |> List.averageBy (fun (n',k') -> n') , k )    )
+        ) inputCount
+
+let ttt = 
+    [ (3.,"b"); (2.,"a"); (4.,"c"); (1.,"a"); (5.,"d")] 
+    |> List.countBy (fun (n,l) -> l)
+    |> List.choose 
+        (fun (k,n) -> 
+            match n = 1 with 
+            | true -> Some (List.find (fun (n',k') -> k' = k) input) 
+            | false -> Some ( (List.filter (fun (n',k') -> k' = k) input |> List.averageBy (fun (n',k') -> n') , k))
+        ) 
+
+#r @"PresentationCore"
 #r @"PresentationFramework"
 #r @"WindowsBase"
 #r @"System.Xaml"
