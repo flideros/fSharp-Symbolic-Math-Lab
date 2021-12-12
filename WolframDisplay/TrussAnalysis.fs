@@ -215,6 +215,7 @@ module TrussDomain =
     type GetSupportReactionEquationsFromState = bool -> TrussAnalysisState -> TrussAnalysisState
     type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
     type GetReactionForcesFromState = bool -> TrussAnalysisState -> Force list
+    type GetMemberOptionFromTrussPart = TrussPart -> (System.Windows.Point*System.Windows.Point) Option
 
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
@@ -268,6 +269,7 @@ module TrussDomain =
          analyzeEquations:AnalyzeEquations;
          getReactionForcesFromState:GetReactionForcesFromState
          sendPointToCalculation:SendPointToCalculation
+         getMemberOptionFromTrussPart:GetMemberOptionFromTrussPart
          }
 
 module TrussImplementation = 
@@ -935,6 +937,10 @@ module TrussServices =
                     | Some a, None, true -> a::acc
                     | None, None, true -> acc) [] mj.reactions
         | TrussDomain.ErrorState es -> []
+    let getMemberOptionFromTrussPart p = 
+        match p with
+        | Member (j1,j2) -> Some (System.Windows.Point (getXFrom j1,(getYFrom j1)),System.Windows.Point (getXFrom j2,(getYFrom j2)))
+        | _ -> None
 
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
@@ -1402,6 +1408,7 @@ module TrussServices =
         analyzeEquations = analyzeEquations;
         getReactionForcesFromState = getReactionForcesFromState;
         sendPointToCalculation = sendPointToCalculation
+        getMemberOptionFromTrussPart = getMemberOptionFromTrussPart
         }
 
 type TrussAnalysis() as this =  
@@ -2046,9 +2053,18 @@ type TrussAnalysis() as this =
             l.X1 <- p1.X
             l.Y1 <- p1.Y
             l.X2 <- p2.X
-            l.Y2 <- p2.Y
-            
-        l    
+            l.Y2 <- p2.Y            
+        l 
+    let trussMemberSolved (p1:System.Windows.Point, p2:System.Windows.Point) color = 
+        let l = Line() 
+        do  l.Stroke <- color
+            l.StrokeThickness <- 4.0
+            l.Visibility <- Visibility.Visible
+            l.X1 <- p1.X
+            l.Y1 <- p1.Y
+            l.X2 <- p2.X
+            l.Y2 <- p2.Y            
+        l 
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line() 
         let sendLineToState l s =  
@@ -2365,7 +2381,10 @@ type TrussAnalysis() as this =
         do  canvas.Children.Add(j) |> ignore
     let drawMember (p1:System.Windows.Point, p2:System.Windows.Point) =
         let l = trussMember (p1,p2)
-        do  canvas.Children.Add(l) |> ignore    
+        do  canvas.Children.Add(l) |> ignore
+    let drawSolvedMember (p1:System.Windows.Point, p2:System.Windows.Point) color =        
+        let l = trussMemberSolved (p1,p2)  color
+        do  canvas.Children.Add(l) |> ignore
     let drawMemberLabel (p1:System.Windows.Point, p2:System.Windows.Point) (i:int) =
         let l =
             let l = TextBlock()
@@ -2593,8 +2612,7 @@ type TrussAnalysis() as this =
                 | TrussDomain.SupportReactionResult r -> "\"Choose a joint to begin Method of Joints analysis\""                    
                 | TrussDomain.MethodOfJointsCalculation r -> "\"Choose next joint\"" 
                 | TrussDomain.MethodOfJointsAnalysis _ -> "\"Analysis Complete\""                
-            | _ -> "opps"
-        
+            | _ -> "opps"        
         let members = getMembersFrom newState 
         
         do  state <- newState
@@ -2602,6 +2620,33 @@ type TrussAnalysis() as this =
             code_TextBlock.Text <- newCode
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
             Seq.iteri (fun i m -> drawMemberLabel m i) members
+            match newState with
+            | TrussDomain.AnalysisState a -> 
+                match a.analysis with
+                | TrussDomain.Truss -> ()
+                | TrussDomain.SupportReactionEquations _sre -> () 
+                | TrussDomain.SupportReactionResult _srr-> ()                    
+                | TrussDomain.MethodOfJointsCalculation mjc ->                     
+                    do  List.iter (fun  (n, p) -> 
+                        match n, TrussServices.getMemberOptionFromTrussPart p with
+                        | (z, Some m) when z = 0. -> drawSolvedMember m green
+                        | (z, Some m) when z > 0. -> drawSolvedMember m blue
+                        | (z, Some m) when z < 0. -> drawSolvedMember m red
+                        | _ -> ()) mjc.solvedMembers
+                | TrussDomain.MethodOfJointsAnalysis mja ->                     
+                    do  List.iter (fun  (n, p) -> 
+                        match n, TrussServices.getMemberOptionFromTrussPart p with
+                        | (z, Some m) -> drawSolvedMember m blue
+                        | _ -> ()) mja.tensionMembers
+                    do  List.iter (fun  (n, p) -> 
+                        match n, TrussServices.getMemberOptionFromTrussPart p with
+                        | (z, Some m) -> drawSolvedMember m red
+                        | _ -> ()) mja.compressionMembers
+                    do  List.iter (fun  p -> 
+                        match TrussServices.getMemberOptionFromTrussPart p with
+                        | Some m -> drawSolvedMember m green
+                        | None -> ()) mja.zeroForceMembers
+            | _ -> ()
 
     // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
