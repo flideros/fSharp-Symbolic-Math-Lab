@@ -1450,6 +1450,7 @@ type TrussAnalysis() as this =
     let clear = SolidColorBrush(Colors.White)
     let black = SolidColorBrush(Colors.Black) 
     let blue =  SolidColorBrush(Colors.Blue)
+    let blue2 = SolidColorBrush(Colors.RoyalBlue)
     let olive = SolidColorBrush(Colors.Olive)
     let red =   SolidColorBrush(Colors.Red)
     let green = SolidColorBrush(Colors.Green)
@@ -1476,7 +1477,7 @@ type TrussAnalysis() as this =
             l.Opacity <- 0.5
             l.MaxLines <- 30
         l 
-        // Reaction forces and moments
+        // Analysis State
     let axis_Label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -1515,15 +1516,6 @@ type TrussAnalysis() as this =
             b.VerticalAlignment <- VerticalAlignment.Center
             b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
         b
-    let commitReactions_Button = 
-        let b = Button()        
-        do  b.Content <- "Commit Reactions"
-            b.FontSize <- 12.
-            b.FontWeight <- FontWeights.Bold
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
-            b.Visibility <- Visibility.Collapsed
-        b
     let resultant_RadioButton = 
         let r = RadioButton()
         let tb = TextBlock(Text="Resultant",FontSize=15.)        
@@ -1556,17 +1548,64 @@ type TrussAnalysis() as this =
             sp.Children.Add(components_RadioButton) |> ignore
             sp.Visibility <- Visibility.Visible
         sp
-    let reaction_StackPanel = 
+    let legend_StackPanel = 
+        let zeroLegend = 
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontWeight <- FontWeights.Black
+                l.FontSize <- 15.
+                l.MaxWidth <- 500.
+                l.Text <- "Zero Force"  
+                l.Foreground <- olive
+                l.TextAlignment <- TextAlignment.Center
+                //l.Opacity <- 0.5                
+            l 
+        let compressionLegend = 
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontWeight <- FontWeights.Black
+                l.FontSize <- 15.
+                l.MaxWidth <- 500.
+                l.Text <- "Compression"
+                l.Foreground <- red
+                l.TextAlignment <- TextAlignment.Center
+                //l.Opacity <- 0.5                
+            l 
+        let tensionLegend = 
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 5.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontWeight <- FontWeights.Black
+                l.FontSize <- 15.
+                l.MaxWidth <- 500.
+                l.Text <- "Tension"
+                l.Foreground <- blue2
+                l.TextAlignment <- TextAlignment.Center
+                //l.Opacity <- 0.5                
+            l 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(zeroLegend) |> ignore
+            sp.Children.Add(compressionLegend) |> ignore
+            sp.Children.Add(tensionLegend) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+    let analysis_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(legend_StackPanel) |> ignore
             sp.Children.Add(compute_Button) |> ignore
             sp.Children.Add(axis_Label) |> ignore            
             sp.Children.Add(momentAxisRadio_StackPanel) |> ignore            
-            sp.Children.Add(reactionRadio_StackPanel) |> ignore
-            sp.Children.Add(commitReactions_Button) |> ignore
+            sp.Children.Add(reactionRadio_StackPanel) |> ignore            
             sp.Visibility <- Visibility.Collapsed
         sp
         // Orgin and grid
@@ -2031,7 +2070,6 @@ type TrussAnalysis() as this =
             sp.Children.Add(trussForceMagnitude_TextBox) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
-    
         // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
@@ -2063,7 +2101,9 @@ type TrussAnalysis() as this =
             l.X1 <- p1.X
             l.Y1 <- p1.Y
             l.X2 <- p2.X
-            l.Y2 <- p2.Y            
+            l.Y2 <- p2.Y
+            l.Opacity <- 0.7
+
         l 
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line() 
@@ -2340,7 +2380,7 @@ type TrussAnalysis() as this =
             sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
             sp.Children.Add(settings_StackPanel) |> ignore
             sp.Children.Add(selectionMode_StackPanel) |> ignore
-            sp.Children.Add(reaction_StackPanel) |> ignore
+            sp.Children.Add(analysis_StackPanel) |> ignore
             border.Child <- sp
         border    
     (*Actions*) 
@@ -2385,6 +2425,36 @@ type TrussAnalysis() as this =
     let drawSolvedMember (p1:System.Windows.Point, p2:System.Windows.Point) color =        
         let l = trussMemberSolved (p1,p2)  color
         do  canvas.Children.Add(l) |> ignore
+    let drawSolvedMembers (state:TrussDomain.TrussAnalysisState) = 
+        match state with
+        | TrussDomain.AnalysisState a -> 
+            match a.analysis with
+            | TrussDomain.Truss -> ()
+            | TrussDomain.SupportReactionEquations _sre -> () 
+            | TrussDomain.SupportReactionResult _srr-> ()                    
+            | TrussDomain.MethodOfJointsCalculation mjc ->                     
+                do  List.iter (fun  (n, p) -> 
+                    match n, TrussServices.getMemberOptionFromTrussPart p with
+                    | (z, Some m) when z = 0. -> drawSolvedMember m olive
+                    | (z, Some m) when z > 0. -> drawSolvedMember m blue2
+                    | (z, Some m) when z < 0. -> drawSolvedMember m red
+                    | _ -> ()) mjc.solvedMembers
+            | TrussDomain.MethodOfJointsAnalysis mja ->                     
+                do  List.iter (fun  (n, p) -> 
+                    match n, TrussServices.getMemberOptionFromTrussPart p with
+                    | (z, Some m) -> drawSolvedMember m blue2
+                    | _ -> ()) mja.tensionMembers
+                do  List.iter (fun  (n, p) -> 
+                    match n, TrussServices.getMemberOptionFromTrussPart p with
+                    | (z, Some m) -> drawSolvedMember m red
+                    | _ -> ()) mja.compressionMembers
+                do  List.iter (fun  p -> 
+                    match TrussServices.getMemberOptionFromTrussPart p with
+                    | Some m -> drawSolvedMember m olive
+                    | None -> ()) mja.zeroForceMembers
+        | _ -> ()
+        
+        
     let drawMemberLabel (p1:System.Windows.Point, p2:System.Windows.Point) (i:int) =
         let l =
             let l = TextBlock()
@@ -2553,6 +2623,7 @@ type TrussAnalysis() as this =
         drawSelectedMember s
         drawSelectedForce s
         drawSelectedSupport s
+        drawSolvedMembers s
         // Set
     let setOrgin p = 
         let joints = getJointsFrom state |> Seq.toList
@@ -2613,40 +2684,13 @@ type TrussAnalysis() as this =
                 | TrussDomain.MethodOfJointsCalculation r -> "\"Choose next joint\"" 
                 | TrussDomain.MethodOfJointsAnalysis _ -> "\"Analysis Complete\""                
             | _ -> "opps"        
-        let members = getMembersFrom newState 
-        
+        let members = getMembersFrom newState         
         do  state <- newState
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
             Seq.iteri (fun i m -> drawMemberLabel m i) members
-            match newState with
-            | TrussDomain.AnalysisState a -> 
-                match a.analysis with
-                | TrussDomain.Truss -> ()
-                | TrussDomain.SupportReactionEquations _sre -> () 
-                | TrussDomain.SupportReactionResult _srr-> ()                    
-                | TrussDomain.MethodOfJointsCalculation mjc ->                     
-                    do  List.iter (fun  (n, p) -> 
-                        match n, TrussServices.getMemberOptionFromTrussPart p with
-                        | (z, Some m) when z = 0. -> drawSolvedMember m green
-                        | (z, Some m) when z > 0. -> drawSolvedMember m blue
-                        | (z, Some m) when z < 0. -> drawSolvedMember m red
-                        | _ -> ()) mjc.solvedMembers
-                | TrussDomain.MethodOfJointsAnalysis mja ->                     
-                    do  List.iter (fun  (n, p) -> 
-                        match n, TrussServices.getMemberOptionFromTrussPart p with
-                        | (z, Some m) -> drawSolvedMember m blue
-                        | _ -> ()) mja.tensionMembers
-                    do  List.iter (fun  (n, p) -> 
-                        match n, TrussServices.getMemberOptionFromTrussPart p with
-                        | (z, Some m) -> drawSolvedMember m red
-                        | _ -> ()) mja.compressionMembers
-                    do  List.iter (fun  p -> 
-                        match TrussServices.getMemberOptionFromTrussPart p with
-                        | Some m -> drawSolvedMember m green
-                        | None -> ()) mja.zeroForceMembers
-            | _ -> ()
+            drawSolvedMembers newState            
 
     // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =        
@@ -2683,7 +2727,7 @@ type TrussAnalysis() as this =
                 | false,false,false,false,false,true, true,false,false,false,false,false ->    
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
                     result_StackPanel.Visibility <- Visibility.Collapsed
-                    reaction_StackPanel.Visibility <- Visibility.Collapsed
+                    analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- false
@@ -2705,7 +2749,7 @@ type TrussAnalysis() as this =
                 | false,false,false,false,false,true, false,true,false,false,false,false -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
                     result_StackPanel.Visibility <- Visibility.Collapsed
-                    reaction_StackPanel.Visibility <- Visibility.Collapsed
+                    analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -2723,7 +2767,7 @@ type TrussAnalysis() as this =
                 | false,false,false,false,false,true,  false,false,true,false,false,false -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
                     result_StackPanel.Visibility <- Visibility.Collapsed
-                    reaction_StackPanel.Visibility <- Visibility.Collapsed
+                    analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
                     supportType_StackPanel.Visibility <- Visibility.Visible
@@ -2745,7 +2789,7 @@ type TrussAnalysis() as this =
                 | false,false,false,false,false,true,  false,false,false,true,false,false -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
                     result_StackPanel.Visibility <- Visibility.Collapsed
-                    reaction_StackPanel.Visibility <- Visibility.Collapsed
+                    analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -2765,7 +2809,7 @@ type TrussAnalysis() as this =
                     setGraphicsFromKernel kernel
                     result_StackPanel.Visibility <- Visibility.Visible
                     reactionRadio_StackPanel.Visibility <- Visibility.Visible
-                    reaction_StackPanel.Visibility <- Visibility.Visible
+                    analysis_StackPanel.Visibility <- Visibility.Visible
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -2786,7 +2830,7 @@ type TrussAnalysis() as this =
                 | false,false,false,false,false,true,  false,false,false,false,false,true -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
                     result_StackPanel.Visibility <- Visibility.Collapsed
-                    reaction_StackPanel.Visibility <- Visibility.Collapsed
+                    analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
@@ -2962,21 +3006,21 @@ type TrussAnalysis() as this =
                         setOrgin p 
                         drawTruss newState
                         Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)
-                | TrussDomain.MethodOfJointsCalculation r -> 
+                | TrussDomain.MethodOfJointsCalculation mjc -> 
                     let newState = trussServices.sendPointToCalculation p state
                     let newCode = 
                         match newState with 
                         | TrussDomain.AnalysisState a ->
                             match a.analysis with
-                            | TrussDomain.MethodOfJointsCalculation r -> WolframServices.solveEquations r.memberEquations r.variables
+                            | TrussDomain.MethodOfJointsCalculation mjc -> WolframServices.solveEquations mjc.memberEquations mjc.variables
                             | _ -> "1"
                         | _ -> "2"
                     do  state <- newState
                         code_TextBlock.Text <- newCode
                         setOrgin p 
                         drawTruss newState
-                        Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)
-                | TrussDomain.MethodOfJointsAnalysis _ -> ()
+                        Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)                        
+                | TrussDomain.MethodOfJointsAnalysis mja -> drawSolvedMembers state 
             | TrussDomain.ErrorState es -> 
                 match es.errors with 
                 | [TrussDomain.NoJointSelected] -> ()                    
