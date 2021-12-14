@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Content Include="Pictures\trussAnalysis.JPG" />
+    <Content Include="Pictures\AnalyzedTruss.JPG" />
     <Compile Include="TrussAnalysis.fs" />
     <Compile Include="BlankCanvas.fs" />
     <Compile Include="MohrsCircle.fs" />
