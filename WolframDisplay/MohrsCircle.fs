@@ -321,11 +321,11 @@ type MohrsCircle() as this  =
 
         | false,_ -> state <- {state with theta = parameter_Slider.Value}
     let handleReturnKey (e:Input.KeyEventArgs) = 
-            match e.Key with
-            | Input.Key.Return -> 
-                kernel.Compute(code state)
-                setGraphicsFromKernel kernel
-            | _ -> e.Handled <- true
+        match e.Key with
+        | Input.Key.Return -> 
+            kernel.Compute(code state)
+            setGraphicsFromKernel kernel
+        | _ -> e.Handled <- true
 
     (*Initialize*)
     do  this.Content <- screen_Grid

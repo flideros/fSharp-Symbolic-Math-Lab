@@ -239,7 +239,6 @@ module TrussDomain =
 
     type RemoveTrussPartFromTruss = TrussAnalysisState -> TrussAnalysisState
     
-
     type TrussServices = 
         {checkSupportTypeIsRoller:CheckSupportTypeIsRoller;
          checkTruss:CheckTruss;
@@ -1392,7 +1391,17 @@ module TrussServices =
             | SupportReactionEquations sr -> ""
             | MethodOfJointsCalculation mjc -> ""
             | MethodOfJointsAnalysis mja -> 
-                let truss = getTrussFromState state
+                let truss = getTrussFromState state                
+                let reactions = 
+                    List.map (fun x ->                        
+                        let i = List.findIndex (fun s -> s = x.support) truss.supports
+                        let supportType = match truss.supports.[i] with | Pin p -> "Pin" | Roller r -> "Roller"
+                        match x.xReactionForce, x.yReactionForce with
+                        | None, None -> ""
+                        | Some x, None -> supportType + i.ToString() + " X = " + x.magnitude.ToString() + " \\n"
+                        | None, Some y -> supportType + i.ToString() + " Y = " + y.magnitude.ToString() + " \\n"
+                        | Some x, Some y -> supportType + i.ToString() + " X = " + x.magnitude.ToString() + " \\n" + supportType + i.ToString() + " Y = " + y.magnitude.ToString() + " \\n"
+                        ) mja.reactions |> List.fold (fun acc x -> acc + x ) ""                    
                 let zeroForceMeners = 
                     match mja.zeroForceMembers with
                     | [] -> None
@@ -1427,14 +1436,17 @@ module TrussServices =
                                 | None -> -1
                             "M" + i.ToString() + " = " + f'.ToString() + " Compression \\n"
                             ) mja.compressionMembers |> List.fold (fun acc x -> acc + x ) "" |> Some
+                let reactionHeading = "\"--Reactions-- \\n"
+                let memberHeading = "--Member Forces-- \\n"
+                
                 match tensionForceMeners, compressionForceMeners, zeroForceMeners with
-                | Some t, Some c, Some z -> "\"" + t + c + z + "\""
-                | Some t, Some c, None   -> "\"" + t + c + "\""
-                | None,   Some c, Some z -> "\"" + c + z + "\"" 
-                | Some t, None,   Some z -> "\"" + t + z + "\""
-                | Some t, None,   None   -> "\"" + t + "\""
-                | None,   Some c, None   -> "\"" + c + "\""                
-                | None,   None,   Some z -> "\"" + z + "\""                 
+                | Some t, Some c, Some z -> reactionHeading + reactions + memberHeading + t + c + z + "\""
+                | Some t, Some c, None   -> reactionHeading + reactions + memberHeading + t + c + "\""
+                | None,   Some c, Some z -> reactionHeading + reactions + memberHeading + c + z + "\"" 
+                | Some t, None,   Some z -> reactionHeading + reactions + memberHeading + t + z + "\""
+                | Some t, None,   None   -> reactionHeading + reactions + memberHeading + t + "\""
+                | None,   Some c, None   -> reactionHeading + reactions + memberHeading + c + "\""                
+                | None,   None,   Some z -> reactionHeading + reactions + memberHeading + z + "\""                 
                 | None,   None,   None -> ""
             
                     
@@ -2337,7 +2349,7 @@ type TrussAnalysis() as this =
         let sp = StackPanel()
         do  sp.Orientation <- Orientation.Vertical
             sp.HorizontalAlignment <- HorizontalAlignment.Left
-            sp.Margin <- Thickness(Left = 200., Top = 10., Right = 0., Bottom = 0.)
+            sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
             sp.Visibility <- Visibility.Collapsed
         sp
         // Main canvas    
@@ -2710,7 +2722,7 @@ type TrussAnalysis() as this =
             | false -> getImages (i+1)
         match k.Graphics.Length > 0 with                
         | true ->                                        
-            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 20]",pageWidth = 0)
             result_StackPanel.Children.Clear()            
             getImages 0
             result_TextBlock.Text <- text
@@ -2718,8 +2730,8 @@ type TrussAnalysis() as this =
             result_StackPanel.Children.Add(result_TextBlock) |> ignore
         | false -> 
             result_StackPanel.Children.Clear()             
-            let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
-            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
+            let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 20]", width = 0, height = 0)
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 20]",pageWidth = 0)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_TextBlock.Text <- text
