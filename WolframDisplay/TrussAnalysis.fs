@@ -2324,6 +2324,7 @@ type TrussAnalysis() as this =
         let vb = Viewbox()   
         do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
             vb.Child <- image
+            //vb.
         vb
     let code_TextBlock = 
         let l = TextBox()
@@ -2351,7 +2352,16 @@ type TrussAnalysis() as this =
             sp.HorizontalAlignment <- HorizontalAlignment.Left
             sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
             sp.Visibility <- Visibility.Collapsed
-        sp
+        sp    
+    let result_ScrollViewer = 
+        let sv = new ScrollViewer();
+        do  sv.VerticalScrollBarVisibility <- ScrollBarVisibility.Hidden 
+            sv.MaxHeight <- 1000.
+            sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
+            sv.MaxWidth <-800.
+            sv.Content <- result_StackPanel
+        sv
+
         // Main canvas    
     let canvas = 
         let c = Canvas()        
@@ -2359,12 +2369,14 @@ type TrussAnalysis() as this =
             c.ClipToBounds <- true
             c.Cursor <- System.Windows.Input.Cursors.Cross
             c.Children.Add(label) |> ignore 
-            c.Children.Add(result_StackPanel) |> ignore
+            c.Children.Add(result_ScrollViewer) |> ignore
         c
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
         g
+    
+
         // Settings
     let toggleCodeText_Button = 
         let b = Button() 
@@ -2685,7 +2697,7 @@ type TrussAnalysis() as this =
             canvas.Children.Add(grid) |> ignore
             drawOrgin orginPoint
             canvas.Children.Add(label) |> ignore
-            canvas.Children.Add(result_StackPanel) |> ignore
+            canvas.Children.Add(result_ScrollViewer) |> ignore
             canvas.Children.Add(trussControls_Border) |> ignore
         let joints = getJointsFrom s
         let members = getMembersFrom s 
@@ -2722,7 +2734,7 @@ type TrussAnalysis() as this =
             | false -> getImages (i+1)
         match k.Graphics.Length > 0 with                
         | true ->                                        
-            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 20]",pageWidth = 0)
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
             result_StackPanel.Children.Clear()            
             getImages 0
             result_TextBlock.Text <- text
@@ -2730,8 +2742,8 @@ type TrussAnalysis() as this =
             result_StackPanel.Children.Add(result_TextBlock) |> ignore
         | false -> 
             result_StackPanel.Children.Clear()             
-            let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 20]", width = 0, height = 0)
-            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 20]",pageWidth = 0)
+            let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_TextBlock.Text <- text
@@ -3324,8 +3336,9 @@ type TrussAnalysis() as this =
 
     (*Initialize*)
     // label.Text <- state.ToString()
-    do  this.Content <- screen_Grid        
-        setGraphicsFromKernel kernel
+    do  
+        this.Content <- screen_Grid
+        setGraphicsFromKernel kernel        
         
     (*add event handlers*)        
         this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
