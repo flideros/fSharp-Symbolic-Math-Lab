@@ -1523,7 +1523,7 @@ type TrussAnalysis() as this =
     let image = Image()
     do  image.SetValue(Panel.ZIndexProperty, -100)    
     let visual = DrawingVisual()     
-    let clear = SolidColorBrush(Colors.White)
+    let clear = SolidColorBrush(Colors.Transparent)
     let black = SolidColorBrush(Colors.Black) 
     let blue =  SolidColorBrush(Colors.Blue)
     let blue2 = SolidColorBrush(Colors.RoyalBlue)
@@ -2333,9 +2333,20 @@ type TrussAnalysis() as this =
             l.FontSize <- 15.
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "Calculate Reactions"
+            l.Text <- "Ready"
             l.Visibility <- Visibility.Hidden
         l 
+    let message_TextBlock = 
+        let l = TextBlock()
+        do  //l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 30.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Calculate Reactions"
+            l.Visibility <- Visibility.Visible
+            l.Background <- clear
+        l
     let result_TextBlock = 
         let l = TextBox()
         do  //l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
@@ -2343,7 +2354,7 @@ type TrussAnalysis() as this =
             l.FontSize <- 15.
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "Calculate reactions."
+            l.Text <- ""
             l.Visibility <- Visibility.Hidden
         l 
     let result_StackPanel = 
@@ -2375,7 +2386,6 @@ type TrussAnalysis() as this =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
         g
-    
 
         // Settings
     let toggleCodeText_Button = 
@@ -2401,7 +2411,7 @@ type TrussAnalysis() as this =
         let b = Button() 
         let onOff() = 
             match b.Content.ToString() with 
-            | " Result Text Off" -> 
+            | "Result Text Off" -> 
                 do  result_TextBlock.Visibility <- Visibility.Visible
                     b.Content <- "Result Text On" 
             | "Result Text On" -> 
@@ -2420,7 +2430,7 @@ type TrussAnalysis() as this =
         let b = Button() 
         let onOff() = 
             match b.Content.ToString() with 
-            | " State Text Off" -> 
+            | "State Text Off" -> 
                 do  label.Visibility <- Visibility.Visible
                     b.Content <- "State Text On" 
             | "State Text On" -> 
@@ -2732,12 +2742,13 @@ type TrussAnalysis() as this =
             match i + 1 = k.Graphics.Length with
             | true -> ()
             | false -> getImages (i+1)
-        match k.Graphics.Length > 0 with                
+        match k.Graphics.Length > 0 with
         | true ->                                        
             let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
             result_StackPanel.Children.Clear()            
             getImages 0
             result_TextBlock.Text <- text
+            result_StackPanel.Children.Add(message_TextBlock) |> ignore
             result_StackPanel.Children.Add(code_TextBlock) |> ignore
             result_StackPanel.Children.Add(result_TextBlock) |> ignore
         | false -> 
@@ -2747,6 +2758,7 @@ type TrussAnalysis() as this =
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_TextBlock.Text <- text
+                result_StackPanel.Children.Add(message_TextBlock) |> ignore
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
                 result_StackPanel.Children.Add(code_TextBlock) |> ignore
                 result_StackPanel.Children.Add(result_TextBlock) |> ignore
@@ -2771,11 +2783,22 @@ type TrussAnalysis() as this =
                 | TrussDomain.SupportReactionResult r -> "\"Choose a joint to begin Method of Joints analysis\""                    
                 | TrussDomain.MethodOfJointsCalculation r -> "\"Choose next joint\"" 
                 | TrussDomain.MethodOfJointsAnalysis _ -> TrussServices.getMethodOfJointsAnalysisReport newState//"\"Analysis Complete\""                
-            | _ -> "opps"        
+            | _ -> "opps"
+        let newMessage = 
+            match newState with 
+            | TrussDomain.AnalysisState a -> 
+                match a.analysis with
+                | TrussDomain.Truss -> ""
+                | TrussDomain.SupportReactionEquations r -> "" 
+                | TrussDomain.SupportReactionResult r -> "Choose a joint to begin Method of Joints analysis."                    
+                | TrussDomain.MethodOfJointsCalculation r -> "Choose next joint."
+                | TrussDomain.MethodOfJointsAnalysis _ -> "Analysis Complete. Click Compute to see report."                
+            | _ -> "opps"
         let members = getMembersFrom newState         
         do  state <- newState
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
+            message_TextBlock.Text <- newMessage
             Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
             Seq.iteri (fun i m -> drawMemberLabel m i) members
             drawSolvedMembers newState            
@@ -2825,7 +2848,8 @@ type TrussAnalysis() as this =
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
-                    code_TextBlock.Text <- "Calculate Reactions"
+                    message_TextBlock.Text <- "Calculate Reactions"
+                    code_TextBlock.Text <- "Ready"
                     drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state                    
                 // Member
@@ -2843,7 +2867,8 @@ type TrussAnalysis() as this =
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
-                    code_TextBlock.Text <- "Calculate Reactions"
+                    message_TextBlock.Text <- "Calculate Reactions"
+                    code_TextBlock.Text <- "Ready"
                     drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
                 // Support
@@ -2865,7 +2890,8 @@ type TrussAnalysis() as this =
                     trussForceAngle_TextBox.Text <- "Enter Angle"
                     trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
                     trussForceMagnitude_TextBox.Text <- "0"
-                    code_TextBlock.Text <- "Calculate Reactions"
+                    message_TextBlock.Text <- "Calculate Reactions"
+                    code_TextBlock.Text <- "Ready"
                     drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
                 // Selection
@@ -2884,7 +2910,8 @@ type TrussAnalysis() as this =
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
-                    code_TextBlock.Text <- "Calculate Reactions"
+                    message_TextBlock.Text <- "Calculate Reactions"
+                    code_TextBlock.Text <- "Ready"
                     drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.Selection state
                 // Analysis
@@ -2925,7 +2952,8 @@ type TrussAnalysis() as this =
                     settings_StackPanel.Visibility <- Visibility.Visible
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true
-                    code_TextBlock.Text <- "Calculate Reactions"
+                    message_TextBlock.Text <- "Calculate Reactions"
+                    code_TextBlock.Text <- "Ready"
                     drawTruss state
                     trussServices.setTrussMode TrussDomain.TrussMode.Settings state
                 | _ -> // Logic for Support Type radio buttons
