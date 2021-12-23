@@ -22,6 +22,7 @@ module WolframServices =
     let testResult = "{{Ry0 -> -13.2124, Rx1 -> 70.7107, Ry1 -> 100.561}}"
 
     // create helper functions to assemble Wolfram code
+    
     let floatToString (f:float) = 
         let f' = f.ToString()
         match String.exists (fun x -> x = '.') f' with
@@ -37,8 +38,6 @@ module WolframServices =
         "DecimalForm[Solve[{" + 
         (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" eq') + "},{" +
         (List.fold (fun acc x-> match acc with | "" -> x | _ -> acc + "," + x) "" v) + "}]]"
-
-    
 
     // create helper functions to parse Wolfram code
 
@@ -219,6 +218,7 @@ module TrussDomain =
     type GetReactionForcesFromState = bool -> TrussAnalysisState -> Force list
     type GetMemberOptionFromTrussPart = TrussPart -> (System.Windows.Point*System.Windows.Point) Option
     type GetMethodOfJointsAnalysisReport = TrussAnalysisState -> string
+    type GetSupportIndexAtJoint = Joint -> Support list -> int*string
     
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
@@ -270,10 +270,11 @@ module TrussDomain =
          getSupportReactionSolve:GetSupportReactionSolve;
          sendStateToSupportBuilder:SendStateToSupportBuilder;
          analyzeEquations:AnalyzeEquations;
-         getReactionForcesFromState:GetReactionForcesFromState
-         sendPointToCalculation:SendPointToCalculation
-         getMemberOptionFromTrussPart:GetMemberOptionFromTrussPart
-         getMethodOfJointsAnalysisReport:GetMethodOfJointsAnalysisReport
+         getReactionForcesFromState:GetReactionForcesFromState;
+         sendPointToCalculation:SendPointToCalculation;
+         getMemberOptionFromTrussPart:GetMemberOptionFromTrussPart;
+         getMethodOfJointsAnalysisReport:GetMethodOfJointsAnalysisReport;
+         getSupportIndexAtJoint:GetSupportIndexAtJoint
          }
 
 module TrussImplementation = 
@@ -945,6 +946,16 @@ module TrussServices =
         match p with
         | Member (j1,j2) -> Some (System.Windows.Point (getXFrom j1,(getYFrom j1)),System.Windows.Point (getXFrom j2,(getYFrom j2)))
         | _ -> None
+    let getSupportIndexAtJoint (j:Joint) supports = 
+        let i = 
+            List.findIndex (fun (x:TrussDomain.Support) -> 
+                match x with 
+                | Pin p -> p.normal.joint = j
+                | Roller r -> r.joint = j
+                ) supports
+        match supports.[i] with
+        | Pin p -> i,"Pin"
+        | Roller r -> i,"Roller"
 
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
@@ -1391,7 +1402,13 @@ module TrussServices =
             | SupportReactionEquations sr -> ""
             | MethodOfJointsCalculation mjc -> ""
             | MethodOfJointsAnalysis mja -> 
-                let truss = getTrussFromState state                
+                let truss = getTrussFromState state
+                let forces = 
+                    match truss.forces with
+                    | [] -> "none \\n"
+                    | _ -> List.mapi (fun i f ->                             
+                            "F" + i.ToString() + " = " + f.magnitude.ToString() + " \\n"
+                            ) truss.forces |> List.fold (fun acc x -> acc + x ) "" 
                 let reactions = 
                     List.map (fun x ->                        
                         let i = List.findIndex (fun s -> s = x.support) truss.supports
@@ -1436,20 +1453,20 @@ module TrussServices =
                                 | None -> -1
                             "M" + i.ToString() + " = " + f'.ToString() + " Compression \\n"
                             ) mja.compressionMembers |> List.fold (fun acc x -> acc + x ) "" |> Some
-                let reactionHeading = "\"--Reactions-- \\n"
+                let forcesHeading = "\"--Forces-- \\n"
+                let reactionHeading = "--Reactions-- \\n"
                 let memberHeading = "--Member Forces-- \\n"
                 
                 match tensionForceMeners, compressionForceMeners, zeroForceMeners with
-                | Some t, Some c, Some z -> reactionHeading + reactions + memberHeading + t + c + z + "\""
-                | Some t, Some c, None   -> reactionHeading + reactions + memberHeading + t + c + "\""
-                | None,   Some c, Some z -> reactionHeading + reactions + memberHeading + c + z + "\"" 
-                | Some t, None,   Some z -> reactionHeading + reactions + memberHeading + t + z + "\""
-                | Some t, None,   None   -> reactionHeading + reactions + memberHeading + t + "\""
-                | None,   Some c, None   -> reactionHeading + reactions + memberHeading + c + "\""                
-                | None,   None,   Some z -> reactionHeading + reactions + memberHeading + z + "\""                 
+                | Some t, Some c, Some z -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + c + z + "\""
+                | Some t, Some c, None   -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + c + "\""
+                | None,   Some c, Some z -> forcesHeading + forces + reactionHeading + reactions + memberHeading + c + z + "\"" 
+                | Some t, None,   Some z -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + z + "\""
+                | Some t, None,   None   -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + "\""
+                | None,   Some c, None   -> forcesHeading + forces + reactionHeading + reactions + memberHeading + c + "\""                
+                | None,   None,   Some z -> forcesHeading + forces + reactionHeading + reactions + memberHeading + z + "\""                 
                 | None,   None,   None -> ""
             
-                    
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
         checkTruss = checkTruss;
@@ -1484,7 +1501,8 @@ module TrussServices =
         getReactionForcesFromState = getReactionForcesFromState;
         sendPointToCalculation = sendPointToCalculation;
         getMemberOptionFromTrussPart = getMemberOptionFromTrussPart;
-        getMethodOfJointsAnalysisReport = getMethodOfJointsAnalysisReport
+        getMethodOfJointsAnalysisReport = getMethodOfJointsAnalysisReport;
+        getSupportIndexAtJoint = getSupportIndexAtJoint
         }
 
 type TrussAnalysis() as this =  
@@ -2552,7 +2570,6 @@ type TrussAnalysis() as this =
                     | None -> ()) mja.zeroForceMembers
         | _ -> ()
         
-        
     let drawMemberLabel (p1:System.Windows.Point, p2:System.Windows.Point) (i:int) =
         let l =
             let l = TextBlock()
@@ -2565,7 +2582,35 @@ type TrussAnalysis() as this =
                 l.Text <- "M" + i.ToString()                
                 l.Background <- SolidColorBrush(Colors.Transparent)
             l 
+        do  canvas.Children.Add(l) |> ignore 
+    let drawForceLabel (p:System.Windows.Vector) (i:int) (f:float) =
+           let l =
+               let l = TextBlock()
+               do  l.Margin <- Thickness(Left = p.X, Top = p.Y, Right = 0., Bottom = 0.)
+                   l.FontStyle <- FontStyles.Italic
+                   l.FontSize <- 15.
+                   l.FontWeight <- FontWeights.Bold
+                   l.TextAlignment <- TextAlignment.Right
+                   l.MaxWidth <- 50.                
+                   l.Text <- "F" + i.ToString()                
+                   l.Background <- SolidColorBrush(Colors.Transparent)
+               l 
+           do  canvas.Children.Add(l) |> ignore  
+    let drawReactionForceLabel (p:System.Windows.Vector) ((i,s):int*string) (f:float) =
+        
+        let l =
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = p.X - 20., Top = p.Y - 20., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Italic
+                l.FontSize <- 15.
+                l.FontWeight <- FontWeights.Bold
+                l.TextAlignment <- TextAlignment.Right
+                l.MaxWidth <- 50.                
+                l.Text <- s + i.ToString()                
+                l.Background <- SolidColorBrush(Colors.Transparent)
+            l 
         do  canvas.Children.Add(l) |> ignore  
+
     let drawBuildJoint (p:System.Windows.Point) =
         let j = trussJoint p
         do  j.Stroke <- red
@@ -2794,13 +2839,23 @@ type TrussAnalysis() as this =
                 | TrussDomain.MethodOfJointsCalculation r -> "Choose next joint."
                 | TrussDomain.MethodOfJointsAnalysis _ -> "Analysis Complete. Click Compute to see report."                
             | _ -> "opps"
-        let members = getMembersFrom newState         
+        let members = getMembersFrom newState
+        let forces = getForcesFrom newState
+        let supports = getSupportsFrom newState        
+        let reactions = trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState
         do  state <- newState
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
             message_TextBlock.Text <- newMessage
-            Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState)
+            Seq.iter (fun (f:TrussDomain.Force) -> 
+                match f.magnitude = 0.0 with 
+                | true -> () 
+                | false -> 
+                    drawForce blue f
+                    drawReactionForceLabel f.direction (trussServices.getSupportIndexAtJoint f.joint supports) f.magnitude
+                ) reactions            
             Seq.iteri (fun i m -> drawMemberLabel m i) members
+            Seq.iteri (fun i (f:TrussDomain.Force) -> drawForceLabel f.direction i f.magnitude) forces
             drawSolvedMembers newState            
 
     // Handle
@@ -2850,8 +2905,9 @@ type TrussAnalysis() as this =
                     trussForceMagnitude_TextBox.Text <- "Enter magnitude"
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
+                    let newState = trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state
                     drawTruss state
-                    trussServices.setTrussMode TrussDomain.TrussMode.ForceBuild state                    
+                    newState             
                 // Member
                 | true,false,false,false,false,false, false,true,false,false,false,false
                 | false,true,false,false,false,false, false,true,false,false,false,false
@@ -2869,8 +2925,9 @@ type TrussAnalysis() as this =
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
-                    drawTruss state
-                    trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
+                    let newState = trussServices.setTrussMode TrussDomain.TrussMode.MemberBuild state
+                    drawTruss newState
+                    newState
                 // Support
                 | true,false,false,false,false,false,  false,false,true,false,false,false
                 | false,true,false,false,false,false,  false,false,true,false,false,false
@@ -2892,8 +2949,9 @@ type TrussAnalysis() as this =
                     trussForceMagnitude_TextBox.Text <- "0"
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
-                    drawTruss state
-                    trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state                                    
+                    let newTrust = trussServices.setTrussMode TrussDomain.TrussMode.SupportBuild state
+                    drawTruss newTrust
+                    newTrust                                
                 // Selection
                 | true,false,false,false,false,false,  false,false,false,true,false,false
                 | false,true,false,false,false,false,  false,false,false,true,false,false
@@ -2912,8 +2970,9 @@ type TrussAnalysis() as this =
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
-                    drawTruss state
-                    trussServices.setTrussMode TrussDomain.TrussMode.Selection state
+                    let newState = trussServices.setTrussMode TrussDomain.TrussMode.Selection state
+                    drawTruss newState
+                    newState
                 // Analysis
                 | true,false,false,false,false,false,  false,false,false,false,true,false
                 | false,true,false,false,false,false,  false,false,false,false,true,false
@@ -2935,7 +2994,8 @@ type TrussAnalysis() as this =
                         trussServices.checkTruss (trussServices.getTrussFromState state)
                         |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
                     code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
-                    newState
+                    drawTruss newState
+                    newState                    
                 // Settings
                 | true,false,false,false,false,false,  false,false,false,false,false,true
                 | false,true,false,false,false,false,  false,false,false,false,false,true
@@ -2954,8 +3014,9 @@ type TrussAnalysis() as this =
                     trussForceMagnitude_TextBox.IsReadOnly <- true
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
+                    let newState = trussServices.setTrussMode TrussDomain.TrussMode.Settings state
                     drawTruss state
-                    trussServices.setTrussMode TrussDomain.TrussMode.Settings state
+                    newState
                 | _ -> // Logic for Support Type radio buttons
                     match rollerSupport_RadioButton.IsChecked.Value, pinSupport_RadioButton.IsChecked.Value, 
                           rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver 
