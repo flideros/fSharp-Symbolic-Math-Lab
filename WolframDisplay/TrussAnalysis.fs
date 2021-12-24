@@ -1389,6 +1389,7 @@ module TrussServices =
                     | true -> List.concat [for i in 0..(sr.momentEquations.Length - 1) -> ["Rx" + i.ToString();"Ry" + i.ToString()]]
                     | false -> []
                 (WolframServices.solveEquations eq v)
+    
     let getMethodOfJointsAnalysisReport (state :TrussAnalysisState) = 
         match state with
         | TrussDomain.TrussState ts -> ""
@@ -1455,8 +1456,7 @@ module TrussServices =
                             ) mja.compressionMembers |> List.fold (fun acc x -> acc + x ) "" |> Some
                 let forcesHeading = "\"--Forces-- \\n"
                 let reactionHeading = "--Reactions-- \\n"
-                let memberHeading = "--Member Forces-- \\n"
-                
+                let memberHeading = "--Member Forces-- \\n"                
                 match tensionForceMeners, compressionForceMeners, zeroForceMeners with
                 | Some t, Some c, Some z -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + c + z + "\""
                 | Some t, Some c, None   -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + c + "\""
@@ -1465,7 +1465,7 @@ module TrussServices =
                 | Some t, None,   None   -> forcesHeading + forces + reactionHeading + reactions + memberHeading + t + "\""
                 | None,   Some c, None   -> forcesHeading + forces + reactionHeading + reactions + memberHeading + c + "\""                
                 | None,   None,   Some z -> forcesHeading + forces + reactionHeading + reactions + memberHeading + z + "\""                 
-                | None,   None,   None -> ""
+                | None,   None,   None   -> ""
             
     let createServices () = 
        {checkSupportTypeIsRoller = checkSupportTypeIsRoller;
@@ -1539,7 +1539,7 @@ type TrussAnalysis() as this =
     
     (*Model*)        
     let image = Image()
-    do  image.SetValue(Panel.ZIndexProperty, -100)    
+    do  image.SetValue(Panel.ZIndexProperty, -100)          
     let visual = DrawingVisual()     
     let clear = SolidColorBrush(Colors.Transparent)
     let black = SolidColorBrush(Colors.Black) 
@@ -2196,8 +2196,7 @@ type TrussAnalysis() as this =
             l.Y1 <- p1.Y
             l.X2 <- p2.X
             l.Y2 <- p2.Y
-            l.Opacity <- 0.7
-
+            l.Opacity <- 0.5
         l 
     let trussMember (p1:System.Windows.Point, p2:System.Windows.Point) = 
         let l = Line() 
@@ -2338,11 +2337,11 @@ type TrussAnalysis() as this =
             path.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendPathToState path state ))
         path
         // Wolfram result 
-    let result_Viewbox image =                    
+    let result_Viewbox (image:UIElement) =         
         let vb = Viewbox()   
-        do  vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
-            vb.Child <- image
-            //vb.
+        do  image.Opacity <- 0.85            
+            vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            vb.Child <- image            
         vb
     let code_TextBlock = 
         let l = TextBox()
@@ -2381,6 +2380,7 @@ type TrussAnalysis() as this =
             sp.HorizontalAlignment <- HorizontalAlignment.Left
             sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
             sp.Visibility <- Visibility.Collapsed
+            
         sp    
     let result_ScrollViewer = 
         let sv = new ScrollViewer();
@@ -2389,6 +2389,7 @@ type TrussAnalysis() as this =
             sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
             sv.MaxWidth <-800.
             sv.Content <- result_StackPanel
+            sv.SetValue(Canvas.ZIndexProperty,3)
         sv
 
         // Main canvas    
@@ -2397,8 +2398,7 @@ type TrussAnalysis() as this =
         do  c.Background <- System.Windows.Media.Brushes.White 
             c.ClipToBounds <- true
             c.Cursor <- System.Windows.Input.Cursors.Cross
-            c.Children.Add(label) |> ignore 
-            c.Children.Add(result_ScrollViewer) |> ignore
+            c.Children.Add(label) |> ignore             
         c
     let screen_Grid =
         let g = Grid()              
@@ -2485,6 +2485,7 @@ type TrussAnalysis() as this =
             border.IsHitTestVisible <- true
             border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
             border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            border.SetValue(Canvas.ZIndexProperty,4)
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
             sp.MaxWidth <- 150.
@@ -2497,6 +2498,7 @@ type TrussAnalysis() as this =
             sp.Children.Add(settings_StackPanel) |> ignore
             sp.Children.Add(selectionMode_StackPanel) |> ignore
             sp.Children.Add(analysis_StackPanel) |> ignore
+            sp.SetValue(Canvas.ZIndexProperty,4)
             border.Child <- sp
         border    
     (*Actions*) 
@@ -2767,6 +2769,7 @@ type TrussAnalysis() as this =
         drawSelectedForce s
         drawSelectedSupport s
         drawSolvedMembers s
+
         // Set
     let setOrgin p = 
         let joints = getJointsFrom state |> Seq.toList
