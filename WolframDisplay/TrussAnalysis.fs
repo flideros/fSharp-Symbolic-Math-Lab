@@ -2962,8 +2962,14 @@ type TrussAnalysis() as this =
                 | false,false,false,true,false,false,  false,false,false,true,false,false
                 | false,false,false,false,true,false,  false,false,false,true,false,false 
                 | false,false,false,false,false,true,  false,false,false,true,false,false -> 
+                    message_TextBlock.Text <- "Select a Truss Part"
+                    code_TextBlock.Text <- "Ready"
+                    setGraphicsFromKernel kernel
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    result_StackPanel.Visibility <- 
+                        match inspect_RadioButton.IsChecked.Value with
+                        | false -> Visibility.Collapsed
+                        | true -> Visibility.Visible
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
@@ -2971,8 +2977,6 @@ type TrussAnalysis() as this =
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
-                    message_TextBlock.Text <- "Calculate Reactions"
-                    code_TextBlock.Text <- "Ready"
                     let newState = trussServices.setTrussMode TrussDomain.TrussMode.Selection state
                     drawTruss newState
                     newState
@@ -2983,6 +2987,8 @@ type TrussAnalysis() as this =
                 | false,false,false,true,false,false,  false,false,false,false,true,false
                 | false,false,false,false,true,false,  false,false,false,false,true,false 
                 | false,false,false,false,false,true,  false,false,false,false,true,false -> 
+                    message_TextBlock.Text <- "Calculate Reactions"
+                    code_TextBlock.Text <- "Ready"
                     setGraphicsFromKernel kernel
                     result_StackPanel.Visibility <- Visibility.Visible
                     reactionRadio_StackPanel.Visibility <- Visibility.Visible
@@ -3046,15 +3052,22 @@ type TrussAnalysis() as this =
                             delete_RadioButton.IsChecked <- Nullable true
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable false
-                            delete_Button.Visibility <- Visibility.Visible
+                            delete_Button.Visibility <- Visibility.Visible                            
+                            result_StackPanel.Visibility <- Visibility.Collapsed
+                            message_TextBlock.Text <- "Select a Truss Part"
+                            code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Delete state
                         | true,false,false, false,true,false
                         | false,true,false, false,true,false 
                         | false,false,true, false,true,false ->                        
+                            setGraphicsFromKernel kernel
                             delete_RadioButton.IsChecked <- Nullable false 
                             inspect_RadioButton.IsChecked <- Nullable true
                             modify_RadioButton.IsChecked <- Nullable false
-                            delete_Button.Visibility <- Visibility.Collapsed
+                            delete_Button.Visibility <- Visibility.Collapsed                            
+                            result_StackPanel.Visibility <- Visibility.Visible
+                            message_TextBlock.Text <- "Select a Truss Part"
+                            code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
                         | true,false,false, false,false,true
                         | false,true,false, false,false,true 
@@ -3062,7 +3075,10 @@ type TrussAnalysis() as this =
                             delete_RadioButton.IsChecked <- Nullable false 
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable true
-                            delete_Button.Visibility <- Visibility.Collapsed
+                            delete_Button.Visibility <- Visibility.Collapsed                            
+                            result_StackPanel.Visibility <- Visibility.Collapsed
+                            message_TextBlock.Text <- "Select a Truss Part"
+                            code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Modify state
                         | _ -> // Logic for Analysis Mode radio buttons                            
                             match xAxis_RadioButton.IsChecked.Value, 
@@ -3167,7 +3183,7 @@ type TrussAnalysis() as this =
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)) .ToString()
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
-            | TrussDomain.SelectionState ss -> ()
+            | TrussDomain.SelectionState ss -> ()                
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
                 | TrussDomain.Truss -> ()
@@ -3220,8 +3236,24 @@ type TrussAnalysis() as this =
             | TrussDomain.BuildMember bm -> ()
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
-        | TrussDomain.SelectionState ss -> drawTruss state
-        | TrussDomain.AnalysisState s -> ()
+        | TrussDomain.SelectionState ss -> 
+            match ss.forces, ss.members, ss.supports with
+            | Some f, None, None -> 
+                message_TextBlock.Text <- "Force"
+                code_TextBlock.Text <- "\"" + f.Head.ToString() + "\""
+                setGraphicsFromKernel kernel
+            | None, Some m, None ->
+                message_TextBlock.Text <- "Member"
+                code_TextBlock.Text <- "\"" + m.Head.ToString() + "\""
+                setGraphicsFromKernel kernel
+            | None, None, Some s -> 
+                message_TextBlock.Text <- "Support"
+                code_TextBlock.Text <- "\"" + s.Head.ToString() + "\""
+                setGraphicsFromKernel kernel
+            | _ -> message_TextBlock.Text <- "Select a Truss Part"
+                   code_TextBlock.Text <- "Ready"
+            drawTruss state
+        | TrussDomain.AnalysisState a -> ()
         | TrussDomain.ErrorState es -> 
             match es.errors with 
             | [TrussDomain.NoJointSelected] -> 
