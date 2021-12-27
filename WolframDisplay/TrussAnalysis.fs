@@ -217,8 +217,11 @@ module TrussDomain =
     type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
     type GetReactionForcesFromState = bool -> TrussAnalysisState -> Force list
     type GetMemberOptionFromTrussPart = TrussPart -> (System.Windows.Point*System.Windows.Point) Option
-    type GetMethodOfJointsAnalysisReport = TrussAnalysisState -> string
+    type GetAnalysisReport = TrussAnalysisState -> string
     type GetSupportIndexAtJoint = Joint -> Support list -> int*string
+    type GetMemberIndex = Member -> Truss -> int
+    type GetForceIndex = Force -> Truss -> int
+    type GetSupportIndex = Support -> Truss -> int
     
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
@@ -273,8 +276,11 @@ module TrussDomain =
          getReactionForcesFromState:GetReactionForcesFromState;
          sendPointToCalculation:SendPointToCalculation;
          getMemberOptionFromTrussPart:GetMemberOptionFromTrussPart;
-         getMethodOfJointsAnalysisReport:GetMethodOfJointsAnalysisReport;
-         getSupportIndexAtJoint:GetSupportIndexAtJoint
+         getAnalysisReport:GetAnalysisReport;
+         getSupportIndexAtJoint:GetSupportIndexAtJoint;
+         getMemberIndex:GetMemberIndex;
+         getForceIndex:GetForceIndex;
+         getSupportIndex:GetSupportIndex
          }
 
 module TrussImplementation = 
@@ -471,6 +477,34 @@ module TrussImplementation =
                 y/d,"Ry" + i.ToString()) supports 
         createEquation (sumForcesY p) reactions
 
+    // Basic operations on truss
+    let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
+        match p with 
+        | Member m -> {t with members = m::t.members}
+        | Force f -> {t with forces = f::t.forces}
+        | Support s -> {t with supports = s::t.supports}    
+    let removeTrussPartFromTruss (t:Truss) (p:TrussPart option)  = 
+        match p with 
+        | Some (Member m) -> 
+            let mOut = List.except [m] t.members
+            {t with members = mOut}        
+        | Some (Force f) -> 
+            let fOut = List.except [f] t.forces
+            {t with forces = fOut}
+        | Some (Support s) -> 
+            let sOut = List.except [s] t.supports
+            {t with supports = sOut}
+        | None -> t
+    let getMemberIndex (m:Member) (t:Truss) =
+        let i = List.tryFindIndex (fun x -> x = m) t.members
+        match i with | Some n -> n | None -> -1    
+    let getForceIndex (f:Force) (t:Truss) =
+        let i = List.tryFindIndex (fun x -> x = f) t.forces
+        match i with | Some n -> n | None -> -1
+    let getSupportIndex (s:Support) (t:Truss) =
+        let i = List.tryFindIndex (fun x -> x = s) t.supports
+        match i with | Some n -> n | None -> -1
+    
     // Method of Joints
     let isColinear (p1:TrussPart) (p2:TrussPart) = 
         match p1, p2 with
@@ -526,9 +560,7 @@ module TrussImplementation =
         let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
         List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition    
-    let getMemberIndex (m:Member) (t:Truss) =
-        let i = List.tryFindIndex (fun x -> x = m) t.members
-        match i with | Some n -> n | None -> -1    
+    
     let getMemberVariables (t:Truss) =
         let nl = getNodeList t
         let processNode (n:Node) = 
@@ -602,25 +634,6 @@ module TrussImplementation =
              direction = dir; 
              joint = j} |> Force
         | Some _ -> m
-        
-    // Basic operations on truss
-    let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
-        match p with 
-        | Member m -> {t with members = m::t.members}
-        | Force f -> {t with forces = f::t.forces}
-        | Support s -> {t with supports = s::t.supports}    
-    let removeTrussPartFromTruss (t:Truss) (p:TrussPart option)  = 
-        match p with 
-        | Some (Member m) -> 
-            let mOut = List.except [m] t.members
-            {t with members = mOut}        
-        | Some (Force f) -> 
-            let fOut = List.except [f] t.forces
-            {t with forces = fOut}
-        | Some (Support s) -> 
-            let sOut = List.except [s] t.supports
-            {t with supports = sOut}
-        | None -> t
 
     // Workflow for building a member
     let makeMemberBuilderFrom (j:Joint) = MemberBuilder (j,None)
@@ -1390,18 +1403,53 @@ module TrussServices =
                     | false -> []
                 (WolframServices.solveEquations eq v)
     
-    let getMethodOfJointsAnalysisReport (state :TrussAnalysisState) = 
+    let getAnalysisReport (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> ""
-        | TrussDomain.BuildState bs-> ""
-        | TrussDomain.SelectionState ss -> ""
-        | TrussDomain.ErrorState es -> ""
+        | TrussDomain.TrussState ts -> "\"--Ready--\""
+        | TrussDomain.BuildState bs-> "\"--Ready--\""
+        | TrussDomain.SelectionState ss -> 
+            match ss.forces, ss.members, ss.supports with
+            | Some f, None, None -> 
+                let p1,p2 = f.Head.joint, f.Head.direction                
+                let angle =
+                    let x = Math.Abs(p2.X - (getXFrom p1))
+                    let y = Math.Abs(p2.Y - (getYFrom p1))
+                    Math.Round((Math.Atan2(y,x) * 180.)/Math.PI,4)
+                "\"Magnitude = " 
+                + f.Head.magnitude.ToString()                
+                + "\\nAngle = " 
+                + angle.ToString() + "\[Degree]"
+                + "\\nJoint \\n" 
+                + p1.x.ToString() + ", "+ p1.y.ToString()                
+                + "\\n \""
+            | None, Some m, None -> 
+                let p1,p2 = m.Head
+                let length = 
+                    let x = (getXFrom p2) - (getXFrom p1)
+                    let y = (getYFrom p2) - (getYFrom p1)
+                    Math.Round(Math.Sqrt (x*x + y*y),4)
+                let angle =
+                    let x = Math.Abs((getXFrom p2) - (getXFrom p1))
+                    let y = Math.Abs((getYFrom p2) - (getYFrom p1))
+                    Math.Round((Math.Atan2(y,x) * 180.)/Math.PI,4)
+                "\"Joints \\n" 
+                + p1.x.ToString() + ", "+ p1.y.ToString() 
+                + "\\n" 
+                + p2.x.ToString() + ", "+ p2.y.ToString()  
+                + "\\nLength = " 
+                + length.ToString()
+                + "\\nAngle = " 
+                + angle.ToString() + "\[Degree]"
+                + "\\n \""
+            | None, None, Some s -> "\"--Support--\""
+            | _ -> "\"--Ready--\""
+        | TrussDomain.ErrorState es -> "\"--Ready--\""
         | TrussDomain.AnalysisState a -> 
             match a.analysis with
-            | Truss -> ""
-            | SupportReactionResult sr -> ""
-            | SupportReactionEquations sr -> ""
-            | MethodOfJointsCalculation mjc -> ""
+            | Truss -> "\"--Ready--\""
+            | SupportReactionResult sr -> "\"--Ready--\""
+            | SupportReactionEquations sr -> "\"--Ready--\""
+            | MethodOfJointsCalculation mjc -> "\"--Ready--\""
             | MethodOfJointsAnalysis mja -> 
                 let truss = getTrussFromState state
                 let forces = 
@@ -1501,8 +1549,11 @@ module TrussServices =
         getReactionForcesFromState = getReactionForcesFromState;
         sendPointToCalculation = sendPointToCalculation;
         getMemberOptionFromTrussPart = getMemberOptionFromTrussPart;
-        getMethodOfJointsAnalysisReport = getMethodOfJointsAnalysisReport;
-        getSupportIndexAtJoint = getSupportIndexAtJoint
+        getAnalysisReport = getAnalysisReport;
+        getSupportIndexAtJoint = getSupportIndexAtJoint;
+        getMemberIndex = getMemberIndex;
+        getForceIndex = getForceIndex;
+        getSupportIndex = getSupportIndex
         }
 
 type TrussAnalysis() as this =  
@@ -2341,6 +2392,7 @@ type TrussAnalysis() as this =
         let vb = Viewbox()   
         do  image.Opacity <- 0.85            
             vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            vb.IsHitTestVisible <- false
             vb.Child <- image            
         vb
     let code_TextBlock = 
@@ -2379,8 +2431,7 @@ type TrussAnalysis() as this =
         do  sp.Orientation <- Orientation.Vertical
             sp.HorizontalAlignment <- HorizontalAlignment.Left
             sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
-            sp.Visibility <- Visibility.Collapsed
-            
+            sp.Visibility <- Visibility.Visible
         sp    
     let result_ScrollViewer = 
         let sv = new ScrollViewer();
@@ -2389,7 +2440,8 @@ type TrussAnalysis() as this =
             sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
             sv.MaxWidth <-800.
             sv.Content <- result_StackPanel
-            sv.SetValue(Canvas.ZIndexProperty,3)
+            sv.SetValue(Canvas.ZIndexProperty,3) 
+            sv.Visibility <- Visibility.Collapsed    
         sv
 
         // Main canvas    
@@ -2830,7 +2882,7 @@ type TrussAnalysis() as this =
                 | TrussDomain.SupportReactionEquations r -> "" 
                 | TrussDomain.SupportReactionResult r -> "\"Choose a joint to begin Method of Joints analysis\""                    
                 | TrussDomain.MethodOfJointsCalculation r -> "\"Choose next joint\"" 
-                | TrussDomain.MethodOfJointsAnalysis _ -> TrussServices.getMethodOfJointsAnalysisReport newState//"\"Analysis Complete\""                
+                | TrussDomain.MethodOfJointsAnalysis _ -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
             | _ -> "opps"
         let newMessage = 
             match newState with 
@@ -2895,7 +2947,8 @@ type TrussAnalysis() as this =
                 | false,false,false,false,true,false, true,false,false,false,false,false                
                 | false,false,false,false,false,true, true,false,false,false,false,false ->    
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
@@ -2919,7 +2972,8 @@ type TrussAnalysis() as this =
                 | false,false,false,false,true,false, false,true,false,false,false,false
                 | false,false,false,false,false,true, false,true,false,false,false,false -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Visible
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
@@ -2939,7 +2993,8 @@ type TrussAnalysis() as this =
                 | false,false,false,false,true,false,  false,false,true,false,false,false 
                 | false,false,false,false,false,true,  false,false,true,false,false,false -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
@@ -2966,10 +3021,11 @@ type TrussAnalysis() as this =
                     code_TextBlock.Text <- "Ready"
                     setGraphicsFromKernel kernel
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-                    result_StackPanel.Visibility <- 
+                    result_ScrollViewer.Visibility <- 
                         match inspect_RadioButton.IsChecked.Value with
                         | false -> Visibility.Collapsed
                         | true -> Visibility.Visible
+                    result_ScrollViewer.IsHitTestVisible <- false
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
@@ -2990,7 +3046,8 @@ type TrussAnalysis() as this =
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
                     setGraphicsFromKernel kernel
-                    result_StackPanel.Visibility <- Visibility.Visible
+                    result_ScrollViewer.Visibility <- Visibility.Visible
+                    result_ScrollViewer.IsHitTestVisible <- true
                     reactionRadio_StackPanel.Visibility <- Visibility.Visible
                     analysis_StackPanel.Visibility <- Visibility.Visible
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
@@ -3013,7 +3070,8 @@ type TrussAnalysis() as this =
                 | false,false,false,false,true,false,  false,false,false,false,false,true 
                 | false,false,false,false,false,true,  false,false,false,false,false,true -> 
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-                    result_StackPanel.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.Visibility <- Visibility.Collapsed
+                    result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     trussMemberBuilder_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
@@ -3053,7 +3111,8 @@ type TrussAnalysis() as this =
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable false
                             delete_Button.Visibility <- Visibility.Visible                            
-                            result_StackPanel.Visibility <- Visibility.Collapsed
+                            result_ScrollViewer.Visibility <- Visibility.Collapsed
+                            result_ScrollViewer.IsHitTestVisible <- true
                             message_TextBlock.Text <- "Select a Truss Part"
                             code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Delete state
@@ -3065,7 +3124,8 @@ type TrussAnalysis() as this =
                             inspect_RadioButton.IsChecked <- Nullable true
                             modify_RadioButton.IsChecked <- Nullable false
                             delete_Button.Visibility <- Visibility.Collapsed                            
-                            result_StackPanel.Visibility <- Visibility.Visible
+                            result_ScrollViewer.Visibility <- Visibility.Visible
+                            result_ScrollViewer.IsHitTestVisible <- false
                             message_TextBlock.Text <- "Select a Truss Part"
                             code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
@@ -3076,7 +3136,8 @@ type TrussAnalysis() as this =
                             inspect_RadioButton.IsChecked <- Nullable false
                             modify_RadioButton.IsChecked <- Nullable true
                             delete_Button.Visibility <- Visibility.Collapsed                            
-                            result_StackPanel.Visibility <- Visibility.Collapsed
+                            result_ScrollViewer.Visibility <- Visibility.Collapsed
+                            result_ScrollViewer.IsHitTestVisible <- true
                             message_TextBlock.Text <- "Select a Truss Part"
                             code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Modify state
@@ -3237,17 +3298,21 @@ type TrussAnalysis() as this =
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> 
+            let truss = getTrussFrom state
             match ss.forces, ss.members, ss.supports with
             | Some f, None, None -> 
-                message_TextBlock.Text <- "Force"
-                code_TextBlock.Text <- "\"" + f.Head.ToString() + "\""
+                let i = trussServices.getForceIndex f.Head truss
+                message_TextBlock.Text <- "--Force " + i.ToString() + "--"
+                code_TextBlock.Text <- trussServices.getAnalysisReport state
                 setGraphicsFromKernel kernel
-            | None, Some m, None ->
-                message_TextBlock.Text <- "Member"
-                code_TextBlock.Text <- "\"" + m.Head.ToString() + "\""
+            | None, Some m, None ->                
+                let i = trussServices.getMemberIndex m.Head truss
+                message_TextBlock.Text <- "--Member " + i.ToString() + "--"
+                code_TextBlock.Text <- trussServices.getAnalysisReport state
                 setGraphicsFromKernel kernel
             | None, None, Some s -> 
-                message_TextBlock.Text <- "Support"
+                let i = trussServices.getSupportIndex s.Head truss
+                message_TextBlock.Text <- "--Support " + i.ToString() + "--"
                 code_TextBlock.Text <- "\"" + s.Head.ToString() + "\""
                 setGraphicsFromKernel kernel
             | _ -> message_TextBlock.Text <- "Select a Truss Part"
