@@ -1,4 +1,61 @@
-﻿
+﻿let getYMomentReactionEquations (p:TrussPart list) =         
+    let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
+    let getSupportMoments (s:Support) = 
+        let j = getJointFromSupport s
+        let getMomentArmX sj = getXFrom sj - getXFrom j
+        let getMomentArmY sj = getYFrom sj - getYFrom j
+        let ly = List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
+        let lx = 
+            match s with 
+            | Pin p ->
+                let p1,p2 = p.tangent.joint,p.tangent.direction
+                let dpx, dpy = (getXFrom p1) - p2.X, (getYFrom p1) - p2.Y
+                match dpx = 0. || dpy = 0. with
+                | true -> []
+                | false ->List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports 
+            | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
+        List.concat [ly;lx]
+    List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
+let getXMomentReactionEquations (p:TrussPart list) =         
+    let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
+    let getSupportMoments (s:Support) = 
+        let j = getJointFromSupport s
+        let getMomentArmX sj = getXFrom sj - getXFrom j
+        let getMomentArmY sj = getYFrom sj - getYFrom j           
+        let lx = List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
+        let ly = 
+            match s with 
+            | Pin p -> //todo - a function to determine when to add Ry to the equation (i.e. roller angle <> 0)
+                let p1,p2 = p.tangent.joint,p.tangent.direction
+                let dpx, dpy = (getXFrom p1) - p2.X, (getYFrom p1) - p2.Y
+                match dpx = 0. || dpy = 0. with
+                | true -> []
+                | false -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports 
+            | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
+        List.concat [ly;lx]
+    List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let input = [ (3.,"b"); (2.,"a"); (4.,"c"); (1.,"a"); (5.,"d")] 
 
 let inputCount = input |> List.countBy (fun (n,l) -> l)

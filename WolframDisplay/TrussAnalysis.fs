@@ -420,6 +420,15 @@ module TrussImplementation =
     // Support Reaction Equations
     let getYMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
+        // This function only gets the first roller. TODO apply to all rollers in an arbitrary truss 
+        let roller = List.tryFind (fun x -> match x with | Pin p -> false | Roller r -> true) supports
+        let addRx   =             
+            match roller with
+            | Some (Roller r)->                 
+                let m,_b = getLineOfActionFrom r
+                match m = 0. || m = 1. with | true -> false | false -> true
+            | Some (Pin p)-> false
+            | None -> false
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmX sj = getXFrom sj - getXFrom j
@@ -427,34 +436,69 @@ module TrussImplementation =
             let ly = List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
             let lx = 
                 match s with 
-                | Pin _ -> [] //todo - a function to determine when to add Rx to the equation (i.e. roller angle <> 0)
-                    //List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports 
+                | Pin _ ->
+                    match addRx with 
+                    | false -> []
+                    | true -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
                 | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
             List.concat [ly;lx]
-        List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
+        let momentEquations = List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
+        let lxy = 
+            match roller with                                
+            | Some (Roller r) -> 
+                let x = match r.direction.X - (getXFrom r.joint) with | n when n = 0. -> 1. | n-> n
+                let y = match r.direction.Y - (getYFrom r.joint) with | n when n = 0. -> 1. | n-> n
+                let d = Math.Sqrt (x*x + y*y)
+                let i = List.findIndex (fun x -> x = (Roller r)) supports                
+                match addRx with 
+                | true -> 
+                    
+                    [createEquation (0.) [(d/y,"Ry" + i.ToString());(-d/x,"Rx" + i.ToString())]] 
+                | false -> []
+            | Some (Pin _) -> [] 
+            | None -> []
+        List.concat [momentEquations; lxy] 
     let getXMomentReactionEquations (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
+        // This function only gets the first roller. TODO apply to all rollers in an arbitrary truss
+        let roller = List.tryFind (fun x -> match x with | Pin p -> false | Roller r -> true) supports
+        let addRy =            
+            match roller with
+            | Some (Roller r)->                 
+                let m,_b = getLineOfActionFrom r
+                match m = 0. (*|| m = 1.*) with | true -> false | false -> true
+            | Some (Pin p)-> false
+            | None -> false
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmX sj = getXFrom sj - getXFrom j
-            let getMomentArmY sj = getYFrom sj - getYFrom j           
+            let getMomentArmY sj = getYFrom sj - getYFrom j            
             let lx = List.mapi (fun i y -> (getJointFromSupport y |> getMomentArmY),"Rx" + i.ToString()) supports
             let ly = 
                 match s with 
-                | Pin _ -> [] //todo - a function to determine when to add Ry to the equation (i.e. roller angle <> 0)
-                //List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports 
+                | Pin _ ->
+                    match addRy with 
+                    | false -> []
+                    | true -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports 
                 | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
-            List.concat [ly;lx]
-        List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports    
+            List.concat [ly;lx]        
+        let momentEquations = List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports    
+        let lxy = 
+            match roller with                                
+            | Some (Roller r) -> 
+                let x = match r.direction.X - (getXFrom r.joint) with | n when n = 0. -> 1. | n-> n
+                let y =match r.direction.Y - (getYFrom r.joint) with | n when n = 0. -> 1. | n-> n
+                let d = Math.Sqrt (x*x + y*y) 
+                let i = List.findIndex (fun x -> x = (Roller r)) supports
+                match addRy with | true -> [createEquation (0.) [(d/y,"Ry" + i.ToString());(-d/x,"Rx" + i.ToString())]] | false -> []
+            | Some (Pin _) -> [] 
+            | None -> []
+        List.concat [momentEquations; lxy]
     let getXForceReactionEquation (p:TrussPart list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i x -> 
             match x with 
-            | Pin p -> 
-                let x = p.tangent.direction.X - (getXFrom p.tangent.joint)
-                let y = p.tangent.direction.Y - (getYFrom p.tangent.joint)
-                let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-                x/d,"Rx" + i.ToString()
+            | Pin p -> 1.,"Rx" + i.ToString() // Pins always have an x and y component regardless of orientation.
             | Roller r -> 
                 let x = r.direction.X - (getXFrom r.joint)
                 let y = r.direction.Y - (getYFrom r.joint)
@@ -465,11 +509,7 @@ module TrussImplementation =
         let supports = List.choose (fun y -> match y with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i y -> 
             match y with 
-            | Pin p -> 
-                let x = p.normal.direction.X - (getXFrom p.normal.joint)
-                let y = p.normal.direction.Y - (getYFrom p.normal.joint)
-                let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-                y/d,"Ry" + i.ToString()            
+            | Pin p -> 1.,"Ry" + i.ToString() // Pins always have an x and y component regardless of orientation.
             | Roller r -> 
                 let x = r.direction.X - (getXFrom r.joint)
                 let y = r.direction.Y - (getYFrom r.joint)
