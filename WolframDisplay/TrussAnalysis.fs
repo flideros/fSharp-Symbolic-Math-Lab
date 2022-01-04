@@ -147,6 +147,7 @@ module TrussDomain =
          members:Member list option; 
          forces:Force list option; 
          supports:Support list option; 
+         modification: Node option;
          mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     type SupportReactionResult = 
@@ -223,6 +224,7 @@ module TrussDomain =
     type GetForceIndex = Force -> Truss -> int
     type GetSupportIndex = Support -> Truss -> int*string
     
+    type SendPointToModification = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
@@ -281,6 +283,7 @@ module TrussDomain =
          getMemberIndex:GetMemberIndex;
          getForceIndex:GetForceIndex;
          getSupportIndex:GetSupportIndex
+         sendPointToModification:SendPointToModification
          }
 
 module TrussImplementation = 
@@ -470,9 +473,8 @@ module TrussImplementation =
             | false -> [] 
         | _ -> []
     let getYMomentReactionEquations (p:TrussPart list) =         
-        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
-        let addRx = addSupportXY p
-        let rollerXY = supportXY "Rx" addRx p
+        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
+        let supportXY = supportXY "Rx" (addSupportXY p) p
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmX sj = getXFrom sj - getXFrom j
@@ -481,17 +483,16 @@ module TrussImplementation =
             let lx = 
                 match s with 
                 | Pin _ ->
-                    match addRx with 
+                    match addSupportXY p with 
                     | false -> []
                     | true -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
                 | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmY),"Rx" + i.ToString()) supports
             List.concat [ly;lx]
         let momentEquations = List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
-        List.concat [momentEquations; rollerXY] 
+        List.concat [momentEquations; supportXY] 
     let getXMomentReactionEquations (p:TrussPart list) =         
-        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
-        // This function only gets the first roller. TODO apply to all rollers in an arbitrary truss        
-        let addRy = addSupportXY p
+        let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p      
+        let supportXY = supportXY "Ry" (addSupportXY p) p
         let getSupportMoments (s:Support) = 
             let j = getJointFromSupport s
             let getMomentArmX sj = getXFrom sj - getXFrom j
@@ -500,15 +501,13 @@ module TrussImplementation =
             let ly = 
                 match s with 
                 | Pin _ ->
-                    match addRy with 
+                    match addSupportXY p with 
                     | false -> []
                     | true -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports 
                 | Roller _ -> List.mapi (fun i s -> (getJointFromSupport s |> getMomentArmX),"Ry" + i.ToString()) supports
             List.concat [ly;lx]        
-        let momentEquations = List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports
-        let rollerXY = supportXY "Ry" addRy p
-        List.concat [momentEquations; rollerXY]
-    
+        let momentEquations = List.map (fun x -> createEquation (sumForceMoments x p) (getSupportMoments x)) supports        
+        List.concat [momentEquations; supportXY]    
 
     // Basic operations on truss
     let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
@@ -539,6 +538,7 @@ module TrussImplementation =
         match s with
         | Pin _ -> i,"Pin"
         | Roller _ -> i,"Roller"
+    
     // Method of Joints
     let isColinear (p1:TrussPart) (p2:TrussPart) = 
         match p1, p2 with
@@ -1004,6 +1004,20 @@ module TrussServices =
         | Pin p -> i,"Pin"
         | Roller r -> i,"Roller"
 
+    let sendPointToModification (point :System.Windows.Point) (state :TrussAnalysisState) =       
+        match state with 
+        | TrussState es -> ErrorState {errors = [WrongStateData]; truss = es.truss}
+        | BuildState bs-> ErrorState {errors = [WrongStateData]; truss = bs.truss}           
+        | SelectionState ss -> 
+            match ss.mode with
+            | TrussDomain.Inspect          
+            | TrussDomain.Delete -> state
+            | TrussDomain.Modify ->                
+                match ss.modification with
+                | None -> state // find joint and return Some Node
+                | Some m -> state // execute modification and return None
+        | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
+        | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
        match state with 
        | TrussState es -> 
@@ -1106,7 +1120,7 @@ module TrussServices =
             match ts.mode with
             | Settings -> state
             | Selection -> 
-                {truss = ts.truss; members = Some [m]; forces = None; supports = None; mode = sm} 
+                {truss = ts.truss; members = Some [m]; forces = None; supports = None; modification = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
             | MemberBuild -> state
@@ -1114,7 +1128,7 @@ module TrussServices =
             | SupportBuild -> state         
         | BuildState  bs -> state
         | SelectionState  ss -> 
-            {truss = ss.truss; members = Some [m]; forces = None; supports = None; mode = sm} 
+            {truss = ss.truss; members = Some [m]; forces = None; supports = None; modification = None; mode = sm} 
             |> SelectionState
         | AnalysisState s -> state    
         | ErrorState  es -> state
@@ -1125,6 +1139,7 @@ module TrussServices =
             match ts.mode with
             | Settings -> state
             | Selection -> 
+                // TODO add force modify functionality
                 let f = 
                     let t1 = List.tryFind ( fun x -> x.joint = p1 && x.direction.X = getXFrom p2 && x.direction.Y = getYFrom p2) ts.truss.forces                    
                     let t2 = List.tryFind ( fun x -> x.joint = p2 && x.direction.X = getXFrom p2 && x.direction.Y = getYFrom p2) ts.truss.forces
@@ -1137,7 +1152,7 @@ module TrussServices =
                     | None, None, None, Some f -> Some [f]                    
                     | _ -> None
                 
-                {truss = ts.truss; members = None; forces = f; supports = None; mode = sm} 
+                {truss = ts.truss; members = None; forces = f; supports = None; modification = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
             | MemberBuild -> state
@@ -1156,7 +1171,7 @@ module TrussServices =
                 | None, None, Some f, None -> Some [f]
                 | None, None, None, Some f -> Some [f]                    
                 | _ -> None
-            {truss = ss.truss; members = None; forces = f; supports = None; mode = sm} 
+            {truss = ss.truss; members = None; forces = f; supports = None; modification = None; mode = sm} 
             |> SelectionState
         | AnalysisState s -> state
         | ErrorState  es -> state
@@ -1182,7 +1197,7 @@ module TrussServices =
                     match spt with
                     | Some s -> Some [s]                    
                     | _ -> None
-                {truss = ts.truss; members = None; forces = None; supports = s; mode = sm} 
+                {truss = ts.truss; members = None; forces = None; supports = s; modification = None; mode = sm} 
                 |> SelectionState
             | Analysis -> state
             | MemberBuild -> state
@@ -1190,6 +1205,7 @@ module TrussServices =
             | SupportBuild -> state         
         | BuildState  bs -> state
         | SelectionState  ss -> 
+            // TODO add support modify functionality
             let spt = 
                 List.tryFind (                     
                     fun x -> 
@@ -1203,7 +1219,7 @@ module TrussServices =
                 match spt with
                 | Some s -> Some [s]                    
                 | _ -> None
-            {truss = ss.truss; members = None; forces = None; supports = s; mode = sm} 
+            {truss = ss.truss; members = None; forces = None; supports = s; modification = None; mode = sm} 
             |> SelectionState
         | AnalysisState s -> state
         | ErrorState  es -> state
@@ -1615,7 +1631,8 @@ module TrussServices =
         getSupportIndexAtJoint = getSupportIndexAtJoint;
         getMemberIndex = getMemberIndex;
         getForceIndex = getForceIndex;
-        getSupportIndex = getSupportIndex
+        getSupportIndex = getSupportIndex;
+        sendPointToModification = sendPointToModification
         }
 
 type TrussAnalysis() as this =  
@@ -3166,6 +3183,7 @@ type TrussAnalysis() as this =
                               inspect_RadioButton.IsMouseOver,
                               modify_RadioButton.IsMouseOver
                               with 
+                        // Delete
                         | true,false,false, true,false,false
                         | false,true,false, true,false,false 
                         | false,false,true, true,false,false ->  
@@ -3178,6 +3196,7 @@ type TrussAnalysis() as this =
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Delete state
+                        // Inspect
                         | true,false,false, false,true,false
                         | false,true,false, false,true,false 
                         | false,false,true, false,true,false ->                        
@@ -3191,6 +3210,7 @@ type TrussAnalysis() as this =
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
+                        // Modify
                         | true,false,false, false,false,true
                         | false,true,false, false,false,true 
                         | false,false,true, false,false,true ->                        
@@ -3306,7 +3326,17 @@ type TrussAnalysis() as this =
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)) .ToString()
                 | TrussDomain.BuildForce bf -> ()
                 | TrussDomain.BuildSupport bs -> ()
-            | TrussDomain.SelectionState ss -> ()                
+            | TrussDomain.SelectionState ss -> 
+                match ss.mode with
+                | TrussDomain.Delete -> ()
+                | TrussDomain.Inspect ->()
+                | TrussDomain.Modify -> 
+                    let newState = trussServices.sendPointToModification p state
+                    do  drawTruss newState
+                        state <- newState
+                        // TODO 
+                        // if modify is Some then set orgin point, None hide orgin point
+                        // etc.
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
                 | TrussDomain.Truss -> ()
@@ -3360,26 +3390,30 @@ type TrussAnalysis() as this =
             | TrussDomain.BuildForce bf -> ()
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> 
-            let truss = getTrussFrom state
-            match ss.forces, ss.members, ss.supports with
-            | Some f, None, None -> 
-                let i = trussServices.getForceIndex f.Head truss
-                message_TextBlock.Text <- "--Force " + i.ToString() + "--"
-                code_TextBlock.Text <- trussServices.getAnalysisReport state
-                setGraphicsFromKernel kernel
-            | None, Some m, None ->                
-                let i = trussServices.getMemberIndex m.Head truss
-                message_TextBlock.Text <- "--Member " + i.ToString() + "--"
-                code_TextBlock.Text <- trussServices.getAnalysisReport state
-                setGraphicsFromKernel kernel
-            | None, None, Some s -> 
-                let i,st = trussServices.getSupportIndex s.Head truss
-                message_TextBlock.Text <- "--" + st + " Support " + i.ToString() + "--"
-                code_TextBlock.Text <- trussServices.getAnalysisReport state
-                setGraphicsFromKernel kernel
-            | _ -> message_TextBlock.Text <- "--Select a Truss Part--"
-                   code_TextBlock.Text <- "Ready"
-            drawTruss state
+            match ss.mode with
+            | TrussDomain.Modify -> ()            
+            | TrussDomain.Delete -> ()
+            | TrussDomain.Inspect -> 
+                let truss = getTrussFrom state
+                match ss.forces, ss.members, ss.supports with
+                | Some f, None, None -> 
+                    let i = trussServices.getForceIndex f.Head truss
+                    message_TextBlock.Text <- "--Force " + i.ToString() + "--"
+                    code_TextBlock.Text <- trussServices.getAnalysisReport state
+                    setGraphicsFromKernel kernel
+                | None, Some m, None ->                
+                    let i = trussServices.getMemberIndex m.Head truss
+                    message_TextBlock.Text <- "--Member " + i.ToString() + "--"
+                    code_TextBlock.Text <- trussServices.getAnalysisReport state
+                    setGraphicsFromKernel kernel
+                | None, None, Some s -> 
+                    let i,st = trussServices.getSupportIndex s.Head truss
+                    message_TextBlock.Text <- "--" + st + " Support " + i.ToString() + "--"
+                    code_TextBlock.Text <- trussServices.getAnalysisReport state
+                    setGraphicsFromKernel kernel
+                | _ -> message_TextBlock.Text <- "--Select a Truss Part--"
+                       code_TextBlock.Text <- "Ready"
+                drawTruss state
         | TrussDomain.AnalysisState a -> ()
         | TrussDomain.ErrorState es -> 
             match es.errors with 
