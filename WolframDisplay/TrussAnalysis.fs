@@ -147,7 +147,7 @@ module TrussDomain =
          members:Member list option; 
          forces:Force list option; 
          supports:Support list option; 
-         modification: Node option;
+         modification: Joint option;
          mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     type SupportReactionResult = 
@@ -808,6 +808,38 @@ module TrussImplementation =
         | true  -> Determinate 
         | false -> Indeterminate
 
+    let modifyTruss (truss:Truss) (newJ:Joint) (oldJ:Joint) =
+        let newDir (oldDir:Vector) = 
+            let newX = oldDir.X + (getXFrom newJ) - (getXFrom oldJ)
+            let newY = oldDir.Y + (getYFrom newJ) - (getYFrom oldJ)
+            Vector(newX,newY)
+        let newMembers = 
+            List.map (fun (j1,j2) -> 
+                match j1 = oldJ with 
+                | true -> (newJ,j2)
+                | false -> 
+                    match j2 = oldJ with
+                    | true -> (j1,newJ)
+                    | false -> (j1,j2)) truss.members
+        let newForces = 
+            List.map (fun f -> 
+                match f.joint = oldJ with 
+                | true -> {f with joint = newJ; direction = newDir f.direction}
+                | false -> f) truss.forces
+        let newSupports = 
+            List.map (fun s  -> 
+                match s with
+                | Roller r -> 
+                    match r.joint = oldJ with 
+                    | true -> {r with joint = newJ; direction = newDir r.direction} |> Roller
+                    | false -> Roller r
+                | Pin p -> 
+                    match p.normal.joint = oldJ with
+                    | true -> {tangent = {p.tangent with joint = newJ; direction = newDir p.tangent.direction}; normal = {p.normal with joint = newJ; direction = newDir p.normal.direction}} |> Pin
+                    | false -> Pin p
+                ) truss.supports
+        {truss with members = newMembers; forces = newForces; supports = newSupports}
+
 module TrussServices = 
     open TrussDomain
     open TrussImplementation
@@ -1004,18 +1036,35 @@ module TrussServices =
         | Pin p -> i,"Pin"
         | Roller r -> i,"Roller"
 
-    let sendPointToModification (point :System.Windows.Point) (state :TrussAnalysisState) =       
+    let sendPointToModification (p1 :System.Windows.Point) (state :TrussAnalysisState) =       
+        let joints = getJointSeqFromTruss (getTrussFromState state)
+        let joint  = Seq.tryFind (fun (p2:System.Windows.Point) ->  (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) joints
         match state with 
-        | TrussState es -> ErrorState {errors = [WrongStateData]; truss = es.truss}
+        | TrussState es ->             
+            match joint with
+            | None -> state
+            | Some p -> 
+                {truss = es.truss; 
+                 members = None; 
+                 forces = None; 
+                 supports = None; 
+                 modification = Some (makeJointFrom p);
+                 mode = Modify} |> SelectionState            
         | BuildState bs-> ErrorState {errors = [WrongStateData]; truss = bs.truss}           
         | SelectionState ss -> 
             match ss.mode with
             | TrussDomain.Inspect          
             | TrussDomain.Delete -> state
-            | TrussDomain.Modify ->                
-                match ss.modification with
-                | None -> state // find joint and return Some Node
-                | Some m -> state // execute modification and return None
+            | TrussDomain.Modify -> 
+                match joint with
+                | None ->
+                    match ss.modification with
+                    | None -> state
+                    | Some j -> {ss with members = None; modification = None; truss = modifyTruss ss.truss (makeJointFrom p1) j} |> SelectionState // execute modification and return None
+                | Some p ->                     
+                    match ss.modification with
+                    | None -> {ss with members = None; modification = Some (makeJointFrom p)} |> SelectionState // find joint and return Some Node
+                    | Some j -> {ss with members = None; modification = None; truss = modifyTruss ss.truss (makeJointFrom p1) j} |> SelectionState // execute modification and return None
         | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
     let sendPointToMemberBuilder (point :System.Windows.Point) (state :TrussAnalysisState) =       
@@ -2164,6 +2213,36 @@ type TrussAnalysis() as this =
             b.VerticalAlignment <- VerticalAlignment.Center
             b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
         b
+    let newPX_TextBlock = 
+        let tb = TextBlock(Text = "X")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newPX_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newPY_TextBlock = 
+        let tb = TextBlock(Text = "Y")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newPY_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newP_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(newPX_TextBlock) |> ignore
+            sp.Children.Add(newPX_TextBox) |> ignore
+            sp.Children.Add(newPY_TextBlock) |> ignore
+            sp.Children.Add(newPY_TextBox) |> ignore            
+            sp.Visibility <- Visibility.Collapsed
+        sp
     let selectionMode_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
@@ -2175,6 +2254,7 @@ type TrussAnalysis() as this =
             sp.Children.Add(inspect_RadioButton) |> ignore
             sp.Children.Add(modify_RadioButton) |> ignore
             sp.Children.Add(delete_Button) |> ignore
+            sp.Children.Add(newP_StackPanel) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
         // Member builder P1
@@ -3111,6 +3191,7 @@ type TrussAnalysis() as this =
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
+                    newP_StackPanel.Visibility <- Visibility.Collapsed
                     trussForceMagnitude_TextBox.IsReadOnly <- true                    
                     let newState = trussServices.setTrussMode TrussDomain.TrussMode.Selection state                    
                     drawTruss newState
@@ -3195,6 +3276,7 @@ type TrussAnalysis() as this =
                             result_ScrollViewer.IsHitTestVisible <- true
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
+                            newP_StackPanel.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Delete state
                         // Inspect
                         | true,false,false, false,true,false
@@ -3209,6 +3291,7 @@ type TrussAnalysis() as this =
                             result_ScrollViewer.IsHitTestVisible <- false
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
+                            newP_StackPanel.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Inspect state
                         // Modify
                         | true,false,false, false,false,true
@@ -3222,6 +3305,7 @@ type TrussAnalysis() as this =
                             result_ScrollViewer.IsHitTestVisible <- true
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
+                            newP_StackPanel.Visibility <- Visibility.Collapsed
                             trussServices.setSelectionMode TrussDomain.TrussSelectionMode.Modify state
                         | _ -> // Logic for Analysis Mode radio buttons                            
                             match xAxis_RadioButton.IsChecked.Value, 
@@ -3310,7 +3394,18 @@ type TrussAnalysis() as this =
                             state <- newState
                             label.Text <- state.ToString()
                 | TrussDomain.TrussMode.Analysis -> setGraphicsFromKernel kernel //()//
-                | TrussDomain.TrussMode.Selection -> label.Text <- state.ToString()
+                | TrussDomain.TrussMode.Selection ->                     
+                    match modify_RadioButton.IsChecked.Value with
+                    | false -> label.Text <- state.ToString()
+                    | true ->                         
+                        let newState = trussServices.sendPointToModification p state
+                        do  setOrgin p
+                            drawTruss newState
+                            state <- newState
+                            label.Text <- state.ToString()
+                            newP_StackPanel.Visibility <- Visibility.Visible
+                            newPX_TextBox.Text <- p.X.ToString()
+                            newPY_TextBox.Text <- p.Y.ToString()
                 | TrussDomain.TrussMode.Settings -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
@@ -3332,11 +3427,19 @@ type TrussAnalysis() as this =
                 | TrussDomain.Inspect ->()
                 | TrussDomain.Modify -> 
                     let newState = trussServices.sendPointToModification p state
-                    do  drawTruss newState
+                    do  setOrgin p
+                        drawTruss newState
                         state <- newState
-                        // TODO 
-                        // if modify is Some then set orgin point, None hide orgin point
-                        // etc.
+                        label.Text <- state.ToString()
+                    match newState with
+                    | TrussDomain.SelectionState ss -> 
+                        match ss.modification with
+                        | None -> newP_StackPanel.Visibility <- Visibility.Collapsed
+                        | Some m -> 
+                            newP_StackPanel.Visibility <- Visibility.Visible
+                            newPX_TextBox.Text <- p.X.ToString()
+                            newPY_TextBox.Text <- p.Y.ToString()
+                    | _ -> ()
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
                 | TrussDomain.Truss -> ()
@@ -3588,7 +3691,29 @@ type TrussAnalysis() as this =
                         let newState = trussServices.sendMagnitudeToSupportBuilder (mag,None) state
                         state <- newState
                         label.Text <- newState.ToString()                    
-            | TrussDomain.SelectionState ss -> ()
+            | TrussDomain.SelectionState ss -> 
+                match ss.mode with
+                | TrussDomain.Delete -> ()
+                | TrussDomain.Inspect ->()
+                | TrussDomain.Modify -> 
+                    let p =
+                        let x = Double.TryParse newPX_TextBox.Text
+                        let y = Double.TryParse newPY_TextBox.Text
+                        match x,y with
+                        | (true,x),(true,y) -> Point(x,y)
+                        | _ -> Point(0.,0.)
+                    let newState = trussServices.sendPointToModification p state
+                    do  setOrgin p
+                        drawTruss newState
+                        state <- newState
+                        label.Text <- state.ToString()
+                    match newState with
+                    | TrussDomain.SelectionState ss -> 
+                        match ss.modification with
+                        | None -> newP_StackPanel.Visibility <- Visibility.Collapsed
+                        | Some m -> ()
+                    | _ -> ()
+                
             | TrussDomain.AnalysisState s -> ()
             | TrussDomain.ErrorState es -> ()
         | Input.Key.Delete -> 
