@@ -237,6 +237,8 @@ module TrussDomain =
     type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
 
+    type ModifyTrussForce = float -> float -> TrussAnalysisState -> TrussAnalysisState
+
     type AnalyzeEquations = string -> TrussAnalysisState -> TrussAnalysisState
     
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
@@ -282,8 +284,9 @@ module TrussDomain =
          getSupportIndexAtJoint:GetSupportIndexAtJoint;
          getMemberIndex:GetMemberIndex;
          getForceIndex:GetForceIndex;
-         getSupportIndex:GetSupportIndex
-         sendPointToModification:SendPointToModification
+         getSupportIndex:GetSupportIndex;
+         sendPointToModification:SendPointToModification;
+         modifyTrussForce:ModifyTrussForce
          }
 
 module TrussImplementation = 
@@ -593,8 +596,7 @@ module TrussImplementation =
         let jointParts = getJointPartListFrom t        
         let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
-        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition    
-    
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition     
     let getMemberVariables (t:Truss) =
         let nl = getNodeList t
         let processNode (n:Node) = 
@@ -839,6 +841,14 @@ module TrussImplementation =
                     | false -> Pin p
                 ) truss.supports
         {truss with members = newMembers; forces = newForces; supports = newSupports}
+    let modifyTrussForce (truss:Truss) (newFMag:float) (newFDir:float) (oldF:Force) =
+        let newDir = Vector((getXFrom oldF.joint) + (50.0 * cos (newFDir * Math.PI/180.)),(getYFrom oldF.joint) - (50.0 * sin (newFDir * Math.PI/180.)))        
+        let newForces = 
+            List.map (fun f -> 
+                match f = oldF with 
+                | true -> {f with direction = newDir; magnitude = newFMag}
+                | false -> f) truss.forces        
+        {truss with forces = newForces}
 
 module TrussServices = 
     open TrussDomain
@@ -1305,7 +1315,7 @@ module TrussServices =
             | TrussDomain.BuildState _bs-> state
             | TrussDomain.SelectionState _ss -> state
             | TrussDomain.ErrorState _es -> state
-            | TrussDomain.AnalysisState a ->                     
+            | TrussDomain.AnalysisState a ->
                 match a.analysis with
                 | Truss -> state                
                 | SupportReactionEquations _sr -> state
@@ -1340,6 +1350,19 @@ module TrussServices =
                     } |> TrussDomain.AnalysisState
                 | MethodOfJointsAnalysis _mj -> state
 
+    let modifyForce (newFMag:float) (newFDir:float) (state :TrussAnalysisState) = 
+        match state with
+        | TrussDomain.TrussState _ts -> state
+        | TrussDomain.BuildState _bs-> state        
+        | TrussDomain.ErrorState _es -> state
+        | TrussDomain.AnalysisState a -> state
+        | TrussDomain.SelectionState ss ->             
+            match ss.forces with 
+            | None -> state
+            | Some f -> 
+                let newTruss = modifyTrussForce ss.truss newFMag newFDir f.Head
+                {ss with truss = newTruss; forces = None} |> SelectionState
+            
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
         match state with 
@@ -1528,9 +1551,9 @@ module TrussServices =
             | Some f, None, None -> 
                 let p1,p2 = f.Head.joint, f.Head.direction                
                 let angle =
-                    let x = Math.Abs(p2.X - (getXFrom p1))
-                    let y = Math.Abs(p2.Y - (getYFrom p1))
-                    Math.Round((Math.Atan2(y,x) * 180.)/Math.PI,4)
+                    let x = (p2.X) - (getXFrom p1) 
+                    let y = (getYFrom p1) - (p2.Y)  
+                    Math.Round((Math.Atan2(y,x) * 180.)/Math.PI,4) 
                 "\"Magnitude = " 
                 + f.Head.magnitude.ToString()                
                 + "\\nAngle = " 
@@ -1681,7 +1704,8 @@ module TrussServices =
         getMemberIndex = getMemberIndex;
         getForceIndex = getForceIndex;
         getSupportIndex = getSupportIndex;
-        sendPointToModification = sendPointToModification
+        sendPointToModification = sendPointToModification;
+        modifyTrussForce = modifyForce
         }
 
 type TrussAnalysis() as this =  
@@ -2242,7 +2266,37 @@ type TrussAnalysis() as this =
             sp.Children.Add(newPY_TextBlock) |> ignore
             sp.Children.Add(newPY_TextBox) |> ignore            
             sp.Visibility <- Visibility.Collapsed
-        sp
+        sp    
+    let newFMag_TextBlock = 
+        let tb = TextBlock(Text = "Magnitude")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newFMag_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newFDir_TextBlock = 
+        let tb = TextBlock(Text = "Direction (Degrees)")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newFDir_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newF_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(newFMag_TextBlock) |> ignore
+            sp.Children.Add(newFMag_TextBox) |> ignore
+            sp.Children.Add(newFDir_TextBlock) |> ignore
+            sp.Children.Add(newFDir_TextBox) |> ignore            
+            sp.Visibility <- Visibility.Collapsed
+        sp    
     let selectionMode_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
@@ -2255,6 +2309,7 @@ type TrussAnalysis() as this =
             sp.Children.Add(modify_RadioButton) |> ignore
             sp.Children.Add(delete_Button) |> ignore
             sp.Children.Add(newP_StackPanel) |> ignore
+            sp.Children.Add(newF_StackPanel) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
         // Member builder P1
@@ -3399,13 +3454,26 @@ type TrussAnalysis() as this =
                     | false -> label.Text <- state.ToString()
                     | true ->                         
                         let newState = trussServices.sendPointToModification p state
-                        do  setOrgin p
-                            drawTruss newState
-                            state <- newState
-                            label.Text <- state.ToString()
-                            newP_StackPanel.Visibility <- Visibility.Visible
-                            newPX_TextBox.Text <- p.X.ToString()
-                            newPY_TextBox.Text <- p.Y.ToString()
+                        match newState with 
+                        | TrussDomain.SelectionState ss -> 
+                            match ss.forces with
+                            | Some f -> 
+                                state <- newState
+                                label.Text <- state.ToString()
+                                newP_StackPanel.Visibility <- Visibility.Collapsed
+                                newF_StackPanel.Visibility <- Visibility.Visible
+                                newFMag_TextBox.Text <- f.Head.magnitude.ToString()
+                                newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString()                                
+                            | None -> 
+                                do  setOrgin p
+                                    drawTruss newState
+                                    state <- newState
+                                    label.Text <- state.ToString()
+                                    newP_StackPanel.Visibility <- Visibility.Visible
+                                    newF_StackPanel.Visibility <- Visibility.Collapsed
+                                    newPX_TextBox.Text <- p.X.ToString()
+                                    newPY_TextBox.Text <- p.Y.ToString()
+                        | _-> ()
                 | TrussDomain.TrussMode.Settings -> ()
             | TrussDomain.BuildState bs -> 
                 match bs.buildOp with
@@ -3433,12 +3501,21 @@ type TrussAnalysis() as this =
                         label.Text <- state.ToString()
                     match newState with
                     | TrussDomain.SelectionState ss -> 
-                        match ss.modification with
-                        | None -> newP_StackPanel.Visibility <- Visibility.Collapsed
-                        | Some m -> 
+                        match ss.modification, ss.forces with
+                        | None, Some f -> 
+                            newP_StackPanel.Visibility <- Visibility.Collapsed
+                            newF_StackPanel.Visibility <- Visibility.Visible
+                            newFMag_TextBox.Text <- f.Head.magnitude.ToString()
+                            newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString() 
+                        | Some m, None -> 
                             newP_StackPanel.Visibility <- Visibility.Visible
+                            newF_StackPanel.Visibility <- Visibility.Collapsed
                             newPX_TextBox.Text <- p.X.ToString()
                             newPY_TextBox.Text <- p.Y.ToString()
+                        | None, None 
+                        | _ ->
+                            newP_StackPanel.Visibility <- Visibility.Collapsed
+                            newF_StackPanel.Visibility <- Visibility.Collapsed                        
                     | _ -> ()
             | TrussDomain.AnalysisState a -> 
                 match a.analysis with
@@ -3494,7 +3571,17 @@ type TrussAnalysis() as this =
             | TrussDomain.BuildSupport bs -> ()
         | TrussDomain.SelectionState ss -> 
             match ss.mode with
-            | TrussDomain.Modify -> ()            
+            | TrussDomain.Modify -> 
+                match ss.forces with
+                | Some f -> 
+                    match newF_StackPanel.Visibility = Visibility.Collapsed with
+                    | true -> 
+                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
+                            newF_StackPanel.Visibility <- Visibility.Visible
+                            newFMag_TextBox.Text <- f.Head.magnitude.ToString()
+                            newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString() 
+                    | false -> ()
+                | None -> newF_StackPanel.Visibility <- Visibility.Collapsed
             | TrussDomain.Delete -> ()
             | TrussDomain.Inspect -> 
                 let truss = getTrussFrom state
@@ -3696,24 +3783,36 @@ type TrussAnalysis() as this =
                 | TrussDomain.Delete -> ()
                 | TrussDomain.Inspect ->()
                 | TrussDomain.Modify -> 
-                    let p =
-                        let x = Double.TryParse newPX_TextBox.Text
-                        let y = Double.TryParse newPY_TextBox.Text
-                        match x,y with
-                        | (true,x),(true,y) -> Point(x,y)
-                        | _ -> Point(0.,0.)
-                    let newState = trussServices.sendPointToModification p state
-                    do  setOrgin p
-                        drawTruss newState
-                        state <- newState
-                        label.Text <- state.ToString()
-                    match newState with
-                    | TrussDomain.SelectionState ss -> 
-                        match ss.modification with
-                        | None -> newP_StackPanel.Visibility <- Visibility.Collapsed
-                        | Some m -> ()
-                    | _ -> ()
-                
+                    match ss.forces with
+                    | None ->                     
+                        let p =
+                            let x = Double.TryParse newPX_TextBox.Text
+                            let y = Double.TryParse newPY_TextBox.Text
+                            match x,y with
+                            | (true,x),(true,y) -> Point(x,y)
+                            | _ -> Point(0.,0.)
+                        let newState = trussServices.sendPointToModification p state
+                        do  drawTruss newState
+                            state <- newState
+                            label.Text <- state.ToString()
+                        match newState with
+                        | TrussDomain.SelectionState ss -> 
+                            match ss.modification with
+                            | None -> 
+                                newP_StackPanel.Visibility <- Visibility.Collapsed
+                                setOrgin (Point(0.,0.))
+                                drawTruss newState
+                            | Some m -> setOrgin p
+                        | _ -> ()
+                    | Some f -> 
+                        let _mag,mag = Double.TryParse newFMag_TextBox.Text
+                        let _dir,dir = Double.TryParse newFDir_TextBox.Text
+                        let newState = trussServices.modifyTrussForce mag dir state 
+                        do  state <- newState
+                            newF_StackPanel.Visibility <- Visibility.Collapsed
+                            setOrgin (Point(0.,0.))
+                            drawTruss newState
+                            label.Text <- newState.ToString()
             | TrussDomain.AnalysisState s -> ()
             | TrussDomain.ErrorState es -> ()
         | Input.Key.Delete -> 
