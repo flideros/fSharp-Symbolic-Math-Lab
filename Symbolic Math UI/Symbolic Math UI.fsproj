@@ -59,6 +59,11 @@
     <Content Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Analysis Lab\AnalysisLab.fsproj">
+      <Name>AnalysisLab</Name>
+      <Project>{261305ae-989b-4f22-a02d-2a5be6474064}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\ControLibrary\ControlLibrary.fsproj">
       <Name>ControlLibrary</Name>
       <Project>{36d2be06-a4c4-449e-aabf-921975ee0fc2}</Project>

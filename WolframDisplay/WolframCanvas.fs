@@ -173,7 +173,9 @@ type WolframCanvas() as this  =
     let screen_Grid =
         let g = Grid()
         do  g.SetValue(Grid.RowProperty, 1)        
-        do  g.Children.Add(canvas_DockPanel) |> ignore
+            g.Children.Add(canvas_DockPanel) |> ignore
+            g.MinHeight <- 500.
+            g.MinWidth <- 700.
         g
     
     (*Actions*)

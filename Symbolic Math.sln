@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28803.156
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Symbolic Math", "Symbolic Math\Symbolic Math.fsproj", "{03E8055F-412D-498F-9CD1-C712257FAD32}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Math Display", "Math Display\Math Display.fsproj", "{4507D1FD-E756-4E6C-BF74-914FEF35621F}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "WolframDisplay", "WolframDisplay\WolframDisplay.fsproj", "{DC1EFAE1-2362-4655-8240-123F7E648317}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AnalysisLab", "Analysis Lab\AnalysisLab.fsproj", "{261305AE-989B-4F22-A02D-2A5BE6474064}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +93,14 @@ Global
 		{DC1EFAE1-2362-4655-8240-123F7E648317}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DC1EFAE1-2362-4655-8240-123F7E648317}.Release|x64.ActiveCfg = Release|x64
 		{DC1EFAE1-2362-4655-8240-123F7E648317}.Release|x64.Build.0 = Release|x64
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Debug|x64.Build.0 = Debug|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Release|Any CPU.Build.0 = Release|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Release|x64.ActiveCfg = Release|Any CPU
+		{261305AE-989B-4F22-A02D-2A5BE6474064}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

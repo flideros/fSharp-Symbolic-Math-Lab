@@ -25,9 +25,18 @@ let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
 
-let testCanvas = Math.Presentation.WolframEngine.WolframCanvas()//.MohrsCircle()//
+let testCanvas = Math.Presentation.WolframEngine.Analysis.TrussAnalysis()
 let stack = 
     let sp = StackPanel()
+    let WolframDisplay = 
+        let b = Button(Content = "Wolfram Display")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- Math.Presentation.WolframEngine.WolframCanvas(RenderTransformOrigin = Point(0.,0.))
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b    
     let dataLab = 
         let b = Button(Content = "Data Lab")
         let handleClick () =
@@ -68,6 +77,7 @@ let stack =
         sp.Children.Add(graphingCalculator) |> ignore
         sp.Children.Add(basicCalculator) |> ignore
         sp.Children.Add(colorPicker) |> ignore 
+        sp.Children.Add(WolframDisplay) |> ignore
     sp
 
 // Tab Control 
@@ -77,10 +87,10 @@ let item0 = TabItem(Header = "Test Canvas")
 do  item0.Content <- testCanvas
 let item1 = TabItem(Header = "Past Projects")
 do  item1.Content <- stack
-let item2 = TabItem(Header = "Truss Analysis")
-do  item2.Content <- Math.Presentation.WolframEngine.TrussAnalysis()
+//let item2 = TabItem(Header = "Truss Analysis")
+//do  item2.Content <- Math.Presentation.WolframEngine.TrussAnalysis()
 
-do  tabs.Items.Add(item2) |> ignore
+do  //tabs.Items.Add(item2) |> ignore
     tabs.Items.Add(item0) |> ignore
     tabs.Items.Add(item1) |> ignore
 (**)
