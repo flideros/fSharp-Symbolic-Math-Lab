@@ -15,7 +15,6 @@ open System.Reflection
 open System.Windows.Media.Imaging
 open Style
 open ControlLibrary
-open BasicCalculator
 open DataLab
 
 
@@ -25,18 +24,36 @@ let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
 
-let testCanvas = Math.Presentation.WolframEngine.Analysis.TrussAnalysis()
+let testCanvas = Math.Presentation.WolframEngine.Analysis.Analysis()
 let stack = 
     let sp = StackPanel()
-    let WolframDisplay = 
-        let b = Button(Content = "Wolfram Display")
+    let WolframCanvas = 
+        let b = Button(Content = "Wolfram Canvas")
         let handleClick () =
             let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
             do  w.Content <- Math.Presentation.WolframEngine.WolframCanvas(RenderTransformOrigin = Point(0.,0.))
             w.Topmost <- true
             w.Show() 
         b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b    
+        b
+    let MohrsCircle = 
+        let b = Button(Content = "Mohrs Circle")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- Math.Presentation.WolframEngine.MohrsCircle(RenderTransformOrigin = Point(0.,0.))
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b
+    let TrussAnalysis = 
+        let b = Button(Content = "Truss Analysis")
+        let handleClick () =
+            let w = Window(SizeToContent = SizeToContent.WidthAndHeight)
+            do  w.Content <- Math.Presentation.WolframEngine.TrussAnalysis(RenderTransformOrigin = Point(0.,0.))
+            w.Topmost <- true
+            w.Show() 
+        b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b
     let dataLab = 
         let b = Button(Content = "Data Lab")
         let handleClick () =
@@ -77,7 +94,9 @@ let stack =
         sp.Children.Add(graphingCalculator) |> ignore
         sp.Children.Add(basicCalculator) |> ignore
         sp.Children.Add(colorPicker) |> ignore 
-        sp.Children.Add(WolframDisplay) |> ignore
+        sp.Children.Add(WolframCanvas) |> ignore
+        sp.Children.Add(MohrsCircle) |> ignore        
+        sp.Children.Add(TrussAnalysis) |> ignore
     sp
 
 // Tab Control 

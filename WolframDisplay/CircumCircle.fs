@@ -81,6 +81,8 @@ type CircumCircle() as this  =
         let g = Grid()
         do  g.SetValue(Grid.RowProperty, 1)        
             g.Children.Add(canvas) |> ignore
+            g.MinHeight <- 500.
+            g.MinWidth <- 500.
         g
     
     (*Logic*)

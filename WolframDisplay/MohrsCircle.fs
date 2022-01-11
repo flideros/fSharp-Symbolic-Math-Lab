@@ -274,6 +274,8 @@ type MohrsCircle() as this  =
         let g = Grid()
         do  g.SetValue(Grid.RowProperty, 1)        
             g.Children.Add(canvas) |> ignore
+            g.MinHeight <- 800.
+            g.MinWidth <- 800.
         g
     
     (*Actions*)

@@ -2691,6 +2691,8 @@ type TrussAnalysis() as this =
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
+        g.MinHeight <- 700.
+        g.MinWidth <- 800.
         g
 
         // Settings
