@@ -2,24 +2,36 @@
 
 open System.Windows
 
-module TrussDomain =
-    
-    // Parameters
+module CoordinateDomain =
     type X = X of float
     type Y = Y of float
     type Z = Z of float
 
-    // Domain Types
-    type Joint = {x:X; y:Y} //; z:Z}
-    type MemberBuilder = (Joint*(Joint option))
-    type Member = (Joint*Joint)    
+module ObjectDomain =    
+    open CoordinateDomain
+        
+    type Joint = {x:X; y:Y}
+    type Joint3D = {x:X; y:Y; z:Z}
+        
+    type MemberBuilder = (Joint*(Joint option))    
+    type Member = (Joint*Joint)
+    
+module LoadDomain = 
+    open ObjectDomain    
+    
     type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
-    type ComponentForces = {joint:Joint; magnitudeX:float; magnitudeY:float}
-    type Force = {magnitude:float; direction:Vector; joint:Joint}    
-    type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)   
+    type Force = {magnitude:float; direction:Vector; joint:Joint}
+    type ComponentForces = {magnitudeX:float; magnitudeY:float; atJoint:Joint}
+
+module TrussDomain =
+    open ObjectDomain
+    open LoadDomain
+    
     type Pin = {tangent:Force;normal:Force}
+    type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)       
     type Support = | Roller of Force | Pin of Pin 
     type Truss = {members:Member list; forces:Force list; supports:Support list}
+    
     type TrussStability = 
         | Stable 
         | NotEnoughReactions 

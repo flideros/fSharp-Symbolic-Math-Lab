@@ -7,15 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="DomainModels.fs" />
+    <Compile Include="GraphicResources.fs" />
     <Compile Include="WolframServices.fs" />
-    <Compile Include="TrussDomain.fs" />
     <Compile Include="TrussImplementation.fs" />
     <Compile Include="TrussServices.fs" />
     <Compile Include="AnalysisUI.fs" />
     <None Include="Script.fsx" />
-    <Content Include="AnimationWindow.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>

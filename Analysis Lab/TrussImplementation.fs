@@ -3,6 +3,9 @@
 open System
 open System.Windows
 open TrussDomain
+open CoordinateDomain
+open ObjectDomain
+open LoadDomain
 open WolframServices
 
 module TrussImplementation =     
@@ -64,7 +67,7 @@ module TrussImplementation =
         let x = f.direction.X - (getXFrom f.joint)
         let y = f.direction.Y - (getYFrom f.joint)
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-        {joint = f.joint; magnitudeX = -f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
+        {atJoint = f.joint; magnitudeX = -f.magnitude*(x/d); magnitudeY = f.magnitude*(y/d)}
     let getResultantForcesFrom (r:SupportReactionResult) =        
         match r with 
         | {support = Roller r; xReactionForce = Some x; yReactionForce = None} -> 
@@ -111,12 +114,12 @@ module TrussImplementation =
             let x = p.tangent.direction.X - (getXFrom p.tangent.joint)
             let y = p.normal.direction.Y - (getYFrom p.normal.joint)
             let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
-            {joint = p.tangent.joint; magnitudeX = p.tangent.magnitude*(x/d); magnitudeY = p.normal.magnitude*(y/d)}
+            {atJoint = p.tangent.joint; magnitudeX = p.tangent.magnitude*(x/d); magnitudeY = p.normal.magnitude*(y/d)}
         | Roller r -> 
             let x = r.direction.X - (getXFrom r.joint)
             let y = r.direction.Y - (getYFrom r.joint)
             let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
-            {joint = r.joint; magnitudeX = r.magnitude*(x/d); magnitudeY = r.magnitude*(y/d)}
+            {atJoint = r.joint; magnitudeX = r.magnitude*(x/d); magnitudeY = r.magnitude*(y/d)}
 
     let getJointFromSupportBuilder (sb:SupportBuilder) = 
         match sb with
@@ -135,7 +138,7 @@ module TrussImplementation =
         let j = getJointFromSupport s
         let getMomentArmY fj = (getYFrom fj - getYFrom j)
         let getMomentArmX fj = (getXFrom fj - getXFrom j)
-        List.fold (fun acc cf -> cf.magnitudeX*(getMomentArmY cf.joint) + cf.magnitudeY*(getMomentArmX cf.joint) + acc ) 0. forces
+        List.fold (fun acc cf -> cf.magnitudeX*(getMomentArmY cf.atJoint) + cf.magnitudeY*(getMomentArmX cf.atJoint) + acc ) 0. forces
     
     // Support Reaction Equations
     let getXForceReactionEquation (p:TrussPart list) =         

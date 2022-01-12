@@ -8,10 +8,12 @@ open System.Windows.Shapes
 open System.Windows.Media
 open System.Windows.Media.Imaging
 open Wolfram.NETLink
+open GraphicResources
 
 type Analysis() as this =  
     inherit UserControl()    
     do Install() |> ignore
+    
 
     let initialState = TrussDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = TrussDomain.MemberBuild}
 
@@ -40,28 +42,7 @@ type Analysis() as this =
     
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
-    
-    (*Model*)        
-    let image = Image()
-    do  image.SetValue(Panel.ZIndexProperty, -100)          
-    let visual = DrawingVisual()     
-    let clear = SolidColorBrush(Colors.Transparent)
-    let black = SolidColorBrush(Colors.Black) 
-    let blue =  SolidColorBrush(Colors.Blue)
-    let blue2 = SolidColorBrush(Colors.RoyalBlue)
-    let olive = SolidColorBrush(Colors.Olive)
-    let red =   SolidColorBrush(Colors.Red)
-    let green = SolidColorBrush(Colors.Green)
-    let bluePen, blueGridline, redPen, 
-        redGridline, blackPen = 
-            Pen(blue, 0.5), Pen(blue, 0.2), Pen(red, 0.5), 
-            Pen(red, 0.1), Pen(black, 0.5) 
-    do  bluePen.Freeze()
-        redPen.Freeze()
-        blackPen.Freeze()
-        redGridline.Freeze()
-        blueGridline.Freeze()
-   
+
     (*Controls*)      
     let label =
         let l = TextBox()
@@ -1251,7 +1232,7 @@ type Analysis() as this =
         let isRollerSupportType = trussServices.checkSupportTypeIsRoller support
         do  drawBuildSupportJoint p
             drawBuildSupport (p,dir,isRollerSupportType)
-    let drawForce color (force:TrussDomain.Force) =  
+    let drawForce color (force:LoadDomain.Force) =  
         let p = trussServices.getPointFromForce force
         let vp = System.Windows.Point(force.direction.X,force.direction.Y)        
         let arrowPoint = 
@@ -1417,7 +1398,7 @@ type Analysis() as this =
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
             message_TextBlock.Text <- newMessage
-            Seq.iter (fun (f:TrussDomain.Force) -> 
+            Seq.iter (fun (f:LoadDomain.Force) -> 
                 match f.magnitude = 0.0 with 
                 | true -> () 
                 | false -> 
@@ -1425,7 +1406,7 @@ type Analysis() as this =
                     drawReactionForceLabel f.direction (trussServices.getSupportIndexAtJoint f.joint supports) f.magnitude
                 ) reactions            
             Seq.iteri (fun i m -> drawMemberLabel m i) members
-            Seq.iteri (fun i (f:TrussDomain.Force) -> drawForceLabel f.direction i f.magnitude) forces
+            Seq.iteri (fun i (f:LoadDomain.Force) -> drawForceLabel f.direction i f.magnitude) forces
             drawSolvedMembers newState            
 
     // Handle
@@ -1698,14 +1679,14 @@ type Analysis() as this =
                                     resultant_RadioButton.IsChecked <- Nullable true 
                                     components_RadioButton.IsChecked <- Nullable false
                                     drawTruss state
-                                    Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                                    Seq.iter (fun (f:LoadDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
                                     state
                                 | true,false, false,true
                                 | false,true, false,true -> 
                                     resultant_RadioButton.IsChecked <- Nullable false 
                                     components_RadioButton.IsChecked <- Nullable true
                                     drawTruss state
-                                    Seq.iter (fun (f:TrussDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                                    Seq.iter (fun (f:LoadDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
                                     state
                                 | _ -> state
             do  state <- newState

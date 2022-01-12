@@ -5,6 +5,9 @@ open System.Windows
 
 module TrussServices = 
     open TrussDomain
+    open CoordinateDomain
+    open ObjectDomain
+    open LoadDomain
     open TrussImplementation
 
     let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false
@@ -733,8 +736,8 @@ module TrussServices =
                     let y = (getYFrom p2) - (getYFrom p1)
                     Math.Round(Math.Sqrt (x*x + y*y),4)
                 let angle =
-                    let x = Math.Abs((getXFrom p2) - (getXFrom p1))
-                    let y = Math.Abs((getYFrom p2) - (getYFrom p1))
+                    let x = Math.Abs(float (getXFrom p2) - (getXFrom p1))
+                    let y = Math.Abs(float (getYFrom p2) - (getYFrom p1))
                     Math.Round((Math.Atan2(y,x) * 180.)/Math.PI,4)
                 "\"Joints \\n" 
                 + p1.x.ToString() + ", "+ p1.y.ToString() 
