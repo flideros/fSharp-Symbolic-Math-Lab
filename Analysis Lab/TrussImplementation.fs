@@ -4,8 +4,9 @@ open System
 open System.Windows
 open TrussDomain
 open CoordinateDomain
-open ObjectDomain
+open AtomicDomain
 open LoadDomain
+open ElementDomain
 open WolframServices
 
 module TrussImplementation =     
@@ -17,7 +18,7 @@ module TrussImplementation =
     
     let getMembersAt (j:Joint) (m:Member list) = 
         List.choose (fun (p1,p2) -> match p1 = j || p2 = j with | true -> Some (Member (p1,p2)) | false -> None) m
-    let getForcesAt (j:Joint) (f:Force list) = 
+    let getForcesAt (j:Joint) (f:JointForce list) = 
         List.choose (fun force -> 
             match force.joint = j with 
             | true ->  Some (Force force)
@@ -43,11 +44,11 @@ module TrussImplementation =
         |> List.concat 
         |> List.distinct
 
-    let getDirectionsFrom (f:Force list) = List.map (fun x -> 
+    let getDirectionsFrom (f:JointForce list) = List.map (fun x -> 
         Vector(
             x = x.direction.X - (getXFrom x.joint), 
             y = x.direction.Y - (getYFrom x.joint))) f
-    let getLineOfActionFrom (f:Force) = 
+    let getLineOfActionFrom (f:JointForce) = 
         match (f.direction.X - (getXFrom f.joint)) = 0. with 
         | false -> 
             let m = (f.direction.Y - (getYFrom f.joint)) / (f.direction.X - (getXFrom f.joint))                   
@@ -63,7 +64,7 @@ module TrussImplementation =
             (m,b)
         | true -> (1.,0.)
     
-    let getComponentForcesFrom (f:Force) =
+    let getComponentForcesFrom (f:JointForce) =
         let x = f.direction.X - (getXFrom f.joint)
         let y = f.direction.Y - (getYFrom f.joint)
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n 
@@ -250,7 +251,7 @@ module TrussImplementation =
     let getMemberIndex (m:Member) (t:Truss) =
         let i = List.tryFindIndex (fun x -> x = m) t.members
         match i with | Some n -> n | None -> -1    
-    let getForceIndex (f:Force) (t:Truss) =
+    let getForceIndex (f:JointForce) (t:Truss) =
         let i = List.tryFindIndex (fun x -> x = f) t.forces
         match i with | Some n -> n | None -> -1
     let getSupportIndex (s:Support) (t:Truss) =
@@ -325,12 +326,12 @@ module TrussImplementation =
         List.map (fun x -> processNode x) nl
         |> List.concat
         |> List.distinct
-    let getReactionSignX (f:Force) = 
+    let getReactionSignX (f:JointForce) = 
         let x = (getXFrom f.joint) - f.direction.X           
         match x < 0. with
         | true  -> -1.
         | false -> 1.
-    let getReactionSignY (f:Force) =                 
+    let getReactionSignY (f:JointForce) =                 
         let y = (getYFrom f.joint) - f.direction.Y 
         match y < 0. with
         | true -> 1.
@@ -398,11 +399,11 @@ module TrussImplementation =
         
     // Workflow for building a force
     let makeForceBuilderFrom (j:Joint) = {_magnitude = None; _direction = None; joint = j}
-    let addDirectionToForceBuilder (v:Vector) (fb:ForceBuilder) = 
+    let addDirectionToForceBuilder (v:Vector) (fb:JointForceBuilder) = 
         match fb._magnitude.IsSome with
         | false -> {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}  |> BuildForce |> TrussBuildOp
         | true -> {magnitude = fb._magnitude.Value; direction = v; joint = fb.joint} |> Force |> TrussPart
-    let addMagnitudeToForceBuilder m (fb:ForceBuilder) = 
+    let addMagnitudeToForceBuilder m (fb:JointForceBuilder) = 
         match fb._direction.IsSome with
         | false -> {_magnitude = Some m; _direction = fb._direction; joint = fb.joint} |> BuildForce |> TrussBuildOp
         | true -> {magnitude = m; direction = fb._direction.Value; joint = fb.joint} |> Force |> TrussPart
@@ -456,7 +457,7 @@ module TrussImplementation =
             compareReactions reactions false
         let checkForConcurrentReactions = 
             let reactions = getReactionForcesFrom truss.supports
-            let compareReactions (reactions:Force list) = 
+            let compareReactions (reactions:JointForce list) = 
                 match reactions with 
                 | [] -> false
                 | _::[] -> false
@@ -558,7 +559,7 @@ module TrussImplementation =
                     | false -> Pin p
                 ) truss.supports
         {truss with members = newMembers; forces = newForces; supports = newSupports}
-    let modifyTrussForce (truss:Truss) (newFMag:float) (newFDir:float) (oldF:Force) =
+    let modifyTrussForce (truss:Truss) (newFMag:float) (newFDir:float) (oldF:JointForce) =
         let newDir = Vector((getXFrom oldF.joint) + (50.0 * cos (newFDir * Math.PI/180.)),(getYFrom oldF.joint) - (50.0 * sin (newFDir * Math.PI/180.)))        
         let newForces = 
             List.map (fun f -> 

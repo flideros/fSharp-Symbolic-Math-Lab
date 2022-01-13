@@ -3,34 +3,54 @@
 open System.Windows
 
 module CoordinateDomain =
+    
+
     type X = X of float
     type Y = Y of float
     type Z = Z of float
 
-module ObjectDomain =    
+module AtomicDomain =    
     open CoordinateDomain
-        
+    
+    // Points in Euclidean affine spaces 
+    // Joints are a consequence of connecting atomic or elemental structures together.
     type Joint = {x:X; y:Y}
     type Joint3D = {x:X; y:Y; z:Z}
-        
+    
+    // Any arbitrary connector of two points. 
+    // Equal end points implies a member that loops back in on itself.
     type MemberBuilder = (Joint*(Joint option))    
     type Member = (Joint*Joint)
     
 module LoadDomain = 
-    open ObjectDomain    
+    open AtomicDomain    
     
-    type ForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
-    type Force = {magnitude:float; direction:Vector; joint:Joint}
+    // Abstract force applied to a joint. The direction vector is based on the joint as the origin
+    // and only expresses the orientation in the 2D plane. The sign of magnitude of the force expresses 
+    // the direction of the force along the direction vector. Positive magnitude points towards the 
+    // Joint. Negative magnitude points away from the Joint.
+    type JointForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
+    type JointForce = {magnitude:float; direction:Vector; joint:Joint}
+    
+    // Abstract force applied at a joint expressed as component forces acting along each axis. 
     type ComponentForces = {magnitudeX:float; magnitudeY:float; atJoint:Joint}
+    type ComponentForces3D = {magnitudeX3D:float; magnitudeY3D:float; magnitudeZ3D:float; atJoint3D:Joint3D}
+
+module ElementDomain =
+    open LoadDomain
+        
+    type Pin = {tangent:JointForce;normal:JointForce}
+    
+    type SupportBuilder = | Roller of JointForceBuilder | Pin of (JointForceBuilder*JointForceBuilder)       
+    type Support = | Roller of JointForce | Pin of Pin
+
 
 module TrussDomain =
-    open ObjectDomain
+    open AtomicDomain
     open LoadDomain
+    open ElementDomain
     
-    type Pin = {tangent:Force;normal:Force}
-    type SupportBuilder = | Roller of ForceBuilder | Pin of (ForceBuilder*ForceBuilder)       
-    type Support = | Roller of Force | Pin of Pin 
-    type Truss = {members:Member list; forces:Force list; supports:Support list}
+    type Truss = {members:Member list; forces:JointForce list; supports:Support list}    
     
     type TrussStability = 
         | Stable 
@@ -43,12 +63,12 @@ module TrussDomain =
         | Indeterminate
     type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
         | Member of Member
-        | Force of Force
+        | Force of JointForce
         | Support of Support
     type MemberForce = (float*TrussPart)
     type TrussBuildOp =
         | BuildMember of MemberBuilder
-        | BuildForce of ForceBuilder
+        | BuildForce of JointForceBuilder
         | BuildSupport of SupportBuilder
     type BuildOpResult =
         | TrussPart of TrussPart
@@ -64,6 +84,7 @@ module TrussDomain =
         | Delete
         | Modify
         | Inspect  
+    
     type Node = (Joint*TrussPart list)
 
     // Types to describe error results
@@ -82,15 +103,15 @@ module TrussDomain =
     type SelectionStateData = 
         {truss:Truss; 
          members:Member list option; 
-         forces:Force list option; 
+         forces:JointForce list option; 
          supports:Support list option; 
          modification: Joint option;
          mode:TrussSelectionMode}    
     type ErrorStateData = {errors : Error list; truss : Truss}
     type SupportReactionResult = 
         {support: Support;
-         xReactionForce: Force option;
-         yReactionForce: Force option}    
+         xReactionForce: JointForce option;
+         yReactionForce: JointForce option}    
     
     // Data associated with each analysis state
     type SupportReactionEquationStateData = 
@@ -143,9 +164,9 @@ module TrussDomain =
     type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
     type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
     type GetTrussFromState = TrussAnalysisState -> Truss
-    type GetPointFromForceBuilder = ForceBuilder -> System.Windows.Point
-    type GetPointFromForce = Force -> System.Windows.Point
-    type GetDirectionFromForce = Force -> float
+    type GetPointFromForceBuilder = JointForceBuilder -> System.Windows.Point
+    type GetPointFromForce = JointForce -> System.Windows.Point
+    type GetDirectionFromForce = JointForce -> float
     type GetPointFromSupport = Support -> System.Windows.Point
     type GetDirectionFromSupport = Support -> float    
     type GetSelectedMemberFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
@@ -153,12 +174,12 @@ module TrussDomain =
     type GetSelectedSupportFromState = TrussAnalysisState -> (System.Windows.Point * float * bool) option
     type GetSupportReactionEquationsFromState = bool -> TrussAnalysisState -> TrussAnalysisState
     type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
-    type GetReactionForcesFromState = bool -> TrussAnalysisState -> Force list
+    type GetReactionForcesFromState = bool -> TrussAnalysisState -> JointForce list
     type GetMemberOptionFromTrussPart = TrussPart -> (System.Windows.Point*System.Windows.Point) Option
     type GetAnalysisReport = TrussAnalysisState -> string
     type GetSupportIndexAtJoint = Joint -> Support list -> int*string
     type GetMemberIndex = Member -> Truss -> int
-    type GetForceIndex = Force -> Truss -> int
+    type GetForceIndex = JointForce -> Truss -> int
     type GetSupportIndex = Support -> Truss -> int*string
     
     type SendPointToModification = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState

@@ -1226,13 +1226,13 @@ type Analysis() as this =
                 support.Tag <- p
             support
         do  canvas.Children.Add(support) |> ignore
-    let drawSupport (support:TrussDomain.Support) = 
+    let drawSupport (support:ElementDomain.Support) = 
         let p = trussServices.getPointFromSupport support
         let dir = trussServices.getDirectionFromSupport support
         let isRollerSupportType = trussServices.checkSupportTypeIsRoller support
         do  drawBuildSupportJoint p
             drawBuildSupport (p,dir,isRollerSupportType)
-    let drawForce color (force:LoadDomain.Force) =  
+    let drawForce color (force:LoadDomain.JointForce) =  
         let p = trussServices.getPointFromForce force
         let vp = System.Windows.Point(force.direction.X,force.direction.Y)        
         let arrowPoint = 
@@ -1398,7 +1398,7 @@ type Analysis() as this =
             label.Text <- newState.ToString()
             code_TextBlock.Text <- newCode
             message_TextBlock.Text <- newMessage
-            Seq.iter (fun (f:LoadDomain.Force) -> 
+            Seq.iter (fun (f:LoadDomain.JointForce) -> 
                 match f.magnitude = 0.0 with 
                 | true -> () 
                 | false -> 
@@ -1406,7 +1406,7 @@ type Analysis() as this =
                     drawReactionForceLabel f.direction (trussServices.getSupportIndexAtJoint f.joint supports) f.magnitude
                 ) reactions            
             Seq.iteri (fun i m -> drawMemberLabel m i) members
-            Seq.iteri (fun i (f:LoadDomain.Force) -> drawForceLabel f.direction i f.magnitude) forces
+            Seq.iteri (fun i (f:LoadDomain.JointForce) -> drawForceLabel f.direction i f.magnitude) forces
             drawSolvedMembers newState            
 
     // Handle
@@ -1679,14 +1679,14 @@ type Analysis() as this =
                                     resultant_RadioButton.IsChecked <- Nullable true 
                                     components_RadioButton.IsChecked <- Nullable false
                                     drawTruss state
-                                    Seq.iter (fun (f:LoadDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                                    Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
                                     state
                                 | true,false, false,true
                                 | false,true, false,true -> 
                                     resultant_RadioButton.IsChecked <- Nullable false 
                                     components_RadioButton.IsChecked <- Nullable true
                                     drawTruss state
-                                    Seq.iter (fun (f:LoadDomain.Force) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                                    Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
                                     state
                                 | _ -> state
             do  state <- newState
@@ -2065,8 +2065,8 @@ type Analysis() as this =
                     | true -> 
                         let jointPoint = 
                             match bs with 
-                            | TrussDomain.Roller f -> trussServices.getPointFromForceBuilder f
-                            | TrussDomain.Pin (f,_) -> trussServices.getPointFromForceBuilder f
+                            | ElementDomain.Roller f -> trussServices.getPointFromForceBuilder f
+                            | ElementDomain.Pin (f,_) -> trussServices.getPointFromForceBuilder f
                         let dirPoint = System.Windows.Point(jointPoint.X + (1.0 * cos ((dir) * Math.PI/180.)), jointPoint.Y - (1.0 * sin ((dir) * Math.PI/180.)))  
                         let arrowPoint = jointPoint                            
                         let newState = 

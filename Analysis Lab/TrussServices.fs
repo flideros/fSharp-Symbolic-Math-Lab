@@ -6,8 +6,9 @@ open System.Windows
 module TrussServices = 
     open TrussDomain
     open CoordinateDomain
-    open ObjectDomain
+    open AtomicDomain
     open LoadDomain
+    open ElementDomain
     open TrussImplementation
 
     let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false
@@ -69,14 +70,14 @@ module TrussServices =
         let j,_ = mb
         let p = System.Windows.Point(getXFrom j, getYFrom j)
         p
-    let getPointFromForceBuilder (fb:ForceBuilder) =         
+    let getPointFromForceBuilder (fb:JointForceBuilder) =         
         let p = System.Windows.Point(getXFrom fb.joint, getYFrom fb.joint)
         p
-    let getDirectionFromForce (f:Force) =
+    let getDirectionFromForce (f:JointForce) =
         let y = f.direction.Y - (getYFrom f.joint)
         let x = f.direction.X - (getXFrom f.joint)
         Math.Atan2(y,x) * (-180./Math.PI)
-    let getPointFromForce (force:Force) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
+    let getPointFromForce (force:JointForce) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
     let getPointFromSupport (support:Support) = 
         match support with
         | Pin p -> getPointFromForce p.normal
@@ -193,7 +194,7 @@ module TrussServices =
         | _ -> None
     let getSupportIndexAtJoint (j:Joint) supports = 
         let i = 
-            List.findIndex (fun (x:TrussDomain.Support) -> 
+            List.findIndex (fun (x:ElementDomain.Support) -> 
                 match x with 
                 | Pin p -> p.normal.joint = j
                 | Roller r -> r.joint = j
