@@ -2,8 +2,9 @@
 
 open System
 open System.Windows
-open TrussDomain
+open TrussAnalysisDomain
 open CoordinateDomain
+open BuilderDomain
 open AtomicDomain
 open LoadDomain
 open ElementDomain
@@ -122,10 +123,10 @@ module TrussImplementation =
             let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 1. | n -> n
             {atJoint = r.joint; magnitudeX = r.magnitude*(x/d); magnitudeY = r.magnitude*(y/d)}
 
-    let getJointFromSupportBuilder (sb:SupportBuilder) = 
+    let getJointFromSupportBuilder (sb:BuilderDomain.SupportBuilder) = 
         match sb with
-        | SupportBuilder.Roller r -> r.joint
-        | SupportBuilder.Pin (p,_) -> p.joint
+        | BuilderDomain.SupportBuilder.Roller r -> r.joint
+        | BuilderDomain.SupportBuilder.Pin (p,_) -> p.joint
     let getJointFromSupport (s:Support) = match s with | Pin p -> p.normal.joint | Roller r -> r.joint
             
     let sumForcesX (p:TrussPart list) = 
@@ -294,7 +295,7 @@ module TrussImplementation =
         | [Member m1;Support s;Member m2]
         | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
         | _ -> []     
-    let partitionNode (tpl:Node list) = 
+    let partitionNode (tpl:TrussNode list) = 
         List.map (fun (j,pl) -> 
             let zfm = getZFM pl
             let pl' = List.except zfm pl
@@ -314,10 +315,10 @@ module TrussImplementation =
         let jointParts = getJointPartListFrom t        
         let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
-        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition     
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> TrussNode (j,List.except zfm pl)::acc) [] partition     
     let getMemberVariables (t:Truss) =
         let nl = getNodeList t
-        let processNode (n:Node) = 
+        let processNode (n:TrussNode) = 
             let _j,pl = n            
             let members = 
                 List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
@@ -352,7 +353,7 @@ module TrussImplementation =
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
         let name = "M" + index.ToString()
         ( y/d,name) //Math.Abs
-    let analyzeNode (n:Node) (t:Truss) (r:SupportReactionResult list) = 
+    let analyzeNode (n:TrussNode) (t:Truss) (r:SupportReactionResult list) = 
         let j,pl = n
         let supportReactions = 
             let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
@@ -390,8 +391,8 @@ module TrussImplementation =
         | Some _ -> m
 
     // Workflow for building a member
-    let makeMemberBuilderFrom (j:Joint) = MemberBuilder (j,None)
-    let addJointToMemberBuilder (j:Joint) (mb:MemberBuilder) = 
+    let makeMemberBuilderFrom (j:Joint) = BuilderDomain.MemberBuilder (j,None)
+    let addJointToMemberBuilder (j:Joint) (mb:BuilderDomain.MemberBuilder) = 
         let a, _b = mb
         match a = j with 
         | true -> mb |> BuildMember |> TrussBuildOp
@@ -399,7 +400,7 @@ module TrussImplementation =
         
     // Workflow for building a force
     let makeForceBuilderFrom (j:Joint) = {_magnitude = None; _direction = None; joint = j}
-    let addDirectionToForceBuilder (v:Vector) (fb:JointForceBuilder) = 
+    let addDirectionToForceBuilder (v:Vector) (fb:BuilderDomain.JointForceBuilder) = 
         match fb._magnitude.IsSome with
         | false -> {_magnitude = fb._magnitude; _direction = Some v; joint = fb.joint}  |> BuildForce |> TrussBuildOp
         | true -> {magnitude = fb._magnitude.Value; direction = v; joint = fb.joint} |> Force |> TrussPart

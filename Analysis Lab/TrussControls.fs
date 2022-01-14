@@ -1,4 +1,6 @@
 ﻿namespace Math.Presentation.WolframEngine.Analysis
+// This is a development area.
+// This code is isolated from the Analysis UI for the time being as I develop this code.
 
 open System
 open System.Numerics
@@ -10,7 +12,94 @@ open System.Windows.Media.Imaging
 open Wolfram.NETLink
 open GraphicResources
 
-type Analysis() as this =  
+type MemberBuilder() as this =  
+    inherit UserControl()    
+    do Install() |> ignore
+        
+        // Member builder P2
+    let trussMemberP1X_TextBlock = 
+        let tb = TextBlock(Text = "X1")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP1X_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let trussMemberP1Y_TextBlock = 
+        let tb = TextBlock(Text = "Y1")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP1Y_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let trussMemberP1_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMemberP1X_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP1X_TextBox) |> ignore
+            sp.Children.Add(trussMemberP1Y_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP1Y_TextBox) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+        // Member builder P2
+    let trussMemberP2X_TextBlock = 
+        let tb = TextBlock(Text = "X2")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP2X_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let trussMemberP2Y_TextBlock = 
+        let tb = TextBlock(Text = "Y2")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let trussMemberP2Y_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb 
+    let trussMemberP2_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMemberP2X_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP2X_TextBox) |> ignore
+            sp.Children.Add(trussMemberP2Y_TextBlock) |> ignore
+            sp.Children.Add(trussMemberP2Y_TextBox) |> ignore
+            sp.Visibility <- Visibility.Collapsed
+        sp
+    let trussMemberBuilder_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMemberP1_StackPanel) |> ignore
+            sp.Children.Add(trussMemberP2_StackPanel) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+    
+    let screen_Grid =
+        let g = Grid()              
+        do  g.Children.Add(trussMemberBuilder_StackPanel) |> ignore
+        g
+    do  this.Content <- screen_Grid
+
+
+
+
+
+type Truss() as this =  
     inherit UserControl()    
     do Install() |> ignore
     
@@ -43,7 +132,10 @@ type Analysis() as this =
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
 
-    (*Controls*)      
+    (*Controls*)
+    let mb = MemberBuilder()
+
+
     let label =
         let l = TextBox()
         do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
@@ -1846,7 +1938,7 @@ type Analysis() as this =
                 | TrussAnalysisDomain.MethodOfJointsAnalysis mja -> drawSolvedMembers state 
             | TrussAnalysisDomain.ErrorState es -> 
                 match es.errors with 
-                | [NoJointSelected] -> ()                    
+                | [ErrorDomain.NoJointSelected] -> ()                    
                 | _ -> ()
     let handleMouseUp () =         
         match state with
@@ -1909,7 +2001,7 @@ type Analysis() as this =
         | TrussAnalysisDomain.AnalysisState a -> ()
         | TrussAnalysisDomain.ErrorState es -> 
             match es.errors with 
-            | [NoJointSelected] -> 
+            | [ErrorDomain.NoJointSelected] -> 
                 match  forceBuilder_RadioButton.IsChecked.Value,
                         memberBuilder_RadioButton.IsChecked.Value with 
                 | true, false -> 

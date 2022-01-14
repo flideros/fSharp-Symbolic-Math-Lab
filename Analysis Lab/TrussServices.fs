@@ -4,11 +4,106 @@ open System
 open System.Windows
 
 module TrussServices = 
-    open TrussDomain
+    open ErrorDomain
+    open TrussAnalysisDomain
     open CoordinateDomain
+    open BuilderDomain
     open AtomicDomain
     open LoadDomain
     open ElementDomain
+    
+    // Services
+    type CheckSupportTypeIsRoller = Support -> bool
+    type CheckTruss = Truss -> TrussAnalysisState
+
+    type GetJointSeqFromTruss = Truss -> System.Windows.Point seq
+    type GetMemberSeqFromTruss = Truss -> (System.Windows.Point * System.Windows.Point) seq
+    type GetPointFromMemberBuilder = MemberBuilder -> System.Windows.Point
+    type GetTrussFromState = TrussAnalysisState -> Truss
+    type GetPointFromForceBuilder = JointForceBuilder -> System.Windows.Point
+    type GetPointFromForce = JointForce -> System.Windows.Point
+    type GetDirectionFromForce = JointForce -> float
+    type GetPointFromSupport = Support -> System.Windows.Point
+    type GetDirectionFromSupport = Support -> float    
+    type GetSelectedMemberFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
+    type GetSelectedForceFromState = TrussAnalysisState -> (System.Windows.Point * System.Windows.Point) option
+    type GetSelectedSupportFromState = TrussAnalysisState -> (System.Windows.Point * float * bool) option
+    type GetSupportReactionEquationsFromState = bool -> TrussAnalysisState -> TrussAnalysisState
+    type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
+    type GetReactionForcesFromState = bool -> TrussAnalysisState -> JointForce list
+    type GetMemberOptionFromTrussPart = TrussPart -> (System.Windows.Point*System.Windows.Point) Option
+    type GetAnalysisReport = TrussAnalysisState -> string
+    type GetSupportIndexAtJoint = Joint -> Support list -> int*string
+    type GetMemberIndex = Member -> Truss -> int
+    type GetForceIndex = JointForce -> Truss -> int
+    type GetSupportIndex = Support -> Truss -> int*string
+    
+    type SendPointToModification = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToMemberBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToForceBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendMagnitudeToForceBuilder = float -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToRollerSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToPinSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState    
+    type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
+    type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+
+    type ModifyTrussForce = float -> float -> TrussAnalysisState -> TrussAnalysisState
+    type ModifyTrussSupport = float -> TrussAnalysisState -> TrussAnalysisState
+    type AnalyzeEquations = string -> TrussAnalysisState -> TrussAnalysisState
+    
+    type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
+    type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+
+    type RemoveTrussPartFromTruss = TrussAnalysisState -> TrussAnalysisState
+    
+    type TrussServices = 
+        {checkSupportTypeIsRoller:CheckSupportTypeIsRoller;
+         checkTruss:CheckTruss;
+         getJointSeqFromTruss:GetJointSeqFromTruss;
+         getMemberSeqFromTruss:GetMemberSeqFromTruss;
+         getPointFromMemberBuilder:GetPointFromMemberBuilder;
+         getPointFromForceBuilder:GetPointFromForceBuilder;
+         getPointFromSupport:GetPointFromSupport;
+         getDirectionFromSupport:GetDirectionFromSupport;
+         getPointFromForce:GetPointFromForce;
+         getDirectionFromForce:GetDirectionFromForce;
+         getTrussFromState:GetTrussFromState;
+         getSelectedMemberFromState:GetSelectedMemberFromState
+         getSelectedForceFromState:GetSelectedForceFromState
+         getSelectedSupportFromState:GetSelectedSupportFromState
+         sendPointToMemberBuilder:SendPointToMemberBuilder;
+         sendPointToForceBuilder:SendPointToForceBuilder;
+         sendMagnitudeToForceBuilder:SendMagnitudeToForceBuilder;
+         sendPointToRollerSupportBuilder:SendPointToRollerSupportBuilder;
+         sendPointToPinSupportBuilder:SendPointToPinSupportBuilder;
+         sendMagnitudeToSupportBuilder:SendMagnitudeToSupportBuilder;
+         sendMemberToState:SendMemberToState;
+         sendForceToState:SendForceToState;
+         sendSupportToState:SendSupportToState;
+         setTrussMode:SetTrussMode;
+         setSelectionMode:SetSelectionMode;
+         removeTrussPartFromTruss:RemoveTrussPartFromTruss;
+         getSupportReactionEquationsFromState:GetSupportReactionEquationsFromState;
+         getSupportReactionSolve:GetSupportReactionSolve;
+         sendStateToSupportBuilder:SendStateToSupportBuilder;
+         analyzeEquations:AnalyzeEquations;
+         getReactionForcesFromState:GetReactionForcesFromState;
+         sendPointToCalculation:SendPointToCalculation;
+         getMemberOptionFromTrussPart:GetMemberOptionFromTrussPart;
+         getAnalysisReport:GetAnalysisReport;
+         getSupportIndexAtJoint:GetSupportIndexAtJoint;
+         getMemberIndex:GetMemberIndex;
+         getForceIndex:GetForceIndex;
+         getSupportIndex:GetSupportIndex;
+         sendPointToModification:SendPointToModification;
+         modifyTrussForce:ModifyTrussForce;
+         modifyTrussSupport:ModifyTrussSupport
+         }
+
     open TrussImplementation
 
     let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false
@@ -23,37 +118,37 @@ module TrussServices =
 
     let getTrussFromState (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> ts.truss
-        | TrussDomain.BuildState bs-> bs.truss
-        | TrussDomain.SelectionState ss -> ss.truss
-        | TrussDomain.AnalysisState s -> s.truss
-        | TrussDomain.ErrorState es -> es.truss
+        | TrussAnalysisDomain.TrussState ts -> ts.truss
+        | TrussAnalysisDomain.BuildState bs-> bs.truss
+        | TrussAnalysisDomain.SelectionState ss -> ss.truss
+        | TrussAnalysisDomain.AnalysisState s -> s.truss
+        | TrussAnalysisDomain.ErrorState es -> es.truss
     let getSelectedMemberFromState (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> None
-        | TrussDomain.BuildState bs-> None
-        | TrussDomain.SelectionState ss -> 
+        | TrussAnalysisDomain.TrussState ts -> None
+        | TrussAnalysisDomain.BuildState bs-> None
+        | TrussAnalysisDomain.SelectionState ss -> 
             match ss.members with
             | None -> None
             | Some m -> 
                 let a,b = m.Head
                 (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
                  System.Windows.Point (x = (getXFrom b),y = (getYFrom b))) |> Some
-        | TrussDomain.AnalysisState s -> None
-        | TrussDomain.ErrorState es -> None
+        | TrussAnalysisDomain.AnalysisState s -> None
+        | TrussAnalysisDomain.ErrorState es -> None
     let getSelectedForceFromState (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> None
-        | TrussDomain.BuildState bs-> None
-        | TrussDomain.SelectionState ss -> 
+        | TrussAnalysisDomain.TrussState ts -> None
+        | TrussAnalysisDomain.BuildState bs-> None
+        | TrussAnalysisDomain.SelectionState ss -> 
             match ss.forces with
             | None -> None
             | Some f -> 
                 let a,b = f.Head.joint,f.Head.direction
                 (System.Windows.Point (x = (getXFrom a),y = (getYFrom a)),
                  System.Windows.Point (x = (b.X),y = (b.Y))) |> Some
-        | TrussDomain.AnalysisState s -> None
-        | TrussDomain.ErrorState es -> None
+        | TrussAnalysisDomain.AnalysisState s -> None
+        | TrussAnalysisDomain.ErrorState es -> None
     let getJointSeqFromTruss (t:Truss) =
        let pointMap (j:Joint) = System.Windows.Point (x = (getXFrom j),y = (getYFrom j))
        let j = getJointListFrom t.members
@@ -88,9 +183,9 @@ module TrussServices =
         | Roller f -> -(getDirectionFromForce f) 
     let getSelectedSupportFromState (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> None
-        | TrussDomain.BuildState bs-> None
-        | TrussDomain.SelectionState ss -> 
+        | TrussAnalysisDomain.TrussState ts -> None
+        | TrussAnalysisDomain.BuildState bs-> None
+        | TrussAnalysisDomain.SelectionState ss -> 
             match ss.supports with
             | None -> None
             | Some spt -> 
@@ -104,18 +199,18 @@ module TrussServices =
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,false)
 
-        | TrussDomain.AnalysisState s -> None
-        | TrussDomain.ErrorState es -> None
+        | TrussAnalysisDomain.AnalysisState s -> None
+        | TrussAnalysisDomain.ErrorState es -> None
     let getSupportReactionEquationsFromState (yAxis: bool) (state :TrussAnalysisState) = 
         let truss = getTrussFromState state        
         let parts = getPartListFrom truss
         match yAxis with
         | true -> 
             match state with
-            | TrussDomain.TrussState ts -> state
-            | TrussDomain.BuildState bs-> state
-            | TrussDomain.SelectionState ss -> state
-            | TrussDomain.AnalysisState s -> 
+            | TrussAnalysisDomain.TrussState ts -> state
+            | TrussAnalysisDomain.BuildState bs-> state
+            | TrussAnalysisDomain.SelectionState ss -> state
+            | TrussAnalysisDomain.AnalysisState s -> 
                 match List.contains Stable s.stability with
                 | true ->                 
                     {s with analysis = 
@@ -125,13 +220,13 @@ module TrussServices =
                              |> SupportReactionEquations} 
                              |> AnalysisState
                 | false -> state
-            | TrussDomain.ErrorState es -> state
+            | TrussAnalysisDomain.ErrorState es -> state
         | false -> 
             match state with
-            | TrussDomain.TrussState ts -> state
-            | TrussDomain.BuildState bs-> state
-            | TrussDomain.SelectionState ss -> state
-            | TrussDomain.AnalysisState s -> 
+            | TrussAnalysisDomain.TrussState ts -> state
+            | TrussAnalysisDomain.BuildState bs-> state
+            | TrussAnalysisDomain.SelectionState ss -> state
+            | TrussAnalysisDomain.AnalysisState s -> 
                 match List.contains Stable s.stability with
                 | true ->                 
                     {s with analysis = 
@@ -141,13 +236,13 @@ module TrussServices =
                              |> SupportReactionEquations} 
                              |> AnalysisState
                 | false -> state
-            | TrussDomain.ErrorState es -> state
+            | TrussAnalysisDomain.ErrorState es -> state
     let getReactionForcesFromState showComponents (state :TrussAnalysisState)  =         
         match state with
-        | TrussDomain.TrussState ts -> []
-        | TrussDomain.BuildState bs-> []
-        | TrussDomain.SelectionState ss -> []
-        | TrussDomain.AnalysisState s -> 
+        | TrussAnalysisDomain.TrussState ts -> []
+        | TrussAnalysisDomain.BuildState bs-> []
+        | TrussAnalysisDomain.SelectionState ss -> []
+        | TrussAnalysisDomain.AnalysisState s -> 
             match s.analysis with
             | Truss -> []
             | SupportReactionEquations sre -> []
@@ -187,7 +282,7 @@ module TrussServices =
                     | None, Some b, true -> b::acc
                     | Some a, None, true -> a::acc
                     | None, None, true -> acc) [] mj.reactions
-        | TrussDomain.ErrorState es -> []
+        | TrussAnalysisDomain.ErrorState es -> []
     let getMemberOptionFromTrussPart p = 
         match p with
         | Member (j1,j2) -> Some (System.Windows.Point (getXFrom j1,(getYFrom j1)),System.Windows.Point (getXFrom j2,(getYFrom j2)))
@@ -220,9 +315,9 @@ module TrussServices =
         | BuildState bs-> ErrorState {errors = [WrongStateData]; truss = bs.truss}           
         | SelectionState ss -> 
             match ss.mode with
-            | TrussDomain.Inspect          
-            | TrussDomain.Delete -> state
-            | TrussDomain.Modify -> 
+            | TrussAnalysisDomain.Inspect          
+            | TrussAnalysisDomain.Delete -> state
+            | TrussAnalysisDomain.Modify -> 
                 match joint with
                 | None ->
                     match ss.modification with
@@ -468,11 +563,11 @@ module TrussServices =
         | None -> state
         | Some p -> 
             match state with
-            | TrussDomain.TrussState _ts -> state
-            | TrussDomain.BuildState _bs-> state 
-            | TrussDomain.SelectionState _ss -> state
-            | TrussDomain.ErrorState _es -> state
-            | TrussDomain.AnalysisState a ->
+            | TrussAnalysisDomain.TrussState _ts -> state
+            | TrussAnalysisDomain.BuildState _bs-> state 
+            | TrussAnalysisDomain.SelectionState _ss -> state
+            | TrussAnalysisDomain.ErrorState _es -> state
+            | TrussAnalysisDomain.AnalysisState a ->
                 match a.analysis with
                 | Truss -> state                
                 | SupportReactionEquations _sr -> state
@@ -491,7 +586,7 @@ module TrussServices =
                          nodes = nodes;
                          reactions = sr.reactions;
                          variables = variables} |> MethodOfJointsCalculation 
-                    TrussDomain.AnalysisState { a with analysis = newAnalysis } 
+                    TrussAnalysisDomain.AnalysisState { a with analysis = newAnalysis } 
                 | MethodOfJointsCalculation mj ->                    
                     let selectedNode = List.tryFind (fun (j,_pl) -> (getXFrom j) = p.X && (getYFrom j) = p.Y) mj.nodes                    
                     let memberEquations =
@@ -504,16 +599,16 @@ module TrussServices =
                          nodes = mj.nodes;
                          reactions = mj.reactions;
                          variables = mj.variables} |> MethodOfJointsCalculation
-                    TrussDomain.AnalysisState { a with analysis = newAnalysis }
+                    TrussAnalysisDomain.AnalysisState { a with analysis = newAnalysis }
                 | MethodOfJointsAnalysis _mj -> state
 
     let modifyForce (newFMag:float) (newFDir:float) (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState _ts -> state
-        | TrussDomain.BuildState _bs-> state        
-        | TrussDomain.ErrorState _es -> state
-        | TrussDomain.AnalysisState a -> state
-        | TrussDomain.SelectionState ss ->             
+        | TrussAnalysisDomain.TrussState _ts -> state
+        | TrussAnalysisDomain.BuildState _bs-> state        
+        | TrussAnalysisDomain.ErrorState _es -> state
+        | TrussAnalysisDomain.AnalysisState a -> state
+        | TrussAnalysisDomain.SelectionState ss ->             
             match ss.forces with 
             | None -> state
             | Some f -> 
@@ -521,11 +616,11 @@ module TrussServices =
                 {ss with truss = newTruss; forces = None} |> SelectionState
     let modifySupport (newFDir:float) (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState _ts -> state
-        | TrussDomain.BuildState _bs-> state        
-        | TrussDomain.ErrorState _es -> state
-        | TrussDomain.AnalysisState a -> state
-        | TrussDomain.SelectionState ss ->             
+        | TrussAnalysisDomain.TrussState _ts -> state
+        | TrussAnalysisDomain.BuildState _bs-> state        
+        | TrussAnalysisDomain.ErrorState _es -> state
+        | TrussAnalysisDomain.AnalysisState a -> state
+        | TrussAnalysisDomain.SelectionState ss ->             
             match ss.supports with 
             | None -> state
             | Some f -> 
@@ -553,11 +648,11 @@ module TrussServices =
         | None -> state
         | Some rList ->             
             match state with
-            | TrussDomain.TrussState _ts -> state
-            | TrussDomain.BuildState _bs-> state
-            | TrussDomain.SelectionState _ss -> state
-            | TrussDomain.ErrorState _es -> state
-            | TrussDomain.AnalysisState a -> 
+            | TrussAnalysisDomain.TrussState _ts -> state
+            | TrussAnalysisDomain.BuildState _bs-> state
+            | TrussAnalysisDomain.SelectionState _ss -> state
+            | TrussAnalysisDomain.ErrorState _es -> state
+            | TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
                 | Truss -> state                
                 | SupportReactionEquations _sr ->
@@ -606,7 +701,7 @@ module TrussServices =
                         |> List.concat 
                         |> List.distinctBy (fun (m,p) -> (m,p))
                         |> List.map (fun x -> MemberForce x) 
-                    let replaceMembersWithForces (n:Node) =
+                    let replaceMembersWithForces (n:TrussNode) =
                         let (j,pl) = n
                         let memberCount pl' = List.filter (fun x -> match x with | Member _ -> true | _ -> false) pl' |> List.length
                         let newPl = 
@@ -638,7 +733,7 @@ module TrussServices =
                              nodes = newNodes;//mj.nodes;//
                              reactions = mj.reactions;
                              variables = mj.variables} |> MethodOfJointsCalculation 
-                        } |> TrussDomain.AnalysisState
+                        } |> TrussAnalysisDomain.AnalysisState
                     | true -> 
                         let solvedMembers' = 
                             solvedMembers
@@ -654,7 +749,7 @@ module TrussServices =
                              tensionMembers =  List.filter (fun (n,m) -> n > 0.0) solvedMembers';
                              compressionMembers =  List.filter (fun (n,m) -> n < 0.0) solvedMembers';
                              reactions = mj.reactions} |> MethodOfJointsAnalysis  
-                         } |> TrussDomain.AnalysisState                                
+                         } |> TrussAnalysisDomain.AnalysisState                                
                 | MethodOfJointsAnalysis mj -> state
 
     let removeTrussPart (state :TrussAnalysisState) =
@@ -673,11 +768,11 @@ module TrussServices =
         | _ -> state
     let getSupportReactionSolve (yAxis: bool) (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> ""
-        | TrussDomain.BuildState bs-> ""
-        | TrussDomain.SelectionState ss -> ""
-        | TrussDomain.ErrorState es -> ""
-        | TrussDomain.AnalysisState a -> 
+        | TrussAnalysisDomain.TrussState ts -> ""
+        | TrussAnalysisDomain.BuildState bs-> ""
+        | TrussAnalysisDomain.SelectionState ss -> ""
+        | TrussAnalysisDomain.ErrorState es -> ""
+        | TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
             | Truss -> ""
             | MethodOfJointsCalculation mj -> ""
@@ -695,11 +790,11 @@ module TrussServices =
                 (WolframServices.solveEquations eq v)
     let getTrussCheck (state :TrussAnalysisState) =
         match state with
-        | TrussDomain.TrussState ts -> "--Ready--"
-        | TrussDomain.BuildState bs -> "--Ready--"
-        | TrussDomain.SelectionState ss -> "--Ready--"                
-        | TrussDomain.ErrorState es -> "--Ready--"
-        | TrussDomain.AnalysisState a -> 
+        | TrussAnalysisDomain.TrussState ts -> "--Ready--"
+        | TrussAnalysisDomain.BuildState bs -> "--Ready--"
+        | TrussAnalysisDomain.SelectionState ss -> "--Ready--"                
+        | TrussAnalysisDomain.ErrorState es -> "--Ready--"
+        | TrussAnalysisDomain.AnalysisState a -> 
             let stability = List.fold (fun acc x -> match acc = "" with | true -> x.ToString() | false -> x.ToString() + ". " + acc) "" a.stability
             let determinancy =  
                 match a.determinancy with
@@ -713,9 +808,9 @@ module TrussServices =
      
     let getAnalysisReport (state :TrussAnalysisState) = 
         match state with
-        | TrussDomain.TrussState ts -> "\"--Ready--\""
-        | TrussDomain.BuildState bs-> "\"--Ready--\""
-        | TrussDomain.SelectionState ss -> 
+        | TrussAnalysisDomain.TrussState ts -> "\"--Ready--\""
+        | TrussAnalysisDomain.BuildState bs-> "\"--Ready--\""
+        | TrussAnalysisDomain.SelectionState ss -> 
             match ss.forces, ss.members, ss.supports with
             | Some f, None, None -> 
                 let p1,p2 = f.Head.joint, f.Head.direction                
@@ -762,8 +857,8 @@ module TrussServices =
                     + j.x.ToString() + ", "+ j.y.ToString()
                     + "\""
             | _ -> "\"--Ready--\""
-        | TrussDomain.ErrorState es -> "\"--Ready--\""
-        | TrussDomain.AnalysisState a -> 
+        | TrussAnalysisDomain.ErrorState es -> "\"--Ready--\""
+        | TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
             | Truss -> getTrussCheck state
             | SupportReactionResult sr -> getTrussCheck state

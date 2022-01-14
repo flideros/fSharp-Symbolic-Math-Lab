@@ -7,11 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="DomainModels.fs" />
     <Compile Include="GraphicResources.fs" />
     <Compile Include="WolframServices.fs" />
+    <Compile Include="DomainModels.fs" />
     <Compile Include="TrussImplementation.fs" />
     <Compile Include="TrussServices.fs" />
+    <Compile Include="TrussControls.fs" />
     <Compile Include="AnalysisUI.fs" />
     <None Include="Script.fsx" />
   </ItemGroup>
