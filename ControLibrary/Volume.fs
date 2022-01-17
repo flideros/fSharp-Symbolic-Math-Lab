@@ -41,9 +41,13 @@ type ColorVolume (color:SharedValue<Color>) as this =
   let red   = SharedValue(int color.Get.R)
   let green = SharedValue(int color.Get.G)
   let blue  = SharedValue(int color.Get.B)
-  do
-    // specifying how to calculate dependent shared values
-    let argbChanged = alpha.Changed |> Observable.merge red.Changed |> Observable.merge green.Changed |> Observable.merge blue.Changed
+  // specifying how to calculate dependent shared values
+  let argbChanged = 
+    alpha.Changed 
+    |> Observable.merge red.Changed 
+    |> Observable.merge green.Changed 
+    |> Observable.merge blue.Changed
+  do    
     argbChanged.Add(fun _ ->
       color.Set(Color.FromArgb(byte alpha.Get,byte red.Get,byte green.Get,byte blue.Get))
       )

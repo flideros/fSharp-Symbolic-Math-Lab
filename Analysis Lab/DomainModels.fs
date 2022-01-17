@@ -2,15 +2,26 @@
 
 open System.Windows
 
-module CoordinateDomain =
+module GenericDomain =
+    
+    // This container is used by some controls to share a variable. If the value is changed, 
+    // it fires changed event. Controls should have this instead of their own internal data
+    type SharedValue<'a when 'a : equality>(value:'a) =
+        let mutable _value = value
+        let changed = Event<'a>()
+        member _sv.Get       = _value
+        member _sv.Set value =
+            let old = _value 
+            _value <- value
+            if old <> _value then _value |> changed.Trigger
+        member _sv.Changed = changed.Publish
+
+module AtomicDomain =    
     
     // Arbitrary coordinate lables.
     type X = X of float
     type Y = Y of float
     type Z = Z of float
-
-module AtomicDomain =    
-    open CoordinateDomain
     
     // Points in Euclidean affine spaces 
     // Joints are a consequence of connecting atomic or elemental structures together.
@@ -40,14 +51,29 @@ module ElementDomain =
         
     type Pin = {tangent:JointForce;normal:JointForce}
     type Support = | Roller of JointForce | Pin of Pin
+    
     type Truss = {members:Member list; forces:JointForce list; supports:Support list}
+    type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
+        | Member of Member
+        | Force of JointForce
+        | Support of Support
+    type TrussNode = (Joint*TrussPart list)
 
 module BuilderDomain = 
     open AtomicDomain
+    open ElementDomain
     
     type MemberBuilder = (Joint*(Joint option))
     type JointForceBuilder = {_magnitude:float option; _direction:Vector option; joint:Joint}
     type SupportBuilder = | Roller of JointForceBuilder | Pin of (JointForceBuilder*JointForceBuilder)       
+    
+    type TrussBuildOp =
+        | BuildMember of MemberBuilder
+        | BuildForce of JointForceBuilder
+        | BuildSupport of SupportBuilder
+    type BuildOpResult =
+        | TrussPart of TrussPart
+        | TrussBuildOp of TrussBuildOp
 
 module ErrorDomain = 
     // Types to describe error results
@@ -60,6 +86,8 @@ module ErrorDomain =
         | NoJointSelected
         | Other of string
 
+
+// I'm in the process of refactoring this domain model into a more general purpose analysis tool.
 module TrussAnalysisDomain =
     open ErrorDomain
     open AtomicDomain
@@ -76,18 +104,9 @@ module TrussAnalysisDomain =
     type TrussDeterminacy = 
         | Determinate 
         | Indeterminate
-    type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
-        | Member of Member
-        | Force of JointForce
-        | Support of Support
-    type MemberForce = (float*TrussPart)
-    type TrussBuildOp =
-        | BuildMember of MemberBuilder
-        | BuildForce of JointForceBuilder
-        | BuildSupport of SupportBuilder
-    type BuildOpResult =
-        | TrussPart of TrussPart
-        | TrussBuildOp of TrussBuildOp
+    
+    type TrussMemberForce = (float*TrussPart)
+    
     type TrussMode =
         | Settings
         | Selection
@@ -99,10 +118,8 @@ module TrussAnalysisDomain =
         | Delete
         | Modify
         | Inspect  
-    
-    type TrussNode = (Joint*TrussPart list)    
   
-    // Data associated with each state     
+    // Data associated with each state
     type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
     type SelectionStateData = 
@@ -111,32 +128,29 @@ module TrussAnalysisDomain =
          forces:JointForce list option; 
          supports:Support list option; 
          modification: Joint option;
-         mode:TrussSelectionMode}    
+         mode:TrussSelectionMode}
     type ErrorStateData = {errors : Error list; truss : Truss}
     type SupportReactionResult = 
         {support: Support;
          xReactionForce: JointForce option;
-         yReactionForce: JointForce option}    
+         yReactionForce: JointForce option}
     
     // Data associated with each analysis state
     type SupportReactionEquationStateData = 
         {momentEquations: string list;
          forceXEquation: string
          forceYEquation: string} 
-    
     type SupportReactionResultStateData = {reactions : SupportReactionResult list}
-
     type MethodOfJointsCalculationStateData = 
-        {solvedMembers: MemberForce list;
+        {solvedMembers: TrussMemberForce list;
          memberEquations : string list;
          nodes : TrussNode list;
          reactions : SupportReactionResult list;
          variables : string list}
-
     type MethodOfJointsAnalysisStateData = 
         {zeroForceMembers: TrussPart list;
-         tensionMembers: MemberForce list;
-         compressionMembers: MemberForce list;
+         tensionMembers: TrussMemberForce list;
+         compressionMembers: TrussMemberForce list;
          reactions : SupportReactionResult list}
     
     // Analysis States
@@ -146,7 +160,6 @@ module TrussAnalysisDomain =
         | SupportReactionResult of SupportReactionResultStateData
         | MethodOfJointsCalculation of MethodOfJointsCalculationStateData
         | MethodOfJointsAnalysis of MethodOfJointsAnalysisStateData 
-    
     type AnalysisStateData = 
         {stability:TrussStability list; 
          determinancy:TrussDeterminacy;
@@ -160,6 +173,3 @@ module TrussAnalysisDomain =
         | SelectionState of SelectionStateData
         | AnalysisState  of AnalysisStateData
         | ErrorState of ErrorStateData
-    
-    
-

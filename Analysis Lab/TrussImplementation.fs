@@ -3,7 +3,6 @@
 open System
 open System.Windows
 open TrussAnalysisDomain
-open CoordinateDomain
 open BuilderDomain
 open AtomicDomain
 open LoadDomain
@@ -375,7 +374,7 @@ module TrussImplementation =
             List.choose (fun y -> match y with | Member m -> Some m | _ -> None) pl
             |> List.map (fun y -> getMemberExpressionsY j y (getMemberIndex y t))
         [createEquation sumfx membersX;createEquation sumfy membersY]
-    let getMemberForceAtJoint (j:Joint) (m:TrussPart) (mf:MemberForce list) = 
+    let getMemberForceAtJoint (j:Joint) (m:TrussPart) (mf:TrussMemberForce list) = 
         let tf = List.tryFind (fun (_f,p) -> p = m ) mf 
         match tf with 
         | None -> m

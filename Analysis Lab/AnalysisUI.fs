@@ -1766,7 +1766,7 @@ type Analysis() as this =
                 | TrussAnalysisDomain.TrussMode.Settings -> ()
             | TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
-                | TrussAnalysisDomain.BuildMember bm ->                 
+                | BuilderDomain.BuildMember bm ->                 
                     let newState = trussServices.sendPointToMemberBuilder p state
                     do  drawTruss newState
                         state <- newState
@@ -1776,8 +1776,8 @@ type Analysis() as this =
                         trussMemberP2Y_TextBox.IsReadOnly <- true
                         trussMemberP2_StackPanel.Visibility <- Visibility.Collapsed
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)) .ToString()
-                | TrussAnalysisDomain.BuildForce bf -> ()
-                | TrussAnalysisDomain.BuildSupport bs -> ()
+                | BuilderDomain.BuildForce bf -> ()
+                | BuilderDomain.BuildSupport bs -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | TrussAnalysisDomain.Delete -> ()
@@ -1860,9 +1860,9 @@ type Analysis() as this =
             | TrussAnalysisDomain.TrussMode.Settings -> ()
         | TrussAnalysisDomain.BuildState bs -> 
             match bs.buildOp with
-            | TrussAnalysisDomain.BuildMember bm -> ()
-            | TrussAnalysisDomain.BuildForce bf -> ()
-            | TrussAnalysisDomain.BuildSupport bs -> ()
+            | BuilderDomain.BuildMember bm -> ()
+            | BuilderDomain.BuildForce bf -> ()
+            | BuilderDomain.BuildSupport bs -> ()
         | TrussAnalysisDomain.SelectionState ss -> 
             match ss.mode with
             | TrussAnalysisDomain.Modify -> 
@@ -1941,7 +1941,7 @@ type Analysis() as this =
             | TrussAnalysisDomain.TrussMode.Settings -> ()
         | TrussAnalysisDomain.BuildState bs ->
             match bs.buildOp with
-            | TrussAnalysisDomain.BuildMember bm ->
+            | BuilderDomain.BuildMember bm ->
                 let p1 = trussServices.getPointFromMemberBuilder bm                
                 let memberBuilder = trussMember (p1,p2)
                 match Input.Mouse.LeftButton = Input.MouseButtonState.Pressed,
@@ -1962,8 +1962,8 @@ type Analysis() as this =
                         canvas.Children.Add(memberBuilder) |> ignore   
                 | true, true 
                 | false, true -> ()
-            | TrussAnalysisDomain.BuildForce bf -> ()
-            | TrussAnalysisDomain.BuildSupport bs -> ()
+            | BuilderDomain.BuildForce bf -> ()
+            | BuilderDomain.BuildSupport bs -> ()
         | TrussAnalysisDomain.SelectionState ss -> ()
         | TrussAnalysisDomain.AnalysisState s -> ()
         | TrussAnalysisDomain.ErrorState es -> ()
@@ -2009,7 +2009,7 @@ type Analysis() as this =
                 | TrussAnalysisDomain.TrussMode.Settings -> ()
             | TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
-                | TrussAnalysisDomain.BuildMember _bm ->                 
+                | BuilderDomain.BuildMember _bm ->                 
                     match p2 with
                     | None -> ()
                     | Some p -> 
@@ -2022,7 +2022,7 @@ type Analysis() as this =
                             trussMemberP2Y_TextBox.IsReadOnly <- true
                             trussMemberP2_StackPanel.Visibility <- Visibility.Collapsed
                             label.Text <- state.ToString()
-                | TrussAnalysisDomain.BuildForce bf -> 
+                | BuilderDomain.BuildForce bf -> 
                     match magb, dirb with
                     | true, true when bf._direction = None -> 
                         let jointPoint = trussServices.getPointFromForceBuilder bf
@@ -2060,7 +2060,7 @@ type Analysis() as this =
                         drawBuildForceLine green (jointPoint,dirPoint)
                         label.Text <- newState.ToString()
                     | false, false -> () 
-                | TrussAnalysisDomain.BuildSupport bs -> 
+                | BuilderDomain.BuildSupport bs -> 
                     match dirb with
                     | true -> 
                         let jointPoint = 
@@ -2138,9 +2138,9 @@ type Analysis() as this =
                 | TrussAnalysisDomain.TrussMode.Settings -> ()
             | TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
-                | TrussAnalysisDomain.BuildMember _bm -> ()
-                | TrussAnalysisDomain.BuildForce bf -> ()
-                | TrussAnalysisDomain.BuildSupport bs -> ()        
+                | BuilderDomain.BuildMember _bm -> ()
+                | BuilderDomain.BuildForce bf -> ()
+                | BuilderDomain.BuildSupport bs -> ()        
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | TrussAnalysisDomain.TrussSelectionMode.Delete -> 

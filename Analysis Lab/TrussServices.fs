@@ -5,8 +5,7 @@ open System.Windows
 
 module TrussServices = 
     open ErrorDomain
-    open TrussAnalysisDomain
-    open CoordinateDomain
+    open TrussAnalysisDomain    
     open BuilderDomain
     open AtomicDomain
     open LoadDomain
@@ -700,12 +699,12 @@ module TrussServices =
                         [(List.map (fun (i,_s:string,m:float) -> (m,getSolvedMember i)) rList); mj.solvedMembers]
                         |> List.concat 
                         |> List.distinctBy (fun (m,p) -> (m,p))
-                        |> List.map (fun x -> MemberForce x) 
+                        |> List.map (fun x -> TrussMemberForce x) 
                     let replaceMembersWithForces (n:TrussNode) =
                         let (j,pl) = n
                         let memberCount pl' = List.filter (fun x -> match x with | Member _ -> true | _ -> false) pl' |> List.length
                         let newPl = 
-                            let rec replace pl' (sMembers:MemberForce list) = 
+                            let rec replace pl' (sMembers:TrussMemberForce list) = 
                                 match memberCount pl' > 2 with
                                 | false -> pl'
                                 | true -> 
