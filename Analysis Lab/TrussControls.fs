@@ -1427,7 +1427,7 @@ type Truss() as this =
             drawSolvedMembers newState            
 
     // Handle
-    let handleMouseDown (e : Input.MouseButtonEventArgs) =        
+    let handleMouseDown (e : Input.MouseButtonEventArgs) =         
         let p1 = adjustMouseButtonEventArgPoint e
         let joint = getJointIndex p1
         let p = 
@@ -1709,6 +1709,7 @@ type Truss() as this =
             do  state <- newState
                 label.Text <- newState.ToString() 
         | false ->  
+            do  memberBuilder_Control.handleMBMouseDown e
             match state with
             | TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
@@ -1719,7 +1720,7 @@ type Truss() as this =
                         trussMemberP1X_TextBox.IsReadOnly <- true
                         trussMemberP1Y_TextBox.IsReadOnly <- true
                         trussMemberP2_StackPanel.Visibility <- Visibility.Visible
-                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
+                        label.Text <- newState.ToString() //"Joints " + (Seq.length (getJointsFrom newState)).ToString()
                 | TrussAnalysisDomain.TrussMode.ForceBuild ->                     
                     match joint with
                     | None ->                         
@@ -1729,7 +1730,7 @@ type Truss() as this =
                         let newState = trussServices.sendPointToForceBuilder p state
                         drawBuildForceJoint p
                         state <- newState
-                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)).ToString()
+                        label.Text <- newState.ToString() //"Joints " + (Seq.length (getJointsFrom newState)).ToString()
                 | TrussAnalysisDomain.TrussMode.SupportBuild -> 
                     match joint with
                     | None ->                         
@@ -1792,7 +1793,7 @@ type Truss() as this =
                         trussMemberP2X_TextBox.IsReadOnly <- true
                         trussMemberP2Y_TextBox.IsReadOnly <- true
                         trussMemberP2_StackPanel.Visibility <- Visibility.Collapsed
-                        label.Text <- "Joints " + (Seq.length (getJointsFrom newState)) .ToString()
+                        label.Text <- newState.ToString() //"Joints " + (Seq.length (getJointsFrom newState)) .ToString()
                 | BuilderDomain.BuildForce bf -> ()
                 | BuilderDomain.BuildSupport bs -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
@@ -2005,7 +2006,7 @@ type Truss() as this =
                 | true, true -> Some (System.Windows.Point(x2,y2))
                 | true, false -> None
                 | false, true -> None
-                | false, false -> None            
+                | false, false -> None
             match state with
             | TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
