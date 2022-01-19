@@ -71,6 +71,7 @@ module BuilderDomain =
         | BuildMember of MemberBuilder
         | BuildForce of JointForceBuilder
         | BuildSupport of SupportBuilder
+        | Control
     type BuildOpResult =
         | TrussPart of TrussPart
         | TrussBuildOp of TrussBuildOp

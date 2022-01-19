@@ -13,22 +13,11 @@ open GenericDomain
 open AtomicDomain
 
 type MemberBuilderControl(mousePosition:SharedValue<Point>,
-                          newMemberOption:SharedValue<Member option>) as this =  
+                          newMemberOption:SharedValue<(Member option)>,
+                          jointList:SharedValue<System.Windows.Point list>) as this =  
     inherit UserControl()    
     do Install() |> ignore     
     // Controls
-    let label =
-        let l = TextBox()
-        do  //l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 15.
-            l.MaxWidth <- 500.
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- ""
-            l.BorderBrush <- SolidColorBrush(Colors.Transparent)
-            l.Opacity <- 0.5
-            l.MaxLines <- 30
-        l 
         // Member builder P1
     let p1X_TextBlock = 
         let tb = TextBlock(Text = "X1")
@@ -99,8 +88,7 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(p1_StackPanel) |> ignore
-            sp.Children.Add(p2_StackPanel) |> ignore 
-            sp.Children.Add(label) |> ignore
+            sp.Children.Add(p2_StackPanel) |> ignore
             sp.Visibility <- Visibility.Visible
         sp
     let screen_Grid =
@@ -116,31 +104,40 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
     let mutable memberBuilder : BuilderDomain.MemberBuilder = (j,None)
 
     // Logic
-    let setMemberOption (mb: BuilderDomain.MemberBuilder)=
+    let getJointIndex (p1:System.Windows.Point) =          
+        Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (List.toSeq jointList.Get)    
+    let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
+    let setMemberOption (mb: BuilderDomain.MemberBuilder) =
         match mb with 
         | j,None -> do  newMemberOption.Set (None)
-                        label.Text <- "None"
                         memberBuilder <- mb
         | j1,Some j2 -> do newMemberOption.Set (Some (j1,j2))
-                           label.Text <- (Some (j1,j2)).ToString()
-                           memberBuilder <- mb
+                           memberBuilder <- mb    
     let handleMousePositionChange (mb: BuilderDomain.MemberBuilder) = 
         let mpX = SharedValue(mousePosition.Get.X)
         let mpY = SharedValue(mousePosition.Get.Y)
-        match p1X_TextBox.IsReadOnly && p1X_TextBox.IsReadOnly && (p2_StackPanel.IsVisible = false), mb with
-        | true, (j,None) -> 
-            do  p1X_TextBox.Text <- mpX.Get.ToString()
-                p1Y_TextBox.Text <- mpY.Get.ToString()
-        | true, (j1,Some j2) -> 
-            do  p1X_TextBox.Text <- mpX.Get.ToString()
-                p1Y_TextBox.Text <- mpY.Get.ToString()        
-        | false, (j1,Some j2) -> ()
-        | false, (j,None) -> 
-            match p2X_TextBox.IsReadOnly && p2X_TextBox.IsReadOnly with
-            | true -> 
-                do  p2X_TextBox.Text <- mpX.Get.ToString()
-                    p2Y_TextBox.Text <- mpY.Get.ToString() 
-            | false -> ()
+        match this.IsKeyboardFocused || 
+              p1X_TextBox.IsKeyboardFocused || 
+              p2X_TextBox.IsKeyboardFocused ||
+              p1Y_TextBox.IsKeyboardFocused || 
+              p2Y_TextBox.IsKeyboardFocused with
+        | true -> ()
+        | false ->
+            match p1X_TextBox.IsReadOnly && p1X_TextBox.IsReadOnly && (p2_StackPanel.IsVisible = false), mb with
+            | true, (j,None) -> 
+                do  p1X_TextBox.Text <- mpX.Get.ToString()
+                    p1Y_TextBox.Text <- mpY.Get.ToString()
+            | true, (j1,Some j2) -> 
+                do  p1X_TextBox.Text <- mpX.Get.ToString()
+                    p1Y_TextBox.Text <- mpY.Get.ToString()        
+            | false, (j1,Some j2) -> ()
+            | false, (j,None) -> 
+                match p2X_TextBox.IsReadOnly && p2X_TextBox.IsReadOnly with
+                | true -> 
+                    do  p2X_TextBox.Text <- mpX.Get.ToString()
+                        p2Y_TextBox.Text <- mpY.Get.ToString() 
+                | false -> ()
     let handleKeyDown (e:Input.KeyEventArgs) =
         match e.Key with 
         | Input.Key.Enter -> 
@@ -150,13 +147,21 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
             let y2b,y2 = Double.TryParse p2Y_TextBox.Text
             let j1 = 
                 match x1b, y1b with 
-                | true, true -> Some {x = X x1; y = Y y1}
+                | true, true -> 
+                    let pi = Point(x1,y1) |> getJointIndex
+                    match pi with
+                    | None ->  Some {x = X x1; y = Y y1}
+                    | Some i -> Some (makeJointFrom jointList.Get.[i])
                 | true, false -> None
                 | false, true -> None
-                | false, false -> None
+                | false, false -> None     
             let j2 = 
                 match x2b, y2b with 
-                | true, true -> Some {x = X x2; y = Y y2}
+                | true, true -> 
+                    let pi = Point(x2,y2) |> getJointIndex
+                    match pi with
+                    | None ->  Some {x = X x2; y = Y y2}
+                    | Some i -> Some (makeJointFrom jointList.Get.[i])
                 | true, false -> None
                 | false, true -> None
                 | false, false -> None
@@ -191,13 +196,21 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
         let y2b,y2 = Double.TryParse p2Y_TextBox.Text
         let j1 = 
             match x1b, y1b with 
-            | true, true -> Some {x = X x1; y = Y y1}
+            | true, true -> 
+                let pi = Point(x1,y1) |> getJointIndex
+                match pi with
+                | None ->  Some {x = X x1; y = Y y1}
+                | Some i -> Some (makeJointFrom jointList.Get.[i])
             | true, false -> None
             | false, true -> None
             | false, false -> None
         let j2 = 
             match x2b, y2b with 
-            | true, true -> Some {x = X x2; y = Y y2}
+            | true, true -> 
+                let pi = Point(x2,y2) |> getJointIndex
+                match pi with
+                | None ->  Some {x = X x2; y = Y y2}
+                | Some i -> Some (makeJointFrom jointList.Get.[i])                
             | true, false -> None
             | false, true -> None
             | false, false -> None
@@ -223,13 +236,28 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
                     p2X_TextBox.IsReadOnly <- true
                     p2Y_TextBox.IsReadOnly <- true
                     p2_StackPanel.Visibility <- Visibility.Collapsed
-    
+    let handleMouseUp (e : Input.MouseButtonEventArgs) =       
+        match this.IsKeyboardFocused || 
+              p1X_TextBox.IsKeyboardFocused || 
+              p2X_TextBox.IsKeyboardFocused ||
+              p1Y_TextBox.IsKeyboardFocused || 
+              p2Y_TextBox.IsKeyboardFocused with
+        | true -> ()
+        | false ->
+            match this.IsVisible, p2_StackPanel.IsVisible with
+            | false, false 
+            | false, true 
+            | true, true -> ()
+            | true, false -> 
+                do  p1X_TextBox.Text <- p2X_TextBox.Text
+                    p1Y_TextBox.Text <- p2Y_TextBox.Text
+                
     do  this.Content <- screen_Grid
-        this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
+        //this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
         mousePosition.Changed.Add(fun _ -> handleMousePositionChange memberBuilder)
         setMemberOption memberBuilder
         //this.IsVisibleChanged. 
 
-    member this.handleMBMouseDown (e : Input.MouseButtonEventArgs) =  handleMouseDown e
-        
-
+    member _this.handleMBMouseDown (e : Input.MouseButtonEventArgs) =  handleMouseDown e
+    member _this.handleMBMouseUp (e : Input.MouseButtonEventArgs) =  handleMouseUp e
+    member _this.handleMBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e

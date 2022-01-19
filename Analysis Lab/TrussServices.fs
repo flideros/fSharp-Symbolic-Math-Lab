@@ -49,6 +49,7 @@ module TrussServices =
     type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
+    type SendMemberOptionToState = Member option -> TrussAnalysisState -> TrussAnalysisState
 
     type ModifyTrussForce = float -> float -> TrussAnalysisState -> TrussAnalysisState
     type ModifyTrussSupport = float -> TrussAnalysisState -> TrussAnalysisState
@@ -100,7 +101,8 @@ module TrussServices =
          getSupportIndex:GetSupportIndex;
          sendPointToModification:SendPointToModification;
          modifyTrussForce:ModifyTrussForce;
-         modifyTrussSupport:ModifyTrussSupport
+         modifyTrussSupport:ModifyTrussSupport;
+         sendMemberOptionToState:SendMemberOptionToState
          }
 
     open TrussImplementation
@@ -552,6 +554,7 @@ module TrussServices =
                         match toPin with 
                         | true -> state 
                         | false -> sendPointToRollerSupportBuilder (System.Windows.Point (getXFrom j2,getYFrom j2)) (TrussState {truss = getTrussFromState state;mode = SupportBuild})        
+            | BuilderDomain.Control -> state
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}  
@@ -600,7 +603,34 @@ module TrussServices =
                          variables = mj.variables} |> MethodOfJointsCalculation
                     TrussAnalysisDomain.AnalysisState { a with analysis = newAnalysis }
                 | MethodOfJointsAnalysis _mj -> state
-
+    let sendMemberOptionToState (mo:Member Option) (state :TrussAnalysisState) =
+        match state with 
+        | TrussState  ts -> 
+            match ts.mode with
+            | Settings -> state
+            | Selection -> state                
+            | Analysis -> state
+            | MemberBuild -> 
+                match mo with 
+                | None -> {buildOp = TrussBuildOp.Control;  truss = ts.truss} |> BuildState 
+                | Some m -> 
+                    let t = addMemberToTruss m (getTrussFromState state)                    
+                    {truss = t; mode = MemberBuild} |> TrussState                
+            | ForceBuild -> state
+            | SupportBuild -> state         
+        | BuildState  bs -> 
+            match bs.buildOp with 
+            | TrussBuildOp.Control -> 
+                match mo with 
+                | None -> {truss = bs.truss; mode = MemberBuild} |> TrussState
+                | Some m -> 
+                    let t = addMemberToTruss m (getTrussFromState state)                
+                    {truss = t; mode = MemberBuild} |> TrussState
+            | _ -> state
+        | SelectionState  ss -> state
+        | AnalysisState s -> state
+        | ErrorState  es -> state
+    
     let modifyForce (newFMag:float) (newFDir:float) (state :TrussAnalysisState) = 
         match state with
         | TrussAnalysisDomain.TrussState _ts -> state
@@ -727,7 +757,7 @@ module TrussServices =
                     match solvedMembers.Length >= truss.members.Length with
                     | false -> 
                         { a with analysis = 
-                            {solvedMembers = solvedMembers ; 
+                            {solvedMembers = solvedMembers; 
                              memberEquations = mj.memberEquations; 
                              nodes = newNodes;//mj.nodes;//
                              reactions = mj.reactions;
@@ -970,5 +1000,6 @@ module TrussServices =
         sendPointToModification = sendPointToModification;
         modifyTrussForce = modifyForce;
         modifyTrussSupport = modifySupport
+        sendMemberOptionToState = sendMemberOptionToState
         }
 

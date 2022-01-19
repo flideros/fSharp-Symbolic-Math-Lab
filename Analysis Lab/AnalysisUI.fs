@@ -1778,6 +1778,7 @@ type Analysis() as this =
                         label.Text <- "Joints " + (Seq.length (getJointsFrom newState)) .ToString()
                 | BuilderDomain.BuildForce bf -> ()
                 | BuilderDomain.BuildSupport bs -> ()
+                | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | TrussAnalysisDomain.Delete -> ()
@@ -1863,6 +1864,7 @@ type Analysis() as this =
             | BuilderDomain.BuildMember bm -> ()
             | BuilderDomain.BuildForce bf -> ()
             | BuilderDomain.BuildSupport bs -> ()
+            | BuilderDomain.Control -> ()
         | TrussAnalysisDomain.SelectionState ss -> 
             match ss.mode with
             | TrussAnalysisDomain.Modify -> 
@@ -1964,6 +1966,7 @@ type Analysis() as this =
                 | false, true -> ()
             | BuilderDomain.BuildForce bf -> ()
             | BuilderDomain.BuildSupport bs -> ()
+            | BuilderDomain.Control -> ()
         | TrussAnalysisDomain.SelectionState ss -> ()
         | TrussAnalysisDomain.AnalysisState s -> ()
         | TrussAnalysisDomain.ErrorState es -> ()
@@ -2079,7 +2082,8 @@ type Analysis() as this =
                     | false -> 
                         let newState = trussServices.sendMagnitudeToSupportBuilder (mag,None) state
                         state <- newState
-                        label.Text <- newState.ToString()                    
+                        label.Text <- newState.ToString()  
+                | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | TrussAnalysisDomain.Delete -> ()
@@ -2140,7 +2144,8 @@ type Analysis() as this =
                 match bs.buildOp with
                 | BuilderDomain.BuildMember _bm -> ()
                 | BuilderDomain.BuildForce bf -> ()
-                | BuilderDomain.BuildSupport bs -> ()        
+                | BuilderDomain.BuildSupport bs -> ()
+                | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | TrussAnalysisDomain.TrussSelectionMode.Delete -> 

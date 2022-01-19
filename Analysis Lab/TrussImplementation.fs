@@ -389,6 +389,9 @@ module TrussImplementation =
              joint = j} |> Force
         | Some _ -> m
 
+    // Add a member directly from MemberBuilderControl
+    let addMemberToTruss (m:Member) (t:Truss) = {t with members = m::t.members |> List.distinct}
+
     // Workflow for building a member
     let makeMemberBuilderFrom (j:Joint) = BuilderDomain.MemberBuilder (j,None)
     let addJointToMemberBuilder (j:Joint) (mb:BuilderDomain.MemberBuilder) = 
