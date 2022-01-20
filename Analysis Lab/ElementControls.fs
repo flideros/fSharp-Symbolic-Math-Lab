@@ -17,6 +17,7 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
                           jointList:SharedValue<System.Windows.Point list>) as this =  
     inherit UserControl()    
     do Install() |> ignore     
+    
     // Controls
         // Member builder P1
     let p1X_TextBlock = 
@@ -252,12 +253,73 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
                 do  p1X_TextBox.Text <- p2X_TextBox.Text
                     p1Y_TextBox.Text <- p2Y_TextBox.Text
                 
-    do  this.Content <- screen_Grid
-        //this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
+    do  this.Content <- screen_Grid        
         mousePosition.Changed.Add(fun _ -> handleMousePositionChange memberBuilder)
         setMemberOption memberBuilder
-        //this.IsVisibleChanged. 
 
     member _this.handleMBMouseDown (e : Input.MouseButtonEventArgs) =  handleMouseDown e
     member _this.handleMBMouseUp (e : Input.MouseButtonEventArgs) =  handleMouseUp e
     member _this.handleMBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e
+
+
+type JointForceBuilderControl(mousePosition:SharedValue<Point>,
+                              newForceOption:SharedValue<(LoadDomain.JointForce option)>,
+                              jointList:SharedValue<System.Windows.Point list>) as this =  
+    inherit UserControl()    
+    do Install() |> ignore     
+    
+    // Controls
+    let jointForceAngle_TextBlock = 
+        let tb = TextBlock(Text = "Angle (Degrees)")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let jointForceAngle_TextBox = 
+        let tb = TextBox()
+        let mouseDown () = 
+            match Double.TryParse tb.Text with
+            | false,_ -> tb.Text <- ""
+            | true,_ -> ()
+        do  tb.MaxLines <- 15
+            tb.TabIndex <- 0
+            tb.IsReadOnly <- false
+            tb.BorderThickness <- Thickness(3.)
+            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
+        tb
+    let jointForceMagnitude_TextBlock = 
+        let tb = TextBlock(Text = "Magnitude")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let jointForceMagnitude_TextBox = 
+        let tb = TextBox()
+        let mouseDown () = 
+            match Double.TryParse tb.Text with
+            | false,_ -> tb.Text <- ""
+            | true,_ -> ()
+        do  tb.MaxLines <- 15
+            tb.TabIndex <- 0
+            tb.IsReadOnly <- false
+            tb.BorderThickness <- Thickness(3.)
+            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
+        tb    
+    
+        // Main grid
+    let jointForceBuilder_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(jointForceAngle_TextBlock) |> ignore
+            sp.Children.Add(jointForceAngle_TextBox) |> ignore
+            sp.Children.Add(jointForceMagnitude_TextBlock) |> ignore
+            sp.Children.Add(jointForceMagnitude_TextBox) |> ignore
+            sp.Visibility <- Visibility.Collapsed
+        sp
+    let screen_Grid =
+        let g = Grid()              
+        do  g.Children.Add(jointForceBuilder_StackPanel) |> ignore
+        g
+    
+                
+    do  this.Content <- screen_Grid        
+        

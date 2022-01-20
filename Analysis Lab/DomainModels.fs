@@ -87,7 +87,6 @@ module ErrorDomain =
         | NoJointSelected
         | Other of string
 
-
 // I'm in the process of refactoring this domain model into a more general purpose analysis tool.
 module TrussAnalysisDomain =
     open ErrorDomain
