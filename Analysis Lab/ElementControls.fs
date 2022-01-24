@@ -11,12 +11,14 @@ open Wolfram.NETLink
 //open GraphicResources
 open GenericDomain
 open AtomicDomain
+open LoadDomain
+open BuilderDomain
 
 type MemberBuilderControl(mousePosition:SharedValue<Point>,
                           newMemberOption:SharedValue<(Member option)>,
                           jointList:SharedValue<System.Windows.Point list>) as this =  
     inherit UserControl()    
-    do Install() |> ignore     
+    //do Install() |> ignore     
     
     // Controls
         // Member builder P1
@@ -98,16 +100,16 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
         g
     
     // Initialize
-    let mpX = SharedValue(mousePosition.Get.X)
-    let mpY = SharedValue(mousePosition.Get.Y)    
-    let j = {x = X mpX.Get; y = Y mpY.Get}
+    let mpX = mousePosition.Get.X
+    let mpY = mousePosition.Get.Y  
+    let j = {x = X mpX; y = Y mpY}
     
     let mutable memberBuilder : BuilderDomain.MemberBuilder = (j,None)
 
     // Logic
     let getJointIndex (p1:System.Windows.Point) =          
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
-            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (List.toSeq jointList.Get)    
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (List.toSeq jointList.Get)
     let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
     let setMemberOption (mb: BuilderDomain.MemberBuilder) =
         match mb with 
@@ -190,7 +192,7 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
                         p2_StackPanel.Visibility <- Visibility.Collapsed
                
         | _ -> () // logic for other keys 
-    let handleMouseDown (e : Input.MouseButtonEventArgs) =
+    let handleMouseDown () =
         let x1b,x1 = Double.TryParse p1X_TextBox.Text
         let y1b,y1 = Double.TryParse p1Y_TextBox.Text
         let x2b,x2 = Double.TryParse p2X_TextBox.Text
@@ -237,7 +239,7 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
                     p2X_TextBox.IsReadOnly <- true
                     p2Y_TextBox.IsReadOnly <- true
                     p2_StackPanel.Visibility <- Visibility.Collapsed
-    let handleMouseUp (e : Input.MouseButtonEventArgs) =       
+    let handleMouseUp () =       
         match this.IsKeyboardFocused || 
               p1X_TextBox.IsKeyboardFocused || 
               p2X_TextBox.IsKeyboardFocused ||
@@ -257,23 +259,22 @@ type MemberBuilderControl(mousePosition:SharedValue<Point>,
         mousePosition.Changed.Add(fun _ -> handleMousePositionChange memberBuilder)
         setMemberOption memberBuilder
 
-    member _this.handleMBMouseDown (e : Input.MouseButtonEventArgs) =  handleMouseDown e
-    member _this.handleMBMouseUp (e : Input.MouseButtonEventArgs) =  handleMouseUp e
+    member _this.handleMBMouseDown () =  handleMouseDown ()
+    member _this.handleMBMouseUp () =  handleMouseUp ()
     member _this.handleMBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e
 
-
 type JointForceBuilderControl(mousePosition:SharedValue<Point>,
-                              newForceOption:SharedValue<(LoadDomain.JointForce option)>,
+                              newJointForceOption:SharedValue<(LoadDomain.JointForce option)>,
                               jointList:SharedValue<System.Windows.Point list>) as this =  
     inherit UserControl()    
     do Install() |> ignore     
     
-    // Controls
-    let jointForceAngle_TextBlock = 
+    // Controls    
+    let angle_TextBlock = 
         let tb = TextBlock(Text = "Angle (Degrees)")
         do tb.SetValue(Grid.RowProperty,0)
         tb
-    let jointForceAngle_TextBox = 
+    let angle_TextBox = 
         let tb = TextBox()
         let mouseDown () = 
             match Double.TryParse tb.Text with
@@ -283,13 +284,13 @@ type JointForceBuilderControl(mousePosition:SharedValue<Point>,
             tb.TabIndex <- 0
             tb.IsReadOnly <- false
             tb.BorderThickness <- Thickness(3.)
-            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
+            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> mouseDown()))
         tb
-    let jointForceMagnitude_TextBlock = 
+    let magnitude_TextBlock = 
         let tb = TextBlock(Text = "Magnitude")
         do tb.SetValue(Grid.RowProperty,0)
         tb
-    let jointForceMagnitude_TextBox = 
+    let magnitude_TextBox = 
         let tb = TextBox()
         let mouseDown () = 
             match Double.TryParse tb.Text with
@@ -309,17 +310,67 @@ type JointForceBuilderControl(mousePosition:SharedValue<Point>,
             sp.MaxWidth <- 150.
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(jointForceAngle_TextBlock) |> ignore
-            sp.Children.Add(jointForceAngle_TextBox) |> ignore
-            sp.Children.Add(jointForceMagnitude_TextBlock) |> ignore
-            sp.Children.Add(jointForceMagnitude_TextBox) |> ignore
-            sp.Visibility <- Visibility.Collapsed
+            sp.Children.Add(angle_TextBlock) |> ignore
+            sp.Children.Add(angle_TextBox) |> ignore
+            sp.Children.Add(magnitude_TextBlock) |> ignore
+            sp.Children.Add(magnitude_TextBox) |> ignore            
+            sp.Visibility <- Visibility.Visible
         sp
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(jointForceBuilder_StackPanel) |> ignore
         g
     
-                
-    do  this.Content <- screen_Grid        
+    // Initialize
+    let mpX = mousePosition.Get.X
+    let mpY = mousePosition.Get.Y  
+    let j = {x = X mpX; y = Y mpY}
+
+    let mutable forceBuilder : BuilderDomain.JointForceBuilder Option = None          
+    let getJointIndex (p1:System.Windows.Point) =          
+        Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (List.toSeq jointList.Get)
+    let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}    
+    let handleMouseDown () = 
+        match getJointIndex mousePosition.Get, this.IsVisible with 
+        | None, true -> 
+            forceBuilder <- None
+            newJointForceOption.Set None
+        | Some i, true -> 
+            let ji = makeJointFrom jointList.Get.[i]
+            let fb =  {_magnitude = None; _direction = None; joint = ji}            
+            forceBuilder <- Some fb
+            newJointForceOption.Set None
+        | _, false -> ()
+    let handleKeyDown (e:Input.KeyEventArgs) =
+        match e.Key with 
+        | Input.Key.Enter -> 
+            let angleb,angle = Double.TryParse angle_TextBox.Text
+            let magnitudeb,magnitude = Double.TryParse magnitude_TextBox.Text             
+            match forceBuilder with 
+            | None -> 
+                newJointForceOption.Set None
+            | Some {_magnitude = m; _direction = d; joint = {x = X x;y = Y y}} -> 
+                match angleb, magnitudeb with                
+                | true, true -> 
+                    let dir = Vector(x + (50.0 * cos (angle * Math.PI/180.)), y - (50.0 * sin (angle * Math.PI/180.)))
+                    forceBuilder <- Some {joint = forceBuilder.Value.joint; _direction = Some dir; _magnitude = Some magnitude}
+                    newJointForceOption.Set (Some {direction = dir; magnitude = magnitude; joint = forceBuilder.Value.joint})
+                | true, false -> 
+                    let dir = Vector(x + (50.0 * cos (angle * Math.PI/180.)), y - (50.0 * sin (angle * Math.PI/180.)))
+                    forceBuilder <- Some {forceBuilder.Value with _direction = Some dir}
+                    newJointForceOption.Set None
+                | false, true -> 
+                    forceBuilder <- Some {forceBuilder.Value with _magnitude = Some magnitude}
+                    newJointForceOption.Set None
+                | false, false -> ()
+                                     
+        | _ -> () // logic for other keys
+
+    do  this.Content <- screen_Grid
+
+    
+    member _this.handleMBMouseDown () =  handleMouseDown ()    
+    member _this.handleMBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e
+
         

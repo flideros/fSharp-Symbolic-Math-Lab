@@ -23,6 +23,7 @@ type Truss() as this =
     // Shared Values    
     let mousePosition = SharedValue<Point> (Point(0.,0.))
     let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
+    let newForceOption = SharedValue<(LoadDomain.JointForce option)> (None)
     let jointList = SharedValue<(Point list)> []
     
     // Internal State
@@ -65,7 +66,7 @@ type Truss() as this =
             l.BorderBrush <- SolidColorBrush(Colors.Transparent)
             l.Opacity <- 0.5
             l.MaxLines <- 30
-        l     
+        l
         
         // Analysis State
     let axis_Label =
@@ -611,6 +612,11 @@ type Truss() as this =
         do  mb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
         mb    
         // Force builder    
+    let jointForceBuilder_Control = 
+        let fb = JointForceBuilderControl(mousePosition,newForceOption,jointList)
+        do  fb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            fb.Visibility <- Visibility.Collapsed
+        fb    
     let trussForceAngle_TextBlock = 
         let tb = TextBlock(Text = "Angle (Degrees)")
         do tb.SetValue(Grid.RowProperty,0)
@@ -894,7 +900,7 @@ type Truss() as this =
         c
     let screen_Grid =
         let g = Grid()              
-        do  g.Children.Add(canvas) |> ignore            
+        do  g.Children.Add(canvas) |> ignore
         g
         // Settings
     let toggleCodeText_Button = 
@@ -985,7 +991,8 @@ type Truss() as this =
             sp.Children.Add(trussMode_StackPanel) |> ignore
             sp.Children.Add(memberBuilder_Control) |> ignore
             sp.Children.Add(supportType_StackPanel) |> ignore
-            sp.Children.Add(trussForceBuilder_StackPanel) |> ignore
+            sp.Children.Add(jointForceBuilder_Control) |> ignore
+            sp.Children.Add(trussForceBuilder_StackPanel) |> ignore // Needed until support control implemented.
             sp.Children.Add(settings_StackPanel) |> ignore
             sp.Children.Add(selectionMode_StackPanel) |> ignore
             sp.Children.Add(analysis_StackPanel) |> ignore
@@ -1391,7 +1398,8 @@ type Truss() as this =
                     result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
+                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    jointForceBuilder_Control.Visibility <- Visibility.Visible
                     trussForceMagnitude_TextBox.IsReadOnly <- false
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
@@ -1417,6 +1425,7 @@ type Truss() as this =
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Visible
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
@@ -1438,6 +1447,7 @@ type Truss() as this =
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
+                    jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Visible
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
@@ -1469,6 +1479,7 @@ type Truss() as this =
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
@@ -1496,6 +1507,7 @@ type Truss() as this =
                     analysis_StackPanel.Visibility <- Visibility.Visible
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
@@ -1516,6 +1528,7 @@ type Truss() as this =
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Visible
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
@@ -1636,14 +1649,15 @@ type Truss() as this =
             do  state <- newState
                 label.Text <- newState.ToString() 
         | false ->  
-            do  memberBuilder_Control.handleMBMouseDown e
+            do  memberBuilder_Control.handleMBMouseDown ()
+                jointForceBuilder_Control.handleMBMouseDown ()
             match state with
             | TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
                 | TrussAnalysisDomain.TrussMode.MemberBuild ->                     
                     let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state
                     do  drawTruss newState
-                        drawBuildJoint p1
+                        drawBuildJoint p
                         state <- newState
                         setjointList newState
                         label.Text <- newState.ToString() 
@@ -1653,7 +1667,7 @@ type Truss() as this =
                         state <- TrussAnalysisDomain.ErrorState {errors = [ErrorDomain.NoJointSelected]; truss = getTrussFrom state}
                         label.Text <- state.ToString()
                     | Some i -> 
-                        let newState = trussServices.sendPointToForceBuilder p state
+                        let newState = trussServices.sendJointForceOptionToState (newForceOption.Get) state                        
                         drawBuildForceJoint p
                         state <- newState
                         label.Text <- newState.ToString() 
@@ -1716,7 +1730,7 @@ type Truss() as this =
                         state <- newState
                         setjointList newState
                         label.Text <- newState.ToString()
-                | BuilderDomain.BuildForce bf -> ()
+                | BuilderDomain.BuildForce bf -> () 
                 | BuilderDomain.BuildSupport bs -> ()
                 | BuilderDomain.Control -> 
                     let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state                    
@@ -1798,7 +1812,7 @@ type Truss() as this =
         match state with
         | TrussAnalysisDomain.TrussState ts -> 
             match ts.mode with
-            | TrussAnalysisDomain.TrussMode.MemberBuild -> do  memberBuilder_Control.handleMBMouseUp e
+            | TrussAnalysisDomain.TrussMode.MemberBuild -> do  memberBuilder_Control.handleMBMouseUp ()
             | TrussAnalysisDomain.TrussMode.ForceBuild -> ()
             | TrussAnalysisDomain.TrussMode.SupportBuild -> ()
             | TrussAnalysisDomain.TrussMode.Analysis -> ()
@@ -1870,6 +1884,7 @@ type Truss() as this =
     let handleMouseMove (e : Input.MouseEventArgs) = mousePosition.Set (adjustMouseEventArgPoint e)
     let handleKeyDown (e:Input.KeyEventArgs) =
         memberBuilder_Control.handleMBKeyDown e
+        jointForceBuilder_Control.handleMBKeyDown e
         match e.Key with 
         | Input.Key.Enter ->             
             let magb, mag = Double.TryParse trussForceMagnitude_TextBox.Text
@@ -1893,44 +1908,7 @@ type Truss() as this =
             | TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
                 | BuilderDomain.BuildMember _bm -> ()
-                | BuilderDomain.BuildForce bf -> 
-                    match magb, dirb with
-                    | true, true when bf._direction = None -> 
-                        let jointPoint = trussServices.getPointFromForceBuilder bf
-                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
-                        let arrowPoint = 
-                            match mag > 0. with 
-                            | true -> jointPoint
-                            | false -> dirPoint
-                        let newState = trussServices.sendMagnitudeToForceBuilder mag state |> trussServices.sendPointToForceBuilder dirPoint
-                        state <- newState
-                        drawBuildForceLine green (jointPoint,dirPoint)
-                        drawBuildForceDirection green (arrowPoint,dir,mag)
-                        label.Text <- newState.ToString()
-                    | true, true -> 
-                        let jointPoint = trussServices.getPointFromForceBuilder bf
-                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
-                        let arrowPoint = 
-                            match mag > 0. with 
-                            | true -> jointPoint
-                            | false -> dirPoint
-                        let newState = trussServices.sendMagnitudeToForceBuilder mag state
-                        state <- newState
-                        drawBuildForceLine green (jointPoint,dirPoint)
-                        drawBuildForceDirection green (arrowPoint,dir,mag)
-                        label.Text <-  newState.ToString()
-                    | true, false -> 
-                        let newState = trussServices.sendMagnitudeToForceBuilder mag state
-                        state <- newState
-                        label.Text <- newState.ToString()
-                    | false, true -> 
-                        let jointPoint = trussServices.getPointFromForceBuilder bf
-                        let dirPoint = System.Windows.Point(jointPoint.X + (50.0 * cos (dir * Math.PI/180.)), jointPoint.Y - (50.0 * sin (dir * Math.PI/180.)))  
-                        let newState = trussServices.sendPointToForceBuilder dirPoint state
-                        state <- newState
-                        drawBuildForceLine green (jointPoint,dirPoint)
-                        label.Text <- newState.ToString()
-                    | false, false -> () 
+                | BuilderDomain.BuildForce _bf -> ()
                 | BuilderDomain.BuildSupport bs -> 
                     match dirb with
                     | true -> 
@@ -1952,7 +1930,12 @@ type Truss() as this =
                         state <- newState
                         label.Text <- newState.ToString()
                 | BuilderDomain.Control -> 
-                    let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state                    
+                    let newState = 
+                        match memberBuilder_Control.IsVisible, jointForceBuilder_Control.IsVisible with
+                        | true, false -> trussServices.sendMemberOptionToState (newMemberOption.Get) state
+                        | false, true -> trussServices.sendJointForceOptionToState (newForceOption.Get) state                        
+                        | true, true -> state
+                        | false, false -> state
                     do  drawTruss newState
                         state <- newState                        
                         setjointList newState
