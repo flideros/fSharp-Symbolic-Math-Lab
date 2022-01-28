@@ -1847,7 +1847,7 @@ type Analysis() as this =
                 | TrussAnalysisDomain.MethodOfJointsAnalysis mja -> drawSolvedMembers state 
             | TrussAnalysisDomain.ErrorState es -> 
                 match es.errors with 
-                | [NoJointSelected] -> ()                    
+                | [ErrorDomain.Error.NoJointSelected] -> ()                    
                 | _ -> ()
     let handleMouseUp () =         
         match state with
@@ -1911,7 +1911,7 @@ type Analysis() as this =
         | TrussAnalysisDomain.AnalysisState a -> ()
         | TrussAnalysisDomain.ErrorState es -> 
             match es.errors with 
-            | [NoJointSelected] -> 
+            | [ErrorDomain.Error.NoJointSelected] -> 
                 match  forceBuilder_RadioButton.IsChecked.Value,
                         memberBuilder_RadioButton.IsChecked.Value with 
                 | true, false -> 

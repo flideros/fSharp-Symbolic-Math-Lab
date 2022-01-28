@@ -109,7 +109,7 @@ module TrussServices =
 
     open TrussImplementation
 
-    let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false
+    let checkSupportTypeIsRoller (support:Support) = match support with | Roller r -> true | Pin p -> false | Fixed | Hinge | Simple -> false
     let checkTruss (truss:Truss) = 
         {truss = truss; 
          stability = checkTrussStability truss; 
@@ -177,13 +177,19 @@ module TrussServices =
         Math.Atan2(y,x) * (-180./Math.PI)
     let getPointFromForce (force:JointForce) = System.Windows.Point(getXFrom force.joint , getYFrom force.joint)
     let getPointFromSupport (support:Support) = 
-        match support with
-        | Pin p -> getPointFromForce p.normal
-        | Roller f -> getPointFromForce f
+        let s = 
+            match support with
+            | Pin p -> Some (getPointFromForce p.normal)
+            | Roller f -> Some (getPointFromForce f)
+            | Fixed | Hinge | Simple -> None
+        s.Value
     let getDirectionFromSupport (support:Support) = 
-        match support with
-        | Pin p -> -(getDirectionFromForce p.normal)
-        | Roller f -> -(getDirectionFromForce f) 
+        let s = 
+            match support with
+            | Pin p -> Some (-(getDirectionFromForce p.normal))
+            | Roller f -> Some (-(getDirectionFromForce f)) 
+            | Fixed | Hinge | Simple -> None
+        s.Value
     let getSelectedSupportFromState (state :TrussAnalysisState) = 
         match state with
         | TrussAnalysisDomain.TrussState ts -> None
@@ -201,7 +207,7 @@ module TrussServices =
                     let p = System.Windows.Point (x = getXFrom p.tangent.joint, y = getYFrom p.normal.joint)
                     let d = getDirectionFromSupport spt.Head
                     Some (p,d,false)
-
+                | Fixed | Hinge | Simple -> None
         | TrussAnalysisDomain.AnalysisState s -> None
         | TrussAnalysisDomain.ErrorState es -> None
     let getSupportReactionEquationsFromState (yAxis: bool) (state :TrussAnalysisState) = 
@@ -251,7 +257,7 @@ module TrussServices =
             | SupportReactionEquations sre -> []
             | SupportReactionResult srr -> 
                 List.fold (fun acc r -> 
-                    let result = getResultantForcesFrom r
+                    let result = (getResultantForcesFrom r).Value
                     match r.xReactionForce,  r.yReactionForce, showComponents with
                     | Some a, Some b, false -> result::acc
                     | None, Some b, false -> result::acc
@@ -263,7 +269,7 @@ module TrussServices =
                     | None, None, true -> acc) [] srr.reactions            
             | MethodOfJointsCalculation mj -> 
                 List.fold (fun acc r -> 
-                    let result = getResultantForcesFrom r
+                    let result = (getResultantForcesFrom r).Value
                     match r.xReactionForce,  r.yReactionForce, showComponents with
                     | Some a, Some b, false -> result::acc
                     | None, Some b, false -> result::acc
@@ -275,7 +281,7 @@ module TrussServices =
                     | None, None, true -> acc) [] mj.reactions            
             | MethodOfJointsAnalysis mj -> 
                 List.fold (fun acc r -> 
-                    let result = getResultantForcesFrom r
+                    let result = (getResultantForcesFrom r).Value
                     match r.xReactionForce,  r.yReactionForce, showComponents with
                     | Some a, Some b, false -> result::acc
                     | None, Some b, false -> result::acc
@@ -296,10 +302,14 @@ module TrussServices =
                 match x with 
                 | Pin p -> p.normal.joint = j
                 | Roller r -> r.joint = j
+                | Fixed | Hinge | Simple -> false
                 ) supports
         match supports.[i] with
         | Pin p -> i,"Pin"
         | Roller r -> i,"Roller"
+        | Fixed -> i,"Fixed"
+        | Hinge -> i,"Hinge"
+        | Simple -> i,"Simple"
 
     let sendPointToModification (p1 :System.Windows.Point) (state :TrussAnalysisState) =       
         let joints = getJointSeqFromTruss (getTrussFromState state)
@@ -501,11 +511,10 @@ module TrussServices =
                 let spt = 
                     List.tryFind (                     
                         fun x -> 
-                            let f = 
-                                match x with
-                                | Roller r -> r
-                                | Pin p -> p.normal
-                            f.joint = j                            
+                            match x with
+                            | Roller r -> r.joint = j
+                            | Pin p -> p.normal.joint = j
+                            | Fixed | Hinge | Simple -> false 
                             ) ts.truss.supports
                 let s =  
                     match spt with
@@ -523,11 +532,10 @@ module TrussServices =
             let spt = 
                 List.tryFind (                     
                     fun x -> 
-                        let f = 
-                            match x with
-                            | Roller r -> r
-                            | Pin p -> p.normal
-                        f.joint = j                            
+                        match x with
+                        | Roller r -> r.joint = j
+                        | Pin p -> p.normal.joint = j
+                        | Fixed | Hinge | Simple -> false                            
                         ) ss.truss.supports
             let s =  
                 match spt with
@@ -718,7 +726,7 @@ module TrussServices =
                     let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) parts
                     let findReaction i' r' = List.tryFind (fun x -> match x with | i, r,_m  when i=i' && r=r'-> true | _ -> false) rList
                     let getReactionForce s r m =                    
-                        let j = getJointFromSupport s
+                        let j = (getJointFromSupport s).Value
                         match r with 
                         | "Rx" ->                         
                             let x' = 
@@ -914,6 +922,7 @@ module TrussServices =
                     "\"Joint \\n"
                     + j.x.ToString() + ", "+ j.y.ToString()
                     + "\""
+                | _ -> "\"Not Implemented\""
             | _ -> "\"--Ready--\""
         | TrussAnalysisDomain.ErrorState es -> "\"--Ready--\""
         | TrussAnalysisDomain.AnalysisState a -> 
@@ -933,7 +942,7 @@ module TrussServices =
                 let reactions = 
                     List.map (fun x ->                        
                         let i = List.findIndex (fun s -> s = x.support) truss.supports
-                        let supportType = match truss.supports.[i] with | Pin p -> "Pin" | Roller r -> "Roller"
+                        let supportType = match truss.supports.[i] with | Pin p -> "Pin" | Roller r -> "Roller" | Fixed -> "Fixed" | Hinge -> "Hinge" | Simple -> "Simple"
                         match x.xReactionForce, x.yReactionForce with
                         | None, None -> ""
                         | Some x, None -> supportType + i.ToString() + " X = " + x.magnitude.ToString() + " \\n"

@@ -24,6 +24,7 @@ type Truss() as this =
     let mousePosition = SharedValue<Point> (Point(0.,0.))
     let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
     let newForceOption = SharedValue<(LoadDomain.JointForce option)> (None)
+    let newSupportOption = SharedValue<(ElementDomain.Support option)> (None)
     let jointList = SharedValue<(Point list)> []
     
     // Internal State
@@ -66,8 +67,7 @@ type Truss() as this =
             l.BorderBrush <- SolidColorBrush(Colors.Transparent)
             l.Opacity <- 0.5
             l.MaxLines <- 30
-        l
-        
+        l        
         // Analysis State
     let axis_Label =
         let l = TextBlock()
@@ -617,6 +617,12 @@ type Truss() as this =
         do  fb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             fb.Visibility <- Visibility.Collapsed
         fb    
+        // Support builder    
+    let supportBuilder_Control = 
+        let sb = SupportBuilderControl(mousePosition,newSupportOption,jointList)
+        do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            sb.Visibility <- Visibility.Visible
+        sb  
     let trussForceAngle_TextBlock = 
         let tb = TextBlock(Text = "Angle (Degrees)")
         do tb.SetValue(Grid.RowProperty,0)
@@ -901,6 +907,7 @@ type Truss() as this =
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
+            g.Children.Add(supportBuilder_Control) |> ignore
         g
         // Settings
     let toggleCodeText_Button = 
@@ -1360,7 +1367,7 @@ type Truss() as this =
             drawSolvedMembers newState            
     let setjointList (s: TrussAnalysisDomain.TrussAnalysisState) = jointList.Set (getJointsFrom s |> Seq.toList)
 
-    // Handle
+        // Handle
     let handleMouseDown (e : Input.MouseButtonEventArgs) =         
         let p1 = adjustMouseButtonEventArgPoint e
         let joint = getJointIndex p1
@@ -1650,7 +1657,8 @@ type Truss() as this =
                 label.Text <- newState.ToString() 
         | false ->  
             do  memberBuilder_Control.handleMBMouseDown ()
-                jointForceBuilder_Control.handleMBMouseDown ()
+                jointForceBuilder_Control.handleFBMouseDown ()
+                supportBuilder_Control.handleSBMouseDown ()
             match state with
             | TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
@@ -1884,7 +1892,8 @@ type Truss() as this =
     let handleMouseMove (e : Input.MouseEventArgs) = mousePosition.Set (adjustMouseEventArgPoint e)
     let handleKeyDown (e:Input.KeyEventArgs) =
         memberBuilder_Control.handleMBKeyDown e
-        jointForceBuilder_Control.handleMBKeyDown e
+        jointForceBuilder_Control.handleFBKeyDown e
+        supportBuilder_Control.handleSBKeyDown e
         match e.Key with 
         | Input.Key.Enter ->             
             let magb, mag = Double.TryParse trussForceMagnitude_TextBox.Text

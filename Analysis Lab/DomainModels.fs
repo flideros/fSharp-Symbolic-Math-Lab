@@ -50,7 +50,13 @@ module ElementDomain =
     open LoadDomain
         
     type Pin = {tangent:JointForce;normal:JointForce}
-    type Support = | Roller of JointForce | Pin of Pin
+    type Support = 
+        | Roller of JointForce 
+        | Pin of Pin
+        | Hinge
+        | Fixed
+        | Simple
+
     
     type Truss = {members:Member list; forces:JointForce list; supports:Support list}
     type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members

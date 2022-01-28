@@ -370,7 +370,128 @@ type JointForceBuilderControl(mousePosition:SharedValue<Point>,
     do  this.Content <- screen_Grid
 
     
-    member _this.handleMBMouseDown () =  handleMouseDown ()    
-    member _this.handleMBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e
+    member _this.handleFBMouseDown () =  handleMouseDown ()    
+    member _this.handleFBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e
 
-        
+type SupportBuilderControl(mousePosition:SharedValue<Point>,
+                           newSupportOption:SharedValue<(ElementDomain.Support option)>,
+                           jointList:SharedValue<System.Windows.Point list>) as this =  
+    inherit UserControl()    
+    do Install() |> ignore     
+    
+    // Controls    
+    let angle_TextBlock = 
+        let tb = TextBlock(Text = "Angle (Degrees)")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let angle_TextBox = 
+        let tb = TextBox()
+        let mouseDown () = 
+            match Double.TryParse tb.Text with
+            | false,_ -> tb.Text <- ""
+            | true,_ -> ()
+        do  tb.MaxLines <- 15
+            tb.TabIndex <- 0
+            tb.IsReadOnly <- false
+            tb.BorderThickness <- Thickness(3.)
+            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> mouseDown()))
+        tb
+    // Support type selection
+    let supportType_Label =
+       let l = TextBlock()
+       do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+           l.FontStyle <- FontStyles.Normal
+           l.FontSize <- 20.            
+           l.TextWrapping <- TextWrapping.Wrap
+           l.Text <- "Support Type"
+       l
+    let supportType_ComboBox =
+        let cb = ComboBox()        
+        do  cb.Text <- "Support Type"
+            //cb.Width <- 200.
+            //cb.Height <- 30.
+            cb.FontSize <- 15.
+            cb.VerticalContentAlignment <- VerticalAlignment.Center
+            cb.SelectedItem <- "Roller"            
+            cb.ItemsSource <- ["Roller";"Pin";"Fixed";"Hinge";"Simple"]
+        cb    
+
+        // Main grid
+    let supportBuilder_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(supportType_Label) |> ignore
+            sp.Children.Add(supportType_ComboBox) |> ignore
+            sp.Children.Add(angle_TextBlock) |> ignore
+            sp.Children.Add(angle_TextBox) |> ignore    
+            sp.Visibility <- Visibility.Visible
+        sp
+    let screen_Grid =
+        let g = Grid()              
+        do  g.Children.Add(supportBuilder_StackPanel) |> ignore
+        g
+    
+    // Initialize
+    let mpX = mousePosition.Get.X
+    let mpY = mousePosition.Get.Y  
+    let j = {x = X mpX; y = Y mpY}
+
+    let mutable supportBuilder : BuilderDomain.SupportBuilder Option = None          
+    let getJointIndex (p1:System.Windows.Point) =          
+        Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
+            (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (List.toSeq jointList.Get)
+    let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}    
+    let handleMouseDown () = 
+        match getJointIndex mousePosition.Get, this.IsVisible with 
+        | None, true -> 
+            supportBuilder <- None
+            newSupportOption.Set None
+        | Some i, true -> 
+            let ji = makeJointFrom jointList.Get.[i]
+            let sb =  
+                match supportType_ComboBox.SelectedItem.ToString() with 
+                | "Roller" -> Roller {_magnitude = Some 0.0; _direction = None; joint = ji}    
+                | "Pin" -> Pin ({_magnitude = Some 0.0; _direction = None; joint = ji}, 
+                                {_magnitude = Some 0.0; _direction = None; joint = ji})
+                | _ -> Roller {_magnitude = Some 0.0; _direction = None; joint = ji}
+            supportBuilder <- Some sb
+            newSupportOption.Set None
+        | _, false -> ()
+    let handleKeyDown (e:Input.KeyEventArgs) =
+        match e.Key with 
+        | Input.Key.Enter -> 
+            let angleb,angle = Double.TryParse angle_TextBox.Text             
+            match supportBuilder with 
+            | None -> 
+                newSupportOption.Set None            
+            | Some (Roller ({_magnitude = _m; _direction = None; joint = {x = X x;y = Y y}})) -> 
+                match angleb with                
+                | true -> 
+                    let dir = Vector(x + (50.0 * cos (angle * Math.PI/180.)), y - (50.0 * sin (angle * Math.PI/180.)))                    
+                    let newSupport = ElementDomain.Roller {direction = dir; magnitude = 0.0; joint = {x = X x;y = Y y}}
+                    supportBuilder <- None
+                    newSupportOption.Set (Some newSupport)
+                | false -> ()
+            | Some (Pin ({_magnitude = _m; _direction = None; joint = {x = X x;y = Y y}},
+                         {_magnitude = _mt; _direction = None; joint = {x = X xt;y = Y yt}})) -> 
+                match angleb with                
+                | true -> 
+                    let dirT = Vector(x + (50.0 * cos (angle * Math.PI/180.)), y - (50.0 * sin (angle * Math.PI/180.)))
+                    let dirN = Vector(x + (50.0 * cos ((angle - 90.) * Math.PI/180.)), y - (50.0 * sin ((angle - 90.) * Math.PI/180.)))
+                    let newSupport = 
+                        ElementDomain.Pin {tangent = {direction = dirT; magnitude = 0.0; joint = {x = X x;y = Y y}};
+                                           normal  = {direction = dirN; magnitude = 0.0; joint = {x = X x;y = Y y}}}
+                    supportBuilder <- None
+                    newSupportOption.Set (Some newSupport)
+                | false -> ()
+            | _ -> ()
+        | _ -> () // logic for other keys
+
+    do  this.Content <- screen_Grid
+
+    
+    member _this.handleSBMouseDown () =  handleMouseDown ()    
+    member _this.handleSBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e        
