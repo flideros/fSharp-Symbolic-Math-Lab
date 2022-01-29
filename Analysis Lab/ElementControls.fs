@@ -383,6 +383,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
     let angle_TextBlock = 
         let tb = TextBlock(Text = "Angle (Degrees)")
         do tb.SetValue(Grid.RowProperty,0)
+           tb.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
         tb
     let angle_TextBox = 
         let tb = TextBox()
@@ -394,12 +395,13 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
             tb.TabIndex <- 0
             tb.IsReadOnly <- false
             tb.BorderThickness <- Thickness(3.)
+            tb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> mouseDown()))
         tb
     // Support type selection
     let supportType_Label =
        let l = TextBlock()
-       do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+       do  l.Margin <- Thickness(Left = 0., Top = 10., Right = 0., Bottom = 10.)
            l.FontStyle <- FontStyles.Normal
            l.FontSize <- 20.            
            l.TextWrapping <- TextWrapping.Wrap
@@ -470,7 +472,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
             | Some (Roller ({_magnitude = _m; _direction = None; joint = {x = X x;y = Y y}})) -> 
                 match angleb with                
                 | true -> 
-                    let dir = Vector(x + (50.0 * cos (angle * Math.PI/180.)), y - (50.0 * sin (angle * Math.PI/180.)))                    
+                    let dir = Vector(x + (50.0 * cos ((angle + 90.) * Math.PI/180.)), y - (50.0 * sin ((angle + 90.) * Math.PI/180.)))                    
                     let newSupport = ElementDomain.Roller {direction = dir; magnitude = 0.0; joint = {x = X x;y = Y y}}
                     supportBuilder <- None
                     newSupportOption.Set (Some newSupport)
@@ -480,7 +482,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
                 match angleb with                
                 | true -> 
                     let dirT = Vector(x + (50.0 * cos (angle * Math.PI/180.)), y - (50.0 * sin (angle * Math.PI/180.)))
-                    let dirN = Vector(x + (50.0 * cos ((angle - 90.) * Math.PI/180.)), y - (50.0 * sin ((angle - 90.) * Math.PI/180.)))
+                    let dirN = Vector(x + (50.0 * cos ((angle + 90.) * Math.PI/180.)), y - (50.0 * sin ((angle + 90.) * Math.PI/180.)))
                     let newSupport = 
                         ElementDomain.Pin {tangent = {direction = dirT; magnitude = 0.0; joint = {x = X x;y = Y y}};
                                            normal  = {direction = dirN; magnitude = 0.0; joint = {x = X x;y = Y y}}}

@@ -401,6 +401,9 @@ module TrussImplementation =
     // Add a force directly from MemberBuilderControl
     let addJointForceToTruss (f:JointForce) (t:Truss) = {t with forces = f::t.forces |> List.distinct}
 
+    // Add a force directly from MemberBuilderControl
+    let addSupportToTruss (s:Support) (t:Truss) = {t with supports = s::t.supports |> List.distinct}
+
     // Workflow for building a member
     let makeMemberBuilderFrom (j:Joint) = BuilderDomain.MemberBuilder (j,None)
     let addJointToMemberBuilder (j:Joint) (mb:BuilderDomain.MemberBuilder) = 

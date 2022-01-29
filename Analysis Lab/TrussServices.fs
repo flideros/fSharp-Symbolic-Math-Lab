@@ -51,6 +51,7 @@ module TrussServices =
     type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMemberOptionToState = Member option -> TrussAnalysisState -> TrussAnalysisState
     type SendJointForceOptionToState = JointForce option -> TrussAnalysisState -> TrussAnalysisState
+    type SendSupportOptionToState = Support option -> TrussAnalysisState -> TrussAnalysisState
 
     type ModifyTrussForce = float -> float -> TrussAnalysisState -> TrussAnalysisState
     type ModifyTrussSupport = float -> TrussAnalysisState -> TrussAnalysisState
@@ -104,7 +105,8 @@ module TrussServices =
          modifyTrussForce:ModifyTrussForce;
          modifyTrussSupport:ModifyTrussSupport;
          sendMemberOptionToState:SendMemberOptionToState;
-         sendJointForceOptionToState:SendJointForceOptionToState
+         sendJointForceOptionToState:SendJointForceOptionToState;
+         sendSupportOptionToState:SendSupportOptionToState
          }
 
     open TrussImplementation
@@ -667,6 +669,34 @@ module TrussServices =
         | SelectionState  ss -> state
         | AnalysisState s -> state
         | ErrorState  es -> state
+    let sendSupportOptionToState (so:Support Option) (state :TrussAnalysisState) =
+        match state with 
+        | TrussState  ts -> 
+            match ts.mode with
+            | Settings -> state
+            | Selection -> state                
+            | Analysis -> state
+            | MemberBuild -> state                                
+            | ForceBuild -> state                
+            | SupportBuild ->          
+                match so with 
+                | None -> {buildOp = TrussBuildOp.Control;  truss = ts.truss} |> BuildState 
+                | Some s -> 
+                    let t = addSupportToTruss s (getTrussFromState state)                    
+                    {truss = t; mode = SupportBuild} |> TrussState
+        
+        | BuildState  bs -> 
+            match bs.buildOp with 
+            | TrussBuildOp.Control -> 
+                match so with 
+                | None -> {truss = bs.truss; mode = SupportBuild} |> TrussState
+                | Some s -> 
+                    let t = addSupportToTruss s (getTrussFromState state)              
+                    {truss = t; mode = SupportBuild} |> TrussState
+            | _ -> state
+        | SelectionState  ss -> state
+        | AnalysisState s -> state
+        | ErrorState  es -> state
     
     let modifyForce (newFMag:float) (newFDir:float) (state :TrussAnalysisState) = 
         match state with
@@ -1039,6 +1069,7 @@ module TrussServices =
         modifyTrussForce = modifyForce;
         modifyTrussSupport = modifySupport;
         sendMemberOptionToState = sendMemberOptionToState;
-        sendJointForceOptionToState = sendJointForceOptionToState
+        sendJointForceOptionToState = sendJointForceOptionToState;
+        sendSupportOptionToState = sendSupportOptionToState
         }
 

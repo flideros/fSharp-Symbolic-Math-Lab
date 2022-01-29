@@ -460,38 +460,6 @@ type Truss() as this =
             sp.Children.Add(analysis_RadioButton) |> ignore
             sp.Children.Add(settings_RadioButton) |> ignore
         sp
-        // Support type selection
-    let supportType_Label =
-        let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.            
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "Support Type"
-        l
-    let pinSupport_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Pin Support", FontSize=15.)        
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    let rollerSupport_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Roller Support", FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- true |> Nullable<bool>
-        r    
-    let supportType_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(supportType_Label) |> ignore
-            sp.Children.Add(pinSupport_RadioButton) |> ignore
-            sp.Children.Add(rollerSupport_RadioButton) |> ignore
-            sp.Visibility <- Visibility.Collapsed
-        sp
         // Selection mode selection
     let selectionMode_Label =
         let l = TextBlock()
@@ -621,52 +589,8 @@ type Truss() as this =
     let supportBuilder_Control = 
         let sb = SupportBuilderControl(mousePosition,newSupportOption,jointList)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            sb.Visibility <- Visibility.Visible
-        sb  
-    let trussForceAngle_TextBlock = 
-        let tb = TextBlock(Text = "Angle (Degrees)")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let trussForceAngle_TextBox = 
-        let tb = TextBox()
-        let mouseDown () = 
-            match Double.TryParse tb.Text with
-            | false,_ -> tb.Text <- ""
-            | true,_ -> ()
-        do  tb.MaxLines <- 15
-            tb.TabIndex <- 0
-            tb.IsReadOnly <- false
-            tb.BorderThickness <- Thickness(3.)
-            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
-        tb
-    let trussForceMagnitude_TextBlock = 
-        let tb = TextBlock(Text = "Magnitude")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let trussForceMagnitude_TextBox = 
-        let tb = TextBox()
-        let mouseDown () = 
-            match Double.TryParse tb.Text with
-            | false,_ -> tb.Text <- ""
-            | true,_ -> ()
-        do  tb.MaxLines <- 15
-            tb.TabIndex <- 0
-            tb.IsReadOnly <- false
-            tb.BorderThickness <- Thickness(3.)
-            tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ ->mouseDown()))
-        tb    
-    let trussForceBuilder_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 0., Top = 15., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(trussForceAngle_TextBlock) |> ignore
-            sp.Children.Add(trussForceAngle_TextBox) |> ignore
-            sp.Children.Add(trussForceMagnitude_TextBlock) |> ignore
-            sp.Children.Add(trussForceMagnitude_TextBox) |> ignore
-            sp.Visibility <- Visibility.Collapsed
-        sp
+            sb.Visibility <- Visibility.Collapsed
+        sb      
         // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
@@ -906,8 +830,7 @@ type Truss() as this =
         c
     let screen_Grid =
         let g = Grid()              
-        do  g.Children.Add(canvas) |> ignore
-            g.Children.Add(supportBuilder_Control) |> ignore
+        do  g.Children.Add(canvas) |> ignore            
         g
         // Settings
     let toggleCodeText_Button = 
@@ -997,9 +920,8 @@ type Truss() as this =
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(trussMode_StackPanel) |> ignore
             sp.Children.Add(memberBuilder_Control) |> ignore
-            sp.Children.Add(supportType_StackPanel) |> ignore
             sp.Children.Add(jointForceBuilder_Control) |> ignore
-            sp.Children.Add(trussForceBuilder_StackPanel) |> ignore // Needed until support control implemented.
+            sp.Children.Add(supportBuilder_Control) |> ignore
             sp.Children.Add(settings_StackPanel) |> ignore
             sp.Children.Add(selectionMode_StackPanel) |> ignore
             sp.Children.Add(analysis_StackPanel) |> ignore
@@ -1405,15 +1327,10 @@ type Truss() as this =
                     result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Visible
-                    trussForceMagnitude_TextBox.IsReadOnly <- false
-                    supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
-                    trussForceAngle_TextBox.Text <- "Enter Angle"
-                    trussForceAngle_TextBox.ToolTip <- "Angle of the focre horizontal."
-                    trussForceMagnitude_TextBox.Text <- "Enter magnitude"
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.ForceBuild state
@@ -1431,9 +1348,8 @@ type Truss() as this =
                     result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Visible
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
-                    supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     message_TextBlock.Text <- "Calculate Reactions"
@@ -1453,15 +1369,10 @@ type Truss() as this =
                     result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Visible
+                    supportBuilder_Control.Visibility <- Visibility.Visible
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
-                    supportType_StackPanel.Visibility <- Visibility.Visible
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
-                    trussForceMagnitude_TextBox.IsReadOnly <- true
-                    trussForceAngle_TextBox.Text <- "Enter Angle"
-                    trussForceAngle_TextBox.ToolTip <- "Angle of the contact plane from horizontal."
-                    trussForceMagnitude_TextBox.Text <- "0"
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
                     let newTrust = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.SupportBuild state
@@ -1485,13 +1396,11 @@ type Truss() as this =
                     result_ScrollViewer.IsHitTestVisible <- false
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
-                    supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
-                    newP_StackPanel.Visibility <- Visibility.Collapsed
-                    trussForceMagnitude_TextBox.IsReadOnly <- true                    
+                    newP_StackPanel.Visibility <- Visibility.Collapsed                  
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Selection state                    
                     drawTruss newState
                     newState
@@ -1513,12 +1422,10 @@ type Truss() as this =
                     reactionRadio_StackPanel.Visibility <- Visibility.Visible
                     analysis_StackPanel.Visibility <- Visibility.Visible
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
-                    supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
-                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
-                    trussForceMagnitude_TextBox.IsReadOnly <- true                    
+                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed                   
                     code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
                     drawTruss newState
                     newState                    
@@ -1534,125 +1441,111 @@ type Truss() as this =
                     result_ScrollViewer.IsHitTestVisible <- true
                     analysis_StackPanel.Visibility <- Visibility.Collapsed
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
-                    trussForceBuilder_StackPanel.Visibility <- Visibility.Collapsed
+                    supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
-                    supportType_StackPanel.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Visible
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
-                    trussForceMagnitude_TextBox.IsReadOnly <- true
                     message_TextBlock.Text <- "Calculate Reactions"
                     code_TextBlock.Text <- "Ready"
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Settings state
                     drawTruss state
                     newState
-                | _ -> // Logic for Support Type radio buttons
-                    match rollerSupport_RadioButton.IsChecked.Value, pinSupport_RadioButton.IsChecked.Value, 
-                          rollerSupport_RadioButton.IsMouseOver, pinSupport_RadioButton.IsMouseOver 
-                          with 
-                    | true,false, true,false
-                    | false,true, true,false -> rollerSupport_RadioButton.IsChecked <- Nullable true
-                                                pinSupport_RadioButton.IsChecked <- Nullable false
-                                                trussServices.sendStateToSupportBuilder false state
-                    | true,false, false,true
-                    | false,true, false,true -> rollerSupport_RadioButton.IsChecked <- Nullable false 
-                                                pinSupport_RadioButton.IsChecked <- Nullable true
-                                                trussServices.sendStateToSupportBuilder true state
-                    | _ -> // Logic for Selection Mode radio buttons
-                        match delete_RadioButton.IsChecked.Value, 
-                              inspect_RadioButton.IsChecked.Value, 
-                              modify_RadioButton.IsChecked.Value, 
-                              delete_RadioButton.IsMouseOver, 
-                              inspect_RadioButton.IsMouseOver,
-                              modify_RadioButton.IsMouseOver
-                              with 
-                        // Delete
-                        | true,false,false, true,false,false
-                        | false,true,false, true,false,false 
-                        | false,false,true, true,false,false ->  
-                            delete_RadioButton.IsChecked <- Nullable true
-                            inspect_RadioButton.IsChecked <- Nullable false
-                            modify_RadioButton.IsChecked <- Nullable false
-                            delete_Button.Visibility <- Visibility.Visible                            
-                            result_ScrollViewer.Visibility <- Visibility.Collapsed
-                            result_ScrollViewer.IsHitTestVisible <- true
-                            message_TextBlock.Text <- "--Select a Truss Part--"
-                            code_TextBlock.Text <- "Ready"
-                            newP_StackPanel.Visibility <- Visibility.Collapsed
-                            trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Delete state
-                        // Inspect
-                        | true,false,false, false,true,false
-                        | false,true,false, false,true,false 
-                        | false,false,true, false,true,false ->                        
-                            setGraphicsFromKernel kernel
-                            delete_RadioButton.IsChecked <- Nullable false 
-                            inspect_RadioButton.IsChecked <- Nullable true
-                            modify_RadioButton.IsChecked <- Nullable false
-                            delete_Button.Visibility <- Visibility.Collapsed                            
-                            result_ScrollViewer.Visibility <- Visibility.Visible
-                            result_ScrollViewer.IsHitTestVisible <- false
-                            message_TextBlock.Text <- "--Select a Truss Part--"
-                            code_TextBlock.Text <- "Ready"
-                            newP_StackPanel.Visibility <- Visibility.Collapsed
-                            trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Inspect state
-                        // Modify
-                        | true,false,false, false,false,true
-                        | false,true,false, false,false,true 
-                        | false,false,true, false,false,true ->                        
-                            delete_RadioButton.IsChecked <- Nullable false 
-                            inspect_RadioButton.IsChecked <- Nullable false
-                            modify_RadioButton.IsChecked <- Nullable true
-                            delete_Button.Visibility <- Visibility.Collapsed                            
-                            result_ScrollViewer.Visibility <- Visibility.Collapsed
-                            result_ScrollViewer.IsHitTestVisible <- true
-                            message_TextBlock.Text <- "--Select a Truss Part--"
-                            code_TextBlock.Text <- "Ready"
-                            newP_StackPanel.Visibility <- Visibility.Collapsed
-                            trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Modify state
-                        | _ -> // Logic for Analysis Mode radio buttons                            
-                            match xAxis_RadioButton.IsChecked.Value, 
-                                  yAxis_RadioButton.IsChecked.Value,                                   
-                                  xAxis_RadioButton.IsMouseOver, 
-                                  yAxis_RadioButton.IsMouseOver
-                                  with 
+                | _ ->  // Logic for Selection Mode radio buttons
+                    match delete_RadioButton.IsChecked.Value, 
+                            inspect_RadioButton.IsChecked.Value, 
+                            modify_RadioButton.IsChecked.Value, 
+                            delete_RadioButton.IsMouseOver, 
+                            inspect_RadioButton.IsMouseOver,
+                            modify_RadioButton.IsMouseOver
+                            with 
+                    // Delete
+                    | true,false,false, true,false,false
+                    | false,true,false, true,false,false 
+                    | false,false,true, true,false,false ->  
+                        delete_RadioButton.IsChecked <- Nullable true
+                        inspect_RadioButton.IsChecked <- Nullable false
+                        modify_RadioButton.IsChecked <- Nullable false
+                        delete_Button.Visibility <- Visibility.Visible                            
+                        result_ScrollViewer.Visibility <- Visibility.Collapsed
+                        result_ScrollViewer.IsHitTestVisible <- true
+                        message_TextBlock.Text <- "--Select a Truss Part--"
+                        code_TextBlock.Text <- "Ready"
+                        newP_StackPanel.Visibility <- Visibility.Collapsed
+                        trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Delete state
+                    // Inspect
+                    | true,false,false, false,true,false
+                    | false,true,false, false,true,false 
+                    | false,false,true, false,true,false ->                        
+                        setGraphicsFromKernel kernel
+                        delete_RadioButton.IsChecked <- Nullable false 
+                        inspect_RadioButton.IsChecked <- Nullable true
+                        modify_RadioButton.IsChecked <- Nullable false
+                        delete_Button.Visibility <- Visibility.Collapsed                            
+                        result_ScrollViewer.Visibility <- Visibility.Visible
+                        result_ScrollViewer.IsHitTestVisible <- false
+                        message_TextBlock.Text <- "--Select a Truss Part--"
+                        code_TextBlock.Text <- "Ready"
+                        newP_StackPanel.Visibility <- Visibility.Collapsed
+                        trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Inspect state
+                    // Modify
+                    | true,false,false, false,false,true
+                    | false,true,false, false,false,true 
+                    | false,false,true, false,false,true ->                        
+                        delete_RadioButton.IsChecked <- Nullable false 
+                        inspect_RadioButton.IsChecked <- Nullable false
+                        modify_RadioButton.IsChecked <- Nullable true
+                        delete_Button.Visibility <- Visibility.Collapsed                            
+                        result_ScrollViewer.Visibility <- Visibility.Collapsed
+                        result_ScrollViewer.IsHitTestVisible <- true
+                        message_TextBlock.Text <- "--Select a Truss Part--"
+                        code_TextBlock.Text <- "Ready"
+                        newP_StackPanel.Visibility <- Visibility.Collapsed
+                        trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Modify state
+                    | _ -> // Logic for Analysis Mode radio buttons                            
+                        match xAxis_RadioButton.IsChecked.Value, 
+                                yAxis_RadioButton.IsChecked.Value,                                   
+                                xAxis_RadioButton.IsMouseOver, 
+                                yAxis_RadioButton.IsMouseOver
+                                with 
+                        | true,false, true,false
+                        | false,true, true,false -> 
+                            xAxis_RadioButton.IsChecked <- Nullable true 
+                            yAxis_RadioButton.IsChecked <- Nullable false
+                            let newState = 
+                                trussServices.checkTruss (trussServices.getTrussFromState state)
+                                |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                            code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
+                            newState
+                        | true,false, false,true
+                        | false,true, false,true -> 
+                            xAxis_RadioButton.IsChecked <- Nullable false 
+                            yAxis_RadioButton.IsChecked <- Nullable true                                
+                            let newState = 
+                                trussServices.checkTruss (trussServices.getTrussFromState state)
+                                |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                            code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
+                            newState
+                        | _ -> // Logic for Reaction Display radio buttons                            
+                            match resultant_RadioButton.IsChecked.Value, 
+                                    components_RadioButton.IsChecked.Value,                                   
+                                    resultant_RadioButton.IsMouseOver, 
+                                    components_RadioButton.IsMouseOver
+                                    with 
                             | true,false, true,false
                             | false,true, true,false -> 
-                                xAxis_RadioButton.IsChecked <- Nullable true 
-                                yAxis_RadioButton.IsChecked <- Nullable false
-                                let newState = 
-                                    trussServices.checkTruss (trussServices.getTrussFromState state)
-                                    |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
-                                code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
-                                newState
+                                resultant_RadioButton.IsChecked <- Nullable true 
+                                components_RadioButton.IsChecked <- Nullable false
+                                drawTruss state
+                                Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                                state
                             | true,false, false,true
                             | false,true, false,true -> 
-                                xAxis_RadioButton.IsChecked <- Nullable false 
-                                yAxis_RadioButton.IsChecked <- Nullable true                                
-                                let newState = 
-                                    trussServices.checkTruss (trussServices.getTrussFromState state)
-                                    |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
-                                code_TextBlock.Text <- trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState
-                                newState
-                            | _ -> // Logic for Reaction Display radio buttons                            
-                                match resultant_RadioButton.IsChecked.Value, 
-                                      components_RadioButton.IsChecked.Value,                                   
-                                      resultant_RadioButton.IsMouseOver, 
-                                      components_RadioButton.IsMouseOver
-                                      with 
-                                | true,false, true,false
-                                | false,true, true,false -> 
-                                    resultant_RadioButton.IsChecked <- Nullable true 
-                                    components_RadioButton.IsChecked <- Nullable false
-                                    drawTruss state
-                                    Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
-                                    state
-                                | true,false, false,true
-                                | false,true, false,true -> 
-                                    resultant_RadioButton.IsChecked <- Nullable false 
-                                    components_RadioButton.IsChecked <- Nullable true
-                                    drawTruss state
-                                    Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
-                                    state
-                                | _ -> state
+                                resultant_RadioButton.IsChecked <- Nullable false 
+                                components_RadioButton.IsChecked <- Nullable true
+                                drawTruss state
+                                Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                                state
+                            | _ -> state
             do  state <- newState
                 label.Text <- newState.ToString() 
         | false ->  
@@ -1685,17 +1578,10 @@ type Truss() as this =
                         state <- TrussAnalysisDomain.ErrorState {errors = [ErrorDomain.NoJointSelected]; truss = getTrussFrom state}
                         label.Text <- state.ToString()
                     | Some i -> 
-                        match pinSupport_RadioButton.IsChecked.Value with
-                        | true -> 
-                            let newState = trussServices.sendPointToPinSupportBuilder p state
-                            drawBuildSupportJoint p
+                        let newState = trussServices.sendSupportOptionToState (newSupportOption.Get) state
+                        do  drawBuildSupportJoint p
                             state <- newState
-                            label.Text <- state.ToString()
-                        | false -> 
-                            let newState = trussServices.sendPointToRollerSupportBuilder p state
-                            drawBuildSupportJoint p
-                            state <- newState
-                            label.Text <- state.ToString()
+                            label.Text <- newState.ToString()
                 | TrussAnalysisDomain.TrussMode.Analysis -> setGraphicsFromKernel kernel 
                 | TrussAnalysisDomain.TrussMode.Selection ->                     
                     match modify_RadioButton.IsChecked.Value with
@@ -1880,13 +1766,17 @@ type Truss() as this =
             match es.errors with 
             | [ErrorDomain.NoJointSelected] -> 
                 match  forceBuilder_RadioButton.IsChecked.Value,
-                        memberBuilder_RadioButton.IsChecked.Value with 
+                       supportBuilder_RadioButton.IsChecked.Value with 
                 | true, false -> 
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.ForceBuild state
                     drawTruss newState
                     state <- newState
                     label.Text <- newState.ToString()
-                | false, true -> ()
+                | false, true -> 
+                    let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.SupportBuild state
+                    drawTruss newState
+                    state <- newState
+                    label.Text <- newState.ToString()
                 | _ -> ()
             | _ -> ()
     let handleMouseMove (e : Input.MouseEventArgs) = mousePosition.Set (adjustMouseEventArgPoint e)
@@ -1895,9 +1785,7 @@ type Truss() as this =
         jointForceBuilder_Control.handleFBKeyDown e
         supportBuilder_Control.handleSBKeyDown e
         match e.Key with 
-        | Input.Key.Enter ->             
-            let magb, mag = Double.TryParse trussForceMagnitude_TextBox.Text
-            let dirb, dir = Double.TryParse trussForceAngle_TextBox.Text            
+        | Input.Key.Enter ->
             match state with
             | TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
@@ -1918,33 +1806,14 @@ type Truss() as this =
                 match bs.buildOp with
                 | BuilderDomain.BuildMember _bm -> ()
                 | BuilderDomain.BuildForce _bf -> ()
-                | BuilderDomain.BuildSupport bs -> 
-                    match dirb with
-                    | true -> 
-                        let jointPoint = 
-                            match bs with 
-                            | BuilderDomain.Roller f -> trussServices.getPointFromForceBuilder f
-                            | BuilderDomain.Pin (f,_) -> trussServices.getPointFromForceBuilder f
-                        let dirPoint = System.Windows.Point(jointPoint.X + (1.0 * cos ((dir) * Math.PI/180.)), jointPoint.Y - (1.0 * sin ((dir) * Math.PI/180.)))  
-                        let arrowPoint = jointPoint                            
-                        let newState = 
-                            match rollerSupport_RadioButton.IsChecked.Value with
-                            | true -> trussServices.sendMagnitudeToSupportBuilder (mag,None) state |> trussServices.sendPointToRollerSupportBuilder dirPoint
-                            | false -> trussServices.sendMagnitudeToSupportBuilder (mag,Some mag) state |> trussServices.sendPointToPinSupportBuilder dirPoint
-                        state <- newState
-                        drawBuildSupport (arrowPoint,dir - 90.,rollerSupport_RadioButton.IsChecked.Value)
-                        label.Text <-  newState.ToString()
-                    | false -> 
-                        let newState = trussServices.sendMagnitudeToSupportBuilder (mag,None) state
-                        state <- newState
-                        label.Text <- newState.ToString()
+                | BuilderDomain.BuildSupport bs -> ()
                 | BuilderDomain.Control -> 
                     let newState = 
-                        match memberBuilder_Control.IsVisible, jointForceBuilder_Control.IsVisible with
-                        | true, false -> trussServices.sendMemberOptionToState (newMemberOption.Get) state
-                        | false, true -> trussServices.sendJointForceOptionToState (newForceOption.Get) state                        
-                        | true, true -> state
-                        | false, false -> state
+                        match memberBuilder_Control.IsVisible, jointForceBuilder_Control.IsVisible, supportBuilder_Control.IsVisible with
+                        | true, false, false -> trussServices.sendMemberOptionToState (newMemberOption.Get) state
+                        | false, true, false -> trussServices.sendJointForceOptionToState (newForceOption.Get) state                        
+                        | false, false, true -> trussServices.sendSupportOptionToState (newSupportOption.Get) state
+                        | _ -> state
                     do  drawTruss newState
                         state <- newState                        
                         setjointList newState
