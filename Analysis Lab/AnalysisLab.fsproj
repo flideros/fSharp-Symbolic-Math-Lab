@@ -11,6 +11,7 @@
     <Compile Include="WolframServices.fs" />
     <Compile Include="DomainModels.fs" />
     <Compile Include="ElementControls.fs" />
+    <Compile Include="AnalysisControls.fs" />
     <Compile Include="TrussImplementation.fs" />
     <Compile Include="TrussServices.fs" />
     <Compile Include="TrussControls.fs" />

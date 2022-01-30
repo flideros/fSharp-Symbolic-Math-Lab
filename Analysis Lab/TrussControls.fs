@@ -21,6 +21,7 @@ type Truss() as this =
     do Install() |> ignore
     
     // Shared Values    
+    let orginPosition = SharedValue<Point> (Point(0.,0.))
     let mousePosition = SharedValue<Point> (Point(0.,0.))
     let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
     let newForceOption = SharedValue<(LoadDomain.JointForce option)> (None)
@@ -68,7 +69,11 @@ type Truss() as this =
             l.Opacity <- 0.5
             l.MaxLines <- 30
         l        
-        // Analysis State
+    // Orgin and grid
+    let coordinateGrid_Control = 
+        let g = GridControl(orginPosition)
+        g
+    // Analysis State
     let axis_Label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -198,209 +203,7 @@ type Truss() as this =
             sp.Children.Add(momentAxisRadio_StackPanel) |> ignore            
             sp.Children.Add(reactionRadio_StackPanel) |> ignore            
             sp.Visibility <- Visibility.Collapsed
-        sp
-        // Orgin and grid
-    let orgin (p:System.Windows.Point) = 
-        let radius = 8.
-        let line1 = Line()
-        do  line1.X1 <- p.X + 15.
-            line1.X2 <- p.X - 15.
-            line1.Y1 <- p.Y
-            line1.Y2 <- p.Y
-            line1.Stroke <- black
-            line1.StrokeThickness <- 2.
-        let line2 = Line()
-        do  line2.X1 <- p.X
-            line2.X2 <- p.X
-            line2.Y1 <- p.Y + 15.
-            line2.Y2 <- p.Y - 15.
-            line2.Stroke <- black
-            line2.StrokeThickness <- 2.
-        let e = Ellipse()
-        let highlight () = e.Fill <- red
-        let unhighlight () = e.Fill <- clear
-        do  e.Stroke <- red
-            e.StrokeThickness <- 2.
-            e.Opacity <- 0.4
-            e.Margin <- Thickness(Left=p.X - radius, Top=p.Y - radius, Right = 0., Bottom = 0.)
-            e.Width <- 2. * radius
-            e.Height <- 2. * radius
-            e.MouseEnter.AddHandler(Input.MouseEventHandler(fun _ _ -> highlight ()))
-            e.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
-        (line1,line2,e)
-    let grid = 
-        let gridLines (p:System.Windows.Point) = 
-            let yInterval,xInterval = 5,5
-            let yOffset, xOffset = p.Y, p.X
-            let lines = Image()        
-            do  lines.SetValue(Panel.ZIndexProperty, -100)
-        
-            let gridLinesVisual = DrawingVisual() 
-            let context = gridLinesVisual.RenderOpen()
-                
-            let rows = (int)(SystemParameters.PrimaryScreenHeight)
-            let columns = (int)(SystemParameters.PrimaryScreenWidth)
-
-            let x = System.Windows.Point(0., 0.)
-            let x' = System.Windows.Point(SystemParameters.PrimaryScreenWidth, 0.)
-            let y = System.Windows.Point(0.,0.)        
-            let y' = System.Windows.Point(0., SystemParameters.PrimaryScreenHeight)
-             
-            //lines
-            let horozontalLines = 
-                seq{for i in 0..rows -> 
-                        match i % yInterval = 0 with //Interval
-                        | true -> context.DrawLine(blueGridline,x,x')
-                                  x.Offset(0.,yOffset)
-                                  x'.Offset(0.,yOffset)
-                        | false -> context.DrawLine(redGridline,x,x')
-                                   x.Offset(0.,yOffset)
-                                   x'.Offset(0.,yOffset)}
-            let verticalLines = 
-                seq{for i in 0..columns -> 
-                        match i % xInterval = 0 with //Interval
-                        | true -> context.DrawLine(blueGridline,y,y')
-                                  y.Offset(xOffset,0.)
-                                  y'.Offset(xOffset,0.)
-                        | false -> context.DrawLine(redGridline,y,y')
-                                   y.Offset(xOffset,0.)
-                                   y'.Offset(xOffset,0.)}        
-            do  
-                Seq.iter (fun x -> x) horozontalLines
-                Seq.iter (fun y -> y) verticalLines
-                context.Close()
-
-            let bitmap = 
-                RenderTargetBitmap(
-                    (int)SystemParameters.PrimaryScreenWidth,
-                    (int)SystemParameters.PrimaryScreenHeight, 
-                    96.,
-                    96.,
-                    PixelFormats.Pbgra32)        
-            do  
-                bitmap.Render(gridLinesVisual)
-                bitmap.Freeze()
-                lines.Source <- bitmap
-            lines
-        let startPoint = System.Windows.Point(20.,20.)
-        let gl = gridLines startPoint
-        gl    
-        // Orgin point coordinates
-    let xOrgin_TextBlock =
-        let l = TextBlock()
-        do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 14.
-            l.Width <- 50.
-            l.Height <- 25.
-            l.VerticalAlignment <- VerticalAlignment.Center
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "200"
-        l
-    let xUp_Button = 
-        let b = Button()
-        let handleClick () = 
-            let x = Double.Parse xOrgin_TextBlock.Text
-            let x' = x + 100.
-            do xOrgin_TextBlock.Text <- x'.ToString()
-        do  b.Content <- "U"
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b
-    let xDown_Button = 
-        let b = Button()
-        let handleClick () = 
-            let x = Double.Parse xOrgin_TextBlock.Text
-            let x' = x - 100.
-            do xOrgin_TextBlock.Text <- x'.ToString()
-        do  b.Content <- "D"
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b
-    let xOrgin_StackPanel =
-        let sp = StackPanel()
-        do  sp.Height <- 30.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Horizontal            
-            sp.Children.Add(xOrgin_TextBlock) |> ignore
-            sp.Children.Add(xUp_Button) |> ignore
-            sp.Children.Add(xDown_Button) |> ignore
-        sp
-    let yOrgin_TextBlock =
-        let l = TextBlock()
-        do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 14.
-            l.Width <- 50.
-            l.Height <- 25.
-            l.VerticalAlignment <- VerticalAlignment.Center
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "500"
-        l
-    let yUp_Button = 
-        let b = Button()
-        let handleClick () = 
-            let y = Double.Parse yOrgin_TextBlock.Text
-            let y' = y + 100.
-            do yOrgin_TextBlock.Text <- y'.ToString()
-        do  b.Content <- "U"
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b
-    let yDown_Button = 
-        let b = Button()
-        let handleClick () = 
-            let y = Double.Parse yOrgin_TextBlock.Text
-            let y' = y - 100.
-            do yOrgin_TextBlock.Text <- y'.ToString()
-        do  b.Content <- "D"
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b
-    let yOrgin_StackPanel =
-        let sp = StackPanel()
-        do  sp.Height <- 30.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Horizontal            
-            sp.Children.Add(yOrgin_TextBlock) |> ignore
-            sp.Children.Add(yUp_Button) |> ignore
-            sp.Children.Add(yDown_Button) |> ignore
-        sp
-    let orgin_StackPanel = 
-        let sp = StackPanel()
-        let x_TextBlock = 
-            let l = TextBlock()
-            do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
-                l.FontStyle <- FontStyles.Normal
-                l.FontSize <- 14.
-                //l.Width <- 50.
-                l.Height <- 25.
-                l.VerticalAlignment <- VerticalAlignment.Center
-                l.HorizontalAlignment <- HorizontalAlignment.Left
-                //l.TextWrapping <- TextWrapping.Wrap
-                l.Text <- "Orgin Point X"
-            l
-        let y_TextBlock = 
-            let l = TextBlock()
-            do  //l.Margin <- Thickness(Left = 10., Top = 50., Right = 0., Bottom = 0.)
-                l.FontStyle <- FontStyles.Normal
-                l.FontSize <- 14.
-                //l.Width <- 50.
-                l.Height <- 25.
-                l.VerticalAlignment <- VerticalAlignment.Center
-                //l.TextWrapping <- TextWrapping.Wrap
-                l.Text <- "Orgin Point Y"
-            l
-        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(x_TextBlock) |> ignore
-            sp.Children.Add(xOrgin_StackPanel) |> ignore
-            sp.Children.Add(y_TextBlock) |> ignore
-            sp.Children.Add(yOrgin_StackPanel) |> ignore
-            sp.Visibility <- Visibility.Visible
-        sp
+        sp        
         // Truss mode selection
     let trussMode_Label =
         let l = TextBlock()
@@ -899,7 +702,7 @@ type Truss() as this =
             sp.Children.Add(toggleCodeText_Button) |> ignore
             sp.Children.Add(toggleResultText_Button) |> ignore
             sp.Children.Add(toggleStateText_Button) |> ignore
-            sp.Children.Add(orgin_StackPanel) |> ignore
+            sp.Children.Add(coordinateGrid_Control) |> ignore
 
         sp  
         // Controls border
@@ -957,7 +760,7 @@ type Truss() as this =
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (getJointsFrom state)
         // Draw
     let drawOrgin (p:System.Windows.Point) = 
-        let l1,l2,e = orgin p
+        let l1,l2,e = coordinateGrid_Control.orginPoint p //orgin p //
         do  canvas.Children.Add(e) |> ignore
             canvas.Children.Add(l1) |> ignore
             canvas.Children.Add(l2) |> ignore
@@ -1173,12 +976,9 @@ type Truss() as this =
                 support
             do  canvas.Children.Add(support) |> ignore
     let drawTruss s =
-        let orginPoint = 
-            let x = Double.Parse xOrgin_TextBlock.Text
-            let y = Double.Parse yOrgin_TextBlock.Text
-            System.Windows.Point(x,y)        
+        let orginPoint = orginPosition.Get
         do  canvas.Children.Clear()
-            canvas.Children.Add(grid) |> ignore
+            canvas.Children.Add(coordinateGrid_Control.gridLines) |> ignore
             drawOrgin orginPoint
             canvas.Children.Add(label) |> ignore
             canvas.Children.Add(result_ScrollViewer) |> ignore
@@ -1203,11 +1003,9 @@ type Truss() as this =
         let selectedJoint = getJointIndex p
         match selectedJoint with 
         | None -> 
-            do  xOrgin_TextBlock.Text <- "0."
-                yOrgin_TextBlock.Text <- "0."
+            do  orginPosition.Set (Point(0.,0.))
         | Some i -> 
-            do  xOrgin_TextBlock.Text <- joints.[i].X.ToString()
-                yOrgin_TextBlock.Text <- joints.[i].Y.ToString()
+            do  orginPosition.Set (Point(joints.[i].X,joints.[i].Y))
     let setGraphicsFromKernel (k:MathKernel) =        
         let code = code_TextBlock.Text // trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value state  //
         let rec getImages i =
@@ -1896,7 +1694,7 @@ type Truss() as this =
     (*Initialize*)
     do  this.Content <- screen_Grid
         setGraphicsFromKernel kernel        
-        
+         
     (*add event handlers*)        
         this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
@@ -1904,9 +1702,6 @@ type Truss() as this =
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
         this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseUp(e)))
         this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
-        xUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
-        xDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
-        yUp_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
-        yDown_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
+        orginPosition.Changed.AddHandler((fun _ _ -> drawTruss state))
