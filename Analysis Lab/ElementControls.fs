@@ -393,6 +393,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
             | true,_ -> ()
         do  tb.MaxLines <- 15
             tb.TabIndex <- 0
+            tb.Text <- "0"
             tb.IsReadOnly <- false
             tb.BorderThickness <- Thickness(3.)
             tb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)

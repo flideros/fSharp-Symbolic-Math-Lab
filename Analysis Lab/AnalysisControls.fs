@@ -10,13 +10,13 @@ open System.Windows.Media.Imaging
 open Wolfram.NETLink
 open GraphicResources
 open GenericDomain
+open ControlDomain
 
 type GridControl(orginPoint:SharedValue<Point>) as this =  
     inherit UserControl()    
     do Install() |> ignore     
     
-    // Controls    
-    
+    // Controls
         // Orgin and grid lines
     let orgin (p:System.Windows.Point) = 
         let radius = 8.
@@ -232,3 +232,107 @@ type GridControl(orginPoint:SharedValue<Point>) as this =
 
     member _this.orginPoint p = orgin p
     member _this.gridLines = grid 
+
+type WolframResultControl(wolframCode:SharedValue<string>,
+                          wolframMessage:SharedValue<string>,
+                          wolframResult:SharedValue<string>,
+                          wolframLink:SharedValue<IKernelLink>,
+                          wolframSettings:SharedValue<WolframResultControlSettings>) as this =  
+    inherit UserControl()    
+    do Install() |> ignore     
+    
+    // Controls        
+            // Wolfram result 
+    let result_Viewbox (image:UIElement) =         
+        let vb = Viewbox()   
+        do  image.Opacity <- 0.85            
+            vb.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            vb.IsHitTestVisible <- false
+            vb.Child <- image            
+        vb
+    let code_TextBlock = 
+        let l = TextBox()
+        do  l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 15.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Ready"
+            l.Visibility <- Visibility.Hidden
+        l 
+    let message_TextBlock = 
+        let l = TextBlock()
+        do  l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 30.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Calculate Reactions"
+            l.Visibility <- Visibility.Visible
+            l.Background <- clear
+        l
+    let result_TextBlock = 
+        let l = TextBox()
+        do  l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 15.
+            l.MaxWidth <- 500.
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- ""
+            l.Visibility <- Visibility.Hidden
+        l 
+    let result_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Orientation <- Orientation.Vertical
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
+            sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
+            sp.Visibility <- Visibility.Visible
+        sp    
+    let result_ScrollViewer = 
+        let sv = new ScrollViewer();
+        do  sv.VerticalScrollBarVisibility <- ScrollBarVisibility.Hidden 
+            sv.MaxHeight <- 1000.
+            sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
+            sv.MaxWidth <-800.
+            sv.Content <- result_StackPanel
+            sv.SetValue(Canvas.ZIndexProperty,3) 
+            sv.Visibility <- Visibility.Collapsed    
+        sv
+
+    let screen_Grid =
+        let g = Grid()              
+        do  g.Children.Add(result_ScrollViewer) |> ignore
+        g
+    
+    let link = wolframLink.Get
+    let setGraphicsFromKernel (k:MathKernel) =        
+        let code = code_TextBlock.Text 
+        let rec getImages i =
+            let image = Image()            
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage (k.Graphics.[i])
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+            match i + 1 = k.Graphics.Length with
+            | true -> ()
+            | false -> getImages (i+1)
+        match k.Graphics.Length > 0 with
+        | true ->                                        
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
+            result_StackPanel.Children.Clear()            
+            getImages 0
+            result_TextBlock.Text <- text
+            result_StackPanel.Children.Add(message_TextBlock) |> ignore
+            result_StackPanel.Children.Add(code_TextBlock) |> ignore
+            result_StackPanel.Children.Add(result_TextBlock) |> ignore
+        | false -> 
+            result_StackPanel.Children.Clear()             
+            let graphics = link.EvaluateToImage("Style[" + code + ",FontSize -> 30]", width = 0, height = 0)
+            let text = link.EvaluateToOutputForm("Style[" + code + ",FontSize -> 30]",pageWidth = 0)
+            let image = Image()            
+            do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
+                result_TextBlock.Text <- text
+                result_StackPanel.Children.Add(message_TextBlock) |> ignore
+                result_StackPanel.Children.Add(result_Viewbox image) |> ignore
+                result_StackPanel.Children.Add(code_TextBlock) |> ignore
+                result_StackPanel.Children.Add(result_TextBlock) |> ignore
+
+    do  this.Content <- screen_Grid
+
+    member _this.result image = result_Viewbox image
+    member _this.setGraphics k = setGraphicsFromKernel k

@@ -57,6 +57,7 @@ type Truss() as this =
     let trussServices = TrussServices.createServices()
 
     (*Controls*) 
+        // General purpose text for code output such as displaying ontrol state
     let label =
         let l = TextBox()
         do  l.Margin <- Thickness(Left = 1080., Top = 50., Right = 0., Bottom = 0.)
@@ -69,11 +70,29 @@ type Truss() as this =
             l.Opacity <- 0.5
             l.MaxLines <- 30
         l        
-    // Orgin and grid
+        // Orgin and grid
     let coordinateGrid_Control = 
         let g = GridControl(orginPosition)
         g
-    // Analysis State
+        // Member Builder    
+    let memberBuilder_Control = 
+        let mb = MemberBuilderControl(mousePosition,newMemberOption,jointList)
+        do  mb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+        mb    
+        // Force builder    
+    let jointForceBuilder_Control = 
+        let fb = JointForceBuilderControl(mousePosition,newForceOption,jointList)
+        do  fb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            fb.Visibility <- Visibility.Collapsed
+        fb    
+        // Support builder    
+    let supportBuilder_Control = 
+        let sb = SupportBuilderControl(mousePosition,newSupportOption,jointList)
+        do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            sb.Visibility <- Visibility.Collapsed
+        sb          
+                
+        // Analysis State
     let axis_Label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -204,6 +223,7 @@ type Truss() as this =
             sp.Children.Add(reactionRadio_StackPanel) |> ignore            
             sp.Visibility <- Visibility.Collapsed
         sp        
+        
         // Truss mode selection
     let trussMode_Label =
         let l = TextBlock()
@@ -263,6 +283,7 @@ type Truss() as this =
             sp.Children.Add(analysis_RadioButton) |> ignore
             sp.Children.Add(settings_RadioButton) |> ignore
         sp
+        
         // Selection mode selection
     let selectionMode_Label =
         let l = TextBlock()
@@ -377,23 +398,7 @@ type Truss() as this =
             sp.Children.Add(newF_StackPanel) |> ignore
             sp.Visibility <- Visibility.Collapsed
         sp
-        // Member Builder    
-    let memberBuilder_Control = 
-        let mb = MemberBuilderControl(mousePosition,newMemberOption,jointList)
-        do  mb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-        mb    
-        // Force builder    
-    let jointForceBuilder_Control = 
-        let fb = JointForceBuilderControl(mousePosition,newForceOption,jointList)
-        do  fb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            fb.Visibility <- Visibility.Collapsed
-        fb    
-        // Support builder    
-    let supportBuilder_Control = 
-        let sb = SupportBuilderControl(mousePosition,newSupportOption,jointList)
-        do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            sb.Visibility <- Visibility.Collapsed
-        sb      
+        
         // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
@@ -566,6 +571,7 @@ type Truss() as this =
             path.MouseLeave.AddHandler(Input.MouseEventHandler(fun _ _ -> unhighlight ()))
             path.MouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> sendPathToState path state ))
         path
+        
         // Wolfram result 
     let result_Viewbox (image:UIElement) =         
         let vb = Viewbox()   
@@ -622,6 +628,7 @@ type Truss() as this =
             sv.SetValue(Canvas.ZIndexProperty,3) 
             sv.Visibility <- Visibility.Collapsed    
         sv
+        
         // Main canvas    
     let canvas = 
         let c = Canvas()        
@@ -635,6 +642,7 @@ type Truss() as this =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore            
         g
+        
         // Settings
     let toggleCodeText_Button = 
         let b = Button() 
@@ -705,6 +713,7 @@ type Truss() as this =
             sp.Children.Add(coordinateGrid_Control) |> ignore
 
         sp  
+        
         // Controls border
     let trussControls_Border = 
         let border = Border()            
@@ -731,6 +740,7 @@ type Truss() as this =
             sp.SetValue(Canvas.ZIndexProperty,4)
             border.Child <- sp
         border    
+    
     (*Actions*) 
     let adjustMouseButtonEventArgPoint (e:Input.MouseButtonEventArgs) = 
         let p = e.GetPosition(this)
