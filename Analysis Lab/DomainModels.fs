@@ -95,7 +95,7 @@ module ErrorDomain =
 
 module ControlDomain = 
     
-    type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool}
+    type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool;isHitTestVisible:bool}
 
 // I'm in the process of refactoring this domain model into a more general purpose analysis tool.
 module TrussAnalysisDomain =

@@ -241,8 +241,10 @@ type WolframResultControl(wolframCode:SharedValue<string>,
     inherit UserControl()    
     do Install() |> ignore     
     
-    // Controls        
-            // Wolfram result 
+    // Wolfram Limk
+    let link = wolframLink.Get
+    
+    // Controls
     let result_Viewbox (image:UIElement) =         
         let vb = Viewbox()   
         do  image.Opacity <- 0.85            
@@ -257,7 +259,7 @@ type WolframResultControl(wolframCode:SharedValue<string>,
             l.MaxWidth <- 500.
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- "Ready"
-            l.Visibility <- Visibility.Hidden
+            l.Visibility <- Visibility.Visible
         l 
     let message_TextBlock = 
         let l = TextBlock()
@@ -284,24 +286,23 @@ type WolframResultControl(wolframCode:SharedValue<string>,
             sp.HorizontalAlignment <- HorizontalAlignment.Left
             sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
             sp.Visibility <- Visibility.Visible
-        sp    
+        sp
     let result_ScrollViewer = 
         let sv = new ScrollViewer();
         do  sv.VerticalScrollBarVisibility <- ScrollBarVisibility.Hidden 
-            sv.MaxHeight <- 1000.
+            sv.MaxHeight <- 700.
             sv.HorizontalScrollBarVisibility <- ScrollBarVisibility.Auto 
             sv.MaxWidth <-800.
-            sv.Content <- result_StackPanel
-            sv.SetValue(Canvas.ZIndexProperty,3) 
-            sv.Visibility <- Visibility.Collapsed    
+            sv.Content <- result_StackPanel 
+            sv.Visibility <- Visibility.Visible    
         sv
-
+    // main grid
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(result_ScrollViewer) |> ignore
         g
     
-    let link = wolframLink.Get
+    // logic
     let setGraphicsFromKernel (k:MathKernel) =        
         let code = code_TextBlock.Text 
         let rec getImages i =
@@ -317,6 +318,7 @@ type WolframResultControl(wolframCode:SharedValue<string>,
             result_StackPanel.Children.Clear()            
             getImages 0
             result_TextBlock.Text <- text
+            wolframResult.Set text
             result_StackPanel.Children.Add(message_TextBlock) |> ignore
             result_StackPanel.Children.Add(code_TextBlock) |> ignore
             result_StackPanel.Children.Add(result_TextBlock) |> ignore
@@ -327,12 +329,28 @@ type WolframResultControl(wolframCode:SharedValue<string>,
             let image = Image()            
             do  image.Source <- ControlLibrary.Image.convertDrawingImage(graphics)
                 result_TextBlock.Text <- text
+                wolframResult.Set text
                 result_StackPanel.Children.Add(message_TextBlock) |> ignore
                 result_StackPanel.Children.Add(result_Viewbox image) |> ignore
                 result_StackPanel.Children.Add(code_TextBlock) |> ignore
                 result_StackPanel.Children.Add(result_TextBlock) |> ignore
-
+    let handleWolframCodeChange code = code_TextBlock.Text <- code
+    let handleWolframMessageChange message = message_TextBlock.Text <- message
+    let handleWolframResultChange result = result_TextBlock.Text <- result
+    let handleWolframSettingsChange settings = 
+        do  code_TextBlock.Visibility <- match wolframSettings.Get.codeVisible with | true -> Visibility.Visible | false -> Visibility.Collapsed
+            result_TextBlock.Visibility <- match wolframSettings.Get.resultVisible with | true -> Visibility.Visible | false -> Visibility.Collapsed
+            result_ScrollViewer.IsHitTestVisible <- wolframSettings.Get.isHitTestVisible
+    
     do  this.Content <- screen_Grid
+        wolframCode.Changed.Add handleWolframCodeChange 
+        wolframResult.Changed.Add handleWolframResultChange 
+        wolframMessage.Changed.Add handleWolframMessageChange 
+        wolframSettings.Changed.Add handleWolframSettingsChange
+        handleWolframCodeChange wolframCode.Get
+        handleWolframResultChange wolframResult.Get
+        handleWolframMessageChange wolframMessage.Get
+        handleWolframSettingsChange wolframSettings.Get
 
     member _this.result image = result_Viewbox image
     member _this.setGraphics k = setGraphicsFromKernel k
