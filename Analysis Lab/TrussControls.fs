@@ -17,7 +17,7 @@ open ControlDomain
 // This is a development area.
 // This code is isolated from the Analysis UI for the time being as I develop this code.
 
-type Truss() as this =  
+type Truss(                                                                                                                                                                                                                                                                                  ) as this =  
     inherit UserControl()    
     do Install() |> ignore
     
@@ -60,8 +60,6 @@ type Truss() as this =
     // Internal State
     let initialState = TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = TrussAnalysisDomain.MemberBuild}
     let mutable state = initialState    
-
-    
     
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
@@ -101,7 +99,7 @@ type Truss() as this =
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             sb.Visibility <- Visibility.Collapsed
         sb
-        // Support builder    
+        // Wolfram Result    
     let wolframResult_Control = 
         let sb = WolframResultControl(wolframCode,wolframMessage,wolframResult,wolframLink,wolframSettings)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -1321,12 +1319,11 @@ type Truss() as this =
                         do  drawBuildSupportJoint p
                             state <- newState
                             label.Text <- newState.ToString()
-                | TrussAnalysisDomain.TrussMode.Analysis -> 
-                    wolframResult_Control.setGraphics kernel
+                | TrussAnalysisDomain.TrussMode.Analysis -> wolframResult_Control.setGraphics kernel
                 | TrussAnalysisDomain.TrussMode.Selection ->                     
                     match modify_RadioButton.IsChecked.Value with
                     | false -> label.Text <- state.ToString()
-                    | true ->                         
+                    | true ->
                         let newState = trussServices.sendPointToModification p state
                         match newState with 
                         | TrussAnalysisDomain.SelectionState ss -> 

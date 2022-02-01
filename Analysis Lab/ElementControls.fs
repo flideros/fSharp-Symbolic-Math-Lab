@@ -497,4 +497,5 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
 
     
     member _this.handleSBMouseDown () =  handleMouseDown ()    
-    member _this.handleSBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e        
+    member _this.handleSBKeyDown (e:Input.KeyEventArgs) = handleKeyDown e      
+    

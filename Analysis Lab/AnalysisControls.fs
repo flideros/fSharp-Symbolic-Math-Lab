@@ -354,3 +354,129 @@ type WolframResultControl(wolframCode:SharedValue<string>,
 
     member _this.result image = result_Viewbox image
     member _this.setGraphics k = setGraphicsFromKernel k
+
+type SelectionControl (orginPoint:SharedValue<Point>) as this =  
+    inherit UserControl()    
+    do Install() |> ignore     
+    
+    // Controls    
+    let selectionMode_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Selection Mode"
+        l
+    let delete_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Delete", FontSize=15.)        
+        do  r.Content <- tb
+            r.IsChecked <- true |> Nullable<bool>
+        r
+    let inspect_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Inspect", FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
+    let modify_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Modify", FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
+    (*let delete_Button = 
+        let b = Button()
+        let handleClick () = 
+            let newState = trussServices.removeTrussPartFromTruss state            
+            do  state <- newState 
+                label.Text <- newState.ToString()
+        do  b.Content <- "Delete"
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Bold
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
+        b*)
+    let newPX_TextBlock = 
+        let tb = TextBlock(Text = "X")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newPX_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newPY_TextBlock = 
+        let tb = TextBlock(Text = "Y")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newPY_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newP_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(newPX_TextBlock) |> ignore
+            sp.Children.Add(newPX_TextBox) |> ignore
+            sp.Children.Add(newPY_TextBlock) |> ignore
+            sp.Children.Add(newPY_TextBox) |> ignore            
+            sp.Visibility <- Visibility.Collapsed
+        sp    
+    let newFMag_TextBlock = 
+        let tb = TextBlock(Text = "Magnitude")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newFMag_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newFDir_TextBlock = 
+        let tb = TextBlock(Text = "Direction (Degrees)")
+        do tb.SetValue(Grid.RowProperty,0)
+        tb
+    let newFDir_TextBox = 
+        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
+        let toggleIsReadOnly () = tb.IsReadOnly <- false
+        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
+        tb
+    let newF_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(newFMag_TextBlock) |> ignore
+            sp.Children.Add(newFMag_TextBox) |> ignore
+            sp.Children.Add(newFDir_TextBlock) |> ignore
+            sp.Children.Add(newFDir_TextBox) |> ignore            
+            sp.Visibility <- Visibility.Collapsed
+        sp    
+    let selectionMode_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(selectionMode_Label) |> ignore
+            sp.Children.Add(delete_RadioButton) |> ignore
+            sp.Children.Add(inspect_RadioButton) |> ignore
+            sp.Children.Add(modify_RadioButton) |> ignore
+            //sp.Children.Add(delete_Button) |> ignore
+            sp.Children.Add(newP_StackPanel) |> ignore
+            sp.Children.Add(newF_StackPanel) |> ignore
+            sp.Visibility <- Visibility.Collapsed
+        sp
+    
+    let screen_Grid =
+        let g = Grid()              
+        do  g.Children.Add(selectionMode_StackPanel) |> ignore
+        g
+    
+    do  this.Content <- screen_Grid
