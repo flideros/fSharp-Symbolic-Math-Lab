@@ -355,7 +355,10 @@ type WolframResultControl(wolframCode:SharedValue<string>,
     member _this.result image = result_Viewbox image
     member _this.setGraphics k = setGraphicsFromKernel k
 
-type SelectionControl (orginPoint:SharedValue<Point>) as this =  
+type SelectionControl (orginPoint:SharedValue<Point>,
+                       system:SharedValue<ElementDomain.System option>,
+                       selectedPart:SharedValue<ElementDomain.Part option>
+                       ) as this =  
     inherit UserControl()    
     do Install() |> ignore     
     
@@ -367,37 +370,26 @@ type SelectionControl (orginPoint:SharedValue<Point>) as this =
             l.FontSize <- 20.            
             l.TextWrapping <- TextWrapping.Wrap
             l.Text <- "Selection Mode"
-        l
-    let delete_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Delete", FontSize=15.)        
-        do  r.Content <- tb
-            r.IsChecked <- true |> Nullable<bool>
-        r
-    let inspect_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Inspect", FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    let modify_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Modify", FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    (*let delete_Button = 
-        let b = Button()
-        let handleClick () = 
-            let newState = trussServices.removeTrussPartFromTruss state            
-            do  state <- newState 
-                label.Text <- newState.ToString()
+        l    
+    let selectionMode_ComboBox =
+        let cb = ComboBox()        
+        do  cb.Text <- "Selection Mode"
+            //cb.Width <- 200.
+            //cb.Height <- 30.
+            cb.FontSize <- 15.
+            cb.VerticalContentAlignment <- VerticalAlignment.Center
+            cb.SelectedItem <- "Delete"            
+            cb.ItemsSource <- ["Delete";"Inspect";"Modify"]
+        cb     
+    
+    let delete_Button = 
+        let b = Button()        
         do  b.Content <- "Delete"
             b.FontSize <- 12.
             b.FontWeight <- FontWeights.Bold
             b.VerticalAlignment <- VerticalAlignment.Center
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b*)
+        b
+    
     let newPX_TextBlock = 
         let tb = TextBlock(Text = "X")
         do tb.SetValue(Grid.RowProperty,0)
@@ -428,6 +420,7 @@ type SelectionControl (orginPoint:SharedValue<Point>) as this =
             sp.Children.Add(newPY_TextBox) |> ignore            
             sp.Visibility <- Visibility.Collapsed
         sp    
+    
     let newFMag_TextBlock = 
         let tb = TextBlock(Text = "Magnitude")
         do tb.SetValue(Grid.RowProperty,0)
@@ -458,6 +451,7 @@ type SelectionControl (orginPoint:SharedValue<Point>) as this =
             sp.Children.Add(newFDir_TextBox) |> ignore            
             sp.Visibility <- Visibility.Collapsed
         sp    
+    
     let selectionMode_StackPanel = 
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
@@ -465,9 +459,7 @@ type SelectionControl (orginPoint:SharedValue<Point>) as this =
             sp.IsHitTestVisible <- true
             sp.Orientation <- Orientation.Vertical
             sp.Children.Add(selectionMode_Label) |> ignore
-            sp.Children.Add(delete_RadioButton) |> ignore
-            sp.Children.Add(inspect_RadioButton) |> ignore
-            sp.Children.Add(modify_RadioButton) |> ignore
+            sp.Children.Add(selectionMode_ComboBox) |> ignore
             //sp.Children.Add(delete_Button) |> ignore
             sp.Children.Add(newP_StackPanel) |> ignore
             sp.Children.Add(newF_StackPanel) |> ignore
@@ -479,4 +471,16 @@ type SelectionControl (orginPoint:SharedValue<Point>) as this =
         do  g.Children.Add(selectionMode_StackPanel) |> ignore
         g
     
+    // logic
+    let deletePart () = 
+        match system.Get.IsSome && selectedPart.Get.IsSome with
+        | true -> ()
+        | false -> 
+            match system.Get.Value with 
+            | ElementDomain.System.Beam -> ()
+            | ElementDomain.System.TrussSystem  t -> 
+                let tOut = TrussImplementation.removeTrussPartFromTruss t selectedPart.Get
+                do  system.Set (ElementDomain.System.TrussSystem tOut |> Some)
+    
     do  this.Content <- screen_Grid
+        delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> deletePart()))

@@ -30,7 +30,7 @@ module TrussServices =
     type GetSupportReactionEquationsFromState = bool -> TrussAnalysisState -> TrussAnalysisState
     type GetSupportReactionSolve = bool -> TrussAnalysisState -> string
     type GetReactionForcesFromState = bool -> TrussAnalysisState -> JointForce list
-    type GetMemberOptionFromTrussPart = TrussPart -> (System.Windows.Point*System.Windows.Point) Option
+    type GetMemberOptionFromTrussPart = Part -> (System.Windows.Point*System.Windows.Point) Option
     type GetAnalysisReport = TrussAnalysisState -> string
     type GetSupportIndexAtJoint = Joint -> Support list -> int*string
     type GetMemberIndex = Member -> Truss -> int
@@ -797,7 +797,7 @@ module TrussServices =
                         |> List.concat 
                         |> List.distinctBy (fun (m,p) -> (m,p))
                         |> List.map (fun x -> TrussMemberForce x) 
-                    let replaceMembersWithForces (n:TrussNode) =
+                    let replaceMembersWithForces (n:Node) =
                         let (j,pl) = n
                         let memberCount pl' = List.filter (fun x -> match x with | Member _ -> true | _ -> false) pl' |> List.length
                         let newPl = 

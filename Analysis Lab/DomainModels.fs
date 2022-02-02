@@ -56,14 +56,18 @@ module ElementDomain =
         | Hinge
         | Fixed
         | Simple
-
     
-    type Truss = {members:Member list; forces:JointForce list; supports:Support list}
-    type TrussPart = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
+    type Part = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
         | Member of Member
         | Force of JointForce
-        | Support of Support
-    type TrussNode = (Joint*TrussPart list)
+        | Support of Support    
+    type Node = (Joint*Part list)
+
+    type Truss = {members:Member list; forces:JointForce list; supports:Support list}
+    type System = 
+        | TrussSystem of Truss
+        | Beam // TODO
+        // etc.
 
 module BuilderDomain = 
     open AtomicDomain
@@ -79,7 +83,7 @@ module BuilderDomain =
         | BuildSupport of SupportBuilder
         | Control
     type BuildOpResult =
-        | TrussPart of TrussPart
+        | TrussPart of Part
         | TrussBuildOp of TrussBuildOp
 
 module ErrorDomain = 
@@ -115,7 +119,7 @@ module TrussAnalysisDomain =
         | Determinate 
         | Indeterminate
     
-    type TrussMemberForce = (float*TrussPart)
+    type TrussMemberForce = (float*Part)
     
     type TrussMode =
         | Settings
@@ -154,11 +158,11 @@ module TrussAnalysisDomain =
     type MethodOfJointsCalculationStateData = 
         {solvedMembers: TrussMemberForce list;
          memberEquations : string list;
-         nodes : TrussNode list;
+         nodes : Node list;
          reactions : SupportReactionResult list;
          variables : string list}
     type MethodOfJointsAnalysisStateData = 
-        {zeroForceMembers: TrussPart list;
+        {zeroForceMembers: Part list;
          tensionMembers: TrussMemberForce list;
          compressionMembers: TrussMemberForce list;
          reactions : SupportReactionResult list}

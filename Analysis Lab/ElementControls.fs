@@ -410,10 +410,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
        l
     let supportType_ComboBox =
         let cb = ComboBox()        
-        do  cb.Text <- "Support Type"
-            //cb.Width <- 200.
-            //cb.Height <- 30.
-            cb.FontSize <- 15.
+        do  cb.FontSize <- 15.
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Roller"            
             cb.ItemsSource <- ["Roller";"Pin";"Fixed";"Hinge";"Simple"]

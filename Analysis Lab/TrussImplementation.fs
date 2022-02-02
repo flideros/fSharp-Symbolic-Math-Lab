@@ -126,13 +126,13 @@ module TrussImplementation =
         | BuilderDomain.SupportBuilder.Pin (p,_) -> p.joint
     let getJointFromSupport (s:Support) = match s with | Pin p -> Some p.normal.joint | Roller r -> Some r.joint | _ -> None
             
-    let sumForcesX (p:TrussPart list) = 
+    let sumForcesX (p:Part list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         List.fold (fun acc x -> x.magnitudeX + acc ) 0. forces
-    let sumForcesY (p:TrussPart list) = 
+    let sumForcesY (p:Part list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         List.fold (fun acc y -> y.magnitudeY + acc ) 0. forces
-    let sumForceMoments (s:Support) (p:TrussPart list) = 
+    let sumForceMoments (s:Support) (p:Part list) = 
         let forces = List.choose (fun x -> match x with | Force f -> Some (getComponentForcesFrom f) | _ -> None) p
         let j = getJointFromSupport s
         let getMomentArmY fj = (getYFrom fj - getYFrom j.Value)
@@ -140,7 +140,7 @@ module TrussImplementation =
         List.fold (fun acc cf -> cf.magnitudeX*(getMomentArmY cf.atJoint) + cf.magnitudeY*(getMomentArmX cf.atJoint) + acc ) 0. forces
     
     // Support Reaction Equations
-    let getXForceReactionEquation (p:TrussPart list) =         
+    let getXForceReactionEquation (p:Part list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i x -> 
             match x with 
@@ -152,7 +152,7 @@ module TrussImplementation =
                 Math.Abs x/d,"Rx" + i.ToString() 
             | _ -> 0.0,"Not Implemented") supports
         createEquation (sumForcesX p) reactions
-    let getYForceReactionEquation (p:TrussPart list) =   
+    let getYForceReactionEquation (p:Part list) =   
         let supports = List.choose (fun y -> match y with | Support s -> Some s | _ -> None) p        
         let reactions = List.mapi (fun i y -> 
             match y with 
@@ -164,7 +164,7 @@ module TrussImplementation =
                 y/d,"Ry" + i.ToString()
             | _ -> 0.0,"Not Implemented") supports 
         createEquation (sumForcesY p) reactions
-    let addSupportXY (p:TrussPart list) =
+    let addSupportXY (p:Part list) =
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p        
         match supports with
         | [] -> false
@@ -174,7 +174,7 @@ module TrussImplementation =
             match m = 0. || m = Double.PositiveInfinity with | true -> false | false -> true
         | Pin p1 :: Pin p2 :: [] -> true
         | _ -> true
-    let supportXY rSting add (p:TrussPart list) =   
+    let supportXY rSting add (p:Part list) =   
         let supports = List.choose (fun y -> match y with | Support s -> Some s | _ -> None) p 
         match supports with                                
         | [] -> []
@@ -193,7 +193,7 @@ module TrussImplementation =
             | true ->  [createEquation (0.) [(1., rSting + i1.ToString());(-1., rSting + i2.ToString())]] 
             | false -> [] 
         | _ -> []
-    let getYMomentReactionEquations (p:TrussPart list) =         
+    let getYMomentReactionEquations (p:Part list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p
         let supportXY = supportXY "Rx" (addSupportXY p) p
         let getSupportMoments (s:Support) = 
@@ -212,7 +212,7 @@ module TrussImplementation =
             List.concat [ly;lx]
         let momentEquations = List.map (fun y -> createEquation (sumForceMoments y p) (getSupportMoments y)) supports        
         List.concat [momentEquations; supportXY] 
-    let getXMomentReactionEquations (p:TrussPart list) =         
+    let getXMomentReactionEquations (p:Part list) =         
         let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) p      
         let supportXY = supportXY "Ry" (addSupportXY p) p
         let getSupportMoments (s:Support) = 
@@ -235,12 +235,12 @@ module TrussImplementation =
         List.concat [momentEquations; supportXY]    
 
     // Basic operations on truss
-    let addTrussPartToTruss (t:Truss) (p:TrussPart)  = 
+    let addTrussPartToTruss (t:Truss) (p:Part)  = 
         match p with 
         | Member m -> {t with members = m::t.members}
         | Force f -> {t with forces = f::t.forces}
         | Support s -> {t with supports = s::t.supports}    
-    let removeTrussPartFromTruss (t:Truss) (p:TrussPart option)  = 
+    let removeTrussPartFromTruss (t:Truss) (p:Part option)  = 
         match p with 
         | Some (Member m) -> 
             let mOut = List.except [m] t.members
@@ -267,7 +267,7 @@ module TrussImplementation =
         | Hinge -> i,"Hinge"
         | Simple -> i,"Simple"
     // Method of Joints
-    let isColinear (p1:TrussPart) (p2:TrussPart) = 
+    let isColinear (p1:Part) (p2:Part) = 
         match p1, p2 with
         | Member m1, Member m2 -> (getMemberLineOfActionFrom m1) = (getMemberLineOfActionFrom m2)
         | Member m1, Force f 
@@ -277,7 +277,7 @@ module TrussImplementation =
         | Support (Pin p), Member m1 
         | Member m1,Support (Pin (p)) -> (getMemberLineOfActionFrom m1) = (getLineOfActionFrom p.normal)*) 
         | _ -> false
-    let getZFM (tpl:TrussPart list) = 
+    let getZFM (tpl:Part list) = 
         match tpl with 
         // case 1 -- no load, 2 non-colinear members, both members are zero force
         | [Member m1;Member m2] when (isColinear (Member m1) (Member m2)) = false -> [Member m1;Member m2]                     
@@ -300,7 +300,7 @@ module TrussImplementation =
         | [Member m1;Support s;Member m2]
         | [Support s;Member m1;Member m2] when (isColinear (Member m2) (Support s)) && ((isColinear (Member m1) (Member m2)) = false) -> [Member m1]
         | _ -> []     
-    let partitionNode (tpl:TrussNode list) = 
+    let partitionNode (tpl:Node list) = 
         List.map (fun (j,pl) -> 
             let zfm = getZFM pl
             let pl' = List.except zfm pl
@@ -320,10 +320,10 @@ module TrussImplementation =
         let jointParts = getJointPartListFrom t        
         let partition = partitionNode jointParts
         let zfm = getZeroForceMembers t
-        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> TrussNode (j,List.except zfm pl)::acc) [] partition     
+        List.fold (fun acc x -> match x with | (j,pl,_zfm) -> Node (j,List.except zfm pl)::acc) [] partition     
     let getMemberVariables (t:Truss) =
         let nl = getNodeList t
-        let processNode (n:TrussNode) = 
+        let processNode (n:Node) = 
             let _j,pl = n            
             let members = 
                 List.choose (fun x -> match x with | Member m -> Some m | _ -> None) pl
@@ -358,7 +358,7 @@ module TrussImplementation =
         let d = match Math.Sqrt (x*x + y*y) with | n when n = 0. -> 0. | n -> n         
         let name = "M" + index.ToString()
         ( y/d,name) //Math.Abs
-    let analyzeNode (n:TrussNode) (t:Truss) (r:SupportReactionResult list) = 
+    let analyzeNode (n:Node) (t:Truss) (r:SupportReactionResult list) = 
         let j,pl = n
         let supportReactions = 
             let s = List.tryFind (fun x -> match x with | Support _ -> true | _ -> false) pl
@@ -380,7 +380,7 @@ module TrussImplementation =
             List.choose (fun y -> match y with | Member m -> Some m | _ -> None) pl
             |> List.map (fun y -> getMemberExpressionsY j y (getMemberIndex y t))
         [createEquation sumfx membersX;createEquation sumfy membersY]
-    let getMemberForceAtJoint (j:Joint) (m:TrussPart) (mf:TrussMemberForce list) = 
+    let getMemberForceAtJoint (j:Joint) (m:Part) (mf:TrussMemberForce list) = 
         let tf = List.tryFind (fun (_f,p) -> p = m ) mf 
         match tf with 
         | None -> m
