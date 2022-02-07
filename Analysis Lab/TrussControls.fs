@@ -1343,14 +1343,14 @@ type Truss(                                                                     
                                 newFMag_TextBox.Text <- "0."
                                 newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s.Head).ToString()                                
                             | _ -> 
-                                do  setOrgin p
-                                    drawTruss newState
-                                    state <- newState
-                                    label.Text <- state.ToString()
-                                    newP_StackPanel.Visibility <- Visibility.Visible
-                                    newF_StackPanel.Visibility <- Visibility.Collapsed
-                                    newPX_TextBox.Text <- p.X.ToString()
-                                    newPY_TextBox.Text <- p.Y.ToString()
+                                setOrgin p
+                                drawTruss newState
+                                state <- newState
+                                label.Text <- state.ToString()
+                                newP_StackPanel.Visibility <- Visibility.Visible
+                                newF_StackPanel.Visibility <- Visibility.Collapsed
+                                newPX_TextBox.Text <- p.X.ToString()
+                                newPY_TextBox.Text <- p.Y.ToString()
                         | _-> ()
                 | TrussAnalysisDomain.TrussMode.Settings -> ()
             | TrussAnalysisDomain.BuildState bs -> 
@@ -1495,8 +1495,9 @@ type Truss(                                                                     
                     wolframMessage.Set ("--" + st + " Support " + i.ToString() + "--")
                     wolframCode.Set (trussServices.getAnalysisReport state)
                     wolframResult_Control.setGraphics kernel
-                | _ -> wolframMessage.Set "--Select a Truss Part--"
-                       wolframCode.Set "Ready"
+                | _ -> 
+                    wolframMessage.Set "--Select a Truss Part--"
+                    wolframCode.Set "Ready"
                 drawTruss state
         | TrussAnalysisDomain.AnalysisState a -> ()
         | TrussAnalysisDomain.ErrorState es -> 

@@ -414,7 +414,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Roller"            
             cb.ItemsSource <- ["Roller";"Pin";"Fixed";"Hinge";"Simple"]
-        cb    
+        cb
 
         // Main grid
     let supportBuilder_StackPanel = 

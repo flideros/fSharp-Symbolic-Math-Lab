@@ -57,7 +57,7 @@ module ElementDomain =
         | Fixed
         | Simple
     
-    type Part = // A joint by itself is not a part, rather it is a cosequence of connecting two (or more) members
+    type Part = 
         | Member of Member
         | Force of JointForce
         | Support of Support    
@@ -100,6 +100,8 @@ module ErrorDomain =
 module ControlDomain = 
     
     type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool;isHitTestVisible:bool}
+
+
 
 // I'm in the process of refactoring this domain model into a more general purpose analysis tool.
 module TrussAnalysisDomain =
