@@ -490,7 +490,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             sp.Children.Add(delete_Button) |> ignore
             sp.Children.Add(newP_StackPanel) |> ignore
             sp.Children.Add(newF_StackPanel) |> ignore
-            sp.Visibility <- Visibility.Collapsed
+            sp.Visibility <- Visibility.Visible
         sp
     
     let screen_Grid =
@@ -520,10 +520,10 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             match joint with
             | None -> mousePosition.Get
             | Some i -> Seq.item i jointList.Get
-        match system.Get with
-        | None -> ()
-        | Some (ElementDomain.System.TrussSystem truss) -> 
-            match selectionMode_ComboBox.Text with        
+        match system.Get, this.IsVisible with
+        | None, true -> ()
+        | Some (ElementDomain.System.TrussSystem truss), true -> 
+            match string selectionMode_ComboBox.SelectedItem with        
             | "Modify" ->
                 match selectedPart.Get, p1 with             
                 | Some (ElementDomain.Force f), None ->
@@ -574,7 +574,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             match selectedPart.Get with
             | None -> ()
             | Some part -> 
-                match selectionMode_ComboBox.Text with        
+                match string selectionMode_ComboBox.SelectedItem with        
                 | "Modify" ->
                     match selectedPart.Get with
                     | Some (ElementDomain.Force jf) -> 
@@ -611,7 +611,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             match system.Get with
             | None -> ()
             | Some (ElementDomain.System.TrussSystem truss) -> 
-                match selectionMode_ComboBox.Text with        
+                match string selectionMode_ComboBox.SelectedItem with        
                 | "Modify" ->
                     match selectedPart.Get with
                     | None ->                      
@@ -639,7 +639,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                         let _dir,dir = Double.TryParse newFDir_TextBox.Text                       
                         let newTruss = TrussImplementation.modifyTrussSupport truss dir s
                         do  system.Set (Some (ElementDomain.System.TrussSystem newTruss))
-                            newF_StackPanel.Visibility <- Visibility.Collapsed
+                            newS_StackPanel.Visibility <- Visibility.Collapsed
                             orginPoint.Set (Point(0.,0.))
                     | _ -> ()
                 | _ -> ()
@@ -653,9 +653,16 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | _ -> ()
             | _ -> ()
         | _ -> () // logic for other keys
+    let handleSelectionModeChange () = 
+        match string selectionMode_ComboBox.SelectedItem with
+        | "Delete" -> delete_Button.Visibility <- Visibility.Visible
+        | "Inspect" -> delete_Button.Visibility <- Visibility.Collapsed
+        | "Modify" -> delete_Button.Visibility <- Visibility.Collapsed
+        | _ -> delete_Button.Visibility <- Visibility.Collapsed
 
     do  this.Content <- screen_Grid
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> deletePart()))
+        selectionMode_ComboBox.SelectionChanged .AddHandler(SelectionChangedEventHandler(fun _ _ -> handleSelectionModeChange()))
 
     member _this.handleSelectionMouseDown () =  handleMouseDown ()
     member _this.handleSelectionMouseUp () =  handleMouseUp ()

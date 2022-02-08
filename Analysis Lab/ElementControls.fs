@@ -488,7 +488,7 @@ type SupportBuilderControl(mousePosition:SharedValue<Point>,
                     newSupportOption.Set (Some newSupport)
                 | false -> ()
             | _ -> ()
-        | _ -> () // logic for other keys
+        | _ -> () // logic for other keys    
 
     do  this.Content <- screen_Grid
 

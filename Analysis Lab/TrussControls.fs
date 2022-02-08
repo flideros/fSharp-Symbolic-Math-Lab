@@ -48,6 +48,8 @@ type Truss(                                                                     
     let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
     let newForceOption = SharedValue<(LoadDomain.JointForce option)> (None)
     let newSupportOption = SharedValue<(ElementDomain.Support option)> (None)
+    let system = SharedValue<(ElementDomain.System option)> (None)
+    let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
 
     let wolframCode = SharedValue<string> "Ready"
     let wolframMessage = SharedValue<string> "Ready"
@@ -105,6 +107,12 @@ type Truss(                                                                     
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             sb.Visibility <- Visibility.Collapsed
             sb.SetValue(Canvas.ZIndexProperty,3) 
+        sb
+        // Selection
+    let selection_Control = 
+        let sb = SelectionControl(orginPosition,mousePosition,jointList,system,selectedPart,wolframMessage)
+        do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            sb.Visibility <- Visibility.Visible            
         sb   
 
         // Analysis State
@@ -599,6 +607,7 @@ type Truss(                                                                     
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
+            g.Children.Add(selection_Control) |> ignore
         g
         
         // Settings
@@ -1122,6 +1131,7 @@ type Truss(                                                                     
                 | false,false,false,true,false,false,  false,false,false,true,false,false
                 | false,false,false,false,true,false,  false,false,false,true,false,false 
                 | false,false,false,false,false,true,  false,false,false,true,false,false -> 
+                    system.Set (Some (ElementDomain.System.TrussSystem (trussServices.getTrussFromState state)))
                     wolframMessage.Set "--Select a Truss Part--"
                     wolframCode.Set "Ready"                    
                     wolframResult_Control.setGraphics kernel
@@ -1289,6 +1299,7 @@ type Truss(                                                                     
             do  memberBuilder_Control.handleMBMouseDown ()
                 jointForceBuilder_Control.handleFBMouseDown ()
                 supportBuilder_Control.handleSBMouseDown ()
+                selection_Control.handleSelectionMouseDown ()
             match state with
             | TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
@@ -1440,6 +1451,7 @@ type Truss(                                                                     
                 | [ErrorDomain.NoJointSelected] -> ()                    
                 | _ -> label.Text <- state.ToString()
     let handleMouseUp (e : Input.MouseButtonEventArgs) =          
+        selection_Control.handleSelectionMouseUp()
         match state with
         | TrussAnalysisDomain.TrussState ts -> 
             match ts.mode with
