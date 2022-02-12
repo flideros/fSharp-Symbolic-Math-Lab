@@ -490,6 +490,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             sp.Children.Add(delete_Button) |> ignore
             sp.Children.Add(newP_StackPanel) |> ignore
             sp.Children.Add(newF_StackPanel) |> ignore
+            sp.Children.Add(newS_StackPanel) |> ignore
             sp.Visibility <- Visibility.Visible
         sp
     
@@ -499,16 +500,16 @@ type SelectionControl (orginPoint:SharedValue<Point>,
         g
     
     // Internal State
-    let mutable p1 = Some mousePosition.Get
+    let mutable p1 = None
 
     // logic
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) jointList.Get
     let deletePart () = 
-        match system.Get.IsSome && selectedPart.Get.IsSome with
-        | true -> ()
-        | false -> 
+        match system.Get.IsSome with
+        | false -> ()
+        | true -> 
             match system.Get.Value with 
             | ElementDomain.System.Beam -> ()
             | ElementDomain.System.TrussSystem  t -> 
@@ -521,35 +522,12 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             | None -> mousePosition.Get
             | Some i -> Seq.item i jointList.Get
         match system.Get, this.IsVisible with
-        | None, true -> ()
         | Some (ElementDomain.System.TrussSystem truss), true -> 
             match string selectionMode_ComboBox.SelectedItem with        
             | "Modify" ->
                 match selectedPart.Get, p1 with             
                 | Some (ElementDomain.Force f), None ->
-                    newP_StackPanel.Visibility <- Visibility.Collapsed
-                    newF_StackPanel.Visibility <- Visibility.Visible
-                    newS_StackPanel.Visibility <- Visibility.Collapsed
-                    newFMag_TextBox.Text <- f.magnitude.ToString()
-                    newFDir_TextBox.Text <- (TrussServices.getDirectionFromForce f).ToString()                                
-                | Some (ElementDomain.Support s), None  ->
-                    newP_StackPanel.Visibility <- Visibility.Collapsed
-                    newF_StackPanel.Visibility <- Visibility.Collapsed
-                    newS_StackPanel.Visibility <-  Visibility.Visible                    
-                    newSDir_TextBox.Text <- (90. + TrussServices.getDirectionFromSupport s).ToString()                                
-                | None, Some p0 -> 
-                    orginPoint.Set p                    
-                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
-                    p1 <- None
-                    newP_StackPanel.Visibility <- Visibility.Collapsed
-                    newF_StackPanel.Visibility <- Visibility.Collapsed
-                    newS_StackPanel.Visibility <- Visibility.Collapsed
-                    newPX_TextBox.Text <- p.X.ToString()
-                    newPY_TextBox.Text <- p.Y.ToString()
-                | None, None -> 
-                    newP_StackPanel.Visibility <- Visibility.Visible
-                    newF_StackPanel.Visibility <- Visibility.Collapsed
-                    newS_StackPanel.Visibility <- Visibility.Collapsed
+                    selectedPart.Set None
                     match joint.IsSome with
                     | false -> ()
                     | true -> 
@@ -560,11 +538,72 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                         newS_StackPanel.Visibility <- Visibility.Collapsed
                         newPX_TextBox.Text <- p.X.ToString()
                         newPY_TextBox.Text <- p.Y.ToString()
-                | _,_ -> 
+                | Some (ElementDomain.Support s), None  ->
+                    selectedPart.Set None
+                    match joint.IsSome with
+                    | false -> ()
+                    | true -> 
+                        p1 <- Some p
+                        orginPoint.Set p
+                        newP_StackPanel.Visibility <- Visibility.Visible
+                        newF_StackPanel.Visibility <- Visibility.Collapsed
+                        newS_StackPanel.Visibility <- Visibility.Collapsed
+                        newPX_TextBox.Text <- p.X.ToString()
+                        newPY_TextBox.Text <- p.Y.ToString()
+                | Some (ElementDomain.Member m), None  ->
+                    selectedPart.Set None
+                    match joint.IsSome with
+                    | false -> ()
+                    | true -> 
+                        p1 <- Some p
+                        orginPoint.Set p
+                        newP_StackPanel.Visibility <- Visibility.Visible
+                        newF_StackPanel.Visibility <- Visibility.Collapsed
+                        newS_StackPanel.Visibility <- Visibility.Collapsed
+                        newPX_TextBox.Text <- p.X.ToString()
+                        newPY_TextBox.Text <- p.Y.ToString()
+                | Some (ElementDomain.Force f), Some p0 ->
+                    selectedPart.Set None
+                    orginPoint.Set p                    
+                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    p1 <- None
                     newP_StackPanel.Visibility <- Visibility.Collapsed
                     newF_StackPanel.Visibility <- Visibility.Collapsed
                     newS_StackPanel.Visibility <- Visibility.Collapsed
-
+                | Some (ElementDomain.Support s), Some p0  ->
+                    selectedPart.Set None
+                    orginPoint.Set p                    
+                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    p1 <- None
+                    newP_StackPanel.Visibility <- Visibility.Collapsed
+                    newF_StackPanel.Visibility <- Visibility.Collapsed
+                    newS_StackPanel.Visibility <- Visibility.Collapsed
+                | Some (ElementDomain.Member m), Some p0  ->
+                    selectedPart.Set None
+                    orginPoint.Set p                    
+                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    p1 <- None
+                    newP_StackPanel.Visibility <- Visibility.Collapsed
+                    newF_StackPanel.Visibility <- Visibility.Collapsed
+                    newS_StackPanel.Visibility <- Visibility.Collapsed                    
+                | None, Some p0 -> 
+                    orginPoint.Set p                    
+                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    p1 <- None
+                    newP_StackPanel.Visibility <- Visibility.Collapsed
+                    newF_StackPanel.Visibility <- Visibility.Collapsed
+                    newS_StackPanel.Visibility <- Visibility.Collapsed
+                | None, None ->                     
+                    match joint.IsSome with
+                    | false -> ()
+                    | true -> 
+                        p1 <- Some p
+                        orginPoint.Set p
+                        newP_StackPanel.Visibility <- Visibility.Visible
+                        newF_StackPanel.Visibility <- Visibility.Collapsed
+                        newS_StackPanel.Visibility <- Visibility.Collapsed
+                        newPX_TextBox.Text <- p.X.ToString()
+                        newPY_TextBox.Text <- p.Y.ToString()
             | _-> ()
         | _-> ()
     let handleMouseUp () =
@@ -588,9 +627,11 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                             newF_StackPanel.Visibility <- Visibility.Collapsed
                             newS_StackPanel.Visibility <- Visibility.Visible                            
                             newSDir_TextBox.Text <- (90. + TrussServices.getDirectionFromSupport s).ToString()
-                    | _ ->  newP_StackPanel.Visibility <- Visibility.Collapsed
+                    | Some (ElementDomain.Member m) -> 
+                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Collapsed
-                            newS_StackPanel.Visibility <- Visibility.Collapsed
+                            newS_StackPanel.Visibility <- Visibility.Collapsed                            
+                    | _ ->  ()
                 | "Inspect" ->                     
                     match selectedPart.Get with
                     | Some (ElementDomain.Force jf) -> 
@@ -654,6 +695,11 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             | _ -> ()
         | _ -> () // logic for other keys
     let handleSelectionModeChange () = 
+        orginPoint.Set (Point(0.,0.))
+        selectedPart.Set None
+        newP_StackPanel.Visibility <- Visibility.Collapsed
+        newF_StackPanel.Visibility <- Visibility.Collapsed
+        newS_StackPanel.Visibility <- Visibility.Collapsed
         match string selectionMode_ComboBox.SelectedItem with
         | "Delete" -> delete_Button.Visibility <- Visibility.Visible
         | "Inspect" -> delete_Button.Visibility <- Visibility.Collapsed
@@ -663,6 +709,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
     do  this.Content <- screen_Grid
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> deletePart()))
         selectionMode_ComboBox.SelectionChanged .AddHandler(SelectionChangedEventHandler(fun _ _ -> handleSelectionModeChange()))
+        selectedPart.Changed.AddHandler(fun _ _ -> handleMouseUp ())
 
     member _this.handleSelectionMouseDown () =  handleMouseDown ()
     member _this.handleSelectionMouseUp () =  handleMouseUp ()

@@ -57,6 +57,7 @@ module TrussServices =
     type ModifyTrussSupport = float -> TrussAnalysisState -> TrussAnalysisState
     type AnalyzeEquations = string -> TrussAnalysisState -> TrussAnalysisState
     
+    type SetTruss = Truss -> TrussAnalysisState -> TrussAnalysisState
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
 
@@ -106,7 +107,8 @@ module TrussServices =
          modifyTrussSupport:ModifyTrussSupport;
          sendMemberOptionToState:SendMemberOptionToState;
          sendJointForceOptionToState:SendJointForceOptionToState;
-         sendSupportOptionToState:SendSupportOptionToState
+         sendSupportOptionToState:SendSupportOptionToState;
+         setTruss:SetTruss
          }
 
     open TrussImplementation
@@ -732,6 +734,14 @@ module TrussServices =
         | AnalysisState s -> state
         | ErrorState ts -> state
     
+    let setTruss (t:Truss) (state :TrussAnalysisState) =
+        match state with 
+        | TrussAnalysisDomain.TrussState ts -> {ts with truss = t} |> TrussState
+        | TrussAnalysisDomain.BuildState bs-> {bs with truss = t} |> BuildState
+        | TrussAnalysisDomain.SelectionState ss -> {ss with truss = t} |> SelectionState
+        | TrussAnalysisDomain.ErrorState es -> {es with truss = t} |> ErrorState
+        | TrussAnalysisDomain.AnalysisState a -> {a with truss = t} |> AnalysisState
+
     let tryParseResult (s:string) = 
         let results = WolframServices.parseResults s
         match List.contains (-1,"Unable to compute result",0.0) results  with
@@ -1070,6 +1080,7 @@ module TrussServices =
         modifyTrussSupport = modifySupport;
         sendMemberOptionToState = sendMemberOptionToState;
         sendJointForceOptionToState = sendJointForceOptionToState;
-        sendSupportOptionToState = sendSupportOptionToState
+        sendSupportOptionToState = sendSupportOptionToState;
+        setTruss = setTruss
         }
 

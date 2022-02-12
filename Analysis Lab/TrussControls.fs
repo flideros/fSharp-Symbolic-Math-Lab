@@ -112,7 +112,7 @@ type Truss(                                                                     
     let selection_Control = 
         let sb = SelectionControl(orginPosition,mousePosition,jointList,system,selectedPart,wolframMessage)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            sb.Visibility <- Visibility.Visible            
+            sb.Visibility <- Visibility.Collapsed          
         sb   
 
         // Analysis State
@@ -969,11 +969,10 @@ type Truss(                                                                     
         Seq.iter (fun j -> drawJoint j) joints
         Seq.iter (fun f -> drawForce green f) forces
         Seq.iter (fun s -> drawSupport s) supports
-        drawSelectedMember s
-        drawSelectedForce s
-        drawSelectedSupport s
+        //drawSelectedMember s
+        //drawSelectedForce s
+        //drawSelectedSupport s
         drawSolvedMembers s
-
         // Set
     let setOrgin p = 
         let joints = getJointsFrom state |> Seq.toList
@@ -1075,6 +1074,7 @@ type Truss(                                                                     
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Visible
+                    selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
@@ -1096,6 +1096,7 @@ type Truss(                                                                     
                     memberBuilder_Control.Visibility <- Visibility.Visible
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
+                    selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
@@ -1117,6 +1118,7 @@ type Truss(                                                                     
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     supportBuilder_Control.Visibility <- Visibility.Visible
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
+                    selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
@@ -1145,11 +1147,13 @@ type Truss(                                                                     
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
+                    selection_Control.Visibility <- Visibility.Visible
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Visible
                     newP_StackPanel.Visibility <- Visibility.Collapsed                  
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Selection state                    
                     drawTruss newState
+                    label.Text <- system.Get.ToString()
                     newState
                 // Analysis
                 | true,false,false,false,false,false,  false,false,false,false,true,false
@@ -1171,6 +1175,7 @@ type Truss(                                                                     
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
+                    selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed                   
                     wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
@@ -1190,6 +1195,7 @@ type Truss(                                                                     
                     memberBuilder_Control.Visibility <- Visibility.Collapsed
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
+                    selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Visible
                     selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
@@ -1331,29 +1337,38 @@ type Truss(                                                                     
                             state <- newState
                             label.Text <- newState.ToString()
                 | TrussAnalysisDomain.TrussMode.Analysis -> wolframResult_Control.setGraphics kernel
-                | TrussAnalysisDomain.TrussMode.Selection ->                     
+                | TrussAnalysisDomain.TrussMode.Selection -> 
                     match modify_RadioButton.IsChecked.Value with
                     | false -> label.Text <- state.ToString()
                     | true ->
                         let newState = trussServices.sendPointToModification p state
                         match newState with 
-                        | TrussAnalysisDomain.SelectionState ss -> 
-                            match ss.forces, ss.supports with 
-                            | Some f, None ->
+                        | TrussAnalysisDomain.SelectionState ss ->                             
+                            match ss.forces, ss.supports, ss.members with 
+                            | Some [f], None, None ->
+                                selectedPart.Set (Some (ElementDomain.Force f))
                                 state <- newState
                                 label.Text <- state.ToString()
                                 newP_StackPanel.Visibility <- Visibility.Collapsed
                                 newF_StackPanel.Visibility <- Visibility.Visible
-                                newFMag_TextBox.Text <- f.Head.magnitude.ToString()
-                                newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString()                                
-                            | None, Some s ->                                
+                                newFMag_TextBox.Text <- f.magnitude.ToString()
+                                newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f).ToString()
+                            | None, Some [s], None ->                                
+                                selectedPart.Set (Some (ElementDomain.Support s))
                                 state <- newState
                                 label.Text <- state.ToString()
                                 newP_StackPanel.Visibility <- Visibility.Collapsed
                                 newF_StackPanel.Visibility <- Visibility.Visible
                                 newFMag_TextBox.Text <- "0."
-                                newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s.Head).ToString()                                
+                                newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s).ToString()
+                            | None, None, Some [m] ->                                
+                                selectedPart.Set (Some (ElementDomain.Member m))
+                                state <- newState
+                                label.Text <- state.ToString()
+                                newP_StackPanel.Visibility <- Visibility.Collapsed
+                                newF_StackPanel.Visibility <- Visibility.Collapsed                               
                             | _ -> 
+                                selectedPart.Set None
                                 setOrgin p
                                 drawTruss newState
                                 state <- newState
@@ -1382,7 +1397,12 @@ type Truss(                                                                     
                         label.Text <- newState.ToString()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.Delete -> ()
+                | TrussAnalysisDomain.Delete ->
+                    match ss.forces, ss.supports, ss.members with
+                    | Some [f], None, None -> selectedPart.Set (Some (ElementDomain.Force f))
+                    | None, Some [s], None -> selectedPart.Set (Some (ElementDomain.Support s))
+                    | None, None, Some [m] -> selectedPart.Set (Some (ElementDomain.Member m))
+                    | _ -> ()
                 | TrussAnalysisDomain.Inspect ->()
                 | TrussAnalysisDomain.Modify -> 
                     let newState = trussServices.sendPointToModification p state
@@ -1394,22 +1414,26 @@ type Truss(                                                                     
                     | TrussAnalysisDomain.SelectionState ss -> 
                         match ss.modification, ss.forces, ss.supports with
                         |None, None, Some s-> 
+                            selectedPart.Set (Some (ElementDomain.Support s.Head))
                             newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Visible
                             newFMag_TextBox.Text <- "0."
                             newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s.Head).ToString()
                         | None, Some f, None-> 
+                            selectedPart.Set (Some (ElementDomain.Force f.Head))
                             newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Visible
                             newFMag_TextBox.Text <- f.Head.magnitude.ToString()
                             newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString() 
-                        | Some m, None, None -> 
+                        | Some m, None, None ->                             
+                            selectedPart.Set None
                             newP_StackPanel.Visibility <- Visibility.Visible
                             newF_StackPanel.Visibility <- Visibility.Collapsed
                             newPX_TextBox.Text <- p.X.ToString()
                             newPY_TextBox.Text <- p.Y.ToString()
                         | None, None, None
                         | _ ->
+                            selectedPart.Set None
                             newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Collapsed                        
                     | _ -> ()
@@ -1470,23 +1494,33 @@ type Truss(                                                                     
         | TrussAnalysisDomain.SelectionState ss -> 
             match ss.mode with
             | TrussAnalysisDomain.Modify -> 
-                match ss.forces, ss.supports with
-                | Some f, None -> 
+                match ss.forces, ss.supports, ss.members with
+                | Some [f], None, None -> 
+                    selectedPart.Set (Some (ElementDomain.Force f))
                     match newF_StackPanel.Visibility = Visibility.Collapsed with
                     | true -> 
                         do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Visible
-                            newFMag_TextBox.Text <- f.Head.magnitude.ToString()
-                            newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString() 
+                            newFMag_TextBox.Text <- f.magnitude.ToString()
+                            newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f).ToString() 
                     | false -> ()
-                | None, Some s -> 
+                | None, Some [s], None -> 
+                    selectedPart.Set (Some (ElementDomain.Support s))
                     match newF_StackPanel.Visibility = Visibility.Collapsed with
                     | true -> 
                         do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Visible
                             newFMag_TextBox.Text <-"0."
-                            newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s.Head).ToString() 
-                    | false -> ()                
+                            newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s).ToString() 
+                    | false -> ()
+                | None, None, Some [m] -> 
+                    selectedPart.Set (Some (ElementDomain.Member m))
+                    match newF_StackPanel.Visibility = Visibility.Collapsed with
+                    | true -> 
+                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
+                            newF_StackPanel.Visibility <- Visibility.Collapsed
+                    | false -> ()
+
                 | _ -> newF_StackPanel.Visibility <- Visibility.Collapsed
             | TrussAnalysisDomain.Delete -> ()
             | TrussAnalysisDomain.Inspect -> 
@@ -1534,6 +1568,7 @@ type Truss(                                                                     
         memberBuilder_Control.handleMBKeyDown e
         jointForceBuilder_Control.handleFBKeyDown e
         supportBuilder_Control.handleSBKeyDown e
+        selection_Control.handleSelectionKeyDown e
         match e.Key with 
         | Input.Key.Enter ->
             match state with
@@ -1642,11 +1677,20 @@ type Truss(                                                                     
             | TrussAnalysisDomain.AnalysisState s -> ()                
             | TrussAnalysisDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
-
+    let handleSystemChanged s =
+        match system.Get with
+        | None -> label.Text <- "System = None" 
+        | Some (ElementDomain.System.TrussSystem truss) ->
+            let newState = trussServices.setTruss truss s
+            do  state <- newState
+                drawTruss newState
+                //system.Set None
+                label.Text <- "System =" + truss.ToString()
+        | _ -> ()
     (*Initialize*)
     do  this.Content <- screen_Grid        
         wolframResult_Control.setGraphics kernel
-
+        
     (*add event handlers*)        
         this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
         this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
@@ -1657,3 +1701,4 @@ type Truss(                                                                     
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
         orginPosition.Changed.AddHandler((fun _ _ -> drawTruss state))
+        system.Changed.AddHandler((fun _ _ -> handleSystemChanged state))
