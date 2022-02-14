@@ -50,6 +50,7 @@ type Truss(                                                                     
     let newSupportOption = SharedValue<(ElementDomain.Support option)> (None)
     let system = SharedValue<(ElementDomain.System option)> (None)
     let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
+    let selectionMode = SharedValue<(ControlDomain.SelectionMode)> (ControlDomain.SelectionMode.Delete)
 
     let wolframCode = SharedValue<string> "Ready"
     let wolframMessage = SharedValue<string> "Ready"
@@ -110,7 +111,7 @@ type Truss(                                                                     
         sb
         // Selection
     let selection_Control = 
-        let sb = SelectionControl(orginPosition,mousePosition,jointList,system,selectedPart,wolframMessage)
+        let sb = SelectionControl(orginPosition,mousePosition,jointList,system,selectedPart,selectionMode,wolframMessage)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             sb.Visibility <- Visibility.Collapsed          
         sb   
@@ -306,122 +307,7 @@ type Truss(                                                                     
             sp.Children.Add(analysis_RadioButton) |> ignore
             sp.Children.Add(settings_RadioButton) |> ignore            
         sp
-        
-        // Selection mode selection
-    let selectionMode_Label =
-        let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.            
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "Selection Mode"
-        l
-    let delete_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Delete", FontSize=15.)        
-        do  r.Content <- tb
-            r.IsChecked <- true |> Nullable<bool>
-        r
-    let inspect_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Inspect", FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    let modify_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Modify", FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    let delete_Button = 
-        let b = Button()
-        let handleClick () = 
-            let newState = trussServices.removeTrussPartFromTruss state            
-            do  state <- newState 
-                label.Text <- newState.ToString()
-        do  b.Content <- "Delete"
-            b.FontSize <- 12.
-            b.FontWeight <- FontWeights.Bold
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> handleClick()))
-        b
-    let newPX_TextBlock = 
-        let tb = TextBlock(Text = "X")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let newPX_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
-        let toggleIsReadOnly () = tb.IsReadOnly <- false
-        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
-        tb
-    let newPY_TextBlock = 
-        let tb = TextBlock(Text = "Y")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let newPY_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
-        let toggleIsReadOnly () = tb.IsReadOnly <- false
-        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
-        tb
-    let newP_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(newPX_TextBlock) |> ignore
-            sp.Children.Add(newPX_TextBox) |> ignore
-            sp.Children.Add(newPY_TextBlock) |> ignore
-            sp.Children.Add(newPY_TextBox) |> ignore            
-            sp.Visibility <- Visibility.Collapsed
-        sp    
-    let newFMag_TextBlock = 
-        let tb = TextBlock(Text = "Magnitude")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let newFMag_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
-        let toggleIsReadOnly () = tb.IsReadOnly <- false
-        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
-        tb
-    let newFDir_TextBlock = 
-        let tb = TextBlock(Text = "Direction (Degrees)")
-        do tb.SetValue(Grid.RowProperty,0)
-        tb
-    let newFDir_TextBox = 
-        let tb = TextBox(MaxLines = 15, TabIndex = 0, IsReadOnly = true, BorderThickness = Thickness(3.))
-        let toggleIsReadOnly () = tb.IsReadOnly <- false
-        do  tb.PreviewMouseDown.AddHandler(Input.MouseButtonEventHandler(fun _ _ -> toggleIsReadOnly()))
-        tb
-    let newF_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(newFMag_TextBlock) |> ignore
-            sp.Children.Add(newFMag_TextBox) |> ignore
-            sp.Children.Add(newFDir_TextBlock) |> ignore
-            sp.Children.Add(newFDir_TextBox) |> ignore            
-            sp.Visibility <- Visibility.Collapsed
-        sp    
-    let selectionMode_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(selectionMode_Label) |> ignore
-            sp.Children.Add(delete_RadioButton) |> ignore
-            sp.Children.Add(inspect_RadioButton) |> ignore
-            sp.Children.Add(modify_RadioButton) |> ignore
-            sp.Children.Add(delete_Button) |> ignore
-            sp.Children.Add(newP_StackPanel) |> ignore
-            sp.Children.Add(newF_StackPanel) |> ignore            
-            sp.Visibility <- Visibility.Collapsed
-        sp
-        
+                
         // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
@@ -460,13 +346,10 @@ type Truss(                                                                     
         let l = Line() 
         let sendLineToState l s =  
             let newState = 
-                match delete_RadioButton.IsChecked.Value, 
-                      inspect_RadioButton.IsChecked.Value, 
-                      modify_RadioButton.IsChecked.Value with
-                | true,false,false -> trussServices.sendMemberToState l TrussAnalysisDomain.TrussSelectionMode.Delete s
-                | false,true,false -> trussServices.sendMemberToState l TrussAnalysisDomain.TrussSelectionMode.Inspect s
-                | false,false,true -> trussServices.sendMemberToState l TrussAnalysisDomain.TrussSelectionMode.Modify s
-                | _ -> s //add code to throw an error here.
+                match selectionMode.Get with
+                | ControlDomain.Delete -> trussServices.sendMemberToState l ControlDomain.SelectionMode.Delete s
+                | ControlDomain.Inspect -> trussServices.sendMemberToState l ControlDomain.SelectionMode.Inspect s
+                | ControlDomain.Modify -> trussServices.sendMemberToState l ControlDomain.SelectionMode.Modify s
             do  state <- newState
                 label.Text <- state.ToString()
         let highlight () = 
@@ -512,13 +395,10 @@ type Truss(                                                                     
         let l = Line()
         let sendLineToState l s =  
             let newState = 
-                match delete_RadioButton.IsChecked.Value, 
-                      inspect_RadioButton.IsChecked.Value, 
-                      modify_RadioButton.IsChecked.Value with
-                | true,false,false -> trussServices.sendForceToState l TrussAnalysisDomain.TrussSelectionMode.Delete s
-                | false,true,false -> trussServices.sendForceToState l TrussAnalysisDomain.TrussSelectionMode.Inspect s
-                | false,false,true -> trussServices.sendForceToState l TrussAnalysisDomain.TrussSelectionMode.Modify s
-                | _ -> s //add code to throw an error here.
+                match selectionMode.Get with
+                | ControlDomain.Delete -> trussServices.sendForceToState l ControlDomain.SelectionMode.Delete s
+                | ControlDomain.Inspect -> trussServices.sendForceToState l ControlDomain.SelectionMode.Inspect s
+                | ControlDomain.Modify -> trussServices.sendForceToState l ControlDomain.SelectionMode.Modify s
             do  state <- newState
                 label.Text <- state.ToString()
         let highlight () = 
@@ -571,13 +451,10 @@ type Truss(                                                                     
         let path = Path()            
         let sendPathToState p s =  
             let newState = 
-                match delete_RadioButton.IsChecked.Value, 
-                      inspect_RadioButton.IsChecked.Value, 
-                      modify_RadioButton.IsChecked.Value with
-                | true,false,false -> trussServices.sendSupportToState p TrussAnalysisDomain.TrussSelectionMode.Delete s
-                | false,true,false -> trussServices.sendSupportToState p TrussAnalysisDomain.TrussSelectionMode.Inspect s
-                | false,false,true -> trussServices.sendSupportToState p TrussAnalysisDomain.TrussSelectionMode.Modify s
-                | _ -> s //add code to throw an error here.
+                match selectionMode.Get with
+                | ControlDomain.Delete -> trussServices.sendSupportToState p ControlDomain.SelectionMode.Delete s
+                | ControlDomain.Inspect -> trussServices.sendSupportToState p ControlDomain.SelectionMode.Inspect s
+                | ControlDomain.Modify -> trussServices.sendSupportToState p ControlDomain.SelectionMode.Modify s
             do  state <- newState
                 label.Text <- state.ToString()
         let highlight () = 
@@ -607,7 +484,6 @@ type Truss(                                                                     
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
-            //g.Children.Add(selection_Control) |> ignore
         g
         
         // Settings
@@ -702,7 +578,6 @@ type Truss(                                                                     
             sp.Children.Add(jointForceBuilder_Control) |> ignore
             sp.Children.Add(supportBuilder_Control) |> ignore
             sp.Children.Add(settings_StackPanel) |> ignore
-            //sp.Children.Add(selectionMode_StackPanel) |> ignore
             sp.Children.Add(selection_Control) |> ignore
             sp.Children.Add(analysis_StackPanel) |> ignore
             sp.SetValue(Canvas.ZIndexProperty,4)
@@ -1077,7 +952,6 @@ type Truss(                                                                     
                     jointForceBuilder_Control.Visibility <- Visibility.Visible
                     selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
-                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
                     wolframCode.Set "Ready"
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.ForceBuild state
@@ -1099,7 +973,6 @@ type Truss(                                                                     
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
-                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
                     wolframCode.Set "Ready"
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.MemberBuild state
@@ -1121,7 +994,6 @@ type Truss(                                                                     
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Collapsed
-                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
                     wolframCode.Set "Ready"
                     let newTrust = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.SupportBuild state
@@ -1140,7 +1012,7 @@ type Truss(                                                                     
                     wolframResult_Control.setGraphics kernel
                     reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
                     wolframResult_Control.Visibility <- 
-                        match inspect_RadioButton.IsChecked.Value with
+                        match selectionMode.Get = ControlDomain.Inspect with
                         | false -> Visibility.Collapsed
                         | true -> Visibility.Visible                    
                     wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
@@ -1149,9 +1021,7 @@ type Truss(                                                                     
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     selection_Control.Visibility <- Visibility.Visible
-                    settings_StackPanel.Visibility <- Visibility.Collapsed
-                    selectionMode_StackPanel.Visibility <- Visibility.Visible
-                    newP_StackPanel.Visibility <- Visibility.Collapsed                  
+                    settings_StackPanel.Visibility <- Visibility.Collapsed              
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Selection state                    
                     drawTruss newState
                     label.Text <- state.ToString()
@@ -1177,8 +1047,7 @@ type Truss(                                                                     
                     supportBuilder_Control.Visibility <- Visibility.Collapsed
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     selection_Control.Visibility <- Visibility.Collapsed
-                    settings_StackPanel.Visibility <- Visibility.Collapsed
-                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed                   
+                    settings_StackPanel.Visibility <- Visibility.Collapsed             
                     wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
                     drawTruss newState
                     newState                    
@@ -1198,108 +1067,76 @@ type Truss(                                                                     
                     jointForceBuilder_Control.Visibility <- Visibility.Collapsed
                     selection_Control.Visibility <- Visibility.Collapsed
                     settings_StackPanel.Visibility <- Visibility.Visible
-                    selectionMode_StackPanel.Visibility <- Visibility.Collapsed
                     wolframMessage.Set "Calculate Reactions"
                     wolframCode.Set "Ready"
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Settings state
                     drawTruss state
                     newState
-                | _ ->  // Logic for Selection Mode radio buttons
-                    match delete_RadioButton.IsChecked.Value, 
-                            inspect_RadioButton.IsChecked.Value, 
-                            modify_RadioButton.IsChecked.Value, 
-                            delete_RadioButton.IsMouseOver, 
-                            inspect_RadioButton.IsMouseOver,
-                            modify_RadioButton.IsMouseOver
+                | _ -> // Logic for Analysis Mode radio buttons                            
+                    match xAxis_RadioButton.IsChecked.Value, 
+                            yAxis_RadioButton.IsChecked.Value,                                   
+                            xAxis_RadioButton.IsMouseOver, 
+                            yAxis_RadioButton.IsMouseOver
                             with 
-                    // Delete
-                    | true,false,false, true,false,false
-                    | false,true,false, true,false,false 
-                    | false,false,true, true,false,false ->  
-                        delete_RadioButton.IsChecked <- Nullable true
-                        inspect_RadioButton.IsChecked <- Nullable false
-                        modify_RadioButton.IsChecked <- Nullable false
-                        delete_Button.Visibility <- Visibility.Visible                            
-                        wolframResult_Control.Visibility <- Visibility.Collapsed
-                        wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-                        wolframMessage.Set "--Select a Truss Part--"
-                        wolframCode.Set "Ready"
-                        newP_StackPanel.Visibility <- Visibility.Collapsed
-                        trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Delete state
-                    // Inspect
-                    | true,false,false, false,true,false
-                    | false,true,false, false,true,false 
-                    | false,false,true, false,true,false ->                        
-                        wolframResult_Control.setGraphics kernel
-                        delete_RadioButton.IsChecked <- Nullable false 
-                        inspect_RadioButton.IsChecked <- Nullable true
-                        modify_RadioButton.IsChecked <- Nullable false
-                        delete_Button.Visibility <- Visibility.Collapsed                            
-                        wolframResult_Control.Visibility <- Visibility.Visible
-                        wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
-                        wolframMessage.Set "--Select a Truss Part--"
-                        wolframCode.Set "Ready"
-                        newP_StackPanel.Visibility <- Visibility.Collapsed
-                        trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Inspect state
-                    // Modify
-                    | true,false,false, false,false,true
-                    | false,true,false, false,false,true 
-                    | false,false,true, false,false,true ->                        
-                        delete_RadioButton.IsChecked <- Nullable false 
-                        inspect_RadioButton.IsChecked <- Nullable false
-                        modify_RadioButton.IsChecked <- Nullable true
-                        delete_Button.Visibility <- Visibility.Collapsed                            
-                        wolframResult_Control.Visibility <- Visibility.Collapsed
-                        wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-                        wolframMessage.Set "--Select a Truss Part--"
-                        wolframCode.Set "Ready"
-                        newP_StackPanel.Visibility <- Visibility.Collapsed
-                        trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Modify state
-                    | _ -> // Logic for Analysis Mode radio buttons                            
-                        match xAxis_RadioButton.IsChecked.Value, 
-                                yAxis_RadioButton.IsChecked.Value,                                   
-                                xAxis_RadioButton.IsMouseOver, 
-                                yAxis_RadioButton.IsMouseOver
+                    | true,false, true,false
+                    | false,true, true,false -> 
+                        xAxis_RadioButton.IsChecked <- Nullable true 
+                        yAxis_RadioButton.IsChecked <- Nullable false
+                        let newState = 
+                            trussServices.checkTruss (trussServices.getTrussFromState state)
+                            |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                        wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
+                        newState
+                    | true,false, false,true
+                    | false,true, false,true -> 
+                        xAxis_RadioButton.IsChecked <- Nullable false 
+                        yAxis_RadioButton.IsChecked <- Nullable true                                
+                        let newState = 
+                            trussServices.checkTruss (trussServices.getTrussFromState state)
+                            |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                        wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
+                        newState
+                    | _ -> // Logic for Reaction Display radio buttons                            
+                        match resultant_RadioButton.IsChecked.Value, 
+                                components_RadioButton.IsChecked.Value,                                   
+                                resultant_RadioButton.IsMouseOver, 
+                                components_RadioButton.IsMouseOver
                                 with 
                         | true,false, true,false
                         | false,true, true,false -> 
-                            xAxis_RadioButton.IsChecked <- Nullable true 
-                            yAxis_RadioButton.IsChecked <- Nullable false
-                            let newState = 
-                                trussServices.checkTruss (trussServices.getTrussFromState state)
-                                |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
-                            wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
-                            newState
+                            resultant_RadioButton.IsChecked <- Nullable true 
+                            components_RadioButton.IsChecked <- Nullable false
+                            drawTruss state
+                            Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                            state
                         | true,false, false,true
                         | false,true, false,true -> 
-                            xAxis_RadioButton.IsChecked <- Nullable false 
-                            yAxis_RadioButton.IsChecked <- Nullable true                                
-                            let newState = 
-                                trussServices.checkTruss (trussServices.getTrussFromState state)
-                                |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
-                            wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
-                            newState
-                        | _ -> // Logic for Reaction Display radio buttons                            
-                            match resultant_RadioButton.IsChecked.Value, 
-                                    components_RadioButton.IsChecked.Value,                                   
-                                    resultant_RadioButton.IsMouseOver, 
-                                    components_RadioButton.IsMouseOver
-                                    with 
-                            | true,false, true,false
-                            | false,true, true,false -> 
-                                resultant_RadioButton.IsChecked <- Nullable true 
-                                components_RadioButton.IsChecked <- Nullable false
-                                drawTruss state
-                                Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
-                                state
-                            | true,false, false,true
-                            | false,true, false,true -> 
-                                resultant_RadioButton.IsChecked <- Nullable false 
-                                components_RadioButton.IsChecked <- Nullable true
-                                drawTruss state
-                                Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
-                                state
-                            | _ -> state
+                            resultant_RadioButton.IsChecked <- Nullable false 
+                            components_RadioButton.IsChecked <- Nullable true
+                            drawTruss state
+                            Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
+                            state
+                        | _ -> // Logic for Selection Mode radio buttons
+                            match selectionMode.Get with 
+                            | ControlDomain.Delete ->                             
+                                wolframResult_Control.Visibility <- Visibility.Collapsed
+                                wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
+                                wolframMessage.Set "--Select a Truss Part--"
+                                wolframCode.Set "Ready"
+                                trussServices.setSelectionMode ControlDomain.SelectionMode.Delete state
+                            | ControlDomain.Inspect ->                        
+                                wolframResult_Control.setGraphics kernel                          
+                                wolframResult_Control.Visibility <- Visibility.Visible
+                                wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
+                                wolframMessage.Set "--Select a Truss Part--"
+                                wolframCode.Set "Ready"
+                                trussServices.setSelectionMode ControlDomain.SelectionMode.Inspect state
+                            | ControlDomain.Modify ->                           
+                                wolframResult_Control.Visibility <- Visibility.Collapsed
+                                wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
+                                wolframMessage.Set "--Select a Truss Part--"
+                                wolframCode.Set "Ready"
+                                trussServices.setSelectionMode ControlDomain.SelectionMode.Modify state
             do  state <- newState
                 label.Text <- newState.ToString() 
         | false ->  
@@ -1339,7 +1176,7 @@ type Truss(                                                                     
                             label.Text <- newState.ToString()
                 | TrussAnalysisDomain.TrussMode.Analysis -> wolframResult_Control.setGraphics kernel
                 | TrussAnalysisDomain.TrussMode.Selection -> 
-                    match modify_RadioButton.IsChecked.Value with
+                    match selectionMode.Get = ControlDomain.Modify with
                     | false -> label.Text <- state.ToString()
                     | true ->
                         let newState = trussServices.sendPointToModification p state
@@ -1350,34 +1187,20 @@ type Truss(                                                                     
                                 selectedPart.Set (Some (ElementDomain.Force f))
                                 state <- newState
                                 label.Text <- state.ToString()
-                                newP_StackPanel.Visibility <- Visibility.Collapsed
-                                newF_StackPanel.Visibility <- Visibility.Visible
-                                newFMag_TextBox.Text <- f.magnitude.ToString()
-                                newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f).ToString()
                             | None, Some [s], None ->                                
                                 selectedPart.Set (Some (ElementDomain.Support s))
                                 state <- newState
                                 label.Text <- state.ToString()
-                                newP_StackPanel.Visibility <- Visibility.Collapsed
-                                newF_StackPanel.Visibility <- Visibility.Visible
-                                newFMag_TextBox.Text <- "0."
-                                newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s).ToString()
                             | None, None, Some [m] ->                                
                                 selectedPart.Set (Some (ElementDomain.Member m))
                                 state <- newState
-                                label.Text <- state.ToString()
-                                newP_StackPanel.Visibility <- Visibility.Collapsed
-                                newF_StackPanel.Visibility <- Visibility.Collapsed                               
+                                label.Text <- state.ToString()                             
                             | _ -> 
                                 selectedPart.Set None
                                 setOrgin p
                                 drawTruss newState
                                 state <- newState
                                 label.Text <- state.ToString()
-                                newP_StackPanel.Visibility <- Visibility.Visible
-                                newF_StackPanel.Visibility <- Visibility.Collapsed
-                                newPX_TextBox.Text <- p.X.ToString()
-                                newPY_TextBox.Text <- p.Y.ToString()
                         | _-> ()
                 | TrussAnalysisDomain.TrussMode.Settings -> ()
             | TrussAnalysisDomain.BuildState bs -> 
@@ -1398,14 +1221,14 @@ type Truss(                                                                     
                         label.Text <- newState.ToString()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.Delete ->
+                | ControlDomain.Delete ->
                     match ss.forces, ss.supports, ss.members with
                     | Some [f], None, None -> selectedPart.Set (Some (ElementDomain.Force f))
                     | None, Some [s], None -> selectedPart.Set (Some (ElementDomain.Support s))
                     | None, None, Some [m] -> selectedPart.Set (Some (ElementDomain.Member m))
                     | _ -> ()
-                | TrussAnalysisDomain.Inspect ->()
-                | TrussAnalysisDomain.Modify -> 
+                | ControlDomain.Inspect ->()
+                | ControlDomain.Modify -> 
                     let newState = trussServices.sendPointToModification p state
                     do  setOrgin p
                         drawTruss newState
@@ -1414,29 +1237,11 @@ type Truss(                                                                     
                     match newState with
                     | TrussAnalysisDomain.SelectionState ss -> 
                         match ss.modification, ss.forces, ss.supports with
-                        |None, None, Some s-> 
-                            selectedPart.Set (Some (ElementDomain.Support s.Head))
-                            newP_StackPanel.Visibility <- Visibility.Collapsed
-                            newF_StackPanel.Visibility <- Visibility.Visible
-                            newFMag_TextBox.Text <- "0."
-                            newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s.Head).ToString()
-                        | None, Some f, None-> 
-                            selectedPart.Set (Some (ElementDomain.Force f.Head))
-                            newP_StackPanel.Visibility <- Visibility.Collapsed
-                            newF_StackPanel.Visibility <- Visibility.Visible
-                            newFMag_TextBox.Text <- f.Head.magnitude.ToString()
-                            newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f.Head).ToString() 
-                        | Some m, None, None ->                             
-                            selectedPart.Set None
-                            newP_StackPanel.Visibility <- Visibility.Visible
-                            newF_StackPanel.Visibility <- Visibility.Collapsed
-                            newPX_TextBox.Text <- p.X.ToString()
-                            newPY_TextBox.Text <- p.Y.ToString()
+                        |None, None, Some s-> selectedPart.Set (Some (ElementDomain.Support s.Head))
+                        | None, Some f, None-> selectedPart.Set (Some (ElementDomain.Force f.Head))
+                        | Some m, None, None -> selectedPart.Set None
                         | None, None, None
-                        | _ ->
-                            selectedPart.Set None
-                            newP_StackPanel.Visibility <- Visibility.Collapsed
-                            newF_StackPanel.Visibility <- Visibility.Collapsed                        
+                        | _ -> selectedPart.Set None                       
                     | _ -> ()
             | TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
@@ -1494,36 +1299,14 @@ type Truss(                                                                     
             | BuilderDomain.Control -> ()
         | TrussAnalysisDomain.SelectionState ss -> 
             match ss.mode with
-            | TrussAnalysisDomain.Modify -> 
+            | ControlDomain.Modify -> 
                 match ss.forces, ss.supports, ss.members with
-                | Some [f], None, None -> 
-                    selectedPart.Set (Some (ElementDomain.Force f))
-                    match newF_StackPanel.Visibility = Visibility.Collapsed with
-                    | true -> 
-                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
-                            newF_StackPanel.Visibility <- Visibility.Visible
-                            newFMag_TextBox.Text <- f.magnitude.ToString()
-                            newFDir_TextBox.Text <- (trussServices.getDirectionFromForce f).ToString() 
-                    | false -> ()
-                | None, Some [s], None -> 
-                    selectedPart.Set (Some (ElementDomain.Support s))
-                    match newF_StackPanel.Visibility = Visibility.Collapsed with
-                    | true -> 
-                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
-                            newF_StackPanel.Visibility <- Visibility.Visible
-                            newFMag_TextBox.Text <-"0."
-                            newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s).ToString() 
-                    | false -> ()
-                | None, None, Some [m] -> 
-                    selectedPart.Set (Some (ElementDomain.Member m))
-                    match newF_StackPanel.Visibility = Visibility.Collapsed with
-                    | true -> 
-                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
-                            newF_StackPanel.Visibility <- Visibility.Collapsed
-                    | false -> ()
-                | _ -> newF_StackPanel.Visibility <- Visibility.Collapsed
-            | TrussAnalysisDomain.Delete -> ()
-            | TrussAnalysisDomain.Inspect -> 
+                | Some [f], None, None -> selectedPart.Set (Some (ElementDomain.Force f))
+                | None, Some [s], None ->  selectedPart.Set (Some (ElementDomain.Support s)) 
+                | None, None, Some [m] -> selectedPart.Set (Some (ElementDomain.Member m)) 
+                | _ -> () 
+            | ControlDomain.Delete -> ()
+            | ControlDomain.Inspect -> 
                 let truss = getTrussFrom state
                 match ss.forces, ss.members, ss.supports with
                 | Some f, None, None -> 
@@ -1605,48 +1388,9 @@ type Truss(                                                                     
                         label.Text <- newState.ToString()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.Delete -> ()
-                | TrussAnalysisDomain.Inspect -> ()
-                | TrussAnalysisDomain.Modify -> 
-                    match ss.forces, ss.supports with
-                    | None, None ->                     
-                        let p =
-                            let x = Double.TryParse newPX_TextBox.Text
-                            let y = Double.TryParse newPY_TextBox.Text
-                            match x,y with
-                            | (true,x),(true,y) -> Point(x,y)
-                            | _ -> Point(0.,0.)
-                        let newState = trussServices.sendPointToModification p state
-                        do  drawTruss newState
-                            state <- newState
-                            label.Text <- state.ToString()
-                        match newState with
-                        | TrussAnalysisDomain.SelectionState ss -> 
-                            match ss.modification with
-                            | None -> 
-                                newP_StackPanel.Visibility <- Visibility.Collapsed
-                                setOrgin (Point(0.,0.))
-                                drawTruss newState
-                            | Some m -> setOrgin p
-                        | _ -> ()
-                    | Some f, None -> 
-                        let _mag,mag = Double.TryParse newFMag_TextBox.Text
-                        let _dir,dir = Double.TryParse newFDir_TextBox.Text
-                        let newState = trussServices.modifyTrussForce mag dir state 
-                        do  state <- newState
-                            newF_StackPanel.Visibility <- Visibility.Collapsed
-                            setOrgin (Point(0.,0.))
-                            drawTruss newState
-                            label.Text <- newState.ToString()
-                    | None,Some s ->                         
-                        let _dir,dir = Double.TryParse newFDir_TextBox.Text
-                        let newState = trussServices.modifyTrussSupport dir state 
-                        do  state <- newState
-                            newF_StackPanel.Visibility <- Visibility.Collapsed
-                            setOrgin (Point(0.,0.))
-                            drawTruss newState
-                            label.Text <- newState.ToString()
-                    | _ -> ()
+                | ControlDomain.Delete -> ()
+                | ControlDomain.Inspect -> ()
+                | ControlDomain.Modify -> ()                    
             | TrussAnalysisDomain.AnalysisState s -> ()
             | TrussAnalysisDomain.ErrorState es -> ()
         | Input.Key.Delete -> 
@@ -1667,13 +1411,13 @@ type Truss(                                                                     
                 | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.TrussSelectionMode.Delete -> 
+                | ControlDomain.SelectionMode.Delete -> 
                     let newState = trussServices.removeTrussPartFromTruss state            
                     do  state <- newState 
                         label.Text <- newState.ToString()
                         drawTruss newState
-                | TrussAnalysisDomain.TrussSelectionMode.Modify  -> ()
-                | TrussAnalysisDomain.TrussSelectionMode.Inspect -> ()
+                | ControlDomain.SelectionMode.Modify  -> ()
+                | ControlDomain.SelectionMode.Inspect -> ()
             | TrussAnalysisDomain.AnalysisState s -> ()                
             | TrussAnalysisDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
@@ -1703,7 +1447,7 @@ type Truss(                                                                     
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
         this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseUp(e)))
         this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
-        delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+        //delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
         orginPosition.Changed.AddHandler((fun _ _ -> drawTruss state))
         system.Changed.AddHandler((fun _ _ -> handleSystemChanged state))

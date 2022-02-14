@@ -100,8 +100,11 @@ module ErrorDomain =
 module ControlDomain = 
     
     type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool;isHitTestVisible:bool}
-
-
+    
+    type SelectionMode =
+            | Delete
+            | Modify
+            | Inspect
 
 // I'm in the process of refactoring this domain model into a more general purpose analysis tool.
 module TrussAnalysisDomain =
@@ -130,11 +133,7 @@ module TrussAnalysisDomain =
         | MemberBuild
         | ForceBuild
         | SupportBuild
-    type TrussSelectionMode =
-        | Delete
-        | Modify
-        | Inspect  
-  
+    
     // Data associated with each state
     type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
@@ -144,7 +143,7 @@ module TrussAnalysisDomain =
          forces:JointForce list option; 
          supports:Support list option; 
          modification: Joint option;
-         mode:TrussSelectionMode}
+         mode:ControlDomain.SelectionMode}
     type ErrorStateData = {errors : Error list; truss : Truss}
     type SupportReactionResult = 
         {support: Support;

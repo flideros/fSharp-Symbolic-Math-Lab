@@ -752,9 +752,9 @@ type Analysis() as this =
                 match delete_RadioButton.IsChecked.Value, 
                       inspect_RadioButton.IsChecked.Value, 
                       modify_RadioButton.IsChecked.Value with
-                | true,false,false -> trussServices.sendMemberToState l TrussAnalysisDomain.TrussSelectionMode.Delete s
-                | false,true,false -> trussServices.sendMemberToState l TrussAnalysisDomain.TrussSelectionMode.Inspect s
-                | false,false,true -> trussServices.sendMemberToState l TrussAnalysisDomain.TrussSelectionMode.Modify s
+                | true,false,false -> trussServices.sendMemberToState l ControlDomain.SelectionMode.Delete s
+                | false,true,false -> trussServices.sendMemberToState l ControlDomain.SelectionMode.Inspect s
+                | false,false,true -> trussServices.sendMemberToState l ControlDomain.SelectionMode.Modify s
                 | _ -> s //add code to throw an error here.
             do  state <- newState
                 label.Text <- state.ToString()
@@ -804,9 +804,9 @@ type Analysis() as this =
                 match delete_RadioButton.IsChecked.Value, 
                       inspect_RadioButton.IsChecked.Value, 
                       modify_RadioButton.IsChecked.Value with
-                | true,false,false -> trussServices.sendForceToState l TrussAnalysisDomain.TrussSelectionMode.Delete s
-                | false,true,false -> trussServices.sendForceToState l TrussAnalysisDomain.TrussSelectionMode.Inspect s
-                | false,false,true -> trussServices.sendForceToState l TrussAnalysisDomain.TrussSelectionMode.Modify s
+                | true,false,false -> trussServices.sendForceToState l ControlDomain.SelectionMode.Delete s
+                | false,true,false -> trussServices.sendForceToState l ControlDomain.SelectionMode.Inspect s
+                | false,false,true -> trussServices.sendForceToState l ControlDomain.SelectionMode.Modify s
                 | _ -> s //add code to throw an error here.
             do  state <- newState
                 label.Text <- state.ToString()
@@ -863,9 +863,9 @@ type Analysis() as this =
                 match delete_RadioButton.IsChecked.Value, 
                       inspect_RadioButton.IsChecked.Value, 
                       modify_RadioButton.IsChecked.Value with
-                | true,false,false -> trussServices.sendSupportToState p TrussAnalysisDomain.TrussSelectionMode.Delete s
-                | false,true,false -> trussServices.sendSupportToState p TrussAnalysisDomain.TrussSelectionMode.Inspect s
-                | false,false,true -> trussServices.sendSupportToState p TrussAnalysisDomain.TrussSelectionMode.Modify s
+                | true,false,false -> trussServices.sendSupportToState p ControlDomain.SelectionMode.Delete s
+                | false,true,false -> trussServices.sendSupportToState p ControlDomain.SelectionMode.Inspect s
+                | false,false,true -> trussServices.sendSupportToState p ControlDomain.SelectionMode.Modify s
                 | _ -> s //add code to throw an error here.
             do  state <- newState
                 label.Text <- state.ToString()
@@ -1614,7 +1614,7 @@ type Analysis() as this =
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
                             newP_StackPanel.Visibility <- Visibility.Collapsed
-                            trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Delete state
+                            trussServices.setSelectionMode ControlDomain.SelectionMode.Delete state
                         // Inspect
                         | true,false,false, false,true,false
                         | false,true,false, false,true,false 
@@ -1629,7 +1629,7 @@ type Analysis() as this =
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
                             newP_StackPanel.Visibility <- Visibility.Collapsed
-                            trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Inspect state
+                            trussServices.setSelectionMode ControlDomain.SelectionMode.Inspect state
                         // Modify
                         | true,false,false, false,false,true
                         | false,true,false, false,false,true 
@@ -1643,7 +1643,7 @@ type Analysis() as this =
                             message_TextBlock.Text <- "--Select a Truss Part--"
                             code_TextBlock.Text <- "Ready"
                             newP_StackPanel.Visibility <- Visibility.Collapsed
-                            trussServices.setSelectionMode TrussAnalysisDomain.TrussSelectionMode.Modify state
+                            trussServices.setSelectionMode ControlDomain.SelectionMode.Modify state
                         | _ -> // Logic for Analysis Mode radio buttons                            
                             match xAxis_RadioButton.IsChecked.Value, 
                                   yAxis_RadioButton.IsChecked.Value,                                   
@@ -1781,9 +1781,9 @@ type Analysis() as this =
                 | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.Delete -> ()
-                | TrussAnalysisDomain.Inspect ->()
-                | TrussAnalysisDomain.Modify -> 
+                | ControlDomain.Delete -> ()
+                | ControlDomain.Inspect ->()
+                | ControlDomain.Modify -> 
                     let newState = trussServices.sendPointToModification p state
                     do  setOrgin p
                         drawTruss newState
@@ -1867,7 +1867,7 @@ type Analysis() as this =
             | BuilderDomain.Control -> ()
         | TrussAnalysisDomain.SelectionState ss -> 
             match ss.mode with
-            | TrussAnalysisDomain.Modify -> 
+            | ControlDomain.Modify -> 
                 match ss.forces, ss.supports with
                 | Some f, None -> 
                     match newF_StackPanel.Visibility = Visibility.Collapsed with
@@ -1886,8 +1886,8 @@ type Analysis() as this =
                             newFDir_TextBox.Text <- (90. + trussServices.getDirectionFromSupport s.Head).ToString() 
                     | false -> ()                
                 | _ -> newF_StackPanel.Visibility <- Visibility.Collapsed
-            | TrussAnalysisDomain.Delete -> ()
-            | TrussAnalysisDomain.Inspect -> 
+            | ControlDomain.Delete -> ()
+            | ControlDomain.Inspect -> 
                 let truss = getTrussFrom state
                 match ss.forces, ss.members, ss.supports with
                 | Some f, None, None -> 
@@ -2086,9 +2086,9 @@ type Analysis() as this =
                 | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.Delete -> ()
-                | TrussAnalysisDomain.Inspect ->()
-                | TrussAnalysisDomain.Modify -> 
+                | ControlDomain.Delete -> ()
+                | ControlDomain.Inspect ->()
+                | ControlDomain.Modify -> 
                     match ss.forces, ss.supports with
                     | None, None ->                     
                         let p =
@@ -2148,13 +2148,13 @@ type Analysis() as this =
                 | BuilderDomain.Control -> ()
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
-                | TrussAnalysisDomain.TrussSelectionMode.Delete -> 
+                | ControlDomain.SelectionMode.Delete -> 
                     let newState = trussServices.removeTrussPartFromTruss state            
                     do  state <- newState 
                         label.Text <- newState.ToString()
                         drawTruss newState
-                | TrussAnalysisDomain.TrussSelectionMode.Modify  -> ()
-                | TrussAnalysisDomain.TrussSelectionMode.Inspect -> ()
+                | ControlDomain.SelectionMode.Modify  -> ()
+                | ControlDomain.SelectionMode.Inspect -> ()
             | TrussAnalysisDomain.AnalysisState s -> ()                
             | TrussAnalysisDomain.ErrorState es -> ()
         | _ -> () // logic for other keys

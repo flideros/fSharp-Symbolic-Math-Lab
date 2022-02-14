@@ -360,6 +360,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                        jointList:SharedValue<System.Windows.Point list>,
                        system:SharedValue<ElementDomain.System option>,
                        selectedPart:SharedValue<ElementDomain.Part option>,                       
+                       selectionMode:SharedValue<ControlDomain.SelectionMode>,
                        wolframMessage:SharedValue<string>
                        ) as this =  
     inherit UserControl()    
@@ -511,9 +512,15 @@ type SelectionControl (orginPoint:SharedValue<Point>,
         newF_StackPanel.Visibility <- Visibility.Collapsed
         newS_StackPanel.Visibility <- Visibility.Collapsed
         match string selectionMode_ComboBox.SelectedItem with
-        | "Delete" -> delete_Button.Visibility <- Visibility.Visible
-        | "Inspect" -> delete_Button.Visibility <- Visibility.Collapsed
-        | "Modify" -> delete_Button.Visibility <- Visibility.Collapsed
+        | "Delete" -> 
+            selectionMode.Set (ControlDomain.SelectionMode.Delete)
+            delete_Button.Visibility <- Visibility.Visible
+        | "Inspect" -> 
+            selectionMode.Set (ControlDomain.SelectionMode.Inspect)
+            delete_Button.Visibility <- Visibility.Collapsed
+        | "Modify" -> 
+            selectionMode.Set (ControlDomain.SelectionMode.Inspect)
+            delete_Button.Visibility <- Visibility.Collapsed
         | _ -> delete_Button.Visibility <- Visibility.Collapsed
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 

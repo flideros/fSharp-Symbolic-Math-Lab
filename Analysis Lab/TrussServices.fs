@@ -44,9 +44,9 @@ module TrussServices =
     type SendPointToRollerSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToPinSupportBuilder = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMagnitudeToSupportBuilder = float*float option -> TrussAnalysisState -> TrussAnalysisState    
-    type SendMemberToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
-    type SendForceToState = System.Windows.Shapes.Line -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
-    type SendSupportToState = System.Windows.Shapes.Path -> TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendMemberToState = System.Windows.Shapes.Line -> ControlDomain.SelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendForceToState = System.Windows.Shapes.Line -> ControlDomain.SelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SendSupportToState = System.Windows.Shapes.Path -> ControlDomain.SelectionMode -> TrussAnalysisState -> TrussAnalysisState
     type SendStateToSupportBuilder = bool -> TrussAnalysisState -> TrussAnalysisState
     type SendPointToCalculation = System.Windows.Point -> TrussAnalysisState -> TrussAnalysisState
     type SendMemberOptionToState = Member option -> TrussAnalysisState -> TrussAnalysisState
@@ -59,7 +59,7 @@ module TrussServices =
     
     type SetTruss = Truss -> TrussAnalysisState -> TrussAnalysisState
     type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
-    type SetSelectionMode = TrussSelectionMode -> TrussAnalysisState -> TrussAnalysisState
+    type SetSelectionMode = ControlDomain.SelectionMode -> TrussAnalysisState -> TrussAnalysisState
 
     type RemoveTrussPartFromTruss = TrussAnalysisState -> TrussAnalysisState
     
@@ -328,13 +328,13 @@ module TrussServices =
                  forces = None; 
                  supports = None; 
                  modification = Some (makeJointFrom p);
-                 mode = Modify} |> SelectionState            
+                 mode = ControlDomain.Modify} |> SelectionState            
         | BuildState bs-> ErrorState {errors = [WrongStateData]; truss = bs.truss}           
         | SelectionState ss -> 
             match ss.mode with
-            | TrussAnalysisDomain.Inspect          
-            | TrussAnalysisDomain.Delete -> state
-            | TrussAnalysisDomain.Modify -> 
+            | ControlDomain.Inspect          
+            | ControlDomain.Delete -> state
+            | ControlDomain.Modify -> 
                 match joint with
                 | None ->
                     match ss.modification with
@@ -441,7 +441,7 @@ module TrussServices =
         | SelectionState ss -> ErrorState {errors = [WrongStateData]; truss = ss.truss} 
         | AnalysisState s -> ErrorState {errors = [WrongStateData]; truss = s.truss}
         | ErrorState es -> ErrorState {errors = WrongStateData::es.errors; truss = es.truss}
-    let sendMemberToState (l:System.Windows.Shapes.Line) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
+    let sendMemberToState (l:System.Windows.Shapes.Line) (sm:ControlDomain.SelectionMode)(state :TrussAnalysisState) = 
         let m =  ({x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y})
         match state with 
         | TrussState  ts -> 
@@ -460,7 +460,7 @@ module TrussServices =
             |> SelectionState
         | AnalysisState s -> state    
         | ErrorState  es -> state
-    let sendForceToState (l:System.Windows.Shapes.Line) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
+    let sendForceToState (l:System.Windows.Shapes.Line) (sm:ControlDomain.SelectionMode)(state :TrussAnalysisState) = 
         let p1,p2 =  {x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y}                    
         match state with 
         | TrussState  ts -> 
@@ -503,7 +503,7 @@ module TrussServices =
             |> SelectionState
         | AnalysisState s -> state
         | ErrorState  es -> state
-    let sendSupportToState (path:System.Windows.Shapes.Path) (sm:TrussSelectionMode)(state :TrussAnalysisState) = 
+    let sendSupportToState (path:System.Windows.Shapes.Path) (sm:ControlDomain.SelectionMode)(state :TrussAnalysisState) = 
         //let p1,p2 =  {x = l.X1 |> X; y = l.Y1 |> Y}, {x = l.X2 |> X; y = l.Y2 |> Y}                    
         let p = path.Tag :?> System.Windows.Point
         let j = makeJointFrom p
@@ -726,7 +726,7 @@ module TrussServices =
                 {ss with truss = newTruss; supports = None} |> SelectionState
             
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
-    let setSelectionMode (mode :TrussSelectionMode) (state :TrussAnalysisState) =
+    let setSelectionMode (mode :ControlDomain.SelectionMode) (state :TrussAnalysisState) =
         match state with 
         | TrussState ts -> state
         | BuildState ts -> state
