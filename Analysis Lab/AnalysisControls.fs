@@ -503,6 +503,18 @@ type SelectionControl (orginPoint:SharedValue<Point>,
     let mutable p1 = None
 
     // logic
+    let setDefaultControlState () = 
+        p1 <- None
+        orginPoint.Set (Point(0.,0.))
+        selectedPart.Set None
+        newP_StackPanel.Visibility <- Visibility.Collapsed
+        newF_StackPanel.Visibility <- Visibility.Collapsed
+        newS_StackPanel.Visibility <- Visibility.Collapsed
+        match string selectionMode_ComboBox.SelectedItem with
+        | "Delete" -> delete_Button.Visibility <- Visibility.Visible
+        | "Inspect" -> delete_Button.Visibility <- Visibility.Collapsed
+        | "Modify" -> delete_Button.Visibility <- Visibility.Collapsed
+        | _ -> delete_Button.Visibility <- Visibility.Collapsed
     let getJointIndex (p1:System.Windows.Point) = 
         Seq.tryFindIndex (fun (p2:System.Windows.Point) -> 
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) jointList.Get
@@ -515,7 +527,8 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             | ElementDomain.System.TrussSystem  t -> 
                 let tOut = TrussImplementation.removeTrussPartFromTruss t selectedPart.Get
                 do  system.Set (ElementDomain.System.TrussSystem tOut |> Some)
-    let handleMouseDown () =         
+                    setDefaultControlState ()
+    let handleMouseDown ()  =         
         let joint = getJointIndex mousePosition.Get
         let p = 
             match joint with
@@ -526,11 +539,11 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             match string selectionMode_ComboBox.SelectedItem with        
             | "Modify" ->
                 match selectedPart.Get, p1 with             
-                | Some (ElementDomain.Force f), None ->
-                    selectedPart.Set None
+                | Some (ElementDomain.Force f), None ->                    
                     match joint.IsSome with
                     | false -> ()
                     | true -> 
+                        //selectedPart.Set None
                         p1 <- Some p
                         orginPoint.Set p
                         newP_StackPanel.Visibility <- Visibility.Visible
@@ -538,11 +551,11 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                         newS_StackPanel.Visibility <- Visibility.Collapsed
                         newPX_TextBox.Text <- p.X.ToString()
                         newPY_TextBox.Text <- p.Y.ToString()
-                | Some (ElementDomain.Support s), None  ->
-                    selectedPart.Set None
+                | Some (ElementDomain.Support s), None  ->                    
                     match joint.IsSome with
                     | false -> ()
                     | true -> 
+                        //selectedPart.Set None
                         p1 <- Some p
                         orginPoint.Set p
                         newP_StackPanel.Visibility <- Visibility.Visible
@@ -550,11 +563,11 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                         newS_StackPanel.Visibility <- Visibility.Collapsed
                         newPX_TextBox.Text <- p.X.ToString()
                         newPY_TextBox.Text <- p.Y.ToString()
-                | Some (ElementDomain.Member m), None  ->
-                    selectedPart.Set None
+                | Some (ElementDomain.Member m), None  ->                    
                     match joint.IsSome with
                     | false -> ()
                     | true -> 
+                        //selectedPart.Set None
                         p1 <- Some p
                         orginPoint.Set p
                         newP_StackPanel.Visibility <- Visibility.Visible
@@ -565,7 +578,8 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | Some (ElementDomain.Force f), Some p0 ->
                     selectedPart.Set None
                     orginPoint.Set p                    
-                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    let newTruss = TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0)
+                    system.Set (Some (newTruss |> ElementDomain.System.TrussSystem))
                     p1 <- None
                     newP_StackPanel.Visibility <- Visibility.Collapsed
                     newF_StackPanel.Visibility <- Visibility.Collapsed
@@ -573,7 +587,8 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | Some (ElementDomain.Support s), Some p0  ->
                     selectedPart.Set None
                     orginPoint.Set p                    
-                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    let newTruss = TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0)
+                    system.Set (Some (newTruss |> ElementDomain.System.TrussSystem))
                     p1 <- None
                     newP_StackPanel.Visibility <- Visibility.Collapsed
                     newF_StackPanel.Visibility <- Visibility.Collapsed
@@ -581,14 +596,16 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | Some (ElementDomain.Member m), Some p0  ->
                     selectedPart.Set None
                     orginPoint.Set p                    
-                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    let newTruss = TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0)
+                    system.Set (Some (newTruss |> ElementDomain.System.TrussSystem))
                     p1 <- None
                     newP_StackPanel.Visibility <- Visibility.Collapsed
                     newF_StackPanel.Visibility <- Visibility.Collapsed
                     newS_StackPanel.Visibility <- Visibility.Collapsed                    
                 | None, Some p0 -> 
                     orginPoint.Set p                    
-                    system.Set (Some (TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0) |> ElementDomain.System.TrussSystem))
+                    let newTruss = TrussImplementation.modifyTruss truss (TrussServices.makeJointFrom p) (TrussServices.makeJointFrom p0)
+                    system.Set (Some (newTruss |> ElementDomain.System.TrussSystem))
                     p1 <- None
                     newP_StackPanel.Visibility <- Visibility.Collapsed
                     newF_StackPanel.Visibility <- Visibility.Collapsed
@@ -596,7 +613,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | None, None ->                     
                     match joint.IsSome with
                     | false -> ()
-                    | true -> 
+                    | true ->                         
                         p1 <- Some p
                         orginPoint.Set p
                         newP_StackPanel.Visibility <- Visibility.Visible
@@ -615,24 +632,29 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             | Some part -> 
                 match string selectionMode_ComboBox.SelectedItem with        
                 | "Modify" ->
-                    match selectedPart.Get with
-                    | Some (ElementDomain.Force jf) -> 
+                    match selectedPart.Get, p1.IsSome with
+                    | Some (ElementDomain.Force jf), false -> 
                         do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Visible
                             newS_StackPanel.Visibility <- Visibility.Collapsed
                             newFMag_TextBox.Text <- jf.magnitude.ToString()                            
                             newFDir_TextBox.Text <- (TrussServices.getDirectionFromForce jf).ToString() 
-                    | Some (ElementDomain.Support s) -> 
+                    | Some (ElementDomain.Support s), false -> 
                         do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Collapsed
                             newS_StackPanel.Visibility <- Visibility.Visible                            
                             newSDir_TextBox.Text <- (90. + TrussServices.getDirectionFromSupport s).ToString()
-                    | Some (ElementDomain.Member m) -> 
+                    | Some (ElementDomain.Member m), false -> 
                         do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Collapsed
                             newS_StackPanel.Visibility <- Visibility.Collapsed                            
+                    | Some elem, true -> 
+                        do  newP_StackPanel.Visibility <- Visibility.Collapsed
+                            newF_StackPanel.Visibility <- Visibility.Collapsed
+                            newS_StackPanel.Visibility <- Visibility.Collapsed 
+                            selectedPart.Set None
                     | _ ->  ()
-                | "Inspect" ->                     
+                | "Inspect" ->
                     match selectedPart.Get with
                     | Some (ElementDomain.Force jf) -> 
                         let i = TrussImplementation.getForceIndex jf truss
@@ -677,9 +699,9 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                             newF_StackPanel.Visibility <- Visibility.Collapsed
                             orginPoint.Set (Point(0.,0.))
                     | Some (ElementDomain.Support s) ->
-                        let _dir,dir = Double.TryParse newFDir_TextBox.Text                       
-                        let newTruss = TrussImplementation.modifyTrussSupport truss dir s
-                        do  system.Set (Some (ElementDomain.System.TrussSystem newTruss))
+                        let _dir,dir = Double.TryParse newSDir_TextBox.Text                       
+                        let newTruss = TrussImplementation.modifyTrussSupport truss (dir - 0.) s
+                        do  system.Set (Some (ElementDomain.System.TrussSystem newTruss))                            
                             newS_StackPanel.Visibility <- Visibility.Collapsed
                             orginPoint.Set (Point(0.,0.))
                     | _ -> ()
@@ -694,21 +716,10 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | _ -> ()
             | _ -> ()
         | _ -> () // logic for other keys
-    let handleSelectionModeChange () = 
-        orginPoint.Set (Point(0.,0.))
-        selectedPart.Set None
-        newP_StackPanel.Visibility <- Visibility.Collapsed
-        newF_StackPanel.Visibility <- Visibility.Collapsed
-        newS_StackPanel.Visibility <- Visibility.Collapsed
-        match string selectionMode_ComboBox.SelectedItem with
-        | "Delete" -> delete_Button.Visibility <- Visibility.Visible
-        | "Inspect" -> delete_Button.Visibility <- Visibility.Collapsed
-        | "Modify" -> delete_Button.Visibility <- Visibility.Collapsed
-        | _ -> delete_Button.Visibility <- Visibility.Collapsed
-
+    
     do  this.Content <- screen_Grid
         delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> deletePart()))
-        selectionMode_ComboBox.SelectionChanged .AddHandler(SelectionChangedEventHandler(fun _ _ -> handleSelectionModeChange()))
+        selectionMode_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _ -> setDefaultControlState ()))
         selectedPart.Changed.AddHandler(fun _ _ -> handleMouseUp ())
 
     member _this.handleSelectionMouseDown () =  handleMouseDown ()

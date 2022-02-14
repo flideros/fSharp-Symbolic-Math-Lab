@@ -721,8 +721,8 @@ module TrussServices =
         | TrussAnalysisDomain.SelectionState ss ->             
             match ss.supports with 
             | None -> state
-            | Some f -> 
-                let newTruss = modifyTrussSupport ss.truss newFDir f.Head
+            | Some s -> 
+                let newTruss = modifyTrussSupport ss.truss newFDir s.Head
                 {ss with truss = newTruss; supports = None} |> SelectionState
             
     let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState

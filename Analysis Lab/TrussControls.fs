@@ -304,7 +304,7 @@ type Truss(                                                                     
             sp.Children.Add(supportBuilder_RadioButton) |> ignore
             sp.Children.Add(selection_RadioButton) |> ignore
             sp.Children.Add(analysis_RadioButton) |> ignore
-            sp.Children.Add(settings_RadioButton) |> ignore
+            sp.Children.Add(settings_RadioButton) |> ignore            
         sp
         
         // Selection mode selection
@@ -418,7 +418,7 @@ type Truss(                                                                     
             sp.Children.Add(modify_RadioButton) |> ignore
             sp.Children.Add(delete_Button) |> ignore
             sp.Children.Add(newP_StackPanel) |> ignore
-            sp.Children.Add(newF_StackPanel) |> ignore
+            sp.Children.Add(newF_StackPanel) |> ignore            
             sp.Visibility <- Visibility.Collapsed
         sp
         
@@ -607,7 +607,7 @@ type Truss(                                                                     
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
-            g.Children.Add(selection_Control) |> ignore
+            //g.Children.Add(selection_Control) |> ignore
         g
         
         // Settings
@@ -702,7 +702,8 @@ type Truss(                                                                     
             sp.Children.Add(jointForceBuilder_Control) |> ignore
             sp.Children.Add(supportBuilder_Control) |> ignore
             sp.Children.Add(settings_StackPanel) |> ignore
-            sp.Children.Add(selectionMode_StackPanel) |> ignore
+            //sp.Children.Add(selectionMode_StackPanel) |> ignore
+            sp.Children.Add(selection_Control) |> ignore
             sp.Children.Add(analysis_StackPanel) |> ignore
             sp.SetValue(Canvas.ZIndexProperty,4)
             border.Child <- sp
@@ -1153,7 +1154,7 @@ type Truss(                                                                     
                     newP_StackPanel.Visibility <- Visibility.Collapsed                  
                     let newState = trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Selection state                    
                     drawTruss newState
-                    label.Text <- system.Get.ToString()
+                    label.Text <- state.ToString()
                     newState
                 // Analysis
                 | true,false,false,false,false,false,  false,false,false,false,true,false
@@ -1520,7 +1521,6 @@ type Truss(                                                                     
                         do  newP_StackPanel.Visibility <- Visibility.Collapsed
                             newF_StackPanel.Visibility <- Visibility.Collapsed
                     | false -> ()
-
                 | _ -> newF_StackPanel.Visibility <- Visibility.Collapsed
             | TrussAnalysisDomain.Delete -> ()
             | TrussAnalysisDomain.Inspect -> 
@@ -1606,7 +1606,7 @@ type Truss(                                                                     
             | TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | TrussAnalysisDomain.Delete -> ()
-                | TrussAnalysisDomain.Inspect ->()
+                | TrussAnalysisDomain.Inspect -> ()
                 | TrussAnalysisDomain.Modify -> 
                     match ss.forces, ss.supports with
                     | None, None ->                     
@@ -1684,9 +1684,14 @@ type Truss(                                                                     
             let newState = trussServices.setTruss truss s
             do  state <- newState
                 drawTruss newState
-                //system.Set None
-                label.Text <- "System =" + truss.ToString()
+                jointList.Set (trussServices.getJointSeqFromTruss truss |> Seq.toList)
+                label.Text <- state.ToString()
         | _ -> ()
+    let handleSelectedPartChanged s =        
+        match selectedPart.Get with
+        | None -> state <- trussServices.setTrussMode TrussAnalysisDomain.TrussMode.Selection s
+        | Some p -> ()
+    
     (*Initialize*)
     do  this.Content <- screen_Grid        
         wolframResult_Control.setGraphics kernel
@@ -1702,3 +1707,4 @@ type Truss(                                                                     
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
         orginPosition.Changed.AddHandler((fun _ _ -> drawTruss state))
         system.Changed.AddHandler((fun _ _ -> handleSystemChanged state))
+        selectedPart.Changed.AddHandler((fun _ _ -> handleSelectedPartChanged state))
