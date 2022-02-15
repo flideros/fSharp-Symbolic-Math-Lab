@@ -519,7 +519,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             selectionMode.Set (ControlDomain.SelectionMode.Inspect)
             delete_Button.Visibility <- Visibility.Collapsed
         | "Modify" -> 
-            selectionMode.Set (ControlDomain.SelectionMode.Inspect)
+            selectionMode.Set (ControlDomain.SelectionMode.Modify)
             delete_Button.Visibility <- Visibility.Collapsed
         | _ -> delete_Button.Visibility <- Visibility.Collapsed
     let getJointIndex (p1:System.Windows.Point) = 
@@ -631,9 +631,9 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             | _-> ()
         | _-> ()
     let handleMouseUp () =
-        match system.Get with
-        | None -> ()
-        | Some (ElementDomain.System.TrussSystem truss) ->
+        match system.Get, this.IsVisible with
+        | None, true -> ()
+        | Some (ElementDomain.System.TrussSystem truss), true ->
             match selectedPart.Get with
             | None -> ()
             | Some part -> 
@@ -676,8 +676,8 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                 | _-> ()
         | _-> ()
     let handleKeyDown (e:Input.KeyEventArgs) =        
-        match e.Key with 
-        | Input.Key.Enter ->                      
+        match e.Key, this.IsVisible with 
+        | Input.Key.Enter, true ->                      
             match system.Get with
             | None -> ()
             | Some (ElementDomain.System.TrussSystem truss) -> 
@@ -714,7 +714,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                     | _ -> ()
                 | _ -> ()
             | _ -> ()
-        | Input.Key.Delete -> 
+        | Input.Key.Delete, true -> 
             match system.Get, this.IsVisible with
             | None,_ -> ()
             | Some (ElementDomain.System.TrussSystem truss),true -> 

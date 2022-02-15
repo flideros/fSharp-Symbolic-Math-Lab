@@ -43,6 +43,7 @@ type Truss(                                                                     
         k
     
     (*Shared Values*)  
+    let jointList = SharedValue<(Point list)> []
     let orginPosition = SharedValue<Point> (Point(0.,0.))
     let mousePosition = SharedValue<Point> (Point(0.,0.))
     let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
@@ -51,14 +52,11 @@ type Truss(                                                                     
     let system = SharedValue<(ElementDomain.System option)> (None)
     let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
     let selectionMode = SharedValue<(ControlDomain.SelectionMode)> (ControlDomain.SelectionMode.Delete)
-
     let wolframCode = SharedValue<string> "Ready"
     let wolframMessage = SharedValue<string> "Ready"
     let wolframResult = SharedValue<string> "Ready"
     let wolframLink = SharedValue<IKernelLink> link
     let wolframSettings = SharedValue<WolframResultControlSettings> {codeVisible = false; resultVisible = false; isHitTestVisible = true}
-
-    let jointList = SharedValue<(Point list)> []
     
     // Internal State
     let initialState = TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = TrussAnalysisDomain.MemberBuild}
@@ -307,7 +305,105 @@ type Truss(                                                                     
             sp.Children.Add(analysis_RadioButton) |> ignore
             sp.Children.Add(settings_RadioButton) |> ignore            
         sp
-                
+         
+         // Settings
+    let toggleCodeText_Button = 
+        let b = Button() 
+        let onOff() = 
+            match b.Content.ToString() with 
+            | "Code Text Off" -> 
+                do  wolframSettings.Set {wolframSettings.Get with codeVisible = true}
+                    b.Content <- "Code Text On" 
+            | "Code Text On" -> 
+                do  wolframSettings.Set {wolframSettings.Get with codeVisible = false}
+                    b.Content <- "Code Text Off" 
+            | _ -> ()
+        do  b.Content <- "Code Text Off" 
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Regular
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+            b.Visibility <- Visibility.Visible
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
+        b
+    let toggleResultText_Button = 
+        let b = Button() 
+        let onOff() = 
+            match b.Content.ToString() with 
+            | "Result Text Off" -> 
+                do  wolframSettings.Set {wolframSettings.Get with resultVisible = true}
+                    b.Content <- "Result Text On" 
+            | "Result Text On" -> 
+                do  wolframSettings.Set {wolframSettings.Get with resultVisible = false}
+                    b.Content <- "Result Text Off" 
+            | _ -> ()
+        do  b.Content <- "Result Text Off" 
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Regular
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+            b.Visibility <- Visibility.Visible
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
+        b
+    let toggleStateText_Button = 
+        let b = Button() 
+        let onOff() = 
+            match b.Content.ToString() with 
+            | "State Text Off" -> 
+                do  label.Visibility <- Visibility.Visible
+                    b.Content <- "State Text On" 
+            | "State Text On" -> 
+                do  label.Visibility <- Visibility.Collapsed
+                    b.Content <- "State Text Off" 
+            | _ -> ()
+        do  b.Content <- "State Text On" 
+            b.FontSize <- 12.
+            b.FontWeight <- FontWeights.Regular
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+            b.Visibility <- Visibility.Visible
+            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
+        b
+    let settings_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Orientation <- Orientation.Vertical
+            sp.HorizontalAlignment <- HorizontalAlignment.Left
+            sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            sp.Visibility <- Visibility.Collapsed
+            sp.Children.Add(toggleCodeText_Button) |> ignore
+            sp.Children.Add(toggleResultText_Button) |> ignore
+            sp.Children.Add(toggleStateText_Button) |> ignore
+            sp.Children.Add(coordinateGrid_Control) |> ignore
+
+        sp  
+        
+        // Controls border
+    let trussControls_Border = 
+        let border = Border()            
+        do  border.BorderBrush <- black
+            border.Cursor <- System.Windows.Input.Cursors.Arrow
+            border.Background <- clear
+            border.Opacity <- 0.8
+            border.IsHitTestVisible <- true
+            border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
+            border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            border.SetValue(Canvas.ZIndexProperty,4)
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(trussMode_StackPanel) |> ignore
+            sp.Children.Add(memberBuilder_Control) |> ignore
+            sp.Children.Add(jointForceBuilder_Control) |> ignore
+            sp.Children.Add(supportBuilder_Control) |> ignore
+            sp.Children.Add(settings_StackPanel) |> ignore
+            sp.Children.Add(selection_Control) |> ignore
+            sp.Children.Add(analysis_StackPanel) |> ignore
+            sp.SetValue(Canvas.ZIndexProperty,4)
+            border.Child <- sp
+        border
+
         // Truss parts
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
@@ -485,104 +581,6 @@ type Truss(                                                                     
         let g = Grid()              
         do  g.Children.Add(canvas) |> ignore
         g
-        
-        // Settings
-    let toggleCodeText_Button = 
-        let b = Button() 
-        let onOff() = 
-            match b.Content.ToString() with 
-            | "Code Text Off" -> 
-                do  wolframSettings.Set {wolframSettings.Get with codeVisible = true}
-                    b.Content <- "Code Text On" 
-            | "Code Text On" -> 
-                do  wolframSettings.Set {wolframSettings.Get with codeVisible = false}
-                    b.Content <- "Code Text Off" 
-            | _ -> ()
-        do  b.Content <- "Code Text Off" 
-            b.FontSize <- 12.
-            b.FontWeight <- FontWeights.Regular
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
-            b.Visibility <- Visibility.Visible
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
-        b
-    let toggleResultText_Button = 
-        let b = Button() 
-        let onOff() = 
-            match b.Content.ToString() with 
-            | "Result Text Off" -> 
-                do  wolframSettings.Set {wolframSettings.Get with resultVisible = true}
-                    b.Content <- "Result Text On" 
-            | "Result Text On" -> 
-                do  wolframSettings.Set {wolframSettings.Get with resultVisible = false}
-                    b.Content <- "Result Text Off" 
-            | _ -> ()
-        do  b.Content <- "Result Text Off" 
-            b.FontSize <- 12.
-            b.FontWeight <- FontWeights.Regular
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
-            b.Visibility <- Visibility.Visible
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
-        b
-    let toggleStateText_Button = 
-        let b = Button() 
-        let onOff() = 
-            match b.Content.ToString() with 
-            | "State Text Off" -> 
-                do  label.Visibility <- Visibility.Visible
-                    b.Content <- "State Text On" 
-            | "State Text On" -> 
-                do  label.Visibility <- Visibility.Collapsed
-                    b.Content <- "State Text Off" 
-            | _ -> ()
-        do  b.Content <- "State Text On" 
-            b.FontSize <- 12.
-            b.FontWeight <- FontWeights.Regular
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
-            b.Visibility <- Visibility.Visible
-            b.Click.AddHandler(RoutedEventHandler(fun _ _ -> onOff() ))
-        b
-    let settings_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Orientation <- Orientation.Vertical
-            sp.HorizontalAlignment <- HorizontalAlignment.Left
-            sp.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
-            sp.Visibility <- Visibility.Collapsed
-            sp.Children.Add(toggleCodeText_Button) |> ignore
-            sp.Children.Add(toggleResultText_Button) |> ignore
-            sp.Children.Add(toggleStateText_Button) |> ignore
-            sp.Children.Add(coordinateGrid_Control) |> ignore
-
-        sp  
-        
-        // Controls border
-    let trussControls_Border = 
-        let border = Border()            
-        do  border.BorderBrush <- black
-            border.Cursor <- System.Windows.Input.Cursors.Arrow
-            border.Background <- clear
-            border.Opacity <- 0.8
-            border.IsHitTestVisible <- true
-            border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
-            border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
-            border.SetValue(Canvas.ZIndexProperty,4)
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(trussMode_StackPanel) |> ignore
-            sp.Children.Add(memberBuilder_Control) |> ignore
-            sp.Children.Add(jointForceBuilder_Control) |> ignore
-            sp.Children.Add(supportBuilder_Control) |> ignore
-            sp.Children.Add(settings_StackPanel) |> ignore
-            sp.Children.Add(selection_Control) |> ignore
-            sp.Children.Add(analysis_StackPanel) |> ignore
-            sp.SetValue(Canvas.ZIndexProperty,4)
-            border.Child <- sp
-        border    
     
     (*Actions*) 
     let adjustMouseButtonEventArgPoint (e:Input.MouseButtonEventArgs) = 
@@ -884,8 +882,8 @@ type Truss(                                                                     
             match newState with 
             | TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | TrussAnalysisDomain.Truss -> ""
-                | TrussAnalysisDomain.SupportReactionEquations r -> "" 
+                | TrussAnalysisDomain.Truss -> "1?"
+                | TrussAnalysisDomain.SupportReactionEquations r -> "2?" 
                 | TrussAnalysisDomain.SupportReactionResult r -> "Choose a joint to begin Method of Joints analysis."                    
                 | TrussAnalysisDomain.MethodOfJointsCalculation r -> "Choose next joint."
                 | TrussAnalysisDomain.MethodOfJointsAnalysis _ -> "Analysis Complete. Click Compute to see report."                
@@ -897,7 +895,7 @@ type Truss(                                                                     
         do  state <- newState
             label.Text <- newState.ToString()            
             wolframCode.Set newCode            
-            wolframMessage.Set newMessage
+            wolframMessage.Set newMessage            
             Seq.iter (fun (f:LoadDomain.JointForce) -> 
                 match f.magnitude = 0.0 with 
                 | true -> () 
@@ -911,6 +909,31 @@ type Truss(                                                                     
     let setjointList (s: TrussAnalysisDomain.TrussAnalysisState) = jointList.Set (getJointsFrom s |> Seq.toList)
 
         // Handle
+    let handleSelectionModeChanged s = 
+        // Logic for Selection Mode 
+        match selectionMode.Get with 
+        | ControlDomain.Delete ->                             
+            wolframResult_Control.Visibility <- Visibility.Collapsed
+            wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
+            wolframMessage.Set "--Select a Truss Part--"
+            wolframCode.Set "Ready"
+            let newState = trussServices.setSelectionMode ControlDomain.SelectionMode.Delete s
+            state <- newState
+        | ControlDomain.Inspect ->                        
+            wolframResult_Control.setGraphics kernel                          
+            wolframResult_Control.Visibility <- Visibility.Visible
+            wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
+            wolframMessage.Set "--Select a Truss Part--"
+            wolframCode.Set "Ready"
+            let newState = trussServices.setSelectionMode ControlDomain.SelectionMode.Inspect s
+            state <- newState
+        | ControlDomain.Modify ->                           
+            wolframResult_Control.Visibility <- Visibility.Collapsed
+            wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
+            wolframMessage.Set "--Select a Truss Part--"
+            wolframCode.Set "Ready"
+            let newState = trussServices.setSelectionMode ControlDomain.SelectionMode.Modify s
+            state <- newState
     let handleMouseDown (e : Input.MouseButtonEventArgs) =         
         let p1 = adjustMouseButtonEventArgPoint e
         let joint = getJointIndex p1
@@ -1116,27 +1139,7 @@ type Truss(                                                                     
                             drawTruss state
                             Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
                             state
-                        | _ -> // Logic for Selection Mode radio buttons
-                            match selectionMode.Get with 
-                            | ControlDomain.Delete ->                             
-                                wolframResult_Control.Visibility <- Visibility.Collapsed
-                                wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-                                wolframMessage.Set "--Select a Truss Part--"
-                                wolframCode.Set "Ready"
-                                trussServices.setSelectionMode ControlDomain.SelectionMode.Delete state
-                            | ControlDomain.Inspect ->                        
-                                wolframResult_Control.setGraphics kernel                          
-                                wolframResult_Control.Visibility <- Visibility.Visible
-                                wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
-                                wolframMessage.Set "--Select a Truss Part--"
-                                wolframCode.Set "Ready"
-                                trussServices.setSelectionMode ControlDomain.SelectionMode.Inspect state
-                            | ControlDomain.Modify ->                           
-                                wolframResult_Control.Visibility <- Visibility.Collapsed
-                                wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-                                wolframMessage.Set "--Select a Truss Part--"
-                                wolframCode.Set "Ready"
-                                trussServices.setSelectionMode ControlDomain.SelectionMode.Modify state
+                        | _ -> state
             do  state <- newState
                 label.Text <- newState.ToString() 
         | false ->  
@@ -1446,9 +1449,9 @@ type Truss(                                                                     
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
         this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseUp(e)))
-        this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
-        //delete_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
+        this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))        
         compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
         orginPosition.Changed.AddHandler((fun _ _ -> drawTruss state))
         system.Changed.AddHandler((fun _ _ -> handleSystemChanged state))
         selectedPart.Changed.AddHandler((fun _ _ -> handleSelectedPartChanged state))
+        selectionMode .Changed.AddHandler((fun _ _ -> handleSelectionModeChanged state))
