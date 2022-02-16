@@ -384,7 +384,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             cb.VerticalContentAlignment <- VerticalAlignment.Center
             cb.SelectedItem <- "Delete"            
             cb.ItemsSource <- ["Delete";"Inspect";"Modify"]
-        cb     
+        cb
     
     //Delete Parts from a System
     let delete_Button = 
@@ -518,6 +518,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
         | "Inspect" -> 
             selectionMode.Set (ControlDomain.SelectionMode.Inspect)
             delete_Button.Visibility <- Visibility.Collapsed
+            wolframMessage.Set "--Select a Truss Part--"
         | "Modify" -> 
             selectionMode.Set (ControlDomain.SelectionMode.Modify)
             delete_Button.Visibility <- Visibility.Collapsed
