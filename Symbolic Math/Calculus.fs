@@ -172,7 +172,7 @@ module Calculus =
                                 Pass(ExpressionStructure.substitute (v, fX.value) out)
                             | _ -> Fail (Symbol(Error OtherError))
                         | Integer i when i = 2I -> 
-                            let abc = Coefficients.listOfGPE expansionValue v
+                            let abc = Polynomial.Coefficients.listOfGPE expansionValue v
                             let out = (rationalReduction2 (Number (Integer 0I)) one abc.[2] abc.[1] abc.[0] j v)
                             Pass(ExpressionStructure.substitute (v, fX.value) out)
                         | _ -> Fail (Symbol(Error OtherError))

@@ -463,10 +463,10 @@ module Polynomial =
             let deg = Degree.ofGPE u [x]
             let rec coeffList deg list =
                 match deg with 
-                | Integer i as I when i = 0I -> (ofGPE u x I) :: list
-                | Integer i as I -> 
+                | Integer i as int when i = 0I -> (ofGPE u x int) :: list
+                | Integer i as int -> 
                     let deg' = match deg with | Integer i when i > 0I -> Integer (i - 1I) | _ -> Integer 0I
-                    let list' = (ofGPE u x I) :: list
+                    let list' = (ofGPE u x int) :: list
                     coeffList deg' list'
                 | _ -> list
             coeffList deg []

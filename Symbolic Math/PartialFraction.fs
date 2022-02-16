@@ -71,8 +71,8 @@ open Math.Pure.Structure.Polynomial
                    | [] -> acc
                 loop factorList.Tail factorList.Head
             match r with 
-            | Number (Integer i) as I when i > 3I -> 
-                let factors = NumberTheory.Integer.factorByTrialDivision I
+            | Number (Integer i) as int when i > 3I -> 
+                let factors = NumberTheory.Integer.factorByTrialDivision int
                 multiply factors
             | Number (Rational ({numerator = n; denominator = d})) when d <> 0I -> 
                 let nFactors = NumberTheory.Integer.factorByTrialDivision (Number(Integer n))

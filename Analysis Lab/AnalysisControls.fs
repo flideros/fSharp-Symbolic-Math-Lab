@@ -361,7 +361,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                        system:SharedValue<ElementDomain.System option>,
                        selectedPart:SharedValue<ElementDomain.Part option>,                       
                        selectionMode:SharedValue<ControlDomain.SelectionMode>,
-                       wolframMessage:SharedValue<string>
+                       message:SharedValue<string>
                        ) as this =  
     inherit UserControl()    
     do Install() |> ignore     
@@ -518,7 +518,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
         | "Inspect" -> 
             selectionMode.Set (ControlDomain.SelectionMode.Inspect)
             delete_Button.Visibility <- Visibility.Collapsed
-            wolframMessage.Set "--Select a Truss Part--"
+            message.Set "--Select a Truss Part--"
         | "Modify" -> 
             selectionMode.Set (ControlDomain.SelectionMode.Modify)
             delete_Button.Visibility <- Visibility.Collapsed
@@ -666,14 +666,14 @@ type SelectionControl (orginPoint:SharedValue<Point>,
                     match selectedPart.Get with
                     | Some (ElementDomain.Force jf) -> 
                         let i = TrussImplementation.getForceIndex jf truss
-                        wolframMessage.Set ("--Force " + i.ToString() + "--")
+                        message.Set ("--Force " + i.ToString() + "--")
                     | Some (ElementDomain.Member m) ->                
                         let i = TrussImplementation.getMemberIndex m truss
-                        wolframMessage.Set ("--Member " + i.ToString() + "--")
+                        message.Set ("--Member " + i.ToString() + "--")
                     | Some (ElementDomain.Support s) -> 
                         let i,st = TrussImplementation.getSupportIndex s truss
-                        wolframMessage.Set ("--" + st + " Support " + i.ToString() + "--")
-                    | _ -> wolframMessage.Set "--Select a Truss Part--"                        
+                        message.Set ("--" + st + " Support " + i.ToString() + "--")
+                    | _ -> message.Set "--Select a Truss Part--"                        
                 | _-> ()
         | _-> ()
     let handleKeyDown (e:Input.KeyEventArgs) =        
