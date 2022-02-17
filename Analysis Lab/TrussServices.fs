@@ -10,6 +10,7 @@ module TrussServices =
     open AtomicDomain
     open LoadDomain
     open ElementDomain
+    open ControlDomain
     
     // Services
     type CheckSupportTypeIsRoller = Support -> bool
@@ -58,7 +59,7 @@ module TrussServices =
     type AnalyzeEquations = string -> TrussAnalysisState -> TrussAnalysisState
     
     type SetTruss = Truss -> TrussAnalysisState -> TrussAnalysisState
-    type SetTrussMode = TrussMode -> TrussAnalysisState -> TrussAnalysisState
+    type SetTrussMode = ControlMode -> TrussAnalysisState -> TrussAnalysisState
     type SetSelectionMode = ControlDomain.SelectionMode -> TrussAnalysisState -> TrussAnalysisState
 
     type RemoveTrussPartFromTruss = TrussAnalysisState -> TrussAnalysisState
@@ -725,7 +726,7 @@ module TrussServices =
                 let newTruss = modifyTrussSupport ss.truss newFDir s.Head
                 {ss with truss = newTruss; supports = None} |> SelectionState
             
-    let setTrussMode (mode :TrussMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
+    let setTrussMode (mode :ControlMode) (state :TrussAnalysisState) = {truss = getTrussFromState state; mode = mode} |> TrussState
     let setSelectionMode (mode :ControlDomain.SelectionMode) (state :TrussAnalysisState) =
         match state with 
         | TrussState ts -> state
@@ -861,16 +862,17 @@ module TrussServices =
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
         | SelectionState ss -> 
-            let part = 
-                match ss.members, ss.forces, ss.supports with
-                | Some m,None,None -> Some (Member m.Head)
-                | None,Some f,None -> Some (Force f.Head)
-                | None,None,Some s -> Some (Support s.Head)
-                | _ -> None
-            let newTruss = removeTrussPartFromTruss ss.truss part
-            
-            {truss = newTruss; mode = Selection} |> TrussState
-            
+            match ss.mode = Delete with 
+            | true -> 
+                let part = 
+                    match ss.members, ss.forces, ss.supports with
+                    | Some m,None,None -> Some (Member m.Head)
+                    | None,Some f,None -> Some (Force f.Head)
+                    | None,None,Some s -> Some (Support s.Head)
+                    | _ -> None
+                let newTruss = removeTrussPartFromTruss ss.truss part            
+                {truss = newTruss; mode = Selection} |> TrussState
+            | false -> state
         | _ -> state
     let getSupportReactionSolve (yAxis: bool) (state :TrussAnalysisState) = 
         match state with

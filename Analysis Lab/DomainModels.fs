@@ -66,8 +66,7 @@ module ElementDomain =
     type Truss = {members:Member list; forces:JointForce list; supports:Support list}
     type System = 
         | TrussSystem of Truss
-        | Beam // TODO
-        // etc.
+        | Beam // etc. TODO        
 
 module BuilderDomain = 
     open AtomicDomain
@@ -102,9 +101,18 @@ module ControlDomain =
     type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool;isHitTestVisible:bool}
     
     type SelectionMode =
-            | Delete
-            | Modify
-            | Inspect
+        | Delete
+        | Modify
+        | Inspect
+
+    type ControlMode =
+        | Settings
+        | Selection
+        | Analysis
+        | MemberBuild
+        | ForceBuild
+        | SupportBuild
+    
 
 // I'm in the process of refactoring this domain model into a more general purpose analysis tool.
 module TrussAnalysisDomain =
@@ -126,16 +134,8 @@ module TrussAnalysisDomain =
     
     type TrussMemberForce = (float*Part)
     
-    type TrussMode =
-        | Settings
-        | Selection
-        | Analysis
-        | MemberBuild
-        | ForceBuild
-        | SupportBuild
-    
     // Data associated with each state
-    type TrussStateData = {truss:Truss; mode:TrussMode} // Includes the empty truss
+    type TrussStateData = {truss:Truss; mode:ControlDomain.ControlMode} // Includes the empty truss
     type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
     type SelectionStateData = 
         {truss:Truss; 
@@ -156,6 +156,7 @@ module TrussAnalysisDomain =
          forceXEquation: string
          forceYEquation: string} 
     type SupportReactionResultStateData = {reactions : SupportReactionResult list}
+    
     type MethodOfJointsCalculationStateData = 
         {solvedMembers: TrussMemberForce list;
          memberEquations : string list;
