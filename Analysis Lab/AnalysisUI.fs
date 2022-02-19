@@ -15,7 +15,7 @@ type Analysis() = //as this =
     do Install() |> ignore
     
 
-    let initialState = TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
+    let initialState = AnalysisDomain.TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
 
     let mutable state = initialState
     

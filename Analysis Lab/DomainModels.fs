@@ -56,7 +56,11 @@ module ElementDomain =
         | Hinge
         | Fixed
         | Simple
-    
+    type SupportReactionResult = 
+        {support: Support;
+         xReactionForce: JointForce option;
+         yReactionForce: JointForce option}
+
     type Part = 
         | Member of Member
         | Force of JointForce
@@ -64,6 +68,8 @@ module ElementDomain =
     type Node = (Joint*Part list)
 
     type Truss = {members:Member list; forces:JointForce list; supports:Support list}
+    type TrussMemberForce = (float*Part)
+
     type System = 
         | TrussSystem of Truss
         | Beam // etc. TODO        
@@ -112,80 +118,79 @@ module ControlDomain =
         | MemberBuild
         | ForceBuild
         | SupportBuild
-    
 
-// I'm in the process of refactoring this domain model into a more general purpose analysis tool.
-module TrussAnalysisDomain =
+module AnalysisDomain =    
     open ErrorDomain
     open AtomicDomain
     open LoadDomain
     open ElementDomain
     open BuilderDomain
-    
-    type TrussStability = 
-        | Stable 
-        | NotEnoughReactions 
-        | ReactionsAreParallel 
-        | ReactionsAreConcurrent 
-        | InternalCollapseMechanism
-    type TrussDeterminacy = 
-        | Determinate 
-        | Indeterminate
-    
-    type TrussMemberForce = (float*Part)
-    
-    // Data associated with each state
-    type TrussStateData = {truss:Truss; mode:ControlDomain.ControlMode} // Includes the empty truss
-    type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
-    type SelectionStateData = 
-        {truss:Truss; 
-         members:Member list option; 
-         forces:JointForce list option; 
-         supports:Support list option; 
-         modification: Joint option;
-         mode:ControlDomain.SelectionMode}
-    type ErrorStateData = {errors : Error list; truss : Truss}
-    type SupportReactionResult = 
-        {support: Support;
-         xReactionForce: JointForce option;
-         yReactionForce: JointForce option}
-    
-    // Data associated with each analysis state
+
     type SupportReactionEquationStateData = 
         {momentEquations: string list;
          forceXEquation: string
          forceYEquation: string} 
     type SupportReactionResultStateData = {reactions : SupportReactionResult list}
     
-    type MethodOfJointsCalculationStateData = 
-        {solvedMembers: TrussMemberForce list;
-         memberEquations : string list;
-         nodes : Node list;
-         reactions : SupportReactionResult list;
-         variables : string list}
-    type MethodOfJointsAnalysisStateData = 
-        {zeroForceMembers: Part list;
-         tensionMembers: TrussMemberForce list;
-         compressionMembers: TrussMemberForce list;
-         reactions : SupportReactionResult list}
+    module TrussAnalysisDomain =
+                
+        type TrussStability = 
+            | Stable 
+            | NotEnoughReactions 
+            | ReactionsAreParallel 
+            | ReactionsAreConcurrent 
+            | InternalCollapseMechanism
+        type TrussDeterminacy = 
+            | Determinate 
+            | Indeterminate
+            
+        type MethodOfJointsCalculationStateData = 
+            {solvedMembers: TrussMemberForce list;
+             memberEquations : string list;
+             nodes : Node list;
+             reactions : SupportReactionResult list;
+             variables : string list}
+        type MethodOfJointsAnalysisStateData = 
+            {zeroForceMembers: Part list;
+             tensionMembers: TrussMemberForce list;
+             compressionMembers: TrussMemberForce list;
+             reactions : SupportReactionResult list}
+        type MethodOfJointsAnalysisState =
+            | Truss
+            | SupportReactionEquations of SupportReactionEquationStateData
+            | SupportReactionResult of SupportReactionResultStateData
+            | MethodOfJointsCalculation of MethodOfJointsCalculationStateData
+            | MethodOfJointsAnalysis of MethodOfJointsAnalysisStateData 
+
+        type TrussAnalysis = 
+            | MethodOfJointsAnalysisState of MethodOfJointsAnalysisState
+        
+        // Data associated with each truss state
+        type TrussStateData = {truss:Truss; mode:ControlDomain.ControlMode} // Includes the empty truss
+        type TrussBuildData = {buildOp : TrussBuildOp;  truss : Truss}
+        type TrussSelectionStateData = 
+            {truss:Truss; 
+             members:Member list option; 
+             forces:JointForce list option; 
+             supports:Support list option; 
+             modification: Joint option;
+             mode:ControlDomain.SelectionMode}
+        type TrussErrorStateData = {errors : Error list; truss : Truss}        
+        type TrussAnalysisStateData = 
+            {stability:TrussStability list; 
+             determinancy:TrussDeterminacy;
+             analysis:TrussAnalysis;
+             truss:Truss}        
+        
+        type TrussAnalysisState =
+            | TrussState of TrussStateData
+            | BuildState of TrussBuildData
+            | SelectionState of TrussSelectionStateData
+            | AnalysisState  of TrussAnalysisStateData
+            | ErrorState of TrussErrorStateData   
     
     // Analysis States
     type AnalysisState =
-        | Truss
-        | SupportReactionEquations of SupportReactionEquationStateData
-        | SupportReactionResult of SupportReactionResultStateData
-        | MethodOfJointsCalculation of MethodOfJointsCalculationStateData
-        | MethodOfJointsAnalysis of MethodOfJointsAnalysisStateData 
-    type AnalysisStateData = 
-        {stability:TrussStability list; 
-         determinancy:TrussDeterminacy;
-         analysis:AnalysisState;
-         truss:Truss}
-    
-    // States
-    type TrussAnalysisState =
-        | TrussState of TrussStateData
-        | BuildState of TrussBuildData
-        | SelectionState of SelectionStateData
-        | AnalysisState  of AnalysisStateData
-        | ErrorState of ErrorStateData
+        | Truss of TrussAnalysisDomain.TrussAnalysisState 
+
+

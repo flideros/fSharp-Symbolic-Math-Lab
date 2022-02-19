@@ -13,6 +13,7 @@ open Wolfram.NETLink
 open GraphicResources
 open GenericDomain
 open ControlDomain
+open AnalysisDomain.TrussAnalysisDomain
 
 // This is a development area.
 // This code is isolated from the Analysis UI for the time being as I develop this code.
@@ -59,7 +60,7 @@ type Truss(                                                                     
     let wolframSettings = SharedValue<WolframResultControlSettings> {codeVisible = false; resultVisible = false; isHitTestVisible = true}
     
     // Internal State
-    let initialState = TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
+    let initialState = AnalysisDomain.TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
     let mutable state = initialState    
     
     (*Truss Services*)
@@ -590,21 +591,21 @@ type Truss(                                                                     
     let drawSolvedMember (p1:System.Windows.Point, p2:System.Windows.Point) color =        
         let l = trussMemberSolved (p1,p2)  color
         do  canvas.Children.Add(l) |> ignore
-    let drawSolvedMembers (state:TrussAnalysisDomain.TrussAnalysisState) = 
+    let drawSolvedMembers (state:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
         match state with
-        | TrussAnalysisDomain.AnalysisState a -> 
+        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
-            | TrussAnalysisDomain.Truss -> ()
-            | TrussAnalysisDomain.SupportReactionEquations _sre -> () 
-            | TrussAnalysisDomain.SupportReactionResult _srr-> ()                    
-            | TrussAnalysisDomain.MethodOfJointsCalculation mjc ->                     
+            | MethodOfJointsAnalysisState Truss -> ()
+            | MethodOfJointsAnalysisState (SupportReactionEquations _sre) -> () 
+            | MethodOfJointsAnalysisState (SupportReactionResult _srr)-> ()                    
+            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) ->                     
                 do  List.iter (fun  (n, p) -> 
                     match n, TrussServices.getMemberOptionFromTrussPart p with
                     | (z, Some m) when z = 0. -> drawSolvedMember m olive
                     | (z, Some m) when z > 0. -> drawSolvedMember m blue2
                     | (z, Some m) when z < 0. -> drawSolvedMember m red
                     | _ -> ()) mjc.solvedMembers
-            | TrussAnalysisDomain.MethodOfJointsAnalysis mja ->                     
+            | MethodOfJointsAnalysisState (MethodOfJointsAnalysis mja) ->                     
                 do  List.iter (fun  (n, p) -> 
                     match n, TrussServices.getMemberOptionFromTrussPart p with
                     | (z, Some m) -> drawSolvedMember m blue2
@@ -618,7 +619,6 @@ type Truss(                                                                     
                     | Some m -> drawSolvedMember m olive
                     | None -> ()) mja.zeroForceMembers
         | _ -> ()
-        
     let drawMemberLabel (p1:System.Windows.Point, p2:System.Windows.Point) (i:int) =
         let l =
             let l = TextBlock()
@@ -659,7 +659,6 @@ type Truss(                                                                     
                 l.Background <- SolidColorBrush(Colors.Transparent)
             l 
         do  canvas.Children.Add(l) |> ignore  
-
     let drawBuildJoint (p:System.Windows.Point) =
         let j = trussJoint p
         do  j.Stroke <- red
@@ -825,33 +824,33 @@ type Truss(                                                                     
         do  wolframResult_Control.setGraphics kernel
         let newState = 
             match s with 
-            | TrussAnalysisDomain.AnalysisState a -> 
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | TrussAnalysisDomain.Truss -> s
-                | TrussAnalysisDomain.SupportReactionEquations _r -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
-                | TrussAnalysisDomain.SupportReactionResult _r -> s 
-                | TrussAnalysisDomain.MethodOfJointsCalculation _mj -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
-                | TrussAnalysisDomain.MethodOfJointsAnalysis _mj -> s                
+                | MethodOfJointsAnalysisState Truss -> s
+                | MethodOfJointsAnalysisState (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
+                | MethodOfJointsAnalysisState (SupportReactionResult _r) -> s 
+                | MethodOfJointsAnalysisState (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
+                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _mj) -> s                
             | _ -> s        
         let newCode = 
             match newState with 
-            | TrussAnalysisDomain.AnalysisState a -> 
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | TrussAnalysisDomain.Truss -> ""
-                | TrussAnalysisDomain.SupportReactionEquations r -> "" 
-                | TrussAnalysisDomain.SupportReactionResult r -> "\"Choose a joint to begin Method of Joints analysis\""                    
-                | TrussAnalysisDomain.MethodOfJointsCalculation r -> "\"Choose next joint\"" 
-                | TrussAnalysisDomain.MethodOfJointsAnalysis _ -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
+                | MethodOfJointsAnalysisState Truss -> ""
+                | MethodOfJointsAnalysisState (SupportReactionEquations r) -> "" 
+                | MethodOfJointsAnalysisState (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
+                | MethodOfJointsAnalysisState (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
+                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _) -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
             | _ -> "opps"
         let newMessage = 
             match newState with 
-            | TrussAnalysisDomain.AnalysisState a -> 
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | TrussAnalysisDomain.Truss -> "1?"
-                | TrussAnalysisDomain.SupportReactionEquations r -> "2?" 
-                | TrussAnalysisDomain.SupportReactionResult r -> "Choose a joint to begin Method of Joints analysis."                    
-                | TrussAnalysisDomain.MethodOfJointsCalculation r -> "Choose next joint."
-                | TrussAnalysisDomain.MethodOfJointsAnalysis _ -> "Analysis Complete. Click Compute to see report."                
+                | MethodOfJointsAnalysisState Truss -> "1?"
+                | MethodOfJointsAnalysisState (SupportReactionEquations r) -> "2?" 
+                | MethodOfJointsAnalysisState (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
+                | MethodOfJointsAnalysisState (MethodOfJointsCalculation r) -> "Choose next joint."
+                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _) -> "Analysis Complete. Click Compute to see report."                
             | _ -> "opps"
         let members = getMembersFrom newState
         let forces = getForcesFrom newState
@@ -871,7 +870,7 @@ type Truss(                                                                     
             Seq.iteri (fun i m -> drawMemberLabel m i) members
             Seq.iteri (fun i (f:LoadDomain.JointForce) -> drawForceLabel f.direction i f.magnitude) forces
             drawSolvedMembers newState            
-    let setjointList (s: TrussAnalysisDomain.TrussAnalysisState) = jointList.Set (getJointsFrom s |> Seq.toList)
+    let setjointList (s: AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = jointList.Set (getJointsFrom s |> Seq.toList)
         // Handle
     let handleSelectionModeChanged s = 
         // Logic for Selection Mode 
@@ -1068,7 +1067,7 @@ type Truss(                                                                     
                 supportBuilder_Control.handleSBMouseDown ()
                 selection_Control.handleSelectionMouseDown ()
             match state with
-            | TrussAnalysisDomain.TrussState ts -> 
+            | AnalysisDomain.TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
                 | ControlDomain.MemberBuild ->                     
                     let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state
@@ -1080,7 +1079,7 @@ type Truss(                                                                     
                 | ControlDomain.ForceBuild ->                     
                     match joint with
                     | None ->                         
-                        state <- TrussAnalysisDomain.ErrorState {errors = [ErrorDomain.NoJointSelected]; truss = getTrussFrom state}
+                        state <- AnalysisDomain.TrussAnalysisDomain.ErrorState {errors = [ErrorDomain.NoJointSelected]; truss = getTrussFrom state}
                         label.Text <- state.ToString()
                     | Some i -> 
                         let newState = trussServices.sendJointForceOptionToState (newForceOption.Get) state                        
@@ -1090,7 +1089,7 @@ type Truss(                                                                     
                 | ControlDomain.SupportBuild -> 
                     match joint with
                     | None ->                         
-                        state <- TrussAnalysisDomain.ErrorState {errors = [ErrorDomain.NoJointSelected]; truss = getTrussFrom state}
+                        state <- AnalysisDomain.TrussAnalysisDomain.ErrorState {errors = [ErrorDomain.NoJointSelected]; truss = getTrussFrom state}
                         label.Text <- state.ToString()
                     | Some i -> 
                         let newState = trussServices.sendSupportOptionToState (newSupportOption.Get) state
@@ -1104,7 +1103,7 @@ type Truss(                                                                     
                     | true ->
                         let newState = trussServices.sendPointToModification p state
                         match newState with 
-                        | TrussAnalysisDomain.SelectionState ss ->                             
+                        | AnalysisDomain.TrussAnalysisDomain.SelectionState ss ->                             
                             match ss.forces, ss.supports, ss.members with 
                             | Some [f], None, None ->
                                 selectedPart.Set (Some (ElementDomain.Force f))
@@ -1126,7 +1125,7 @@ type Truss(                                                                     
                                 label.Text <- state.ToString()
                         | _-> ()
                 | ControlDomain.Settings -> ()
-            | TrussAnalysisDomain.BuildState bs -> 
+            | AnalysisDomain.TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
                 | BuilderDomain.BuildMember bm ->                 
                     let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state
@@ -1142,7 +1141,7 @@ type Truss(                                                                     
                         state <- newState                        
                         setjointList newState
                         label.Text <- newState.ToString()
-            | TrussAnalysisDomain.SelectionState ss -> 
+            | AnalysisDomain.TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | ControlDomain.Delete -> ()
                 | ControlDomain.Inspect ->()
@@ -1153,7 +1152,7 @@ type Truss(                                                                     
                         state <- newState
                         label.Text <- state.ToString()
                     match newState with
-                    | TrussAnalysisDomain.SelectionState ss -> 
+                    | AnalysisDomain.TrussAnalysisDomain.SelectionState ss -> 
                         match ss.modification, ss.forces, ss.supports with
                         |None, None, Some s-> selectedPart.Set (Some (ElementDomain.Support s.Head))
                         | None, Some f, None-> selectedPart.Set (Some (ElementDomain.Force f.Head))
@@ -1161,17 +1160,17 @@ type Truss(                                                                     
                         | None, None, None
                         | _ -> selectedPart.Set None                       
                     | _ -> ()
-            | TrussAnalysisDomain.AnalysisState a -> 
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | TrussAnalysisDomain.Truss -> ()
-                | TrussAnalysisDomain.SupportReactionEquations r -> () 
-                | TrussAnalysisDomain.SupportReactionResult r -> 
+                | MethodOfJointsAnalysisState Truss -> ()
+                | MethodOfJointsAnalysisState (SupportReactionEquations r) -> () 
+                | MethodOfJointsAnalysisState (SupportReactionResult r) -> 
                     let newState = trussServices.sendPointToCalculation p state
                     let newCode = 
                         match newState with 
-                        | TrussAnalysisDomain.AnalysisState a ->
+                        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
                             match a.analysis with
-                            | TrussAnalysisDomain.MethodOfJointsCalculation r -> WolframServices.solveEquations r.memberEquations r.variables
+                            | MethodOfJointsAnalysisState (MethodOfJointsCalculation r) -> WolframServices.solveEquations r.memberEquations r.variables
                             | _ -> "1"
                         | _ -> "2"
                     do  state <- newState
@@ -1179,13 +1178,13 @@ type Truss(                                                                     
                         setOrgin p 
                         drawTruss newState
                         Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)
-                | TrussAnalysisDomain.MethodOfJointsCalculation mjc -> 
+                | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) -> 
                     let newState = trussServices.sendPointToCalculation p state
                     let newCode = 
                         match newState with 
-                        | TrussAnalysisDomain.AnalysisState a ->
+                        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
                             match a.analysis with
-                            | TrussAnalysisDomain.MethodOfJointsCalculation mjc -> WolframServices.solveEquations mjc.memberEquations mjc.variables
+                            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) -> WolframServices.solveEquations mjc.memberEquations mjc.variables
                             | _ -> "1"
                         | _ -> "2"
                     do  state <- newState
@@ -1193,15 +1192,15 @@ type Truss(                                                                     
                         setOrgin p 
                         drawTruss newState
                         Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)                        
-                | TrussAnalysisDomain.MethodOfJointsAnalysis mja -> drawSolvedMembers state 
-            | TrussAnalysisDomain.ErrorState es -> 
+                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis mja) -> drawSolvedMembers state 
+            | AnalysisDomain.TrussAnalysisDomain.ErrorState es -> 
                 match es.errors with 
                 | [ErrorDomain.NoJointSelected] -> ()                    
                 | _ -> label.Text <- state.ToString()
     let handleMouseUp (e : Input.MouseButtonEventArgs) =          
         selection_Control.handleSelectionMouseUp()
         match state with
-        | TrussAnalysisDomain.TrussState ts -> 
+        | AnalysisDomain.TrussAnalysisDomain.TrussState ts -> 
             match ts.mode with
             | ControlDomain.MemberBuild -> do  memberBuilder_Control.handleMBMouseUp ()
             | ControlDomain.ForceBuild -> ()
@@ -1209,13 +1208,13 @@ type Truss(                                                                     
             | ControlDomain.Analysis -> ()
             | ControlDomain.Selection -> ()
             | ControlDomain.Settings -> ()
-        | TrussAnalysisDomain.BuildState bs -> 
+        | AnalysisDomain.TrussAnalysisDomain.BuildState bs -> 
             match bs.buildOp with
             | BuilderDomain.BuildMember bm -> ()
             | BuilderDomain.BuildForce bf -> ()
             | BuilderDomain.BuildSupport bs -> ()
             | BuilderDomain.Control -> ()
-        | TrussAnalysisDomain.SelectionState ss -> 
+        | AnalysisDomain.TrussAnalysisDomain.SelectionState ss -> 
             match ss.mode with
             | ControlDomain.Modify 
             | ControlDomain.Delete -> 
@@ -1252,8 +1251,8 @@ type Truss(                                                                     
                     wolframMessage.Set "--Select a Truss Part--"
                     wolframCode.Set "Ready"
                 drawTruss state
-        | TrussAnalysisDomain.AnalysisState a -> ()
-        | TrussAnalysisDomain.ErrorState es -> 
+        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> ()
+        | AnalysisDomain.TrussAnalysisDomain.ErrorState es -> 
             match es.errors with 
             | [ErrorDomain.NoJointSelected] -> 
                 match  string trussMode_ComboBox.SelectedItem with 
@@ -1278,7 +1277,7 @@ type Truss(                                                                     
         match e.Key with 
         | Input.Key.Enter ->
             match state with
-            | TrussAnalysisDomain.TrussState ts -> 
+            | AnalysisDomain.TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
                 | ControlDomain.MemberBuild ->                     
                     let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state
@@ -1293,7 +1292,7 @@ type Truss(                                                                     
                 | ControlDomain.Analysis -> ()
                 | ControlDomain.Selection -> ()
                 | ControlDomain.Settings -> ()
-            | TrussAnalysisDomain.BuildState bs -> 
+            | AnalysisDomain.TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
                 | BuilderDomain.BuildMember _bm -> ()
                 | BuilderDomain.BuildForce _bf -> ()
@@ -1309,16 +1308,16 @@ type Truss(                                                                     
                         state <- newState                        
                         setjointList newState
                         label.Text <- newState.ToString()
-            | TrussAnalysisDomain.SelectionState ss -> 
+            | AnalysisDomain.TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | ControlDomain.Delete -> ()
                 | ControlDomain.Inspect -> ()
                 | ControlDomain.Modify -> ()                    
-            | TrussAnalysisDomain.AnalysisState s -> ()
-            | TrussAnalysisDomain.ErrorState es -> ()
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState s -> ()
+            | AnalysisDomain.TrussAnalysisDomain.ErrorState es -> ()
         | Input.Key.Delete -> 
             match state with
-            | TrussAnalysisDomain.TrussState ts -> 
+            | AnalysisDomain.TrussAnalysisDomain.TrussState ts -> 
                 match ts.mode with
                 | ControlDomain.MemberBuild -> ()
                 | ControlDomain.ForceBuild -> ()                    
@@ -1326,13 +1325,13 @@ type Truss(                                                                     
                 | ControlDomain.Analysis -> ()
                 | ControlDomain.Selection -> ()
                 | ControlDomain.Settings -> ()
-            | TrussAnalysisDomain.BuildState bs -> 
+            | AnalysisDomain.TrussAnalysisDomain.BuildState bs -> 
                 match bs.buildOp with
                 | BuilderDomain.BuildMember _bm -> ()
                 | BuilderDomain.BuildForce bf -> ()
                 | BuilderDomain.BuildSupport bs -> ()
                 | BuilderDomain.Control -> ()
-            | TrussAnalysisDomain.SelectionState ss -> 
+            | AnalysisDomain.TrussAnalysisDomain.SelectionState ss -> 
                 match ss.mode with
                 | ControlDomain.SelectionMode.Delete -> 
                     let newState = trussServices.removeTrussPartFromTruss state            
@@ -1341,8 +1340,8 @@ type Truss(                                                                     
                         drawTruss newState
                 | ControlDomain.SelectionMode.Modify  -> ()
                 | ControlDomain.SelectionMode.Inspect -> ()
-            | TrussAnalysisDomain.AnalysisState s -> ()                
-            | TrussAnalysisDomain.ErrorState es -> ()
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState s -> ()                
+            | AnalysisDomain.TrussAnalysisDomain.ErrorState es -> ()
         | _ -> () // logic for other keys
     let handleSystemChanged s =        
         match system.Get with

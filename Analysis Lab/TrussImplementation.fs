@@ -2,14 +2,14 @@
 
 open System
 open System.Windows
-open TrussAnalysisDomain
 open BuilderDomain
 open AtomicDomain
 open LoadDomain
 open ElementDomain
 open WolframServices
+open AnalysisDomain.TrussAnalysisDomain
 
-module TrussImplementation =     
+module TrussImplementation =    
     
     let getYFrom (j:Joint) = match j.y with | Y y -> y
     let getXFrom (j:Joint) = match j.x with | X x -> x
