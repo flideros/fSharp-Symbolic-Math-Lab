@@ -1484,13 +1484,12 @@ module TrussServices =
                     let newNodes = List.map (fun x -> replaceMembersWithForces x) mj.nodes                    
                     match solvedMembers.Length >= truss.members.Length with
                     | false -> 
-                        { a with analysis = 
-                            {solvedMembers = solvedMembers ; 
-                             memberEquations = mj.memberEquations; 
-                             nodes = newNodes;//mj.nodes;//
-                             reactions = mj.reactions;
-                             variables = mj.variables} |> MethodOfJointsCalculation 
-                        } |> TrussDomain.AnalysisState
+                        { a with analysis = {
+                                solvedMembers = solvedMembers ; 
+                                memberEquations = mj.memberEquations; 
+                                nodes = newNodes;
+                                reactions = mj.reactions;
+                                variables = mj.variables} |> MethodOfJointsCalculation} |> TrussDomain.AnalysisState
                     | true -> 
                         let solvedMembers' = 
                             solvedMembers
@@ -1501,11 +1500,11 @@ module TrussServices =
                                     | true -> Some (List.find (fun (n',k') -> k' = k) solvedMembers) 
                                     | false -> Some ( (List.filter (fun (n',k') -> k' = k) solvedMembers |> List.averageBy (fun (n',k') -> n') , k))
                                 )
-                        {a with analysis =    
-                            {zeroForceMembers = List.filter (fun (n,m) -> n = 0.0) solvedMembers' |> List.map  (fun (n,m) -> m);
-                             tensionMembers =  List.filter (fun (n,m) -> n > 0.0) solvedMembers';
-                             compressionMembers =  List.filter (fun (n,m) -> n < 0.0) solvedMembers';
-                             reactions = mj.reactions} |> MethodOfJointsAnalysis  
+                        {a with analysis = {
+                            zeroForceMembers = List.filter (fun (n,m) -> n = 0.0) solvedMembers' |> List.map  (fun (n,m) -> m);
+                            tensionMembers =  List.filter (fun (n,m) -> n > 0.0) solvedMembers';
+                            compressionMembers =  List.filter (fun (n,m) -> n < 0.0) solvedMembers';
+                            reactions = mj.reactions} |> MethodOfJointsAnalysis  
                          } |> TrussDomain.AnalysisState                                
                 | MethodOfJointsAnalysis mj -> state
 

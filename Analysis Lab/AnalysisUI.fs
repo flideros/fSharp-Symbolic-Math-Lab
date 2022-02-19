@@ -10,6 +10,10 @@ open System.Windows.Media.Imaging
 open Wolfram.NETLink
 open GraphicResources
 
+(*
+This is a placeholder. 
+I'm still planning and designing the application.
+*)
 type Analysis() = //as this =  
     inherit UserControl()    
     do Install() |> ignore

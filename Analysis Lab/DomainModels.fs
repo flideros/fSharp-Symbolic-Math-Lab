@@ -120,6 +120,7 @@ module ControlDomain =
         | SupportBuild
 
 module AnalysisDomain =    
+    
     open ErrorDomain
     open AtomicDomain
     open LoadDomain
@@ -160,10 +161,10 @@ module AnalysisDomain =
             | SupportReactionEquations of SupportReactionEquationStateData
             | SupportReactionResult of SupportReactionResultStateData
             | MethodOfJointsCalculation of MethodOfJointsCalculationStateData
-            | MethodOfJointsAnalysis of MethodOfJointsAnalysisStateData 
+            | MethodOfJointsAnalysisReport of MethodOfJointsAnalysisStateData 
 
         type TrussAnalysis = 
-            | MethodOfJointsAnalysisState of MethodOfJointsAnalysisState
+            | MethodOfJointsAnalysis of MethodOfJointsAnalysisState
         
         // Data associated with each truss state
         type TrussStateData = {truss:Truss; mode:ControlDomain.ControlMode} // Includes the empty truss
@@ -180,9 +181,8 @@ module AnalysisDomain =
             {stability:TrussStability list; 
              determinancy:TrussDeterminacy;
              analysis:TrussAnalysis;
-             truss:Truss}        
-        
-        type TrussAnalysisState =
+             truss:Truss}         
+        type TrussAnalysisState  =
             | TrussState of TrussStateData
             | BuildState of TrussBuildData
             | SelectionState of TrussSelectionStateData

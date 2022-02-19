@@ -120,7 +120,7 @@ module TrussServices =
         {truss = truss; 
          stability = checkTrussStability truss; 
          determinancy = checkTrussDeterminacy truss;
-         analysis = MethodOfJointsAnalysisState Truss} |> TrussAnalysisState.AnalysisState
+         analysis = MethodOfJointsAnalysis Truss} |> TrussAnalysisState.AnalysisState
 
     let makeJointFrom (point :System.Windows.Point) = {x = X point.X; y = Y point.Y}
     let makeVectorFrom (point :System.Windows.Point) = Vector(x = point.X, y = point.Y)
@@ -227,15 +227,14 @@ module TrussServices =
             | TrussAnalysisDomain.SelectionState ss -> state
             | TrussAnalysisDomain.AnalysisState s -> 
                 match List.contains Stable s.stability with
-                | true ->                 
-                    
-                    {s with analysis = 
-                        {momentEquations = getYMomentReactionEquations parts;
-                         forceXEquation = getXForceReactionEquation parts;
-                         forceYEquation = getYForceReactionEquation parts} 
-                         |> SupportReactionEquations
-                         |> MethodOfJointsAnalysisState} 
-                         |> AnalysisState
+                | true -> 
+                    {s with analysis = {
+                        momentEquations = getYMomentReactionEquations parts;
+                        forceXEquation = getXForceReactionEquation parts;
+                        forceYEquation = getYForceReactionEquation parts} 
+                        |> SupportReactionEquations
+                        |> MethodOfJointsAnalysis} 
+                        |> AnalysisState
                 | false -> state
             | TrussAnalysisDomain.ErrorState es -> state
         | false -> 
@@ -245,13 +244,13 @@ module TrussServices =
             | TrussAnalysisDomain.SelectionState ss -> state
             | TrussAnalysisDomain.AnalysisState s -> 
                 match List.contains Stable s.stability with
-                | true ->                 
-                    {s with analysis = 
-                       {momentEquations = getXMomentReactionEquations parts;
+                | true -> 
+                    {s with analysis ={ 
+                        momentEquations = getXMomentReactionEquations parts;
                         forceXEquation = getXForceReactionEquation parts; 
                         forceYEquation = getYForceReactionEquation parts} 
                         |> SupportReactionEquations
-                        |> MethodOfJointsAnalysisState} 
+                        |> MethodOfJointsAnalysis} 
                         |> AnalysisState
                 | false -> state
             | TrussAnalysisDomain.ErrorState es -> state
@@ -262,9 +261,9 @@ module TrussServices =
         | TrussAnalysisDomain.SelectionState ss -> []
         | TrussAnalysisDomain.AnalysisState s -> 
             match s.analysis with
-            | MethodOfJointsAnalysisState Truss -> []
-            | MethodOfJointsAnalysisState (SupportReactionEquations sre) -> []
-            | MethodOfJointsAnalysisState (SupportReactionResult srr) -> 
+            | MethodOfJointsAnalysis Truss -> []
+            | MethodOfJointsAnalysis (SupportReactionEquations sre) -> []
+            | MethodOfJointsAnalysis (SupportReactionResult srr) -> 
                 List.fold (fun acc r -> 
                     let result = (getResultantForcesFrom r).Value
                     match r.xReactionForce,  r.yReactionForce, showComponents with
@@ -276,7 +275,7 @@ module TrussServices =
                     | None, Some b, true -> b::acc
                     | Some a, None, true -> a::acc
                     | None, None, true -> acc) [] srr.reactions            
-            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mj) -> 
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation mj) -> 
                 List.fold (fun acc r -> 
                     let result = (getResultantForcesFrom r).Value
                     match r.xReactionForce,  r.yReactionForce, showComponents with
@@ -288,7 +287,7 @@ module TrussServices =
                     | None, Some b, true -> b::acc
                     | Some a, None, true -> a::acc
                     | None, None, true -> acc) [] mj.reactions            
-            |  MethodOfJointsAnalysisState (MethodOfJointsAnalysis mj) -> 
+            |  MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mj) -> 
                 List.fold (fun acc r -> 
                     let result = (getResultantForcesFrom r).Value
                     match r.xReactionForce,  r.yReactionForce, showComponents with
@@ -590,9 +589,9 @@ module TrussServices =
             | TrussAnalysisDomain.ErrorState _es -> state
             | TrussAnalysisDomain.AnalysisState a ->
                 match a.analysis with
-                | MethodOfJointsAnalysisState Truss -> state                
-                | MethodOfJointsAnalysisState (SupportReactionEquations _sr) -> state
-                | MethodOfJointsAnalysisState (SupportReactionResult sr) -> 
+                | MethodOfJointsAnalysis Truss -> state                
+                | MethodOfJointsAnalysis (SupportReactionEquations _sr) -> state
+                | MethodOfJointsAnalysis (SupportReactionResult sr) -> 
                     let nodes = getNodeList a.truss
                     let variables = getMemberVariables a.truss
                     let selectedNode = List.tryFind (fun (j,_pl) -> (getXFrom j) = p.X && (getYFrom j) = p.Y) nodes
@@ -606,9 +605,9 @@ module TrussServices =
                          memberEquations = memberEquations; 
                          nodes = nodes;
                          reactions = sr.reactions;
-                         variables = variables} |> MethodOfJointsCalculation |> MethodOfJointsAnalysisState
+                         variables = variables} |> MethodOfJointsCalculation |> MethodOfJointsAnalysis
                     TrussAnalysisDomain.AnalysisState { a with analysis = newAnalysis } 
-                | MethodOfJointsAnalysisState (MethodOfJointsCalculation mj) ->                    
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation mj) ->                    
                     let selectedNode = List.tryFind (fun (j,_pl) -> (getXFrom j) = p.X && (getYFrom j) = p.Y) mj.nodes                    
                     let memberEquations =
                         match selectedNode with
@@ -619,9 +618,9 @@ module TrussServices =
                          memberEquations = memberEquations; 
                          nodes = mj.nodes;
                          reactions = mj.reactions;
-                         variables = mj.variables} |> MethodOfJointsCalculation |> MethodOfJointsAnalysisState
+                         variables = mj.variables} |> MethodOfJointsCalculation |> MethodOfJointsAnalysis
                     TrussAnalysisDomain.AnalysisState { a with analysis = newAnalysis }
-                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _mj) -> state
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _mj) -> state
     let sendMemberOptionToState (mo:Member Option) (state :TrussAnalysisState) =
         match state with 
         | TrussState  ts -> 
@@ -765,8 +764,8 @@ module TrussServices =
             | TrussAnalysisDomain.ErrorState _es -> state
             | TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | MethodOfJointsAnalysisState Truss -> state                
-                | MethodOfJointsAnalysisState (SupportReactionEquations _sr) ->
+                | MethodOfJointsAnalysis Truss -> state                
+                | MethodOfJointsAnalysis (SupportReactionEquations _sr) ->
                     let parts = getPartListFrom a.truss
                     let supports = List.choose (fun x -> match x with | Support s -> Some s | _ -> None) parts
                     let findReaction i' r' = List.tryFind (fun x -> match x with | i, r,_m  when i=i' && r=r'-> true | _ -> false) rList
@@ -801,10 +800,10 @@ module TrussServices =
                                         | Some (_i,r,m) -> getReactionForce x r m
                                         })
                                 ) supports
-                        {reactions = reactions} |> SupportReactionResult |> MethodOfJointsAnalysisState
+                        {reactions = reactions} |> SupportReactionResult |> MethodOfJointsAnalysis
                     {a with analysis = results} |> AnalysisState
-                | MethodOfJointsAnalysisState (SupportReactionResult _sr) -> state
-                | MethodOfJointsAnalysisState (MethodOfJointsCalculation mj) ->                     
+                | MethodOfJointsAnalysis (SupportReactionResult _sr) -> state
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation mj) ->                     
                     let truss = getTrussFromState state
                     let getSolvedMember i = truss.members.[i] |> Member
                     let solvedMembers = 
@@ -838,12 +837,12 @@ module TrussServices =
                     let newNodes = List.map (fun x -> replaceMembersWithForces x) mj.nodes                    
                     match solvedMembers.Length >= truss.members.Length with
                     | false -> 
-                        { a with analysis = 
-                            {solvedMembers = solvedMembers; 
+                        { a with analysis = {
+                             solvedMembers = solvedMembers; 
                              memberEquations = mj.memberEquations; 
-                             nodes = newNodes;//mj.nodes;//
+                             nodes = newNodes;
                              reactions = mj.reactions;
-                             variables = mj.variables} |> MethodOfJointsCalculation |> MethodOfJointsAnalysisState
+                             variables = mj.variables} |> MethodOfJointsCalculation |> MethodOfJointsAnalysis
                         } |> TrussAnalysisDomain.AnalysisState
                     | true -> 
                         let solvedMembers' = 
@@ -855,13 +854,13 @@ module TrussServices =
                                     | true -> Some (List.find (fun (n',k') -> k' = k) solvedMembers) 
                                     | false -> Some ( (List.filter (fun (n',k') -> k' = k) solvedMembers |> List.averageBy (fun (n',k') -> n') , k))
                                 )
-                        {a with analysis =    
-                            {zeroForceMembers = List.filter (fun (n,m) -> n = 0.0) solvedMembers' |> List.map  (fun (n,m) -> m);
-                             tensionMembers =  List.filter (fun (n,m) -> n > 0.0) solvedMembers';
-                             compressionMembers =  List.filter (fun (n,m) -> n < 0.0) solvedMembers';
-                             reactions = mj.reactions} |> MethodOfJointsAnalysis |> MethodOfJointsAnalysisState
+                        {a with analysis = {   
+                            zeroForceMembers = List.filter (fun (n,m) -> n = 0.0) solvedMembers' |> List.map  (fun (n,m) -> m);
+                            tensionMembers =  List.filter (fun (n,m) -> n > 0.0) solvedMembers';
+                            compressionMembers =  List.filter (fun (n,m) -> n < 0.0) solvedMembers';
+                            reactions = mj.reactions} |> MethodOfJointsAnalysisReport |> MethodOfJointsAnalysis
                          } |> TrussAnalysisDomain.AnalysisState                                
-                |  MethodOfJointsAnalysisState (MethodOfJointsAnalysis mj) -> state
+                |  MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mj) -> state
 
     let removeTrussPart (state :TrussAnalysisState) =
         match state with 
@@ -886,11 +885,11 @@ module TrussServices =
         | TrussAnalysisDomain.ErrorState es -> ""
         | TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
-            | MethodOfJointsAnalysisState Truss -> ""
-            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mj) -> ""
-            | MethodOfJointsAnalysisState (MethodOfJointsAnalysis mj) -> ""
-            | MethodOfJointsAnalysisState (SupportReactionResult sr) -> ""
-            | MethodOfJointsAnalysisState (SupportReactionEquations sr) -> 
+            | MethodOfJointsAnalysis Truss -> ""
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation mj) -> ""
+            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mj) -> ""
+            | MethodOfJointsAnalysis (SupportReactionResult sr) -> ""
+            | MethodOfJointsAnalysis (SupportReactionEquations sr) -> 
                 let eq = 
                     match yAxis with
                     | true -> sr.forceXEquation :: sr.momentEquations
@@ -973,11 +972,11 @@ module TrussServices =
         | TrussAnalysisDomain.ErrorState es -> "\"--Ready--\""
         | TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
-            | MethodOfJointsAnalysisState Truss -> getTrussCheck state
-            | MethodOfJointsAnalysisState (SupportReactionResult sr) -> getTrussCheck state
-            | MethodOfJointsAnalysisState (SupportReactionEquations sr) -> getTrussCheck state
-            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) -> getTrussCheck state
-            | MethodOfJointsAnalysisState (MethodOfJointsAnalysis mja) -> 
+            | MethodOfJointsAnalysis Truss -> getTrussCheck state
+            | MethodOfJointsAnalysis (SupportReactionResult sr) -> getTrussCheck state
+            | MethodOfJointsAnalysis (SupportReactionEquations sr) -> getTrussCheck state
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> getTrussCheck state
+            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) -> 
                 let truss = getTrussFromState state
                 let forces = 
                     match truss.forces with

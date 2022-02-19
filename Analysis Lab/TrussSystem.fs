@@ -275,7 +275,7 @@ type Truss(                                                                     
             sp.Children.Add(trussMode_Label) |> ignore
             sp.Children.Add(trussMode_ComboBox) |> ignore 
         sp         
-         // Settings    
+        // Settings    
     let settings_StackPanel = 
         let toggleCodeText_Button = 
             let b = Button() 
@@ -595,17 +595,17 @@ type Truss(                                                                     
         match state with
         | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
-            | MethodOfJointsAnalysisState Truss -> ()
-            | MethodOfJointsAnalysisState (SupportReactionEquations _sre) -> () 
-            | MethodOfJointsAnalysisState (SupportReactionResult _srr)-> ()                    
-            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) ->                     
+            | MethodOfJointsAnalysis Truss -> ()
+            | MethodOfJointsAnalysis (SupportReactionEquations _sre) -> () 
+            | MethodOfJointsAnalysis (SupportReactionResult _srr)-> ()                    
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) ->                     
                 do  List.iter (fun  (n, p) -> 
                     match n, TrussServices.getMemberOptionFromTrussPart p with
                     | (z, Some m) when z = 0. -> drawSolvedMember m olive
                     | (z, Some m) when z > 0. -> drawSolvedMember m blue2
                     | (z, Some m) when z < 0. -> drawSolvedMember m red
                     | _ -> ()) mjc.solvedMembers
-            | MethodOfJointsAnalysisState (MethodOfJointsAnalysis mja) ->                     
+            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) ->                     
                 do  List.iter (fun  (n, p) -> 
                     match n, TrussServices.getMemberOptionFromTrussPart p with
                     | (z, Some m) -> drawSolvedMember m blue2
@@ -826,31 +826,31 @@ type Truss(                                                                     
             match s with 
             | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | MethodOfJointsAnalysisState Truss -> s
-                | MethodOfJointsAnalysisState (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
-                | MethodOfJointsAnalysisState (SupportReactionResult _r) -> s 
-                | MethodOfJointsAnalysisState (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
-                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _mj) -> s                
+                | MethodOfJointsAnalysis Truss -> s
+                | MethodOfJointsAnalysis (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
+                | MethodOfJointsAnalysis (SupportReactionResult _r) -> s 
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s //result_TextBlock.Text s
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _mj) -> s                
             | _ -> s        
         let newCode = 
             match newState with 
             | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | MethodOfJointsAnalysisState Truss -> ""
-                | MethodOfJointsAnalysisState (SupportReactionEquations r) -> "" 
-                | MethodOfJointsAnalysisState (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
-                | MethodOfJointsAnalysisState (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
-                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _) -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
+                | MethodOfJointsAnalysis Truss -> ""
+                | MethodOfJointsAnalysis (SupportReactionEquations r) -> "" 
+                | MethodOfJointsAnalysis (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
             | _ -> "opps"
         let newMessage = 
             match newState with 
             | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | MethodOfJointsAnalysisState Truss -> "1?"
-                | MethodOfJointsAnalysisState (SupportReactionEquations r) -> "2?" 
-                | MethodOfJointsAnalysisState (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
-                | MethodOfJointsAnalysisState (MethodOfJointsCalculation r) -> "Choose next joint."
-                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis _) -> "Analysis Complete. Click Compute to see report."                
+                | MethodOfJointsAnalysis Truss -> "1?"
+                | MethodOfJointsAnalysis (SupportReactionEquations r) -> "2?" 
+                | MethodOfJointsAnalysis (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "Choose next joint."
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> "Analysis Complete. Click Compute to see report."                
             | _ -> "opps"
         let members = getMembersFrom newState
         let forces = getForcesFrom newState
@@ -1162,15 +1162,15 @@ type Truss(                                                                     
                     | _ -> ()
             | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
                 match a.analysis with
-                | MethodOfJointsAnalysisState Truss -> ()
-                | MethodOfJointsAnalysisState (SupportReactionEquations r) -> () 
-                | MethodOfJointsAnalysisState (SupportReactionResult r) -> 
+                | MethodOfJointsAnalysis Truss -> ()
+                | MethodOfJointsAnalysis (SupportReactionEquations r) -> () 
+                | MethodOfJointsAnalysis (SupportReactionResult r) -> 
                     let newState = trussServices.sendPointToCalculation p state
                     let newCode = 
                         match newState with 
                         | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
                             match a.analysis with
-                            | MethodOfJointsAnalysisState (MethodOfJointsCalculation r) -> WolframServices.solveEquations r.memberEquations r.variables
+                            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> WolframServices.solveEquations r.memberEquations r.variables
                             | _ -> "1"
                         | _ -> "2"
                     do  state <- newState
@@ -1178,13 +1178,13 @@ type Truss(                                                                     
                         setOrgin p 
                         drawTruss newState
                         Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)
-                | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) -> 
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> 
                     let newState = trussServices.sendPointToCalculation p state
                     let newCode = 
                         match newState with 
                         | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
                             match a.analysis with
-                            | MethodOfJointsAnalysisState (MethodOfJointsCalculation mjc) -> WolframServices.solveEquations mjc.memberEquations mjc.variables
+                            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> WolframServices.solveEquations mjc.memberEquations mjc.variables
                             | _ -> "1"
                         | _ -> "2"
                     do  state <- newState
@@ -1192,7 +1192,7 @@ type Truss(                                                                     
                         setOrgin p 
                         drawTruss newState
                         Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)                        
-                | MethodOfJointsAnalysisState (MethodOfJointsAnalysis mja) -> drawSolvedMembers state 
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) -> drawSolvedMembers state 
             | AnalysisDomain.TrussAnalysisDomain.ErrorState es -> 
                 match es.errors with 
                 | [ErrorDomain.NoJointSelected] -> ()                    
