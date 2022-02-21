@@ -104,7 +104,7 @@ module ErrorDomain =
 
 module ControlDomain = 
     
-    type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool;isHitTestVisible:bool}
+    type WolframResultControlSettings = {codeVisible:bool;resultVisible:bool;isHitTestVisible:bool;isVisible:bool}
     
     type SelectionMode =
         | Delete

@@ -341,7 +341,8 @@ type WolframResultControl(wolframCode:SharedValue<string>,
         do  code_TextBlock.Visibility <- match wolframSettings.Get.codeVisible with | true -> Visibility.Visible | false -> Visibility.Collapsed
             result_TextBlock.Visibility <- match wolframSettings.Get.resultVisible with | true -> Visibility.Visible | false -> Visibility.Collapsed
             result_ScrollViewer.IsHitTestVisible <- wolframSettings.Get.isHitTestVisible
-    
+            this.Visibility <- match wolframSettings.Get.isVisible with | true -> Visibility.Visible | false -> Visibility.Collapsed
+
     do  this.Content <- screen_Grid
         wolframCode.Changed.Add handleWolframCodeChange 
         wolframResult.Changed.Add handleWolframResultChange 
@@ -519,6 +520,7 @@ type SelectionControl (orginPoint:SharedValue<Point>,
             selectionMode.Set (ControlDomain.SelectionMode.Inspect)
             delete_Button.Visibility <- Visibility.Collapsed
             message.Set "--Select a Truss Part--"
+
         | "Modify" -> 
             selectionMode.Set (ControlDomain.SelectionMode.Modify)
             delete_Button.Visibility <- Visibility.Collapsed

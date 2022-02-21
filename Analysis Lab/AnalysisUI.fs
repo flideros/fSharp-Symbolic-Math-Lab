@@ -45,7 +45,7 @@ type Analysis() as this =
     let wolframMessage = SharedValue<string> "Ready"
     let wolframResult = SharedValue<string> "Ready"
     let wolframLink = SharedValue<IKernelLink> link
-    let wolframSettings = SharedValue<WolframResultControlSettings> {codeVisible = false; resultVisible = false; isHitTestVisible = true}
+    let wolframSettings = SharedValue<WolframResultControlSettings> {codeVisible = false; resultVisible = false; isHitTestVisible = true; isVisible = false}
     
     // Internal State
     let initialState = AnalysisDomain.Truss (AnalysisDomain.TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild})
@@ -65,22 +65,22 @@ type Analysis() as this =
             l.BorderBrush <- SolidColorBrush(Colors.Transparent)
             l.Opacity <- 0.5
             l.MaxLines <- 30
-        l        
-
+        l  
     
     // Wolfram Result    
     let wolframResult_Control = 
         let sb = WolframResultControl(wolframCode,wolframMessage,wolframResult,wolframLink,wolframSettings)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            sb.Visibility <- Visibility.Visible
+            sb.Visibility <- Visibility.Collapsed
             sb.SetValue(Canvas.ZIndexProperty,3) 
-            sb.SetValue(Grid.ColumnProperty,2)
+            sb.SetValue(Grid.ColumnProperty,3)
             sb.SetValue(Grid.HorizontalAlignmentProperty,HorizontalAlignment.Left)
         sb
             
     let truss = 
         let t = Truss(kernel,wolframResult_Control.setGraphics,wolframCode,wolframMessage,wolframResult,wolframSettings)
-        do t.SetValue(Grid.ColumnProperty,1)
+        do  t.SetValue(Grid.ColumnProperty,1)
+            t.SetValue(Grid.ColumnSpanProperty,3)
         t
 
     let canvas = 
@@ -93,13 +93,16 @@ type Analysis() as this =
         c
     let screen_Grid =
         let g = Grid()              
-        
-        let column1 = ColumnDefinition(Width = GridLength.Auto)
-        let column2 = ColumnDefinition()
+        let gs = GridSplitter()
+
+        let column0 = ColumnDefinition(Width = GridLength.Auto)
+        let column1 = ColumnDefinition()//Width = GridLength(1., GridUnitType.Star)
+        let splitter2 = ColumnDefinition(Width = GridLength(1., GridUnitType.Pixel))
         let column3 = ColumnDefinition(Width = GridLength.Auto)
         
-        do  g.ColumnDefinitions.Add(column1)
-            g.ColumnDefinitions.Add(column2)
+        do  g.ColumnDefinitions.Add(column0)
+            g.ColumnDefinitions.Add(column1)
+            g.ColumnDefinitions.Add(splitter2)
             g.ColumnDefinitions.Add(column3)
 
         let row1 = RowDefinition(Height = GridLength(3., GridUnitType.Star))
@@ -111,8 +114,19 @@ type Analysis() as this =
             g.RowDefinitions.Add(row3)
             g.Children.Add(truss) |> ignore
             g.Children.Add(wolframResult_Control) |> ignore
+        
+            gs.SetValue(Grid.ColumnProperty,2)
+            gs.HorizontalAlignment <- HorizontalAlignment.Right
+            gs.VerticalAlignment <- VerticalAlignment.Stretch
+            gs.Background <- black
+            gs.ShowsPreview <- true
+            gs.Width <- 1.
+
+            g.Children.Add(gs) |> ignore
         g    
 
     (*Initialize*)
     do  this.Content <- screen_Grid        
-        wolframResult_Control.setGraphics kernel       
+        wolframResult_Control.setGraphics kernel 
+        
+        this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
