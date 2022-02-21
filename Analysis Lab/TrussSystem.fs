@@ -18,14 +18,20 @@ open AnalysisDomain.TrussAnalysisDomain
 // This is a development area.
 // This code is isolated from the Analysis UI for the time being as I develop this code.
 
-type Truss(                                                                                                                                                                                                                                                                                  ) as this =  
+type Truss(kernel:MathKernel,
+           setGraphicsFromKernel:(MathKernel -> unit),
+           wolframCode : SharedValue<string> ,
+           wolframMessage : SharedValue<string> ,
+           wolframResult : SharedValue<string>,           
+           wolframSettings : SharedValue<WolframResultControlSettings> 
+          ) as this =  
     inherit UserControl()    
     do Install() |> ignore
     
     (*Wolfram Kernel*)
-    let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
-    do  link.WaitAndDiscardAnswer()        
-    let kernel = 
+    //let link = Wolfram.NETLink.MathLinkFactory.CreateKernelLink("-WSTP -linkname \"D:/Program Files/Wolfram Research/Wolfram Engine/12.3/WolframKernel.exe\"")
+    //do  link.WaitAndDiscardAnswer()        
+    (*let kernel = 
         let k = new Wolfram.NETLink.MathKernel(link)
         do  k.AutoCloseLink <- true
             k.CaptureGraphics <- true
@@ -41,7 +47,7 @@ type Truss(                                                                     
             k.PageWidth <- 200
             k.ResultFormat <- Wolfram.NETLink.MathKernel.ResultFormatType.OutputForm
             k.UseFrontEnd <- true
-        k
+        k*)
     
     (*Shared Values*)  
     let jointList = SharedValue<(Point list)> []
@@ -53,12 +59,12 @@ type Truss(                                                                     
     let system = SharedValue<(ElementDomain.System option)> (None)
     let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
     let selectionMode = SharedValue<(ControlDomain.SelectionMode)> (ControlDomain.SelectionMode.Delete)
-    let wolframCode = SharedValue<string> "Ready"
+    (*let wolframCode = SharedValue<string> "Ready"
     let wolframMessage = SharedValue<string> "Ready"
     let wolframResult = SharedValue<string> "Ready"
     let wolframLink = SharedValue<IKernelLink> link
     let wolframSettings = SharedValue<WolframResultControlSettings> {codeVisible = false; resultVisible = false; isHitTestVisible = true}
-    
+    *)
     // Internal State
     let initialState = AnalysisDomain.TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
     let mutable state = initialState    
@@ -102,12 +108,12 @@ type Truss(                                                                     
             sb.Visibility <- Visibility.Collapsed
         sb
         // Wolfram Result    
-    let wolframResult_Control = 
+    (*let wolframResult_Control = 
         let sb = WolframResultControl(wolframCode,wolframMessage,wolframResult,wolframLink,wolframSettings)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             sb.Visibility <- Visibility.Collapsed
             sb.SetValue(Canvas.ZIndexProperty,3) 
-        sb
+        sb*)
         // Selection
     let selection_Control = 
         let sb = SelectionControl(orginPosition,mousePosition,jointList,system,selectedPart,selectionMode,wolframMessage)
@@ -347,15 +353,18 @@ type Truss(                                                                     
         sp        
         // Controls border
     let trussControls_Border = 
+        let expander = Expander()
         let border = Border()            
         do  border.BorderBrush <- black
             border.Cursor <- System.Windows.Input.Cursors.Arrow
             border.Background <- clear
             border.Opacity <- 0.8
             border.IsHitTestVisible <- true
-            border.BorderThickness <- Thickness(Left = 1., Top = 1., Right = 1., Bottom = 1.)
-            border.Margin <- Thickness(Left = 10., Top = 20., Right = 0., Bottom = 0.)
+            border.BorderThickness <- Thickness(Left = 1.5, Top = 1.5, Right = 1.5, Bottom = 1.5)
+            border.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
             border.SetValue(Canvas.ZIndexProperty,4)
+            
+
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
             sp.MaxWidth <- 150.
@@ -369,7 +378,7 @@ type Truss(                                                                     
             sp.Children.Add(selection_Control) |> ignore
             sp.Children.Add(analysis_StackPanel) |> ignore
             sp.SetValue(Canvas.ZIndexProperty,4)
-            border.Child <- sp
+            border.Child <- sp            
         border
         // Main canvas    
     let canvas = 
@@ -796,7 +805,7 @@ type Truss(                                                                     
             canvas.Children.Add(coordinateGrid_Control.gridLines) |> ignore
             drawOrgin orginPoint
             canvas.Children.Add(label) |> ignore
-            canvas.Children.Add(wolframResult_Control) |> ignore
+            //canvas.Children.Add(wolframResult_Control) |> ignore
             canvas.Children.Add(trussControls_Border) |> ignore            
         let joints = getJointsFrom s
         let members = getMembersFrom s 
@@ -821,7 +830,7 @@ type Truss(                                                                     
         | Some i -> 
             do  orginPosition.Set (Point(joints.[i].X,joints.[i].Y))    
     let setStateFromAnaysis s =
-        do  wolframResult_Control.setGraphics kernel
+        do  setGraphicsFromKernel kernel
         let newState = 
             match s with 
             | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
@@ -876,19 +885,19 @@ type Truss(                                                                     
         // Logic for Selection Mode 
         match selectionMode.Get with 
         | ControlDomain.Delete ->                             
-            wolframResult_Control.Visibility <- Visibility.Collapsed
+            //wolframResult_Control.Visibility <- Visibility.Collapsed
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             let newState = trussServices.setSelectionMode ControlDomain.SelectionMode.Delete s
             state <- newState
         | ControlDomain.Inspect ->                        
-            wolframResult_Control.setGraphics kernel                          
-            wolframResult_Control.Visibility <- Visibility.Visible
+            setGraphicsFromKernel kernel //wolframResult_Control.setGraphics kernel                          
+            //wolframResult_Control.Visibility <- Visibility.Visible
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
             wolframCode.Set "Ready"
             let newState = trussServices.setSelectionMode ControlDomain.SelectionMode.Inspect s
             state <- newState
         | ControlDomain.Modify ->                           
-            wolframResult_Control.Visibility <- Visibility.Collapsed
+            //wolframResult_Control.Visibility <- Visibility.Collapsed
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             let newState = trussServices.setSelectionMode ControlDomain.SelectionMode.Modify s
             state <- newState
@@ -898,7 +907,7 @@ type Truss(                                                                     
         // Force
         | "Force builder" ->    
             reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-            wolframResult_Control.Visibility <- Visibility.Collapsed                    
+            //wolframResult_Control.Visibility <- Visibility.Collapsed                    
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
@@ -914,7 +923,7 @@ type Truss(                                                                     
         // Member
         | "Member builder" -> 
             reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-            wolframResult_Control.Visibility <- Visibility.Collapsed
+            //wolframResult_Control.Visibility <- Visibility.Collapsed
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Visible
@@ -930,7 +939,7 @@ type Truss(                                                                     
         // Support
         | "Support builder" -> 
             reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-            wolframResult_Control.Visibility <- Visibility.Collapsed
+            //wolframResult_Control.Visibility <- Visibility.Collapsed
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
@@ -948,12 +957,12 @@ type Truss(                                                                     
             system.Set (Some (ElementDomain.System.TrussSystem (trussServices.getTrussFromState s)))
             wolframMessage.Set "--Select a Truss Part--"
             wolframCode.Set "Ready"                    
-            wolframResult_Control.setGraphics kernel
+            setGraphicsFromKernel kernel//wolframResult_Control.setGraphics kernel
             reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-            wolframResult_Control.Visibility <- 
-                match selectionMode.Get = ControlDomain.Inspect with
-                | false -> Visibility.Collapsed
-                | true -> Visibility.Visible                    
+            //wolframResult_Control.Visibility <- 
+                //match selectionMode.Get = ControlDomain.Inspect with
+                //| false -> Visibility.Collapsed
+                //| true -> Visibility.Visible                    
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
             analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
@@ -972,8 +981,8 @@ type Truss(                                                                     
                 trussServices.checkTruss (trussServices.getTrussFromState s)
                 |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
             wolframCode.Set (trussServices.getAnalysisReport newState)
-            wolframResult_Control.setGraphics kernel
-            wolframResult_Control.Visibility <- Visibility.Visible                    
+            setGraphicsFromKernel kernel//wolframResult_Control.setGraphics kernel
+            //wolframResult_Control.Visibility <- Visibility.Visible                    
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             reactionRadio_StackPanel.Visibility <- Visibility.Visible
             analysis_StackPanel.Visibility <- Visibility.Visible
@@ -988,7 +997,7 @@ type Truss(                                                                     
         // Settings
         | "Settings" -> 
             reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
-            wolframResult_Control.Visibility <- Visibility.Collapsed
+            //wolframResult_Control.Visibility <- Visibility.Collapsed
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
             analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
@@ -1096,7 +1105,7 @@ type Truss(                                                                     
                         do  drawBuildSupportJoint p
                             state <- newState
                             label.Text <- newState.ToString()
-                | ControlDomain.Analysis -> wolframResult_Control.setGraphics kernel
+                | ControlDomain.Analysis -> setGraphicsFromKernel kernel//wolframResult_Control.setGraphics kernel
                 | ControlDomain.Selection -> 
                     match selectionMode.Get = ControlDomain.Modify with
                     | false -> label.Text <- state.ToString()
@@ -1236,17 +1245,17 @@ type Truss(                                                                     
                     let i = trussServices.getForceIndex f.Head truss
                     wolframMessage.Set ("--Force " + i.ToString() + "--")
                     wolframCode.Set (trussServices.getAnalysisReport state)
-                    wolframResult_Control.setGraphics kernel
+                    setGraphicsFromKernel kernel //wolframResult_Control.setGraphics kernel
                 | None, Some m, None ->                
                     let i = trussServices.getMemberIndex m.Head truss
                     wolframMessage.Set ("--Member " + i.ToString() + "--")
                     wolframCode.Set (trussServices.getAnalysisReport state)
-                    wolframResult_Control.setGraphics kernel
+                    setGraphicsFromKernel kernel //wolframResult_Control.setGraphics kernel
                 | None, None, Some s -> 
                     let i,st = trussServices.getSupportIndex s.Head truss
                     wolframMessage.Set ("--" + st + " Support " + i.ToString() + "--")
                     wolframCode.Set (trussServices.getAnalysisReport state)
-                    wolframResult_Control.setGraphics kernel
+                    setGraphicsFromKernel kernel //wolframResult_Control.setGraphics kernel
                 | _ -> 
                     wolframMessage.Set "--Select a Truss Part--"
                     wolframCode.Set "Ready"
@@ -1363,11 +1372,11 @@ type Truss(                                                                     
     
     (*Initialize*)
     do  this.Content <- screen_Grid        
-        wolframResult_Control.setGraphics kernel
+        setGraphicsFromKernel kernel //wolframResult_Control.setGraphics kernel
         
     (*add event handlers*)        
         this.PreviewKeyDown.AddHandler(Input.KeyEventHandler(fun _ e -> handleKeyDown(e)))
-        this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
+        //this.Unloaded.AddHandler(RoutedEventHandler(fun _ _ -> kernel.Dispose()))
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
         this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseUp(e)))

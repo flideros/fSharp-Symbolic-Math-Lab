@@ -284,7 +284,7 @@ type WolframResultControl(wolframCode:SharedValue<string>,
         let sp = StackPanel()
         do  sp.Orientation <- Orientation.Vertical
             sp.HorizontalAlignment <- HorizontalAlignment.Left
-            sp.Margin <- Thickness(Left = 180., Top = 10., Right = 0., Bottom = 0.)
+            sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 0.)
             sp.Visibility <- Visibility.Visible
         sp
     let result_ScrollViewer = 

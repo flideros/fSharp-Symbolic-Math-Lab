@@ -190,7 +190,7 @@ module AnalysisDomain =
             | ErrorState of TrussErrorStateData   
     
     // Analysis States
-    type AnalysisState =
+    type AnalysisState = //
         | Truss of TrussAnalysisDomain.TrussAnalysisState 
-
+         
 

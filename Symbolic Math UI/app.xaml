@@ -11,6 +11,7 @@
         <Color x:Key="WindowColor">#FFE8EDF9</Color>
         <Color x:Key="ContentAreaColorLight">#FFC5CBF9</Color>
         <Color x:Key="ContentAreaColorDark">#FF7381F9</Color>
+        <Color x:Key="Clear">#00000000</Color>       
 
         <Color x:Key="DisabledControlLightColor">#FFE8EDF9</Color>
         <Color x:Key="DisabledControlDarkColor">#FFC5CBF9</Color>
@@ -2544,8 +2545,8 @@
                 <Border.Background>
                     <LinearGradientBrush EndPoint="0.5,1"
                            StartPoint="0.5,0">
-                        <GradientStop Color="{DynamicResource ControlLightColor}" />
-                        <GradientStop Color="{DynamicResource ControlMediumColor}"
+                        <GradientStop Color="{DynamicResource Clear}" />
+                        <GradientStop Color="{DynamicResource Clear}"
                       Offset="1" />
                     </LinearGradientBrush>
                 </Border.Background>
@@ -2691,19 +2692,7 @@
 
                                 </Border.BorderBrush>
                                 <Border.Background>
-
-                                    <LinearGradientBrush StartPoint="0,0"
-                                   EndPoint="0,1">
-                                        <LinearGradientBrush.GradientStops>
-                                            <GradientStopCollection>
-                                                <GradientStop Color="{DynamicResource ControlLightColor}"
-                                  Offset="0.0" />
-                                                <GradientStop Color="{DynamicResource ControlMediumColor}"
-                                  Offset="1.0" />
-                                            </GradientStopCollection>
-                                        </LinearGradientBrush.GradientStops>
-                                    </LinearGradientBrush>
-
+                                    <SolidColorBrush Color="{DynamicResource Clear}" />
                                 </Border.Background>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -2738,7 +2727,7 @@
                                     <SolidColorBrush Color="{DynamicResource BorderMediumColor}" />
                                 </Border.BorderBrush>
                                 <Border.Background>
-                                    <SolidColorBrush Color="{DynamicResource ContentAreaColorDark}" />
+                                    <SolidColorBrush Color="{DynamicResource Clear}" />
                                 </Border.Background>
                                 <ContentPresenter Margin="4" />
                             </Border>

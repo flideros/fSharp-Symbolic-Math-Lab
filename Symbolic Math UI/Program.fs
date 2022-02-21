@@ -24,7 +24,7 @@ let mainProgram = Application.LoadComponent(resource) :?> Application
 
 // Controls
 
-let testCanvas = Math.Presentation.WolframEngine.Analysis.Truss()//Analysis()//
+let testCanvas = Math.Presentation.WolframEngine.Analysis.Analysis()//Truss()//
 let stack = 
     let sp = StackPanel()
     let WolframCanvas = 
