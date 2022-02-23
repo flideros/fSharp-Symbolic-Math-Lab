@@ -83,14 +83,6 @@ type Analysis() as this =
             t.SetValue(Grid.ColumnSpanProperty,3)
         t
 
-    let canvas = 
-        let c = Canvas()        
-        do  c.Background <- System.Windows.Media.Brushes.White 
-            c.ClipToBounds <- true
-            c.Cursor <- System.Windows.Input.Cursors.Cross
-            c.Children.Add(label) |> ignore
-            
-        c
     let screen_Grid =
         let g = Grid()              
         let gs = GridSplitter()
@@ -120,7 +112,7 @@ type Analysis() as this =
             gs.VerticalAlignment <- VerticalAlignment.Stretch
             gs.Background <- black
             gs.ShowsPreview <- true
-            gs.Width <- 1.
+            gs.Width <- 0.
 
             g.Children.Add(gs) |> ignore
         g    

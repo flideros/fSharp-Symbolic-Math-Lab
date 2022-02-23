@@ -15,8 +15,238 @@ open GenericDomain
 open ControlDomain
 open AnalysisDomain.TrussAnalysisDomain
 
-// This is a development area.
-// This code is isolated from the Analysis UI for the time being as I develop this code.
+type MethodOfJointsAnalysis(
+        kernel:MathKernel,
+        setGraphicsFromKernel:(MathKernel -> unit),
+        drawSolvedMember:(Point*Point -> SolidColorBrush -> unit),
+        wolframCode : SharedValue<string>,
+        wolframMessage : SharedValue<string> ,
+        wolframResult : SharedValue<string>,           
+        wolframSettings : SharedValue<WolframResultControlSettings> 
+        ) as this =  
+    inherit UserControl()    
+    do Install() |> ignore
+    
+    (*Shared Values*)  
+    let jointList = SharedValue<(Point list)> []
+    let orginPosition = SharedValue<Point> (Point(0.,0.))
+    let mousePosition = SharedValue<Point> (Point(0.,0.))
+    let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
+    let newForceOption = SharedValue<(LoadDomain.JointForce option)> (None)
+    let newSupportOption = SharedValue<(ElementDomain.Support option)> (None)
+    let system = SharedValue<(ElementDomain.System option)> (None)
+    let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
+    let selectionMode = SharedValue<(ControlDomain.SelectionMode)> (ControlDomain.SelectionMode.Delete)
+    
+        
+    
+    (*Truss Services*)
+    let trussServices = TrussServices.createServices()
+
+    (*Controls*) 
+    let axis_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Moment Axis"
+        l
+    let xAxis_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="X Axis",FontSize=15.)        
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
+    let yAxis_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Y Axis",FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- true |> Nullable<bool>
+            r.Margin <- Thickness(Left = 5., Top = 0., Right = 0., Bottom = 0.)
+        r
+    let momentAxisRadio_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Horizontal
+            sp.Children.Add(xAxis_RadioButton) |> ignore
+            sp.Children.Add(yAxis_RadioButton) |> ignore
+        sp
+    let compute_Button = 
+        let b = Button()        
+        do  b.Content <- "Compute"
+            b.FontSize <- 18.
+            b.FontWeight <- FontWeights.Bold
+            b.VerticalAlignment <- VerticalAlignment.Center
+            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
+        b
+    let resultant_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Resultant",FontSize=15.)        
+        do  r.Content <- tb
+            r.IsChecked <- false |> Nullable<bool>
+        r
+    let components_RadioButton = 
+        let r = RadioButton()
+        let tb = TextBlock(Text="Components",FontSize=15.)            
+        do  r.Content <- tb
+            r.IsChecked <- true |> Nullable<bool>
+            r.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+        r
+    let reaction_Label =
+        let l = TextBlock()
+        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+            l.FontStyle <- FontStyles.Normal
+            l.FontSize <- 20.            
+            l.TextWrapping <- TextWrapping.Wrap
+            l.Text <- "Reaction View"
+        l
+    let reactionRadio_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(reaction_Label) |> ignore
+            sp.Children.Add(resultant_RadioButton) |> ignore
+            sp.Children.Add(components_RadioButton) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+    let legend_StackPanel = 
+        let zeroLegend = 
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontWeight <- FontWeights.Black
+                l.FontSize <- 15.
+                l.MaxWidth <- 500.
+                l.Text <- "Zero Force"  
+                l.Foreground <- olive
+                l.TextAlignment <- TextAlignment.Center
+                //l.Opacity <- 0.5                
+            l 
+        let compressionLegend = 
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontWeight <- FontWeights.Black
+                l.FontSize <- 15.
+                l.MaxWidth <- 500.
+                l.Text <- "Compression"
+                l.Foreground <- red
+                l.TextAlignment <- TextAlignment.Center
+                //l.Opacity <- 0.5                
+            l 
+        let tensionLegend = 
+            let l = TextBlock()
+            do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 5.)
+                l.FontStyle <- FontStyles.Normal
+                l.FontWeight <- FontWeights.Black
+                l.FontSize <- 15.
+                l.MaxWidth <- 500.
+                l.Text <- "Tension"
+                l.Foreground <- blue2
+                l.TextAlignment <- TextAlignment.Center
+                //l.Opacity <- 0.5                
+            l 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(zeroLegend) |> ignore
+            sp.Children.Add(compressionLegend) |> ignore
+            sp.Children.Add(tensionLegend) |> ignore
+            sp.Visibility <- Visibility.Visible
+        sp
+    let analysis_StackPanel = 
+        let sp = StackPanel()
+        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
+            sp.MaxWidth <- 150.
+            sp.IsHitTestVisible <- true
+            sp.Orientation <- Orientation.Vertical
+            sp.Children.Add(legend_StackPanel) |> ignore
+            sp.Children.Add(compute_Button) |> ignore
+            sp.Children.Add(axis_Label) |> ignore            
+            sp.Children.Add(momentAxisRadio_StackPanel) |> ignore            
+            sp.Children.Add(reactionRadio_StackPanel) |> ignore            
+            sp.Visibility <- Visibility.Collapsed
+        sp
+ 
+    let screen_Grid =
+        let g = Grid()              
+        do  g.Children.Add(analysis_StackPanel) |> ignore
+        g
+     
+    let drawSolvedMembersFrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
+        match s with
+        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+            match a.analysis with
+            | MethodOfJointsAnalysis Truss -> ()
+            | MethodOfJointsAnalysis (SupportReactionEquations _sre) -> () 
+            | MethodOfJointsAnalysis (SupportReactionResult _srr)-> ()                    
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) ->                     
+                do  List.iter (fun  (n, p) -> 
+                    match n, TrussServices.getMemberOptionFromTrussPart p with
+                    | (z, Some m) when z = 0. -> drawSolvedMember m olive
+                    | (z, Some m) when z > 0. -> drawSolvedMember m blue2
+                    | (z, Some m) when z < 0. -> drawSolvedMember m red
+                    | _ -> ()) mjc.solvedMembers
+            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) ->                     
+                do  List.iter (fun  (n, p) -> 
+                    match n, TrussServices.getMemberOptionFromTrussPart p with
+                    | (z, Some m) -> drawSolvedMember m blue2
+                    | _ -> ()) mja.tensionMembers
+                do  List.iter (fun  (n, p) -> 
+                    match n, TrussServices.getMemberOptionFromTrussPart p with
+                    | (z, Some m) -> drawSolvedMember m red
+                    | _ -> ()) mja.compressionMembers
+                do  List.iter (fun  p -> 
+                    match TrussServices.getMemberOptionFromTrussPart p with
+                    | Some m -> drawSolvedMember m olive
+                    | None -> ()) mja.zeroForceMembers
+        | _ -> ()    
+    let getNewStatefrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
+            match s with 
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+                match a.analysis with
+                | MethodOfJointsAnalysis Truss -> s
+                | MethodOfJointsAnalysis (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s
+                | MethodOfJointsAnalysis (SupportReactionResult _r) -> s 
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s 
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _mj) -> s                
+            | _ -> s        
+    let getCodeFrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
+        match s with 
+        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+            match a.analysis with
+            | MethodOfJointsAnalysis Truss -> ""
+            | MethodOfJointsAnalysis (SupportReactionEquations r) -> "" 
+            | MethodOfJointsAnalysis (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
+            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> TrussServices.getAnalysisReport s//"\"Analysis Complete\""                
+        | _ -> "opps"
+    let getMessageFrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
+        match s with 
+        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+            match a.analysis with
+            | MethodOfJointsAnalysis Truss -> "1?"
+            | MethodOfJointsAnalysis (SupportReactionEquations r) -> "2?" 
+            | MethodOfJointsAnalysis (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
+            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "Choose next joint."
+            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> "Analysis Complete. Click Compute to see report."                
+        | _ -> "opps"
+
+    (*Initialize*)
+    do  this.Content <- screen_Grid        
+        setGraphicsFromKernel kernel
+    
+    member _this.drawSolvedMembers s = drawSolvedMembersFrom s
+    member _this.getNewState s = getNewStatefrom s
+    member _this.getCode s = getCodeFrom s
+    member _this.getMessage s = getMessageFrom s
 
 type Truss(kernel:MathKernel,
            setGraphicsFromKernel:(MathKernel -> unit),
@@ -89,7 +319,7 @@ type Truss(kernel:MathKernel,
             sb.Visibility <- Visibility.Collapsed          
         sb   
 
-        // Analysis State
+        // Analysis Controls
     let axis_Label =
         let l = TextBlock()
         do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
@@ -1259,7 +1489,6 @@ type Truss(kernel:MathKernel,
                 match ts.mode with
                 | ControlDomain.MemberBuild ->                     
                     let newState = trussServices.sendMemberOptionToState (newMemberOption.Get) state
-                    // add a funtion to get p from Member Builder control
                     do  drawTruss newState
                         //drawBuildJoint p
                         state <- newState
