@@ -16,30 +16,23 @@ open ControlDomain
 open AnalysisDomain.TrussAnalysisDomain
 
 type MethodOfJointsAnalysis(
-        kernel:MathKernel,
-        setGraphicsFromKernel:(MathKernel -> unit),
-        drawSolvedMember:(Point*Point -> SolidColorBrush -> unit),
+        kernel:MathKernel, 
+        state:SharedValue<TrussAnalysisState>,
+        setGraphicsFromKernel:(MathKernel -> unit),        
+        drawSolvedMember:((System.Windows.Point*System.Windows.Point) -> Brush -> unit),
+        drawTruss:(TrussAnalysisState -> unit),
+        drawForce:(SolidColorBrush -> LoadDomain.JointForce -> unit),
+        drawMemberLabel:(Point*Point -> int -> unit),
+        drawForceLabel:(System.Windows.Vector -> int -> float -> unit),
+        drawReactionForceLabel:(System.Windows.Vector -> (int*string) -> float -> unit),
+        setOrgin:(System.Windows.Point-> unit),
+        wolframResult : SharedValue<string>,
         wolframCode : SharedValue<string>,
-        wolframMessage : SharedValue<string> ,
-        wolframResult : SharedValue<string>,           
-        wolframSettings : SharedValue<WolframResultControlSettings> 
+        wolframMessage : SharedValue<string> 
         ) as this =  
     inherit UserControl()    
     do Install() |> ignore
-    
-    (*Shared Values*)  
-    let jointList = SharedValue<(Point list)> []
-    let orginPosition = SharedValue<Point> (Point(0.,0.))
-    let mousePosition = SharedValue<Point> (Point(0.,0.))
-    let newMemberOption = SharedValue<(AtomicDomain.Member option)> (None)
-    let newForceOption = SharedValue<(LoadDomain.JointForce option)> (None)
-    let newSupportOption = SharedValue<(ElementDomain.Support option)> (None)
-    let system = SharedValue<(ElementDomain.System option)> (None)
-    let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
-    let selectionMode = SharedValue<(ControlDomain.SelectionMode)> (ControlDomain.SelectionMode.Delete)
-    
-        
-    
+
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
 
@@ -172,15 +165,15 @@ type MethodOfJointsAnalysis(
             sp.Children.Add(axis_Label) |> ignore            
             sp.Children.Add(momentAxisRadio_StackPanel) |> ignore            
             sp.Children.Add(reactionRadio_StackPanel) |> ignore            
-            sp.Visibility <- Visibility.Collapsed
+            sp.Visibility <- Visibility.Visible
         sp
  
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(analysis_StackPanel) |> ignore
         g
-     
-    let drawSolvedMembersFrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
+    
+    let drawSolvedMembers (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
         match s with
         | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
             match a.analysis with
@@ -207,46 +200,172 @@ type MethodOfJointsAnalysis(
                     match TrussServices.getMemberOptionFromTrussPart p with
                     | Some m -> drawSolvedMember m olive
                     | None -> ()) mja.zeroForceMembers
-        | _ -> ()    
-    let getNewStatefrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
-            match s with 
-            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-                match a.analysis with
-                | MethodOfJointsAnalysis Truss -> s
-                | MethodOfJointsAnalysis (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s
-                | MethodOfJointsAnalysis (SupportReactionResult _r) -> s 
-                | MethodOfJointsAnalysis (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s 
-                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _mj) -> s                
-            | _ -> s        
-    let getCodeFrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
-        match s with 
-        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-            match a.analysis with
-            | MethodOfJointsAnalysis Truss -> ""
-            | MethodOfJointsAnalysis (SupportReactionEquations r) -> "" 
-            | MethodOfJointsAnalysis (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
-            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
-            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> TrussServices.getAnalysisReport s//"\"Analysis Complete\""                
-        | _ -> "opps"
-    let getMessageFrom (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
-        match s with 
-        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-            match a.analysis with
-            | MethodOfJointsAnalysis Truss -> "1?"
-            | MethodOfJointsAnalysis (SupportReactionEquations r) -> "2?" 
-            | MethodOfJointsAnalysis (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
-            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "Choose next joint."
-            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> "Analysis Complete. Click Compute to see report."                
-        | _ -> "opps"
+        | _ -> ()
 
+    let getTrussFrom s = trussServices.getTrussFromState s 
+    let getForcesFrom s = (trussServices.getTrussFromState s).forces 
+    let getSupportsFrom s = (trussServices.getTrussFromState s).supports   
+    let getMembersFrom s = trussServices.getMemberSeqFromTruss (getTrussFrom s)
+        
+    let setStateFromAnaysis s =
+        match this.Visibility = Visibility.Visible with
+        | false -> state.Set s
+        | true ->
+            do  setGraphicsFromKernel kernel
+            let newState = 
+                match s with 
+                | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+                    match a.analysis with
+                    | MethodOfJointsAnalysis Truss -> s
+                    | MethodOfJointsAnalysis (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s
+                    | MethodOfJointsAnalysis (SupportReactionResult _r) -> s 
+                    | MethodOfJointsAnalysis (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s 
+                    | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _mj) -> s                
+                | _ -> s       
+            let newCode = 
+                match newState with 
+                | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+                    match a.analysis with
+                    | MethodOfJointsAnalysis Truss -> "opps7"
+                    | MethodOfJointsAnalysis (SupportReactionEquations r) -> "opps6" 
+                    | MethodOfJointsAnalysis (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
+                    | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
+                    | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
+                | _ -> "opps2"
+            let newMessage = 
+                match newState with 
+                | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+                    match a.analysis with
+                    | MethodOfJointsAnalysis Truss -> "opps4"
+                    | MethodOfJointsAnalysis (SupportReactionEquations r) -> "opps5" 
+                    | MethodOfJointsAnalysis (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
+                    | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "Choose next joint."
+                    | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> "Analysis Complete. Click Compute to see report."                
+                | _ -> "opps3"
+            let members = getMembersFrom newState
+            let forces = getForcesFrom newState
+            let supports = getSupportsFrom newState        
+            let reactions = trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState
+            do  state.Set newState          
+                wolframCode.Set newCode
+                wolframMessage.Set newMessage
+                Seq.iter (fun (f:LoadDomain.JointForce) -> 
+                    match f.magnitude = 0.0 with 
+                    | true -> () 
+                    | false -> 
+                        drawForce blue f
+                        drawReactionForceLabel f.direction (trussServices.getSupportIndexAtJoint f.joint supports) f.magnitude) reactions            
+                Seq.iteri (fun i m -> drawMemberLabel m i) members
+                Seq.iteri (fun i (f:LoadDomain.JointForce) -> drawForceLabel f.direction i f.magnitude) forces
+                drawSolvedMembers newState
+
+    let handleMouseDown p (s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) =
+        match this.Visibility = Visibility.Visible with
+        | false -> state.Set s
+        | true ->            
+            match s with
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
+                match a.analysis with
+                | MethodOfJointsAnalysis Truss -> ()
+                | MethodOfJointsAnalysis (SupportReactionEquations r) -> () 
+                | MethodOfJointsAnalysis (SupportReactionResult r) -> 
+                    let newState = trussServices.sendPointToCalculation p s
+                    let newCode = 
+                        match newState with 
+                        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
+                            match a.analysis with
+                            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> WolframServices.solveEquations r.memberEquations r.variables
+                            | _ -> "1"
+                        | _ -> "2"
+                    do  state.Set newState
+                        wolframCode.Set newCode
+                        setOrgin p 
+                        drawTruss newState
+                        drawSolvedMembers newState
+                        Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)                    
+                | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> 
+                    let newState = trussServices.sendPointToCalculation p s
+                    let newCode = 
+                        match newState with 
+                        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
+                            match a.analysis with
+                            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> WolframServices.solveEquations mjc.memberEquations mjc.variables
+                            | _ -> "1"
+                        | _ -> "2"
+                    do  state.Set newState
+                        wolframCode.Set newCode
+                        setOrgin p 
+                        drawTruss newState
+                        drawSolvedMembers newState
+                        Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)                     
+                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) -> do drawSolvedMembers s                     
+            | _ -> ()
+    let handleClickEvent(s:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) =
+        match this.Visibility = Visibility.Visible with
+        | false -> state.Set s
+        | true ->
+            match compute_Button.IsPressed with 
+            | true -> setStateFromAnaysis s
+            | false -> 
+                match xAxis_RadioButton.IsChecked.Value, 
+                        yAxis_RadioButton.IsChecked.Value,                                   
+                        xAxis_RadioButton.IsMouseOver, 
+                        yAxis_RadioButton.IsMouseOver
+                        with 
+                | true,false, true,false
+                | false,true, true,false -> 
+                    xAxis_RadioButton.IsChecked <- Nullable true 
+                    yAxis_RadioButton.IsChecked <- Nullable false
+                    let newState = 
+                        trussServices.checkTruss (trussServices.getTrussFromState s)
+                        |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                    wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
+                    state.Set newState
+                | true,false, false,true
+                | false,true, false,true -> 
+                    xAxis_RadioButton.IsChecked <- Nullable false 
+                    yAxis_RadioButton.IsChecked <- Nullable true                                
+                    let newState = 
+                        trussServices.checkTruss (trussServices.getTrussFromState s)
+                        |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                    wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
+                    state.Set newState
+                | _ -> // Logic for Reaction Display radio buttons                            
+                    match resultant_RadioButton.IsChecked.Value, 
+                            components_RadioButton.IsChecked.Value,                                   
+                            resultant_RadioButton.IsMouseOver, 
+                            components_RadioButton.IsMouseOver
+                            with 
+                    | true,false, true,false
+                    | false,true, true,false -> 
+                        resultant_RadioButton.IsChecked <- Nullable true 
+                        components_RadioButton.IsChecked <- Nullable false
+                        drawTruss s
+                        drawSolvedMembers s
+                        Seq.iter (fun (f:LoadDomain.JointForce) -> 
+                            match f.magnitude = 0.0 with 
+                            | true -> () 
+                            | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value s)
+                    | true,false, false,true
+                    | false,true, false,true -> 
+                        resultant_RadioButton.IsChecked <- Nullable false 
+                        components_RadioButton.IsChecked <- Nullable true
+                        drawTruss s
+                        drawSolvedMembers s
+                        Seq.iter (fun (f:LoadDomain.JointForce) -> 
+                            match f.magnitude = 0.0 with 
+                            | true -> () 
+                            | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value s)
+                    | _ -> ()
     (*Initialize*)
     do  this.Content <- screen_Grid        
         setGraphicsFromKernel kernel
-    
-    member _this.drawSolvedMembers s = drawSolvedMembersFrom s
-    member _this.getNewState s = getNewStatefrom s
-    member _this.getCode s = getCodeFrom s
-    member _this.getMessage s = getMessageFrom s
+        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state.Get))
+
+    member _this.handleMojClick s = handleClickEvent s
+    member _this.handleMojMouseDown s = handleMouseDown s
+    member _this.setStateFromMojAnaysis s = setStateFromAnaysis s
+    member _this.drawMojSolvedMembers s = drawSolvedMembers s
 
 type Truss(kernel:MathKernel,
            setGraphicsFromKernel:(MathKernel -> unit),
@@ -258,6 +377,10 @@ type Truss(kernel:MathKernel,
     inherit UserControl()    
     do Install() |> ignore
     
+    // Internal State
+    let initialState = AnalysisDomain.TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
+    let mutable state = initialState
+    
     (*Shared Values*)  
     let jointList = SharedValue<(Point list)> []
     let orginPosition = SharedValue<Point> (Point(0.,0.))
@@ -268,10 +391,7 @@ type Truss(kernel:MathKernel,
     let system = SharedValue<(ElementDomain.System option)> (None)
     let selectedPart = SharedValue<(ElementDomain.Part option)> (None)
     let selectionMode = SharedValue<(ControlDomain.SelectionMode)> (ControlDomain.SelectionMode.Delete)
-    
-    // Internal State
-    let initialState = AnalysisDomain.TrussAnalysisDomain.TrussState {truss = {members=[]; forces=[]; supports=[]}; mode = ControlDomain.MemberBuild}
-    let mutable state = initialState    
+    let externalState = SharedValue<TrussAnalysisState> (state)
     
     (*Truss Services*)
     let trussServices = TrussServices.createServices()
@@ -317,140 +437,7 @@ type Truss(kernel:MathKernel,
         let sb = SelectionControl(orginPosition,mousePosition,jointList,system,selectedPart,selectionMode,wolframMessage)
         do  sb.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
             sb.Visibility <- Visibility.Collapsed          
-        sb   
-
-        // Analysis Controls
-    let axis_Label =
-        let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.            
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "Moment Axis"
-        l
-    let xAxis_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="X Axis",FontSize=15.)        
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    let yAxis_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Y Axis",FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- true |> Nullable<bool>
-            r.Margin <- Thickness(Left = 5., Top = 0., Right = 0., Bottom = 0.)
-        r
-    let momentAxisRadio_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Horizontal
-            sp.Children.Add(xAxis_RadioButton) |> ignore
-            sp.Children.Add(yAxis_RadioButton) |> ignore
-        sp
-    let compute_Button = 
-        let b = Button()        
-        do  b.Content <- "Compute"
-            b.FontSize <- 18.
-            b.FontWeight <- FontWeights.Bold
-            b.VerticalAlignment <- VerticalAlignment.Center
-            b.Margin <- Thickness(Left = 0., Top = 5., Right = 5., Bottom = 0.)
-        b
-    let resultant_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Resultant",FontSize=15.)        
-        do  r.Content <- tb
-            r.IsChecked <- false |> Nullable<bool>
-        r
-    let components_RadioButton = 
-        let r = RadioButton()
-        let tb = TextBlock(Text="Components",FontSize=15.)            
-        do  r.Content <- tb
-            r.IsChecked <- true |> Nullable<bool>
-            r.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-        r
-    let reaction_Label =
-        let l = TextBlock()
-        do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-            l.FontStyle <- FontStyles.Normal
-            l.FontSize <- 20.            
-            l.TextWrapping <- TextWrapping.Wrap
-            l.Text <- "Reaction View"
-        l
-    let reactionRadio_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(reaction_Label) |> ignore
-            sp.Children.Add(resultant_RadioButton) |> ignore
-            sp.Children.Add(components_RadioButton) |> ignore
-            sp.Visibility <- Visibility.Visible
-        sp
-    let legend_StackPanel = 
-        let zeroLegend = 
-            let l = TextBlock()
-            do  l.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
-                l.FontStyle <- FontStyles.Normal
-                l.FontWeight <- FontWeights.Black
-                l.FontSize <- 15.
-                l.MaxWidth <- 500.
-                l.Text <- "Zero Force"  
-                l.Foreground <- olive
-                l.TextAlignment <- TextAlignment.Center
-                //l.Opacity <- 0.5                
-            l 
-        let compressionLegend = 
-            let l = TextBlock()
-            do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 0.)
-                l.FontStyle <- FontStyles.Normal
-                l.FontWeight <- FontWeights.Black
-                l.FontSize <- 15.
-                l.MaxWidth <- 500.
-                l.Text <- "Compression"
-                l.Foreground <- red
-                l.TextAlignment <- TextAlignment.Center
-                //l.Opacity <- 0.5                
-            l 
-        let tensionLegend = 
-            let l = TextBlock()
-            do  l.Margin <- Thickness(Left = 0., Top = 0., Right = 0., Bottom = 5.)
-                l.FontStyle <- FontStyles.Normal
-                l.FontWeight <- FontWeights.Black
-                l.FontSize <- 15.
-                l.MaxWidth <- 500.
-                l.Text <- "Tension"
-                l.Foreground <- blue2
-                l.TextAlignment <- TextAlignment.Center
-                //l.Opacity <- 0.5                
-            l 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 0., Top = 5., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(zeroLegend) |> ignore
-            sp.Children.Add(compressionLegend) |> ignore
-            sp.Children.Add(tensionLegend) |> ignore
-            sp.Visibility <- Visibility.Visible
-        sp
-    let analysis_StackPanel = 
-        let sp = StackPanel()
-        do  sp.Margin <- Thickness(Left = 10., Top = 0., Right = 0., Bottom = 0.)
-            sp.MaxWidth <- 150.
-            sp.IsHitTestVisible <- true
-            sp.Orientation <- Orientation.Vertical
-            sp.Children.Add(legend_StackPanel) |> ignore
-            sp.Children.Add(compute_Button) |> ignore
-            sp.Children.Add(axis_Label) |> ignore            
-            sp.Children.Add(momentAxisRadio_StackPanel) |> ignore            
-            sp.Children.Add(reactionRadio_StackPanel) |> ignore            
-            sp.Visibility <- Visibility.Collapsed
-        sp
-        
+        sb
         // Truss mode selection    
     let trussMode_ComboBox =
         let cb = ComboBox()        
@@ -549,20 +536,8 @@ type Truss(kernel:MathKernel,
             sp.Children.Add(coordinateGrid_Control) |> ignore
 
         sp        
-        // Controls border
-    let trussControls_Border = 
-        let expander = Expander()
-        let border = Border()            
-        do  border.BorderBrush <- black
-            border.Cursor <- System.Windows.Input.Cursors.Arrow
-            border.Background <- clear
-            border.Opacity <- 0.8
-            border.IsHitTestVisible <- true
-            border.BorderThickness <- Thickness(Left = 1.5, Top = 1.5, Right = 1.5, Bottom = 1.5)
-            border.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
-            border.SetValue(Canvas.ZIndexProperty,4)
-            
-
+        // Controls
+    let controls_StackPanel =
         let sp = StackPanel()
         do  sp.Margin <- Thickness(Left = 10., Top = 10., Right = 10., Bottom = 10.)
             sp.MaxWidth <- 150.
@@ -574,9 +549,19 @@ type Truss(kernel:MathKernel,
             sp.Children.Add(supportBuilder_Control) |> ignore
             sp.Children.Add(settings_StackPanel) |> ignore
             sp.Children.Add(selection_Control) |> ignore
-            sp.Children.Add(analysis_StackPanel) |> ignore
             sp.SetValue(Canvas.ZIndexProperty,4)
-            border.Child <- sp            
+        sp            
+    let trussControls_Border =         
+        let border = Border()            
+        do  border.BorderBrush <- black
+            border.Cursor <- System.Windows.Input.Cursors.Arrow
+            border.Background <- clear
+            border.Opacity <- 0.8
+            border.IsHitTestVisible <- true
+            border.BorderThickness <- Thickness(Left = 1.5, Top = 1.5, Right = 1.5, Bottom = 1.5)
+            border.Margin <- Thickness(Left = 10., Top = 10., Right = 0., Bottom = 0.)
+            border.SetValue(Canvas.ZIndexProperty,4)
+            border.Child <- controls_StackPanel
         border
         // Main canvas    
     let canvas = 
@@ -785,7 +770,7 @@ type Truss(kernel:MathKernel,
             (p1.X - p2.X) ** 2. + (p1.Y - p2.Y) ** 2. < 36.) (getJointsFrom state)
         // Draw
     let drawOrgin (p:System.Windows.Point) = 
-        let l1,l2,e = coordinateGrid_Control.orginPoint p //orgin p //
+        let l1,l2,e = coordinateGrid_Control.orginPoint p 
         do  canvas.Children.Add(e) |> ignore
             canvas.Children.Add(l1) |> ignore
             canvas.Children.Add(l2) |> ignore
@@ -797,35 +782,7 @@ type Truss(kernel:MathKernel,
         do  canvas.Children.Add(l) |> ignore
     let drawSolvedMember (p1:System.Windows.Point, p2:System.Windows.Point) color =        
         let l = trussMemberSolved (p1,p2)  color
-        do  canvas.Children.Add(l) |> ignore
-    let drawSolvedMembers (state:AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = 
-        match state with
-        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-            match a.analysis with
-            | MethodOfJointsAnalysis Truss -> ()
-            | MethodOfJointsAnalysis (SupportReactionEquations _sre) -> () 
-            | MethodOfJointsAnalysis (SupportReactionResult _srr)-> ()                    
-            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) ->                     
-                do  List.iter (fun  (n, p) -> 
-                    match n, TrussServices.getMemberOptionFromTrussPart p with
-                    | (z, Some m) when z = 0. -> drawSolvedMember m olive
-                    | (z, Some m) when z > 0. -> drawSolvedMember m blue2
-                    | (z, Some m) when z < 0. -> drawSolvedMember m red
-                    | _ -> ()) mjc.solvedMembers
-            | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) ->                     
-                do  List.iter (fun  (n, p) -> 
-                    match n, TrussServices.getMemberOptionFromTrussPart p with
-                    | (z, Some m) -> drawSolvedMember m blue2
-                    | _ -> ()) mja.tensionMembers
-                do  List.iter (fun  (n, p) -> 
-                    match n, TrussServices.getMemberOptionFromTrussPart p with
-                    | (z, Some m) -> drawSolvedMember m red
-                    | _ -> ()) mja.compressionMembers
-                do  List.iter (fun  p -> 
-                    match TrussServices.getMemberOptionFromTrussPart p with
-                    | Some m -> drawSolvedMember m olive
-                    | None -> ()) mja.zeroForceMembers
-        | _ -> ()
+        do  canvas.Children.Add(l) |> ignore    
     let drawMemberLabel (p1:System.Windows.Point, p2:System.Windows.Point) (i:int) =
         let l =
             let l = TextBlock()
@@ -853,7 +810,6 @@ type Truss(kernel:MathKernel,
                l 
            do  canvas.Children.Add(l) |> ignore  
     let drawReactionForceLabel (p:System.Windows.Vector) ((i,s):int*string) (f:float) =
-        
         let l =
             let l = TextBlock()
             do  l.Margin <- Thickness(Left = p.X - 20., Top = p.Y - 20., Right = 0., Bottom = 0.)
@@ -1016,7 +972,7 @@ type Truss(kernel:MathKernel,
         drawSelectedMember s
         drawSelectedForce s
         drawSelectedSupport s
-        drawSolvedMembers s        
+        
         // Set
     let setOrgin p = 
         let joints = getJointsFrom state |> Seq.toList
@@ -1025,59 +981,28 @@ type Truss(kernel:MathKernel,
         | None -> 
             do  orginPosition.Set (Point(0.,0.))
         | Some i -> 
-            do  orginPosition.Set (Point(joints.[i].X,joints.[i].Y))    
-    let setStateFromAnaysis s =
-        do  setGraphicsFromKernel kernel
-        let newState = 
-            match s with 
-            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-                match a.analysis with
-                | MethodOfJointsAnalysis Truss -> s
-                | MethodOfJointsAnalysis (SupportReactionEquations _r) -> trussServices.analyzeEquations wolframResult.Get s
-                | MethodOfJointsAnalysis (SupportReactionResult _r) -> s 
-                | MethodOfJointsAnalysis (MethodOfJointsCalculation _mj) -> trussServices.analyzeEquations wolframResult.Get s 
-                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _mj) -> s                
-            | _ -> s        
-        let newCode = 
-            match newState with 
-            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-                match a.analysis with
-                | MethodOfJointsAnalysis Truss -> ""
-                | MethodOfJointsAnalysis (SupportReactionEquations r) -> "" 
-                | MethodOfJointsAnalysis (SupportReactionResult r) -> "\"Choose a joint to begin Method of Joints analysis\""                    
-                | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "\"Choose next joint\"" 
-                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> TrussServices.getAnalysisReport newState//"\"Analysis Complete\""                
-            | _ -> "opps"
-        let newMessage = 
-            match newState with 
-            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
-                match a.analysis with
-                | MethodOfJointsAnalysis Truss -> "1?"
-                | MethodOfJointsAnalysis (SupportReactionEquations r) -> "2?" 
-                | MethodOfJointsAnalysis (SupportReactionResult r) -> "Choose a joint to begin Method of Joints analysis."                    
-                | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> "Choose next joint."
-                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport _) -> "Analysis Complete. Click Compute to see report."                
-            | _ -> "opps"
-        let members = getMembersFrom newState
-        let forces = getForcesFrom newState
-        let supports = getSupportsFrom newState        
-        let reactions = trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value newState
-        do  state <- newState
-            label.Text <- newState.ToString()            
-            wolframCode.Set newCode            
-            wolframMessage.Set newMessage            
-            Seq.iter (fun (f:LoadDomain.JointForce) -> 
-                match f.magnitude = 0.0 with 
-                | true -> () 
-                | false -> 
-                    drawForce blue f
-                    drawReactionForceLabel f.direction (trussServices.getSupportIndexAtJoint f.joint supports) f.magnitude
-                ) reactions            
-            Seq.iteri (fun i m -> drawMemberLabel m i) members
-            Seq.iteri (fun i (f:LoadDomain.JointForce) -> drawForceLabel f.direction i f.magnitude) forces
-            drawSolvedMembers newState            
+            do  orginPosition.Set (Point(joints.[i].X,joints.[i].Y)) 
     let setjointList (s: AnalysisDomain.TrussAnalysisDomain.TrussAnalysisState) = jointList.Set (getJointsFrom s |> Seq.toList)
-        // Handle
+ 
+    (*Analysis*) 
+    let methodOfJointsAnalysis =         
+        let moj = MethodOfJointsAnalysis(
+                    kernel,
+                    externalState,
+                    setGraphicsFromKernel,
+                    drawSolvedMember,
+                    drawTruss,drawForce,
+                    drawMemberLabel,
+                    drawForceLabel,
+                    drawReactionForceLabel,
+                    setOrgin,                    
+                    wolframResult,
+                    wolframCode,
+                    wolframMessage)
+        do  moj.Visibility <- Visibility.Collapsed
+        moj     
+    
+    (*Event Handlers*)
     let handleSelectionModeChanged s = 
         // Logic for Selection Mode 
         match selectionMode.Get with 
@@ -1103,10 +1028,9 @@ type Truss(kernel:MathKernel,
         match string trussMode_ComboBox.SelectedItem with 
         // Force
         | "Force builder" ->    
-            reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
+            methodOfJointsAnalysis.Visibility <- Visibility.Collapsed
             wolframSettings.Set({wolframSettings.Get with isVisible = false})                   
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-            analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
             supportBuilder_Control.Visibility <- Visibility.Collapsed
             jointForceBuilder_Control.Visibility <- Visibility.Visible
@@ -1116,13 +1040,13 @@ type Truss(kernel:MathKernel,
             wolframCode.Set "Ready"
             let newState = trussServices.setTrussMode ControlDomain.ForceBuild s
             drawTruss s
+
             state <- newState             
         // Member
         | "Member builder" -> 
-            reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
+            methodOfJointsAnalysis.Visibility <- Visibility.Collapsed
             wolframSettings.Set({wolframSettings.Get with isVisible = false})
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-            analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Visible
             supportBuilder_Control.Visibility <- Visibility.Collapsed
             jointForceBuilder_Control.Visibility <- Visibility.Collapsed
@@ -1135,10 +1059,8 @@ type Truss(kernel:MathKernel,
             state <- newState
         // Support
         | "Support builder" -> 
-            reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
             wolframSettings.Set({wolframSettings.Get with isVisible = false})
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-            analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
             supportBuilder_Control.Visibility <- Visibility.Visible
             jointForceBuilder_Control.Visibility <- Visibility.Collapsed
@@ -1155,15 +1077,14 @@ type Truss(kernel:MathKernel,
             wolframMessage.Set "--Select a Truss Part--"
             wolframCode.Set "Ready"                    
             setGraphicsFromKernel kernel
-            reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
             wolframSettings.Set(
                 {wolframSettings.Get with 
                     isVisible = 
                         match selectionMode.Get = ControlDomain.Inspect with
                         | false -> false
                         | true -> true })             
+            methodOfJointsAnalysis.Visibility <- Visibility.Collapsed
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = false}
-            analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
             supportBuilder_Control.Visibility <- Visibility.Collapsed
             jointForceBuilder_Control.Visibility <- Visibility.Collapsed
@@ -1174,31 +1095,29 @@ type Truss(kernel:MathKernel,
             label.Text <- newState.ToString()
             state <- newState
         // Analysis
-        | "Analysis" -> 
+        | "Analysis" ->             
+            methodOfJointsAnalysis.Visibility <- Visibility.Visible
             wolframMessage.Set "Calculate Reactions"
             let newState = 
                 trussServices.checkTruss (trussServices.getTrussFromState s)
-                |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
+                |> trussServices.getSupportReactionEquationsFromState true // LOOK
             wolframCode.Set (trussServices.getAnalysisReport newState)
             setGraphicsFromKernel kernel
             wolframSettings.Set({wolframSettings.Get with isVisible = true})                  
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-            reactionRadio_StackPanel.Visibility <- Visibility.Visible
-            analysis_StackPanel.Visibility <- Visibility.Visible
             memberBuilder_Control.Visibility <- Visibility.Collapsed
             supportBuilder_Control.Visibility <- Visibility.Collapsed
             jointForceBuilder_Control.Visibility <- Visibility.Collapsed
             selection_Control.Visibility <- Visibility.Collapsed
             settings_StackPanel.Visibility <- Visibility.Collapsed             
-            wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
+            wolframCode.Set (trussServices.getSupportReactionSolve true newState) // LOOK
             drawTruss newState
-            state <- newState                    
+            state <- newState 
+            externalState.Set newState 
         // Settings
         | "Settings" -> 
-            reactionRadio_StackPanel.Visibility <- Visibility.Collapsed
             wolframSettings.Set({wolframSettings.Get with isVisible = false})
             wolframSettings.Set {wolframSettings.Get with isHitTestVisible = true}
-            analysis_StackPanel.Visibility <- Visibility.Collapsed
             memberBuilder_Control.Visibility <- Visibility.Collapsed
             supportBuilder_Control.Visibility <- Visibility.Collapsed
             jointForceBuilder_Control.Visibility <- Visibility.Collapsed
@@ -1221,54 +1140,10 @@ type Truss(kernel:MathKernel,
                 let p2 = Seq.item i joints
                 p2
         match trussControls_Border.IsMouseOver with 
-        | true ->             
-            let newState =  // Logic for Analysis Mode radio buttons                            
-                match xAxis_RadioButton.IsChecked.Value, 
-                        yAxis_RadioButton.IsChecked.Value,                                   
-                        xAxis_RadioButton.IsMouseOver, 
-                        yAxis_RadioButton.IsMouseOver
-                        with 
-                | true,false, true,false
-                | false,true, true,false -> 
-                    xAxis_RadioButton.IsChecked <- Nullable true 
-                    yAxis_RadioButton.IsChecked <- Nullable false
-                    let newState = 
-                        trussServices.checkTruss (trussServices.getTrussFromState state)
-                        |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
-                    wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
-                    newState
-                | true,false, false,true
-                | false,true, false,true -> 
-                    xAxis_RadioButton.IsChecked <- Nullable false 
-                    yAxis_RadioButton.IsChecked <- Nullable true                                
-                    let newState = 
-                        trussServices.checkTruss (trussServices.getTrussFromState state)
-                        |> trussServices.getSupportReactionEquationsFromState yAxis_RadioButton.IsChecked.Value
-                    wolframCode.Set (trussServices.getSupportReactionSolve yAxis_RadioButton.IsChecked.Value newState)
-                    newState
-                | _ -> // Logic for Reaction Display radio buttons                            
-                    match resultant_RadioButton.IsChecked.Value, 
-                            components_RadioButton.IsChecked.Value,                                   
-                            resultant_RadioButton.IsMouseOver, 
-                            components_RadioButton.IsMouseOver
-                            with 
-                    | true,false, true,false
-                    | false,true, true,false -> 
-                        resultant_RadioButton.IsChecked <- Nullable true 
-                        components_RadioButton.IsChecked <- Nullable false
-                        drawTruss state
-                        Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce red f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
-                        state
-                    | true,false, false,true
-                    | false,true, false,true -> 
-                        resultant_RadioButton.IsChecked <- Nullable false 
-                        components_RadioButton.IsChecked <- Nullable true
-                        drawTruss state
-                        Seq.iter (fun (f:LoadDomain.JointForce) -> match f.magnitude = 0.0 with | true -> () | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value state)
-                        state
-                    | _ -> state
-            do  state <- newState
-                label.Text <- newState.ToString() 
+        | true ->    
+            let newState =  methodOfJointsAnalysis.handleMojClick state
+            do  state <- externalState.Get
+                label.Text <- state.ToString() 
         | false ->  
             do  memberBuilder_Control.handleMBMouseDown ()
                 jointForceBuilder_Control.handleFBMouseDown ()
@@ -1304,7 +1179,7 @@ type Truss(kernel:MathKernel,
                         do  drawBuildSupportJoint p
                             state <- newState
                             label.Text <- newState.ToString()
-                | ControlDomain.Analysis -> setGraphicsFromKernel kernel
+                | ControlDomain.Analysis -> setGraphicsFromKernel kernel                    
                 | ControlDomain.Selection -> 
                     match selectionMode.Get = ControlDomain.Modify with
                     | false -> label.Text <- state.ToString()
@@ -1358,7 +1233,7 @@ type Truss(kernel:MathKernel,
                     do  setOrgin p
                         drawTruss newState
                         state <- newState
-                        label.Text <- state.ToString()
+                        label.Text <- newState.ToString()
                     match newState with
                     | AnalysisDomain.TrussAnalysisDomain.SelectionState ss -> 
                         match ss.modification, ss.forces, ss.supports with
@@ -1368,39 +1243,9 @@ type Truss(kernel:MathKernel,
                         | None, None, None
                         | _ -> selectedPart.Set None                       
                     | _ -> ()
-            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a -> 
+            | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->                 
                 match a.analysis with
-                | MethodOfJointsAnalysis Truss -> ()
-                | MethodOfJointsAnalysis (SupportReactionEquations r) -> () 
-                | MethodOfJointsAnalysis (SupportReactionResult r) -> 
-                    let newState = trussServices.sendPointToCalculation p state
-                    let newCode = 
-                        match newState with 
-                        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
-                            match a.analysis with
-                            | MethodOfJointsAnalysis (MethodOfJointsCalculation r) -> WolframServices.solveEquations r.memberEquations r.variables
-                            | _ -> "1"
-                        | _ -> "2"
-                    do  state <- newState
-                        wolframCode.Set newCode
-                        setOrgin p 
-                        drawTruss newState
-                        Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)
-                | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> 
-                    let newState = trussServices.sendPointToCalculation p state
-                    let newCode = 
-                        match newState with 
-                        | AnalysisDomain.TrussAnalysisDomain.AnalysisState a ->
-                            match a.analysis with
-                            | MethodOfJointsAnalysis (MethodOfJointsCalculation mjc) -> WolframServices.solveEquations mjc.memberEquations mjc.variables
-                            | _ -> "1"
-                        | _ -> "2"
-                    do  state <- newState
-                        wolframCode.Set newCode
-                        setOrgin p 
-                        drawTruss newState
-                        Seq.iteri (fun i m -> drawMemberLabel m i) (getMembersFrom newState)                        
-                | MethodOfJointsAnalysis (MethodOfJointsAnalysisReport mja) -> drawSolvedMembers state 
+                | MethodOfJointsAnalysis _ -> do methodOfJointsAnalysis.handleMojMouseDown p state                    
             | AnalysisDomain.TrussAnalysisDomain.ErrorState es -> 
                 match es.errors with 
                 | [ErrorDomain.NoJointSelected] -> ()                    
@@ -1410,7 +1255,7 @@ type Truss(kernel:MathKernel,
         match state with
         | AnalysisDomain.TrussAnalysisDomain.TrussState ts -> 
             match ts.mode with
-            | ControlDomain.MemberBuild -> do  memberBuilder_Control.handleMBMouseUp ()
+            | ControlDomain.MemberBuild -> do memberBuilder_Control.handleMBMouseUp ()
             | ControlDomain.ForceBuild -> ()
             | ControlDomain.SupportBuild -> ()
             | ControlDomain.Analysis -> ()
@@ -1567,9 +1412,13 @@ type Truss(kernel:MathKernel,
             state <- newState
             drawTruss newState
         | Some p -> ()
-    
+    let handleExternalStatechanged () = 
+        state <- externalState.Get
+        label.Text <- externalState.Get.ToString()
+
     (*Initialize*)
-    do  this.Content <- screen_Grid        
+    do  controls_StackPanel.Children.Add(methodOfJointsAnalysis) |> ignore
+        this.Content <- screen_Grid        
         setGraphicsFromKernel kernel
         
     (*add event handlers*)        
@@ -1577,10 +1426,10 @@ type Truss(kernel:MathKernel,
         this.Loaded.AddHandler(RoutedEventHandler(fun _ _ -> drawTruss state))
         this.PreviewMouseLeftButtonDown.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseDown e))
         this.PreviewMouseLeftButtonUp.AddHandler(Input.MouseButtonEventHandler(fun _ e -> handleMouseUp(e)))
-        this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))        
-        compute_Button.Click.AddHandler(RoutedEventHandler(fun _ _ -> setStateFromAnaysis state))
+        this.PreviewMouseMove.AddHandler(Input.MouseEventHandler(fun _ e -> handleMouseMove e))
         trussMode_ComboBox.SelectionChanged.AddHandler(SelectionChangedEventHandler(fun _ _ -> handleTrussModeChanged state))
         orginPosition.Changed.AddHandler((fun _ _ -> drawTruss state))
         system.Changed.AddHandler((fun _ _ -> handleSystemChanged state))
         selectedPart.Changed.AddHandler((fun _ _ -> handleSelectedPartChanged state))
         selectionMode .Changed.AddHandler((fun _ _ -> handleSelectionModeChanged state))
+        externalState.Changed.AddHandler((fun _ _ -> handleExternalStatechanged ()))

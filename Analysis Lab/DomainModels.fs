@@ -32,88 +32,88 @@ module AtomicDomain =
     // Equal end points implies a member that loops back in on itself.        
     type Member = (Joint*Joint)
     
-    module Material =
+module MaterialDomain =
     
-        // StructuralProperties
-        type Composition =
-            | Metallica (*In honor of the Band*)
-            | Ceramic
-            | Polymeric
-            | Composite
-        type CrystalStructure =
-            | Cubic
-            | Tetragonal
-            | Hexagonal
-            | Trigonal
-            | Orthorhombic
-            | Monoclinic
-            | Triclinic
-            | Glassy
-        type Microstructure = 
-            | PhaseGrains // A distinct crystal structure and/or chemical composition.
-            | ComponentGrains // A pure substance with a uniquely-defined chemical composition.
-            | PointDefect // Such as vacancies and interstitials.            
-            | PlanarDefect // Such as surfaces, twin boundaries, and grain boundaries.
-            | Dislocation        
-        type StructuralProperties = {
-            composition:Composition List; 
-            crystalStructure:CrystalStructure;
-            microStructures:Microstructure list}
+    // StructuralProperties
+    type Composition =
+        | Metallica (*In honor of the Band*)
+        | Ceramic
+        | Polymeric
+        | Composite
+    type CrystalStructure =
+        | Cubic
+        | Tetragonal
+        | Hexagonal
+        | Trigonal
+        | Orthorhombic
+        | Monoclinic
+        | Triclinic
+        | Glassy
+    type Microstructure = 
+        | PhaseGrains // A distinct crystal structure and/or chemical composition.
+        | ComponentGrains // A pure substance with a uniquely-defined chemical composition.
+        | PointDefect // Such as vacancies and interstitials.            
+        | PlanarDefect // Such as surfaces, twin boundaries, and grain boundaries.
+        | Dislocation        
+    type StructuralProperties = {
+        composition:Composition List; 
+        crystalStructure:CrystalStructure;
+        microStructures:Microstructure list}
 
-        type PhysicalProperties =
-            | State // Solid, liquid or gas; not as simple as it may seem.
-            | Density // Mass of a material per unit volume.
-            | Magnetisum //The physical attraction for iron, inherent in a material or induced by moving electric fields.
-            | Solubility // The maximum amount of a solute that can be added to a solvent.
-            | Viscocity // Resistance of a material (usually liquid) to flow.
+    type PhysicalProperties =
+        | State // Solid, liquid or gas; not as simple as it may seem.
+        | Density // Mass of a material per unit volume.
+        | Magnetisum //The physical attraction for iron, inherent in a material or induced by moving electric fields.
+        | Solubility // The maximum amount of a solute that can be added to a solvent.
+        | Viscocity // Resistance of a material (usually liquid) to flow.
 
-        type MechanicalProperties = 
-            | Malleability
-            | Ductility
-            | TensileStrength
-            | FlexuralStrength
-            | Hardness
-            | Toughness
-            | Brittleness
-            | Elasticity
-            | PlasticDeformation
-            | Stiffness
+    type MechanicalProperties = 
+        | Malleability
+        | Ductility
+        | TensileStrength
+        | FlexuralStrength
+        | Hardness
+        | Toughness
+        | Brittleness
+        | Elasticity
+        | PlasticDeformation
+        | Stiffness
 
-        type ElectricalProperties =
-         | Conductivity
-         | Resistivity
-         | DielectricStrength
+    type ElectricalProperties =
+        | Conductivity
+        | Resistivity
+        | DielectricStrength
         
-        type ChemicalProperties =
-         | Toxicity
-         | ChemicalResistance
-         | CorrosionResistance
-         | Combustibility
-         | Passivity
-         | Biocompatibility
+    type ChemicalProperties =
+        | Toxicity
+        | ChemicalResistance
+        | CorrosionResistance
+        | Combustibility
+        | Passivity
+        | Biocompatibility
         
-        type ThermalProperties =
-         | SpecificHeat
-         | ThermalExpansion
-         | ThermalConductivit
-         | GlassTransitionTemp
-         | MeltingPoint
+    type ThermalProperties =
+        | SpecificHeat
+        | ThermalExpansion
+        | ThermalConductivit
+        | GlassTransitionTemp
+        | MeltingPoint
         
-        type OpticalProperties =
-         | Transmissivity
-         | Absorptivity
-         | IndexOfRefraction
-         | Photoconductivity
-         | Polarization
+    type OpticalProperties =
+        | Transmissivity
+        | Absorptivity
+        | IndexOfRefraction
+        | Photoconductivity
+        | Polarization
 
-        type Properties = 
-            | Structural of StructuralProperties
-            | Phyiscal of PhysicalProperties list
-            | Mechanical of MechanicalProperties list
-            | Electrical 
-            | Chemical
-            | Thermal
-            | Optical
+    type Properties = 
+        | Structural of StructuralProperties
+        | Phyiscal of PhysicalProperties list
+        | Mechanical of MechanicalProperties list
+        | Electrical of ElectricalProperties
+        | Chemical of ChemicalProperties
+        | Thermal of ThermalProperties
+        | Optical of OpticalProperties
 
 module LoadDomain = 
     open AtomicDomain    
