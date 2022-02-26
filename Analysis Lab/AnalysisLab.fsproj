@@ -15,6 +15,7 @@
     <Compile Include="TrussServices.fs" />
     <Compile Include="ElementControls.fs" />
     <Compile Include="AnalysisControls.fs" />
+    <Compile Include="MethodOfJointsTrussAnalysis.fs" />
     <Compile Include="TrussSystem.fs" />
     <Compile Include="AnalysisUI.fs" />
     <None Include="Script.fsx" />
