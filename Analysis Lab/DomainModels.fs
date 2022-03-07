@@ -15,7 +15,7 @@ module GenericDomain =
             _value <- value
             if old <> _value then _value |> changed.Trigger
         member _sv.Changed = changed.Publish
-
+    
 module AtomicDomain =    
     
     // Arbitrary coordinate lables.
@@ -32,17 +32,41 @@ module AtomicDomain =
     // Equal end points implies a member that loops back in on itself.        
     type Member = (Joint*Joint)
     
+    type Atom = 
+        {protons:int;
+         neutrons:int;
+         electrons:int;
+         name:string;
+         symbol:string}
+
 module MaterialDomain =
-    
-    // StructuralProperties
+    open AtomicDomain  
+
+   
+
+    module Chemical =
+        type AtomicProperties = 
+            | AtomicWeight
+            | AtomicRadius
+            | Electronegativity
+            | IonizationEnergy
+
+        type Element = Atom * AtomicProperties seq
+        /// integers in the bonds are the index of the atoms being bonded.
+        type Bond = | Single of (int*int) | Double of (int*int) | Triple of (int*int) | Aromatic of Bond list
+        type Molecule = {name:string; atoms: Element list; bonds: Bond list}       
+
     type Composition =
         | Metallica (*In honor of the Band*)
         | Ceramic
         | Polymeric
         | Composite
     type CrystalStructure =
-        | Cubic
+        | BCC // Body Centered Cubic
+        | FCC // Faced Centered Cubic or Cubic Close Packed (CCP)
+        | SC  // Simple Cubic
         | Tetragonal
+        | HCP // Hexagonal Close-Packed
         | Hexagonal
         | Trigonal
         | Orthorhombic
@@ -55,50 +79,47 @@ module MaterialDomain =
         | PointDefect // Such as vacancies and interstitials.            
         | PlanarDefect // Such as surfaces, twin boundaries, and grain boundaries.
         | Dislocation        
+    
+    // Material Properties
     type StructuralProperties = {
         composition:Composition List; 
         crystalStructure:CrystalStructure;
         microStructures:Microstructure list}
-
     type PhysicalProperties =
         | State // Solid, liquid or gas; not as simple as it may seem.
         | Density // Mass of a material per unit volume.
         | Magnetisum //The physical attraction for iron, inherent in a material or induced by moving electric fields.
         | Solubility // The maximum amount of a solute that can be added to a solvent.
         | Viscocity // Resistance of a material (usually liquid) to flow.
-
     type MechanicalProperties = 
         | Malleability
         | Ductility
         | TensileStrength
         | FlexuralStrength
+        | YieldStrength 
         | Hardness
         | Toughness
         | Brittleness
-        | Elasticity
+        | Elasticity //Young’s Modulus
         | PlasticDeformation
         | Stiffness
-
     type ElectricalProperties =
         | Conductivity
         | Resistivity
-        | DielectricStrength
-        
+        | DielectricStrength        
     type ChemicalProperties =
         | Toxicity
         | ChemicalResistance
         | CorrosionResistance
         | Combustibility
         | Passivity
-        | Biocompatibility
-        
+        | Biocompatibility        
     type ThermalProperties =
         | SpecificHeat
         | ThermalExpansion
         | ThermalConductivit
         | GlassTransitionTemp
-        | MeltingPoint
-        
+        | MeltingPoint        
     type OpticalProperties =
         | Transmissivity
         | Absorptivity
@@ -106,14 +127,16 @@ module MaterialDomain =
         | Photoconductivity
         | Polarization
 
-    type Properties = 
+    type Property =         
         | Structural of StructuralProperties
         | Phyiscal of PhysicalProperties list
         | Mechanical of MechanicalProperties list
-        | Electrical of ElectricalProperties
-        | Chemical of ChemicalProperties
-        | Thermal of ThermalProperties
-        | Optical of OpticalProperties
+        | Electrical of ElectricalProperties list
+        | Chemical of ChemicalProperties list
+        | Thermal of ThermalProperties list
+        | Optical of OpticalProperties list
+
+    type Material = {propertires:Property seq}
 
 module LoadDomain = 
     open AtomicDomain    

@@ -1,6 +1,4 @@
 ﻿namespace Math.Presentation.WolframEngine.Analysis
-// This is a development area.
-// This code is isolated from the Analysis UI for the time being as I develop this code.
 
 open System
 open System.Numerics
@@ -166,8 +164,7 @@ type MethodOfJointsAnalysisControl(
             sp.Children.Add(momentAxisRadio_StackPanel) |> ignore            
             sp.Children.Add(reactionRadio_StackPanel) |> ignore            
             sp.Visibility <- Visibility.Visible
-        sp
- 
+        sp 
     let screen_Grid =
         let g = Grid()              
         do  g.Children.Add(analysis_StackPanel) |> ignore
@@ -357,6 +354,7 @@ type MethodOfJointsAnalysisControl(
                             | true -> () 
                             | false -> drawForce blue f) (trussServices.getReactionForcesFromState components_RadioButton.IsChecked.Value s)
                     | _ -> ()
+    
     (*Initialize*)
     do  this.Content <- screen_Grid        
         setGraphicsFromKernel kernel
@@ -365,5 +363,3 @@ type MethodOfJointsAnalysisControl(
     member _this.handleMojClick s = handleClickEvent s
     member _this.handleMojMouseDown s = handleMouseDown s
     member _this.setStateFromMojAnaysis s = setStateFromAnaysis s
-    
-

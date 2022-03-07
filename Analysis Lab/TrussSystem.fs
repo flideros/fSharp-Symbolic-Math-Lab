@@ -225,7 +225,7 @@ type Truss(kernel:MathKernel,
         do  g.Children.Add(canvas) |> ignore
         g
 
-        // Truss parts
+    (*Truss parts*)
     let trussJoint (p:System.Windows.Point) = 
         let radius = 6.
         let e = Ellipse()
@@ -620,7 +620,6 @@ type Truss(kernel:MathKernel,
         drawSelectedMember s
         drawSelectedForce s
         drawSelectedSupport s
-        
         // Set
     let setOrgin p = 
         let joints = getJointsFrom state |> Seq.toList
