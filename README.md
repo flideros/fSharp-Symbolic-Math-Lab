@@ -15,6 +15,8 @@ Sincerely,
 
 FLideros
 
+3/6/22 -- Added a skeleton domain model for materials to the Analysis Lab. I am going to implement a strain analysis for the truss system before I begin work on a material builder control. 
+
 1/10/22 -- Started a new project called Analysis Lab. My intent is to factor the code basis (Truss Analysis in previous projects tab) into a more general purpose analysis tool. This project will continue to use the Wolfram engine.
 
 7/21/21 -- If you want to run this repository, you will need the Wolfram Kernel. If you edit the Symbolic Math UI Program to exclude the Wolfram Display project, you should be able to run this repository with out the kernel. I am curently writing a truss analysis program and I intend to use the wolfram engine in it.
