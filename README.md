@@ -1,3 +1,6 @@
+*** 3/7/23
+I have decided to retire this repository. The dependancies have become too old to maintain. I will be starting a new coding and revisit the symbolic math code. I will also create a lab for the Wolfram Engine programs.
+***
 # fSharp-Symbolic-Math-Lab
 Personal coding lab for studying computer mathematics in f#
 
